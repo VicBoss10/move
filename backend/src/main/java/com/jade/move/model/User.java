@@ -2,7 +2,6 @@ package com.jade.move.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Entity
 @Table(name = "users")
