@@ -12,7 +12,7 @@ import lombok.*;
 public class User {
 
     @Id
-    @Column(length = 36)
+    @Column(length = 36, unique = true)
     private String id;
 
     @Column(nullable = false, length = 50, unique = true)
