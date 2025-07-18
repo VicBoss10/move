@@ -21,6 +21,6 @@ public class Location {
     @Column(nullable = false)
     private Double length;
 
-    @Column(length = 255)
+    @Column(length = 255, unique = true)
     private String description;
 }

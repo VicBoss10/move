@@ -19,8 +19,9 @@ public class Device {
     @Column(nullable = false, length = 100, unique = true)
     private String name;
 
-    @Column(nullable = false, length = 50)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DeviceType type;
 
     @Column(nullable = false, length = 20)
     private String state;
