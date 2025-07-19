@@ -3,7 +3,6 @@ package com.jade.move.service;
 import com.jade.move.model.User;
 import com.jade.move.repository.UserRepository;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 

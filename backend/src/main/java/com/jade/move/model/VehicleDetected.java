@@ -18,7 +18,7 @@ public class VehicleDetected {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private VehicleType vehicleType; //cambiar este nombre por type
+    private VehicleType vehicleType;
 
     @Column(nullable = false)
     private LocalDateTime timestamp;

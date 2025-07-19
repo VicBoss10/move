@@ -1,11 +1,12 @@
 package com.jade.move.service;
 
-import com.jade.move.model.Device;
-import com.jade.move.repository.DeviceRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
+import com.jade.move.model.Device;
+import com.jade.move.model.DeviceState;
+import com.jade.move.model.DeviceType;
+import com.jade.move.repository.DeviceRepository;
 
 @Service
 public class DeviceService {
@@ -28,11 +29,11 @@ public class DeviceService {
         return Optional.ofNullable(deviceRepository.findByName(name));
     }
 
-    public List<Device> getDevicesByType(String type) {
+    public List<Device> getDevicesByType(DeviceType type) {
         return deviceRepository.findByType(type);
     }
 
-    public List<Device> getDevicesByState(String state) {
+    public List<Device> getDevicesByState(DeviceState state) {
         return deviceRepository.findByState(state);
     }
 

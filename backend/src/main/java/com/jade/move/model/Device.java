@@ -23,8 +23,9 @@ public class Device {
     @Column(nullable = false)
     private DeviceType type;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String state;
+    private DeviceState state;
 
     @ManyToOne
     @JoinColumn(name = "location_id", nullable = false)

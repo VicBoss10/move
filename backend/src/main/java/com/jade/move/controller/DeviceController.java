@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jade.move.model.Device;
+import com.jade.move.model.DeviceState;
+import com.jade.move.model.DeviceType;
 import com.jade.move.service.DeviceService;
 
 @RestController
@@ -56,7 +58,7 @@ public class DeviceController {
     }
 
     @GetMapping("/type/{type}")
-    public ResponseEntity<?> getDevicesByType(@PathVariable String type) {
+    public ResponseEntity<?> getDevicesByType(@PathVariable DeviceType type) {
         List<Device> devices = deviceService.getDevicesByType(type);
         if (devices.isEmpty()) {
             return ResponseEntity.ok("No devices found with type: " + type);
@@ -65,7 +67,7 @@ public class DeviceController {
     }
 
     @GetMapping("/state/{state}")
-    public ResponseEntity<?> getDevicesByState(@PathVariable String state) {
+    public ResponseEntity<?> getDevicesByState(@PathVariable DeviceState state) {
         List<Device> devices = deviceService.getDevicesByState(state);
         if (devices.isEmpty()) {
             return ResponseEntity.ok("No devices found with state: " + state);

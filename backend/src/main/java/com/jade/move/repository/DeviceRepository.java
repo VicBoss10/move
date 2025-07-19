@@ -1,16 +1,18 @@
 package com.jade.move.repository;
 
-import com.jade.move.model.Device;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.util.List;
+import com.jade.move.model.Device;
+import com.jade.move.model.DeviceState;
+import com.jade.move.model.DeviceType;
 
 @Repository
 public interface DeviceRepository extends JpaRepository<Device, Integer> {
     Device findByName(String name);
-    List<Device> findByType(String type);
-    List<Device> findByState(String state);
+    List<Device> findByType(DeviceType type);
+    List<Device> findByState(DeviceState state);
     List<Device> findByLocationId(Integer locationId);
-    List<Device> findByTypeAndState(String type, String state);
-    List<Device> findByLocationIdAndType(Integer locationId, String type);
+    List<Device> findByTypeAndState(DeviceType type, DeviceState state);
+    List<Device> findByLocationIdAndType(Integer locationId, DeviceType type);
 }
