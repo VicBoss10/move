@@ -1,7 +1,10 @@
 package com.jade.move.service;
 
+import com.jade.move.dto.LocationSearchCriteria;
 import com.jade.move.model.Location;
 import com.jade.move.repository.LocationRepository;
+import com.jade.move.specification.LocationSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -46,5 +49,20 @@ public class LocationService {
 
     public void deleteLocation(Integer id) {
         locationRepository.deleteById(id);
+    }
+
+    public List<Location> searchLocations(LocationSearchCriteria criteria) {
+        // Si hay criterios de proximidad, usar consulta específica
+        if (criteria.getLatitude() != null && criteria.getLongitude() != null && criteria.getRadiusKm() != null) {
+            return locationRepository.findLocationsByProximity(
+                    criteria.getLatitude(),
+                    criteria.getLongitude(),
+                    criteria.getRadiusKm()
+            );
+        }
+
+        // Usar especificación para otros criterios
+        Specification<Location> spec = LocationSpecification.buildSpecification(criteria);
+        return locationRepository.findAll(spec);
     }
 }

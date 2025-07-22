@@ -1,7 +1,10 @@
 package com.jade.move.service;
 
+import com.jade.move.dto.SensorDataSearchCriteria;
 import com.jade.move.model.SensorData;
 import com.jade.move.repository.SensorDataRepository;
+import com.jade.move.specification.SensorDataSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -55,5 +58,10 @@ public class SensorDataService {
 
     public void deleteSensorData(Integer id) {
         sensorDataRepository.deleteById(id);
+    }
+
+    public List<SensorData> searchSensorData(SensorDataSearchCriteria criteria) {
+        Specification<SensorData> spec = SensorDataSpecification.buildSpecification(criteria);
+        return sensorDataRepository.findAll(spec);
     }
 }

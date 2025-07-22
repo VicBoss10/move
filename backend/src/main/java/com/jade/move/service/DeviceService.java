@@ -2,6 +2,13 @@ package com.jade.move.service;
 
 import java.util.List;
 import java.util.Optional;
+
+import com.jade.move.dto.DevicesSearchCriteria;
+import com.jade.move.dto.SensorDataSearchCriteria;
+import com.jade.move.model.SensorData;
+import com.jade.move.specification.DevicesSpecification;
+import com.jade.move.specification.SensorDataSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.jade.move.model.Device;
 import com.jade.move.model.DeviceState;
@@ -51,5 +58,10 @@ public class DeviceService {
 
     public void deleteDevice(Integer id) {
         deviceRepository.deleteById(id);
+    }
+
+    public List<Device> searchDevices(DevicesSearchCriteria criteria) {
+        Specification<Device> spec = DevicesSpecification.buildSpecification(criteria);
+        return deviceRepository.findAll(spec);
     }
 }

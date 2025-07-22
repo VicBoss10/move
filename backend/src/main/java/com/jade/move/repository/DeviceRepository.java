@@ -6,9 +6,11 @@ import org.springframework.stereotype.Repository;
 import com.jade.move.model.Device;
 import com.jade.move.model.DeviceState;
 import com.jade.move.model.DeviceType;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 
 @Repository
-public interface DeviceRepository extends JpaRepository<Device, Integer> {
+public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpecificationExecutor<Device> {
     Device findByName(String name);
     List<Device> findByType(DeviceType type);
     List<Device> findByState(DeviceState state);

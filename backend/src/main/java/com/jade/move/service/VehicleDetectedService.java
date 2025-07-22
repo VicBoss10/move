@@ -1,8 +1,11 @@
 package com.jade.move.service;
 
+import com.jade.move.dto.VehicleSearchCriteria;
 import com.jade.move.model.VehicleDetected;
 import com.jade.move.model.VehicleType;
 import com.jade.move.repository.VehicleDetectedRepository;
+import com.jade.move.specification.VehicleDetectedSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -56,5 +59,10 @@ public class VehicleDetectedService {
 
     public void deleteVehicleDetected(Integer id) {
         vehicleDetectedRepository.deleteById(id);
+    }
+
+    public List<VehicleDetected> searchVehicles(VehicleSearchCriteria criteria) {
+        Specification<VehicleDetected> spec = VehicleDetectedSpecification.buildSpecification(criteria);
+        return vehicleDetectedRepository.findAll(spec);
     }
 }
