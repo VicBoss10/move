@@ -4,10 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.jade.move.dto.DevicesSearchCriteria;
-import com.jade.move.dto.SensorDataSearchCriteria;
-import com.jade.move.model.SensorData;
 import com.jade.move.specification.DevicesSpecification;
-import com.jade.move.specification.SensorDataSpecification;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.jade.move.model.Device;

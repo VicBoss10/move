@@ -1,0 +1,38 @@
+services:
+  backend:
+    container_name: move-backend
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://move_db:5432/move_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - move_db
+    networks:
+      - move-network
+
+  move_db:
+    container_name: move_db
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: move_db
+    volumes:
+      - move_db_data:/var/lib/postgresql/data
+    networks:
+      - move-network
+
+volumes:
+  move_db_data:
+
+networks:
+  move-network:
+    driver: bridge

@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import com.jade.move.dto.DevicesSearchCriteria;
-import com.jade.move.dto.LocationSearchCriteria;
-import com.jade.move.model.Location;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
