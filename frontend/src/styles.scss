@@ -1,0 +1,22 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* Global reset to avoid horizontal scroll and default margins */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* evita scroll horizontal si algo se pasa por error */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: #f4f4f4;
+  color: #1f2933;
+}
