@@ -1,4 +1,16 @@
 services:
+  frontend:
+    container_name: move-frontend
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - move-network
+
   backend:
     container_name: move-backend
     build:
@@ -29,6 +41,19 @@ services:
       - move_db_data:/var/lib/postgresql/data
     networks:
       - move-network
+
+  # Servicio de Cloudflare Tunnel
+  cloudflare-tunnel:
+    container_name: cloudflare-tunnel
+    image: cloudflare/cloudflared:latest
+    command: tunnel --config /home/nonroot/.cloudflared/config.yml run
+    volumes:
+      - ~/cloudflared:/home/nonroot/.cloudflared
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    network_mode: host
 
 volumes:
   move_db_data:
