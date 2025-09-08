@@ -1,1 +1,53 @@
-<p>login works!</p>
+<main class="main">
+  <!-- Login Section -->
+  <section class="section">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-5" data-aos="fade-up">
+          <div class="login-form-wrapper">
+            <!-- Logo/Title -->
+            <div class="text-center mb-4">
+              <h2 class="sitename mb-4">MOVE</h2>
+              <p class="lead">Ingresa a tu cuenta</p>
+            </div>
+
+            <!-- Login Form -->
+            <form class="php-email-form">
+              <!-- Email -->
+              <div class="form-group mb-3">
+                <div class="input-with-icon">
+                  <input type="email" class="form-control" placeholder="Correo electrónico" required>
+                  <i class="bi bi-envelope"></i>
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="form-group mb-4">
+                <div class="input-with-icon">
+                  <input type="password" class="form-control" placeholder="Contraseña" required>
+                  <i class="bi bi-lock"></i>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="text-center">
+                <button type="submit" class="btn-submit">Ingresar</button>
+              </div>
+            </form>
+
+            <!-- Additional Links -->
+            <div class="mt-4 text-center">
+              <p class="mb-2">
+                <a href="#" class="text-muted">¿Olvidaste tu contraseña?</a>
+              </p>
+              <p>
+                ¿No tienes cuenta? 
+                <a routerLink="/auth/register" class="text-accent">Regístrate</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

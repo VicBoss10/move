@@ -3792,3 +3792,173 @@ section,
   to { opacity: 1; transform: translateY(0); }
 }
 
+
+/* Login Form Styles */
+.login-form-wrapper {
+  background-color: var(--surface-color);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+
+  .sitename {
+    color: var(--heading-color);
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .lead {
+    color: var(--default-color);
+    opacity: 0.9;
+  }
+
+  .input-with-icon {
+    position: relative;
+    
+    i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent-color);
+    }
+
+    .form-control {
+      padding-left: 2.75rem;
+      height: 3.25rem;
+      background-color: var(--background-color);
+      border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
+      color: var(--default-color);
+
+      &:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--accent-color), transparent 90%);
+      }
+    }
+  }
+
+  .btn-submit {
+    background-color: var(--accent-color);
+    color: var(--contrast-color);
+    padding: 0.75rem 2.5rem;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: color-mix(in srgb, var(--accent-color), transparent 15%);
+      transform: translateY(-2px);
+    }
+  }
+
+  a {
+    color: var(--accent-color);
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: color-mix(in srgb, var(--accent-color), transparent 15%);
+    }
+  }
+}
+
+
+/* Register Form Styles */
+.register-form-wrapper {
+  background-color: var(--surface-color);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+  margin-top: 120px;
+}
+
+.register-form-wrapper .sitename {
+  color: var(--heading-color);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.register-form-wrapper .lead {
+  color: var(--default-color);
+  opacity: 0.9;
+}
+
+.register-form-wrapper .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.register-form-wrapper .input-with-icon {
+  position: relative;
+}
+
+.register-form-wrapper .input-with-icon i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent-color);
+}
+
+.register-form-wrapper .input-with-icon .form-control {
+  padding-left: 2.75rem;
+  height: 3.25rem;
+  background-color: var(--background-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--default-color);
+}
+
+.register-form-wrapper .input-with-icon .form-control:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 0.25rem rgba(46, 164, 79, 0.1);
+}
+
+.register-form-wrapper .input-with-icon .form-control.is-invalid {
+  border-color: #dc3545;
+  padding-right: 3rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.5rem 1.5rem;
+}
+
+.register-form-wrapper .invalid-feedback {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.register-form-wrapper .btn-submit {
+  background-color: var(--accent-color);
+  color: var(--contrast-color);
+  padding: 0.75rem 2.5rem;
+  border: none;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.register-form-wrapper .btn-submit:hover {
+  background-color: color-mix(in srgb, var(--accent-color), transparent 15%);
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .register-form-wrapper {
+    padding: 2rem;
+    margin-top: 80px;
+  }
+  
+  .register-form-wrapper .sitename {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .register-form-wrapper {
+    padding: 1.5rem;
+  }
+  
+  .register-form-wrapper .btn-submit {
+    width: 100%;
+  }
+}

@@ -1,1 +1,129 @@
-<p>register works!</p>
+<main class="main">
+  <section class="section">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-6" data-aos="fade-up">
+          <div class="register-form-wrapper">
+            <!-- Title Section -->
+            <div class="text-center mb-4">
+              <h2 class="sitename mb-4">MOVE</h2>
+              <p class="lead">Crear nueva cuenta</p>
+            </div>
+
+            <!-- Register Form -->
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="php-email-form">
+              <!-- Username -->
+              <div class="form-group mb-3">
+                <div class="input-with-icon">
+                  <input type="text" 
+                         class="form-control" 
+                         placeholder="Nombre de usuario"
+                         formControlName="username"
+                         [ngClass]="{ 'is-invalid': submitted && registerForm.get('username')?.errors }">
+                  <i class="bi bi-person"></i>
+                </div>
+                <div class="invalid-feedback" *ngIf="submitted && registerForm.get('username')?.errors">
+                  <div *ngIf="registerForm.get('username')?.errors?.['required']">Username es requerido</div>
+                  <div *ngIf="registerForm.get('username')?.errors?.['minlength']">Mínimo 4 caracteres</div>
+                </div>
+              </div>
+
+              <!-- First Name -->
+              <div class="form-group mb-3">
+                <div class="input-with-icon">
+                  <input type="text" 
+                         class="form-control" 
+                         placeholder="Nombres"
+                         formControlName="firstName"
+                         [ngClass]="{ 'is-invalid': submitted && registerForm.get('firstName')?.errors }">
+                  <i class="bi bi-person-vcard"></i>
+                </div>
+                <div class="invalid-feedback" *ngIf="submitted && registerForm.get('firstName')?.errors">
+                  <div *ngIf="registerForm.get('firstName')?.errors?.['required']">Nombre es requerido</div>
+                  <div *ngIf="registerForm.get('firstName')?.errors?.['pattern']">Solo letras permitidas</div>
+                </div>
+              </div>
+
+              <!-- Last Name -->
+              <div class="form-group mb-3">
+                <div class="input-with-icon">
+                  <input type="text" 
+                         class="form-control" 
+                         placeholder="Apellidos"
+                         formControlName="lastName"
+                         [ngClass]="{ 'is-invalid': submitted && registerForm.get('lastName')?.errors }">
+                  <i class="bi bi-person-vcard"></i>
+                </div>
+                <div class="invalid-feedback" *ngIf="submitted && registerForm.get('lastName')?.errors">
+                  <div *ngIf="registerForm.get('lastName')?.errors?.['required']">Apellido es requerido</div>
+                  <div *ngIf="registerForm.get('lastName')?.errors?.['pattern']">Solo letras permitidas</div>
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="form-group mb-3">
+                <div class="input-with-icon">
+                  <input type="email" 
+                         class="form-control" 
+                         placeholder="Correo electrónico"
+                         formControlName="email"
+                         [ngClass]="{ 'is-invalid': submitted && registerForm.get('email')?.errors }">
+                  <i class="bi bi-envelope"></i>
+                </div>
+                <div class="invalid-feedback" *ngIf="submitted && registerForm.get('email')?.errors">
+                  <div *ngIf="registerForm.get('email')?.errors?.['required']">Email es requerido</div>
+                  <div *ngIf="registerForm.get('email')?.errors?.['email']">Email inválido</div>
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="form-group mb-3">
+                <div class="input-with-icon">
+                  <input type="password" 
+                         class="form-control" 
+                         placeholder="Contraseña"
+                         formControlName="password"
+                         [ngClass]="{ 'is-invalid': submitted && registerForm.get('password')?.errors }">
+                  <i class="bi bi-lock"></i>
+                </div>
+                <div class="invalid-feedback" *ngIf="submitted && registerForm.get('password')?.errors">
+                  <div *ngIf="registerForm.get('password')?.errors?.['required']">Contraseña requerida</div>
+                  <div *ngIf="registerForm.get('password')?.errors?.['minlength']">Mínimo 6 caracteres</div>
+                </div>
+              </div>
+
+              <!-- Confirm Password -->
+              <div class="form-group mb-4">
+                <div class="input-with-icon">
+                  <input type="password" 
+                         class="form-control" 
+                         placeholder="Confirmar contraseña"
+                         formControlName="confirmPassword"
+                         [ngClass]="{ 'is-invalid': submitted && (registerForm.get('confirmPassword')?.errors || registerForm.errors?.['mismatch']) }">
+                  <i class="bi bi-lock-fill"></i>
+                </div>
+                <div class="invalid-feedback" *ngIf="submitted && (registerForm.get('confirmPassword')?.errors || registerForm.errors?.['mismatch'])">
+                  <div *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Confirmación requerida</div>
+                  <div *ngIf="registerForm.errors?.['mismatch']">Las contraseñas no coinciden</div>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="text-center">
+                <button type="submit" class="btn-submit">Registrarse</button>
+              </div>
+            </form>
+
+            <!-- Additional Links -->
+            <div class="mt-4 text-center">
+              <p>
+                ¿Ya tienes cuenta? 
+                <a routerLink="/auth/login" class="text-accent">Ingresar</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
