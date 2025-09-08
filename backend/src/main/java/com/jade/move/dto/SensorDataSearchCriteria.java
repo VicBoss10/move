@@ -17,6 +17,12 @@ public class SensorDataSearchCriteria {
     private Double maxPm25;
     private Double minPm10;
     private Double maxPm10;
+    private Double minCo;
+    private Double maxCo;
+    private Double minNo2;
+    private Double maxNo2;
+    private Double minNh3;
+    private Double maxNh3;    
     private Integer deviceId;
     private Integer locationId;
 

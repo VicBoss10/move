@@ -32,6 +32,15 @@ public class SensorData {
     private Double pm10;
 
     @Column(nullable = false)
+    private Double co;
+
+    @Column(nullable = false)
+    private Double no2;
+
+    @Column(nullable = false)
+    private Double nh3;
+
+    @Column(nullable = false)
     private LocalDateTime timestamp;
 
     @ManyToOne

@@ -70,6 +70,30 @@ public class SensorDataSpecification {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("timestamp"), criteria.getEnd()));
             }
 
+            // Filtros por CO
+            if (criteria.getMinCo() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("co"), criteria.getMinCo()));
+            }
+            if (criteria.getMaxCo() != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("co"), criteria.getMaxCo()));
+            }
+
+            // Filtros por NO2
+            if (criteria.getMinNo2() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("no2"), criteria.getMinNo2()));
+            }
+            if (criteria.getMaxNo2() != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("no2"), criteria.getMaxNo2()));
+            }
+
+            // Filtros por NH3
+            if (criteria.getMinNh3() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("nh3"), criteria.getMinNh3()));
+            }
+            if (criteria.getMaxNh3() != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("nh3"), criteria.getMaxNh3()));
+            }
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }

@@ -106,7 +106,13 @@ public class SensorDataController {
             @RequestParam(required = false) Integer deviceId,
             @RequestParam(required = false) Integer locationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
+            @RequestParam(required = false) Double minCo,
+            @RequestParam(required = false) Double maxCo,
+            @RequestParam(required = false) Double minNo2,
+            @RequestParam(required = false) Double maxNo2,
+            @RequestParam(required = false) Double minNh3,
+            @RequestParam(required = false) Double maxNh3) {
 
         SensorDataSearchCriteria criteria = new SensorDataSearchCriteria();
         criteria.setMinTemperature(minTemperature);
@@ -123,6 +129,12 @@ public class SensorDataController {
         criteria.setLocationId(locationId);
         criteria.setStart(start);
         criteria.setEnd(end);
+        criteria.setMinCo(minCo);
+        criteria.setMaxCo(maxCo);
+        criteria.setMinNo2(minNo2);
+        criteria.setMaxNo2(maxNo2);
+        criteria.setMinNh3(minNh3);
+        criteria.setMaxNh3(maxNh3);
 
         List<SensorData> result = sensorDataService.searchSensorData(criteria);
         if (result.isEmpty()) {
