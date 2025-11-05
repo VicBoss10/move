@@ -13,6 +13,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 export class RegisterComponent {
   registerForm: FormGroup;
   submitted = false;
+  showEmailForm = false;
 
   constructor(private fb: FormBuilder) {
     this.registerForm = this.fb.group({

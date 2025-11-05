@@ -3861,14 +3861,12 @@ section,
   }
 }
 
-
 /* Register Form Styles */
 .register-form-wrapper {
   background-color: var(--surface-color);
   border-radius: 16px;
   padding: 2.5rem;
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
-  margin-top: 120px;
 }
 
 .register-form-wrapper .sitename {
@@ -3880,10 +3878,6 @@ section,
 .register-form-wrapper .lead {
   color: var(--default-color);
   opacity: 0.9;
-}
-
-.register-form-wrapper .form-group {
-  margin-bottom: 1.5rem;
 }
 
 .register-form-wrapper .input-with-icon {
@@ -3902,28 +3896,13 @@ section,
   padding-left: 2.75rem;
   height: 3.25rem;
   background-color: var(--background-color);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
   color: var(--default-color);
 }
 
 .register-form-wrapper .input-with-icon .form-control:focus {
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 0.25rem rgba(46, 164, 79, 0.1);
-}
-
-.register-form-wrapper .input-with-icon .form-control.is-invalid {
-  border-color: #dc3545;
-  padding-right: 3rem;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 1.5rem 1.5rem;
-}
-
-.register-form-wrapper .invalid-feedback {
-  color: #dc3545;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
+  box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--accent-color), transparent 90%);
 }
 
 .register-form-wrapper .btn-submit {
@@ -3940,6 +3919,51 @@ section,
   background-color: color-mix(in srgb, var(--accent-color), transparent 15%);
   transform: translateY(-2px);
 }
+
+.register-form-wrapper a {
+  color: var(--accent-color);
+  transition: all 0.3s ease;
+}
+
+.register-form-wrapper a:hover {
+  color: color-mix(in srgb, var(--accent-color), transparent 15%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .register-form-wrapper {
+    padding: 2rem;
+  }
+  .register-form-wrapper .sitename {
+    font-size: 1.5rem;
+  }
+}
+
+/* Solución: mensaje de error flotante debajo del input, sin mover el icono */
+.login-form-wrapper .input-with-icon,
+.register-form-wrapper .input-with-icon {
+  position: relative;
+}
+
+.login-form-wrapper .input-with-icon .invalid-feedback,
+.register-form-wrapper .input-with-icon .invalid-feedback {
+  position: absolute;
+  left: 2.75rem; /* igual al padding-left del input */
+  top: 100%;
+  width: calc(100% - 2.75rem);
+  margin-top: 0.15rem;
+  font-size: 0.97em;
+  z-index: 10;
+  pointer-events: none;
+  /* Opcional: animación suave */
+  transition: opacity 0.2s;
+}
+
+.login-form-wrapper .input-with-icon,
+.register-form-wrapper .input-with-icon {
+  margin-bottom: 2.2em; /* Espacio suficiente para el mensaje de error y separación visual */
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -3962,3 +3986,100 @@ section,
     width: 100%;
   }
 }
+
+/* Cambia el color de los placeholders a blanco */
+input::placeholder,
+textarea::placeholder {
+  color: #696565 !important;
+  opacity: 1;
+}
+
+
+/* Botones sociales*/
+.btn-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.08rem;
+  border-radius: 30px;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+  border: none;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.01em;
+}
+
+.btn-social i {
+  font-size: 1.3em;
+  margin-right: 0.7em;
+  vertical-align: middle;
+}
+
+.btn-facebook {
+  background: linear-gradient(90deg, #1877f3 80%, #3b5998 100%);
+  color: #fff;
+}
+.btn-facebook:hover {
+  background: linear-gradient(90deg, #145db2 80%, #1877f3 100%);
+  color: #fff;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 16px rgba(24,119,243,0.12);
+}
+
+.btn-google {
+  background: linear-gradient(90deg, #fff 80%, #f8f8f8 100%);
+  color: #444;
+  border: 1px solid #ea4335;
+}
+.btn-google:hover {
+  background: #ea4335;
+  color: #fff;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 16px rgba(234,67,53,0.12);
+  border-color: #ea4335;
+}
+
+.btn-microsoft {
+  background: linear-gradient(90deg, #f3f3f3 80%, #e6e6e6 100%);
+  color: #444;
+  border: 1px solid #5e5e5e;
+}
+.btn-microsoft:hover {
+  background: #5e5e5e;
+  color: #fff;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 16px rgba(94,94,94,0.12);
+  border-color: #5e5e5e;
+}
+
+/* Limita el ancho de los botones sociales y centra el contenido */
+.btn-social {
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.08rem;
+  border-radius: 30px;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+  border: none;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 400px) {
+  .btn-social {
+    max-width: 100%;
+    font-size: 1rem;
+    padding: 0.6rem 1rem;
+  }
+}
+
