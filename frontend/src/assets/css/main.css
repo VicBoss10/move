@@ -4083,3 +4083,8 @@ textarea::placeholder {
   }
 }
 
+.section-with-header {
+  padding-top: 150px !important; /* Igual que .hero.section en home */
+}
+
+
