@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOVE - Observatorio Móvil de Emisiones Vehiculares</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="assets/img/favicon.png">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200;0,300;0,400;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+
+    <!-- Main CSS File -->
+    <link href="assets/css/main.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- <app-header></app-header>
+<app-header></app-header> -->
+
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div
+            class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+            <a class="logo d-flex align-items-center me-auto me-xl-0">
+                <!-- <img src="assets/img/logo.png" alt="Logo MOVE"> -->
+                <h1 class="sitename">MOVE</h1>
+            </a>
+            <nav id="navmenu" class="navmenu">
+                <ul>
+                    <li><a href="#hero">Inicio</a></li>
+                    <li><a href="#about">Objetivo</a></li>
+                    <li><a href="#features">Caracteristicas</a></li>
+                    <li><a href="#gallery">Galería</a></li>
+                </ul>
+                <i class="mobile-nav-toggle d-xl-none bi bi-list" (click)="toggleMobileNav()"></i>
+            </nav>
+            <a class="btn-getstarted" href="/signin">Ingresar</a>
+        </div>
+    </header>
+
+    <main class="main">
+
+        <!-- Hero Section -->
+        <section id="hero" class="hero section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-7 content-col" data-aos="fade-up">
+                        <div class="content">
+                            <div class="agency-name">
+                                <h5>SISTEMA IOT DE</h5>
+                            </div>
+
+                            <div class="main-heading">
+                                <h1>MONITOREO <br>AMBIENTAL</h1>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="description">
+                                <p>MOVE es un sistema de monitoreo ambiental portátil.
+                                    Mide contaminantes del aire (CO₂, partículas en suspensión, etc.)
+                                    y los relaciona con el tráfico vehicular en tiempo real. Su diseño adaptable permite
+                                    obtener datos precisos en cualquier lugar, ayudando a crear ciudades más saludables.
+                                </p>
+                            </div>
+
+                            <div class="cta-button">
+                                <a href="#features" class="btn">
+                                    <span>CARACTERISTICAS</span>
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5" data-aos="zoom-out">
+                        <div class="visual-content">
+                            <div class="fluid-shape">
+                                <img src="assets/img/tierra.png" alt="Abstract Fluid Shape" class="fluid-img">
+                            </div>
+
+                            <div class="stats-card">
+                                <div class="stats-number">
+                                    <h2>+90%</h2>
+                                </div>
+                                <div class="stats-label">
+                                    <p>De Precisión</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section><!-- /Hero Section -->
+
+        <!-- About Section -->
+        <section id="about" class="about section">
+
+            <!-- Section Title -->
+            <div class="container section-title" data-aos="fade-up">
+                <h2>Objetivo</h2>
+                <div><span>Conoce más sobre el Proyecto</span></div>
+            </div>
+            <!-- End Section Title -->
+
+            <div class="container">
+                <div class="row gx-5 align-items-center">
+                    <!-- Imagen -->
+                    <div class="col-lg-6" data-aos="fade-right" data-aos-delay="200">
+                        <div class="about-image position-relative">
+                            <img src="assets/img/vehicle_detected.png" class="img-fluid rounded-4 shadow-sm"
+                                alt="Sistema IoT Portátil" loading="lazy">
+                            <div class="experience-badge">
+                                <span class="years">Datos</span>
+                                <span class="text">En Tiempo Real .</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contenido -->
+                    <div class="col-lg-6 mt-4 mt-lg-0" data-aos="fade-left" data-aos-delay="300">
+                        <div class="about-content">
+                            <h2>Monitoreo Ambiental Inteligente</h2>
+                            <p class="lead">
+                                El sistema IoT portátil tiene como objetivo medir contaminantes atmosféricos
+                                producidos por el tráfico vehicular y relacionarlos con el tipo y la cantidad de
+                                vehículos.
+                            </p>
+                            <p>
+                                Utilizando sensores de bajo costo, conectividad IoT y modelos de inteligencia artificial
+                                como YOLO, se busca proveer información precisa y en tiempo real para apoyar la
+                                toma de decisiones ambientales y de movilidad.
+                            </p>
+
+                            <div class="row g-4 mt-3">
+                                <div class="col-md-6" data-aos="zoom-in" data-aos-delay="400">
+                                    <div class="feature-item">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <h5>Adquisición de Datos</h5>
+                                        <p>Medición de CO₂, NOx, PM y condiciones ambientales con alta resolución
+                                            espacial y
+                                            temporal.</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6" data-aos="zoom-in" data-aos-delay="450">
+                                    <div class="feature-item">
+                                        <i class="bi bi-lightbulb-fill"></i>
+                                        <h5>Inteligencia Artificial</h5>
+                                        <p>Reconocimiento de tipo de vehículo mediante modelos de visión por
+                                            computadora.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <a href="#section_3" class="btn btn-primary mt-4">Explorar el Proyecto</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </section><!-- /About Section -->
+
+        <!-- features Section -->
+        <section id="features" class="features section">
+
+            <!-- Section Title -->
+            <div class="container section-title" data-aos="fade-up">
+                <h2>Características</h2>
+                <div><span>Explora las funcionalidades</span></div>
+            </div>
+            <!-- End Section Title -->
+
+            <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+                <div class="feature-header">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8 col-md-12">
+                            <div class="feature-intro">
+                                <h2 class="feature-heading">
+                                    <div>Sistema IoT portátil</div>
+                                    <div><span>para monitoreo ambiental</span></div>
+                                </h2>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-12">
+                            <div class="feature-summary">
+                                <p>
+                                    Un dispositivo móvil de bajo costo que mide contaminantes atmosféricos,
+                                    reconoce el tipo de vehículo con IA y envía datos en tiempo real
+                                    para la toma de decisiones ambientales.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                        <div class="feature-card position-relative z-1">
+                            <div class="feature-icon">
+                                <i class="bi bi-cloud"></i>
+                            </div>
+                            <h3>
+                                <a href="#">
+                                    Monitoreo <span>ambiental</span>
+                                </a>
+                            </h3>
+                            <p>
+                                Sensores de CO₂, NOx, partículas (PM2.5 y PM10), temperatura y humedad
+                                para un análisis completo de la calidad del aire.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                        <div class="feature-card position-relative z-1">
+                            <div class="feature-icon">
+                                <i class="bi bi-cpu"></i>
+                            </div>
+                            <h3>
+                                <a href="#">
+                                    Inteligencia <span>artificial</span>
+                                </a>
+                            </h3>
+                            <p>
+                                Identificación en tiempo real del tipo y cantidad de vehículos
+                                utilizando modelos de visión por computadora.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                        <div class="feature-card position-relative z-1">
+                            <div class="feature-icon">
+                                <i class="bi bi-wifi"></i>
+                            </div>
+                            <h3>
+                                <a href="#">
+                                    Datos en <span>tiempo real</span>
+                                </a>
+                            </h3>
+                            <p>
+                                Envío de datos a la nube mediante WiFi/IoT,
+                                asegurando disponibilidad inmediata de la información para análisis.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                        <div class="feature-card position-relative z-1">
+                            <div class="feature-icon">
+                                <i class="bi bi-geo-alt"></i>
+                            </div>
+                            <h3>
+                                <a href="#">
+                                    Geolocalización <span>móvil</span>
+                                </a>
+                            </h3>
+                            <p>
+                                Registro de posición GPS junto con los datos de contaminación,
+                                permitiendo mapear zonas críticas de la ciudad.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                        <div class="feature-card position-relative z-1">
+                            <div class="feature-icon">
+                                <i class="bi bi-bar-chart-line"></i>
+                            </div>
+                            <h3>
+                                <a href="#">
+                                    Visualización <span>de datos</span>
+                                </a>
+                            </h3>
+                            <p>
+                                Plataforma web que muestra gráficos, estadísticas y mapas de contaminación
+                                integrando datos ambientales y vehiculares.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                        <div class="feature-card position-relative z-1">
+                            <div class="feature-icon">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
+                            <h3>
+                                <a href="#">
+                                    Bajo <span>costo</span>
+                                </a>
+                            </h3>
+                            <p>
+                                Dispositivo portátil y accesible que reduce costos en comparación
+                                con estaciones fijas de monitoreo ambiental tradicionales.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- /features Section -->
+
+
+        <!-- Steps Section -->
+        <section id="steps" class="steps section">
+
+            <!-- Section Title -->
+            <div class="container section-title" data-aos="fade-up">
+                <h2>Flujo de Trabajo</h2>
+                <div><span>Cómo Funciona</span></div>
+            </div><!-- End Section Title -->
+
+            <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+                <div class="steps-wrapper">
+
+                    <div class="step-item" data-aos="fade-right" data-aos-delay="200">
+                        <div class="step-content">
+                            <div class="step-icon">
+                                <i class="bi bi-broadcast"></i>
+                            </div>
+                            <div class="step-info">
+                                <span class="step-number">Paso 01</span>
+                                <h3>Recolección de Datos</h3>
+                                <p>
+                                    Los sensores IoT y la cámara capturan en tiempo real variables ambientales junto con
+                                    información del tráfico vehicular.
+                                </p>
+                            </div>
+                        </div>
+                    </div><!-- End Step Item -->
+
+                    <div class="step-item" data-aos="fade-left" data-aos-delay="300">
+                        <div class="step-content">
+                            <div class="step-icon">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                            </div>
+                            <div class="step-info">
+                                <span class="step-number">Paso 02</span>
+                                <h3>Transmisión a la API</h3>
+                                <p>
+                                    Los datos recolectados son enviados a través de una API REST,
+                                    garantizando una comunicación segura y en tiempo real entre el dispositivo y el
+                                    servidor.
+                                </p>
+                            </div>
+                        </div>
+                    </div><!-- End Step Item -->
+
+                    <div class="step-item" data-aos="fade-right" data-aos-delay="400">
+                        <div class="step-content">
+                            <div class="step-icon">
+                                <i class="bi bi-database"></i>
+                            </div>
+                            <div class="step-info">
+                                <span class="step-number">Paso 03</span>
+                                <h3>Almacenamiento en Base de Datos</h3>
+                                <p>
+                                    La información se organiza y almacena en una base de datos relacional,
+                                    lo que permite mantener un historial de las mediciones ambientales y vehiculares.
+                                </p>
+                            </div>
+                        </div>
+                    </div><!-- End Step Item -->
+
+                    <div class="step-item" data-aos="fade-left" data-aos-delay="500">
+                        <div class="step-content">
+                            <div class="step-icon">
+                                <i class="bi bi-graph-up"></i>
+                            </div>
+                            <div class="step-info">
+                                <span class="step-number">Paso 04</span>
+                                <h3>Visualización para el Usuario</h3>
+                                <p>
+                                    La interfaz de usuario consulta los datos almacenados y los presenta en
+                                    paneles interactivos con gráficos, estadísticas y mapas en tiempo real.
+                                </p>
+                            </div>
+                        </div>
+                    </div><!-- End Step Item -->
+
+                </div>
+            </div>
+        </section><!-- /Steps Section -->
+
+        <!-- gallery Section -->
+        <section id="gallery" class="gallery section">
+
+            <!-- Section Title -->
+            <div class="container section-title" data-aos="fade-up">
+                <h2>Galería del Proyecto</h2>
+                <div><span>Datos de Interes</span></div>
+            </div><!-- End Section Title -->
+
+            <div class="container-fluid" data-aos="fade-up" data-aos-delay="100">
+
+                <div class="isotope-layout" data-default-filter="*" data-layout="masonry" data-sort="original-order">
+
+                    <ul class="gallery-filters isotope-filters" data-aos="fade-up" data-aos-delay="200">
+                        <li data-filter="*" class="filter-active">
+                            <i class="bi bi-grid-3x3"></i> Todos
+                        </li>
+                        <li data-filter=".filter-sensores">
+                            <i class="bi bi-speedometer2"></i> Sensores
+                        </li>
+                        <li data-filter=".filter-reconocimiento">
+                            <i class="bi bi-camera-video"></i> Reconocimiento Vehicular
+                        </li>
+                        <li data-filter=".filter-microcontrolador">
+                            <i class="bi bi-cpu"></i> Microcontrolador (ESP32)
+                        </li>
+                        <li data-filter=".filter-otros">
+                            <i class="bi bi-lightbulb"></i> Otros
+                        </li>
+                    </ul>
+
+                    <div class="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
+
+                        <!-- Ejemplo de ítem Sensores -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 gallery-item isotope-item filter-sensores">
+                            <article class="gallery-entry">
+                                <figure class="entry-image">
+                                    <img src="assets/img/examples/scd30.png" class="img-fluid" alt="Sensor SCD30"
+                                        loading="lazy">
+                                    <div class="entry-overlay">
+                                        <div class="overlay-content">
+                                            <div class="entry-meta">Sensores</div>
+                                            <h3 class="entry-title">Sensor SCD30</h3>
+                                            <div class="entry-links">
+                                                <a href="assets/img/examples/scd30.png" class="glightbox"
+                                                    data-gallery="gallery-gallery-sensores"
+                                                    data-glightbox="title: Sensor SCD30; description: Sensor SCD30 para medir concentración de CO₂, temperatura y humedad.">
+                                                    <i class="bi bi-arrows-angle-expand"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </figure>
+                            </article>
+                        </div><!-- End gallery Item -->
+
+                        <div class="col-xl-3 col-lg-4 col-md-6 gallery-item isotope-item filter-sensores">
+                            <article class="gallery-entry">
+                                <figure class="entry-image">
+                                    <img src="assets/img/examples/PM2.png" class="img-fluid" alt="Sensor SCD30"
+                                        loading="lazy">
+                                    <div class="entry-overlay">
+                                        <div class="overlay-content">
+                                            <div class="entry-meta">Sensores</div>
+                                            <h3 class="entry-title">Sensor PMS7003</h3>
+                                            <div class="entry-links">
+                                                <a href="assets/img/examples/PM2.png" class="glightbox"
+                                                    data-gallery="gallery-gallery-sensores"
+                                                    data-glightbox="title: Sensor PMS7003; description: Sensor PMS7003 para medir partículas suspendidas en el aire.">
+                                                    <i class="bi bi-arrows-angle-expand"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </figure>
+                            </article>
+                        </div><!-- End gallery Item -->
+
+                        <div class="col-xl-3 col-lg-4 col-md-6 gallery-item isotope-item filter-sensores">
+                            <article class="gallery-entry">
+                                <figure class="entry-image">
+                                    <img src="assets/img/examples/MICS-6814.jpg" class="img-fluid" alt="Sensor SCD30"
+                                        loading="lazy">
+                                    <div class="entry-overlay">
+                                        <div class="overlay-content">
+                                            <div class="entry-meta">Sensores</div>
+                                            <h3 class="entry-title">Sensor MICS-6814</h3>
+                                            <div class="entry-links">
+                                                <a href="assets/img/examples/MICS-6814.jpg" class="glightbox"
+                                                    data-gallery="gallery-gallery-sensores"
+                                                    data-glightbox="title: Sensor MICS-6814; description: Sensor MICS-6814, detecta varias clases de gases como: CO, NO2, NH3 etc.">
+                                                    <i class="bi bi-arrows-angle-expand"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </figure>
+                            </article>
+                        </div><!-- End gallery Item -->
+
+                        <!-- Ejemplo de ítem Reconocimiento Vehicular -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 gallery-item isotope-item filter-reconocimiento">
+                            <article class="gallery-entry">
+                                <figure class="entry-image">
+                                    <img src="assets/img/examples/mv.png" class="img-fluid" alt="Modelo YOLO"
+                                        loading="lazy">
+                                    <div class="entry-overlay">
+                                        <div class="overlay-content">
+                                            <div class="entry-meta">Reconocimiento Vehicular</div>
+                                            <h3 class="entry-title">Módulo IA</h3>
+                                            <div class="entry-links">
+                                                <a href="assets/img/examples/mv.png" class="glightbox"
+                                                    data-gallery="gallery-gallery-reconocimiento"
+                                                    data-glightbox="title: Modelo IA; description: YOLO: Red neuronal para detección y clasificación de vehículos en tiempo real.">
+                                                    <i class="bi bi-arrows-angle-expand"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </figure>
+                            </article>
+                        </div><!-- End gallery Item -->
+
+                        <!-- Ejemplo de ítem Microcontrolador -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 gallery-item isotope-item filter-microcontrolador">
+                            <article class="gallery-entry">
+                                <figure class="entry-image">
+                                    <img src="assets/img/examples/esp32.jpg" class="img-fluid" alt="ESP32" loading="lazy">
+                                    <div class="entry-overlay">
+                                        <div class="overlay-content">
+                                            <div class="entry-meta">Microcontrolador</div>
+                                            <h3 class="entry-title">ESP32</h3>
+                                            <div class="entry-links">
+                                                <a href="assets/img/examples/esp32.jpg" class="glightbox"
+                                                    data-gallery="gallery-gallery-microcontrolador"
+                                                    data-glightbox="title: ESP32; description: Microcontrolador con WiFi y Bluetooth integrado para IoT.">
+                                                    <i class="bi bi-arrows-angle-expand"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </figure>
+                            </article>
+                        </div><!-- End gallery Item -->
+
+                        <!-- Ejemplo de ítem Otros -->
+                        <!-- <div class="col-xl-3 col-lg-4 col-md-6 gallery-item isotope-item filter-otros">
+                        <article class="gallery-entry">
+                            <figure class="entry-image">
+                                <img src="assets/img/gallery/system-architecture.webp" class="img-fluid"
+                                    alt="Arquitectura del Sistema" loading="lazy">
+                                <div class="entry-overlay">
+                                    <div class="overlay-content">
+                                        <div class="entry-meta">Otros</div>
+                                        <h3 class="entry-title">Arquitectura del Sistema</h3>
+                                        <div class="entry-links">
+                                            <a href="assets/img/gallery/system-architecture.webp" class="glightbox"
+                                                data-gallery="gallery-gallery-otros"
+                                                data-glightbox="title: Arquitectura del Sistema; description: Flujo de datos del sistema IoT desde sensores hasta el usuario final.">
+                                                <i class="bi bi-arrows-angle-expand"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </figure>
+                        </article>
+                    </div>End gallery Item -->
+
+                    </div><!-- End gallery Container -->
+
+                </div>
+
+            </div>
+
+        </section><!-- /gallery Section -->
+
+
+    </main>
+    <footer id="footer" class="footer">
+
+        <div class="container footer-top">
+            <div class="row gy-4">
+                <div class="col-lg-5 col-md-12 footer-about">
+                    <a href="index.html" class="logo d-flex align-items-center">
+                        <span class="sitename">Strategy</span>
+                    </a>
+                    <p>Cras fermentum odio eu feugiat lide par naso tierra. Justo eget nada terra videa magna derita valies
+                        darta donna mare fermentum iaculis eu non diam phasellus.</p>
+                    <div class="social-links d-flex mt-4">
+                        <a href=""><i class="bi bi-twitter-x"></i></a>
+                        <a href=""><i class="bi bi-facebook"></i></a>
+                        <a href=""><i class="bi bi-instagram"></i></a>
+                        <a href=""><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-6 footer-links">
+                    <h4>Useful Links</h4>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">About us</a></li>
+                        <li><a href="#">features</a></li>
+                        <li><a href="#">Terms of feature</a></li>
+                        <li><a href="#">Privacy policy</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-6 footer-links">
+                    <h4>Our features</h4>
+                    <ul>
+                        <li><a href="#">Web Design</a></li>
+                        <li><a href="#">Web Development</a></li>
+                        <li><a href="#">Product Management</a></li>
+                        <li><a href="#">Marketing</a></li>
+                        <li><a href="#">Graphic Design</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-12 footer-contact text-center text-md-start">
+                    <h4>Contact Us</h4>
+                    <p>A108 Adam Street</p>
+                    <p>New York, NY 535022</p>
+                    <p>United States</p>
+                    <p class="mt-4"><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
+                    <p><strong>Email:</strong> <span>infoexample.com</span></p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="container copyright text-center mt-4">
+            <p>© <span>2025</span> <strong class="px-1 sitename">MOVE</strong> <span>Todos los
+                    derechos reservados</span></p>
+            <div class="credits">
+                Plantilla adaptada de <a href="https://bootstrapmade.com/">BootstrapMade</a>
+            </div>
+        </div>
+
+
+    </footer>
+    <!-- <app-footer></app-footer> -->
+
+    <!-- Vendor JS Files -->
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/aos/aos.js"></script>
+    <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+    <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+    <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+    <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+
+    <!-- Main JS File -->
+    <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>

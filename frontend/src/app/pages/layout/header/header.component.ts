@@ -8,4 +8,15 @@ import { RouterModule } from '@angular/router';
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
-export class HeaderComponent {}
+export class HeaderComponent {
+
+  constructor() { }
+
+  /**
+   * Alterna la clase 'mobile-nav-active' en el body para mostrar/ocultar el menú móvil.
+   */
+  toggleMobileNav(): void {
+    document.body.classList.toggle('mobile-nav-active');
+  }
+
+}

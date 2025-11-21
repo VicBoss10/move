@@ -18,14 +18,13 @@ import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
-import { HomeComponent } from './pages/landing/home/home.component';
+import { LandingComponent } from './pages/landing/landing.component'; // ¡Importa el nuevo componente!
 
 export const routes: Routes = [
-  // Ruta raíz: Landing Page
+  // La ruta raíz ahora carga nuestro componente proxy.
   {
     path: '',
-    component: HomeComponent,
-    title: 'Landing Page | MOVE - Sistema IoT de Monitoreo Ambiental'
+    component: LandingComponent,
   },
   // Ruta para el Dashboard (con layout)
   {
@@ -34,79 +33,83 @@ export const routes: Routes = [
     children: [
       {
         path: '',
+        redirectTo: 'ecommerce', // O la ruta que prefieras como default del dashboard
+        pathMatch: 'full'
+      },
+      {
+        path: 'ecommerce',
         component: EcommerceComponent,
-        pathMatch: 'full',
-        title: 'Dashboard | TailAdmin - Angular Admin Dashboard Template',
+        title: 'Dashboard | MOVE - Observatorio Móvil de Emisiones Vehiculares',
       },
       {
         path: 'calendar',
         component: CalenderComponent,
-        title: 'Calendario | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Calendario | MOVE'
       },
       {
         path: 'profile',
         component: ProfileComponent,
-        title: 'Perfil | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Perfil | MOVE'
       },
       {
         path: 'form-elements',
         component: FormElementsComponent,
-        title: 'Elementos de Formulario | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Elementos de Formulario | MOVE'
       },
       {
         path: 'basic-tables',
         component: BasicTablesComponent,
-        title: 'Tablas Básicas | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Tablas Básicas | MOVE'
       },
       {
         path: 'blank',
         component: BlankComponent,
-        title: 'Página en Blanco | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Página en Blanco | MOVE'
       },
       {
         path: 'invoice',
         component: InvoicesComponent,
-        title: 'Facturas | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Facturas | MOVE'
       },
       {
         path: 'line-chart',
         component: LineChartComponent,
-        title: 'Gráfico de Líneas | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Gráfico de Líneas | MOVE'
       },
       {
         path: 'bar-chart',
         component: BarChartComponent,
-        title: 'Gráfico de Barras | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Gráfico de Barras | MOVE'
       },
       {
         path: 'alerts',
         component: AlertsComponent,
-        title: 'Alertas | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Alertas | MOVE'
       },
       {
         path: 'avatars',
         component: AvatarElementComponent,
-        title: 'Avatares | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Avatares | MOVE'
       },
       {
         path: 'badge',
         component: BadgesComponent,
-        title: 'Insignias | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Insignias | MOVE'
       },
       {
         path: 'buttons',
         component: ButtonsComponent,
-        title: 'Botones | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Botones | MOVE'
       },
       {
         path: 'images',
         component: ImagesComponent,
-        title: 'Imágenes | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Imágenes | MOVE'
       },
       {
         path: 'videos',
         component: VideosComponent,
-        title: 'Videos | TailAdmin - Angular Admin Dashboard Template'
+        title: 'Videos | MOVE'
       },
     ]
   },
@@ -114,17 +117,17 @@ export const routes: Routes = [
   {
     path: 'signin',
     component: SignInComponent,
-    title: 'Iniciar Sesión | TailAdmin - Angular Admin Dashboard Template'
+    title: 'Iniciar Sesión | MOVE'
   },
   {
     path: 'signup',
     component: SignUpComponent,
-    title: 'Registrarse | TailAdmin - Angular Admin Dashboard Template'
+    title: 'Registrarse | MOVE'
   },
   // Página de error
   {
     path: '**',
     component: NotFoundComponent,
-    title: 'Página No Encontrada | TailAdmin - Angular Admin Dashboard Template'
+    title: 'Página No Encontrada | MOVE'
   },
 ];

@@ -1,5 +1,4 @@
-
-  <div class="w-full max-w-md pt-10 mx-auto">
+<div class="w-full max-w-md pt-10 mx-auto">
     <a
       routerLink="/"
       class="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
@@ -13,10 +12,10 @@
     <div>
       <div class="mb-5 sm:mb-8">
         <h1 class="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-          Sign In
+          Iniciar Sesión
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Enter your email and password to sign in!
+          Ingresa tu correo electrónico y contraseña para iniciar sesión
         </p>
       </div>
 
@@ -47,7 +46,7 @@
               fill="#EB4335"
             />
           </svg>
-          Sign in with Google
+          Iniciar sesión con Google
         </button>
         <button class="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
           <svg
@@ -60,7 +59,7 @@
           >
             <path d="M15.6705 1.875H18.4272L12.4047 8.75833L19.4897 18.125H13.9422L9.59717 12.4442L4.62554 18.125H1.86721L8.30887 10.7625L1.51221 1.875H7.20054L11.128 7.0675L15.6705 1.875ZM14.703 16.475H16.2305L6.37054 3.43833H4.73137L14.703 16.475Z" />
           </svg>
-          Sign in with X
+          Iniciar sesión con X
         </button>
       </div>
 
@@ -71,7 +70,7 @@
         </div>
         <div class="relative flex justify-center text-sm">
           <span class="p-2 text-gray-400 bg-white dark:bg-gray-900 sm:px-5 sm:py-2">
-            Or
+            O
           </span>
         </div>
       </div>
@@ -79,10 +78,10 @@
       <!-- Form -->
       <form (ngSubmit)="onSignIn()" class="space-y-6">
         <div>
-          <app-label>Email <span class="text-error-500">*</span></app-label>
+          <app-label>Correo electrónico <span class="text-error-500">*</span></app-label>
           <app-input-field
             type="email"
-            placeholder="info@gmail.com"
+            placeholder="correo@ejemplo.com"
             [value]="email"
             name="email"
             class="form-input"
@@ -91,11 +90,11 @@
         </div>
 
         <div>
-          <app-label>Password <span class="text-error-500">*</span></app-label>
+          <app-label>Contraseña <span class="text-error-500">*</span></app-label>
           <div class="relative">
             <app-input-field
               [type]="showPassword ? 'text' : 'password'"
-              placeholder="Enter your password"
+              placeholder="Ingresa tu contraseña"
               [value]="password"
               name="password"
               class="form-input"
@@ -118,14 +117,14 @@
           <div class="flex items-center gap-3">
             <app-checkbox
               [(checked)]="isChecked"
-              label="Keep me logged in"
+              label="Mantener sesión iniciada"
             />
           </div>
           <a
             routerLink="/reset-password"
             class="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
           >
-            Forgot password?
+            ¿Olvidaste tu contraseña?
           </a>
         </div>
 
@@ -134,18 +133,18 @@
           size="sm"
           (btnClick)="onSignIn()"
         >
-          Sign in
+          Iniciar sesión
         </app-button>
       </form>
 
       <div class="mt-5">
         <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-          Don't have an account?
+          ¿No tienes una cuenta?
           <a
             routerLink="/signup"
             class="text-brand-500 hover:text-brand-600 dark:text-brand-400"
           >
-            Sign Up
+            Regístrate
           </a>
         </p>
       </div>
