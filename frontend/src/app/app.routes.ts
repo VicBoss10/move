@@ -20,100 +20,110 @@ import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { LandingComponent } from './pages/landing/landing.component'; // ¡Importa el nuevo componente!
 
+// Definir rutas del dashboard una sola vez
+const DASHBOARD_ROUTES: Routes = [
+  {
+    path: 'ecommerce',
+    component: EcommerceComponent,
+    title: 'Dashboard | MOVE - Observatorio Móvil de Emisiones Vehiculares',
+  },
+  {
+    path: 'calendar',
+    component: CalenderComponent,
+    title: 'Calendario | MOVE'
+  },
+  {
+    path: 'profile',
+    component: ProfileComponent,
+    title: 'Perfil | MOVE'
+  },
+  {
+    path: 'form-elements',
+    component: FormElementsComponent,
+    title: 'Elementos de Formulario | MOVE'
+  },
+  {
+    path: 'basic-tables',
+    component: BasicTablesComponent,
+    title: 'Tablas Básicas | MOVE'
+  },
+  {
+    path: 'blank',
+    component: BlankComponent,
+    title: 'Página en Blanco | MOVE'
+  },
+  {
+    path: 'invoice',
+    component: InvoicesComponent,
+    title: 'Facturas | MOVE'
+  },
+  {
+    path: 'line-chart',
+    component: LineChartComponent,
+    title: 'Gráfico de Líneas | MOVE'
+  },
+  {
+    path: 'bar-chart',
+    component: BarChartComponent,
+    title: 'Gráfico de Barras | MOVE'
+  },
+  {
+    path: 'alerts',
+    component: AlertsComponent,
+    title: 'Alertas | MOVE'
+  },
+  {
+    path: 'avatars',
+    component: AvatarElementComponent,
+    title: 'Avatares | MOVE'
+  },
+  {
+    path: 'badge',
+    component: BadgesComponent,
+    title: 'Insignias | MOVE'
+  },
+  {
+    path: 'buttons',
+    component: ButtonsComponent,
+    title: 'Botones | MOVE'
+  },
+  {
+    path: 'images',
+    component: ImagesComponent,
+    title: 'Imágenes | MOVE'
+  },
+  {
+    path: 'videos',
+    component: VideosComponent,
+    title: 'Videos | MOVE'
+  },
+];
+
+// Rutas limpias que redirigen al dashboard
+const REDIRECT_ROUTES: Routes = DASHBOARD_ROUTES.map(route => ({
+  path: route.path,
+  redirectTo: `dashboard/${route.path}`,
+  pathMatch: 'full'
+}));
+
 export const routes: Routes = [
-  // La ruta raíz ahora carga nuestro componente proxy.
   {
     path: '',
     component: LandingComponent,
   },
-  // Ruta para el Dashboard (con layout)
+  ...REDIRECT_ROUTES,
   {
     path: 'dashboard',
     component: AppLayoutComponent,
     children: [
       {
         path: '',
-        redirectTo: 'ecommerce', // O la ruta que prefieras como default del dashboard
+        redirectTo: 'ecommerce',
         pathMatch: 'full'
       },
-      {
-        path: 'ecommerce',
-        component: EcommerceComponent,
-        title: 'Dashboard | MOVE - Observatorio Móvil de Emisiones Vehiculares',
-      },
-      {
-        path: 'calendar',
-        component: CalenderComponent,
-        title: 'Calendario | MOVE'
-      },
-      {
-        path: 'profile',
-        component: ProfileComponent,
-        title: 'Perfil | MOVE'
-      },
-      {
-        path: 'form-elements',
-        component: FormElementsComponent,
-        title: 'Elementos de Formulario | MOVE'
-      },
-      {
-        path: 'basic-tables',
-        component: BasicTablesComponent,
-        title: 'Tablas Básicas | MOVE'
-      },
-      {
-        path: 'blank',
-        component: BlankComponent,
-        title: 'Página en Blanco | MOVE'
-      },
-      {
-        path: 'invoice',
-        component: InvoicesComponent,
-        title: 'Facturas | MOVE'
-      },
-      {
-        path: 'line-chart',
-        component: LineChartComponent,
-        title: 'Gráfico de Líneas | MOVE'
-      },
-      {
-        path: 'bar-chart',
-        component: BarChartComponent,
-        title: 'Gráfico de Barras | MOVE'
-      },
-      {
-        path: 'alerts',
-        component: AlertsComponent,
-        title: 'Alertas | MOVE'
-      },
-      {
-        path: 'avatars',
-        component: AvatarElementComponent,
-        title: 'Avatares | MOVE'
-      },
-      {
-        path: 'badge',
-        component: BadgesComponent,
-        title: 'Insignias | MOVE'
-      },
-      {
-        path: 'buttons',
-        component: ButtonsComponent,
-        title: 'Botones | MOVE'
-      },
-      {
-        path: 'images',
-        component: ImagesComponent,
-        title: 'Imágenes | MOVE'
-      },
-      {
-        path: 'videos',
-        component: VideosComponent,
-        title: 'Videos | MOVE'
-      },
+      ...DASHBOARD_ROUTES,
     ]
   },
-  // Páginas de autenticación
   {
     path: 'signin',
     component: SignInComponent,
@@ -124,7 +134,6 @@ export const routes: Routes = [
     component: SignUpComponent,
     title: 'Registrarse | MOVE'
   },
-  // Página de error
   {
     path: '**',
     component: NotFoundComponent,
