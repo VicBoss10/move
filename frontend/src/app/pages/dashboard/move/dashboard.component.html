@@ -1,0 +1,27 @@
+<div class="grid grid-cols-12 gap-4 md:gap-6">
+  <!-- Estado del Sistema -->
+  <div class="col-span-12">
+    <app-system-status />
+  </div>
+
+  <!-- Sección 1: Ambiente (Gráfica + Métricas) -->
+  <div class="col-span-12 space-y-6 xl:col-span-7">
+    <div><app-environment-chart /></div>
+    <div><app-vehicle-activity /></div>
+  </div>
+
+  <div class="col-span-12 space-y-6 xl:col-span-5">
+    <div><app-gas-indicators /></div>
+    <div><app-environment-metrics /></div>
+  </div>
+
+  <!-- Sección 2: Contaminantes (Gráfica + Tabla) -->
+  <div class="col-span-12 space-y-6 xl:col-span-7">
+    <div><app-pollution-chart /></div>
+  </div>
+
+  <div class="col-span-12 xl:col-span-5">
+    <app-pollution-summary />
+  </div>
+
+</div>

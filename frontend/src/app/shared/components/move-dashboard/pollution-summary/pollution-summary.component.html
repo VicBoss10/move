@@ -1,0 +1,60 @@
+<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+      Resumen de Contaminantes
+    </h3>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      Estadísticas comparativas (Actual, Promedio, Mín, Máx)
+    </p>
+  </div>
+
+  <!-- Table -->
+  <div class="max-w-full overflow-x-auto custom-scrollbar">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-200 dark:border-gray-700">
+          <th class="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Contaminante</th>
+          <th class="px-3 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Actual</th>
+          <th class="px-3 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Promedio</th>
+          <th class="px-3 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Mín</th>
+          <th class="px-3 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Máx</th>
+          <th class="px-3 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of pollutionData" class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+          <td class="px-3 py-4">
+            <div class="font-semibold text-gray-900 dark:text-white">{{ row.name }}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{{ row.unit }}</div>
+          </td>
+          <td class="px-3 py-4 text-right">
+            <span class="font-bold text-gray-900 dark:text-white">{{ row.current | number: '1.1-2' }}</span>
+          </td>
+          <td class="px-3 py-4 text-right">
+            <span class="text-gray-700 dark:text-gray-300">{{ row.average | number: '1.1-2' }}</span>
+            <span [class]="'ml-1 font-semibold ' + getTrendColor(row.current, row.average)">
+              {{ getTrendIcon(row.current, row.average) }}
+            </span>
+          </td>
+          <td class="px-3 py-4 text-right text-gray-600 dark:text-gray-400">
+            {{ row.min | number: '1.1-2' }}
+          </td>
+          <td class="px-3 py-4 text-right text-gray-600 dark:text-gray-400">
+            {{ row.max | number: '1.1-2' }}
+          </td>
+          <td class="px-3 py-4 text-center">
+            <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ' + getStatusBadge(row.status)">
+              {{ getStatusLabel(row.status) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer info -->
+  <div class="mt-4 text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+    <p><strong>Nota:</strong> Los datos mostrados son históricos de las últimas 24 horas. Las flechas (↑↓→) indican la tendencia respecto al promedio.</p>
+  </div>
+</div>

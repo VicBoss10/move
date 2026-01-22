@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { EcommerceComponent } from './pages/dashboard/ecommerce/ecommerce.component';
+import { DashboardComponent } from './pages/dashboard/move/dashboard.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { FormElementsComponent } from './pages/forms/form-elements/form-elements.component';
 import { BasicTablesComponent } from './pages/tables/basic-tables/basic-tables.component';
@@ -23,9 +23,9 @@ import { LandingComponent } from './pages/landing/landing.component';
 // Definir rutas del dashboard una sola vez
 const DASHBOARD_ROUTES: Routes = [
   {
-    path: 'ecommerce',
-    component: EcommerceComponent,
-    title: 'Inicio',
+    path: 'dashboard',
+    component: DashboardComponent,
+    title: 'Inicio | MOVE',
   },
   {
     path: 'calendar',
@@ -118,7 +118,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'ecommerce',
+        redirectTo: 'dashboard',
         pathMatch: 'full'
       },
       ...DASHBOARD_ROUTES,

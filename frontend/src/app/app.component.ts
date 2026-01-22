@@ -11,5 +11,5 @@ import { RouterModule } from '@angular/router';
   styleUrl: './app.component.css',
 })
 export class AppComponent {
-  title = 'Angular Ecommerce Dashboard | TailAdmin';
+  title = 'MOVE - Dashboard de Calidad del Aire';
 }

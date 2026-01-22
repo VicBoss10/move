@@ -3,16 +3,16 @@ import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
 
-// Registrar los scales y elementos
+// Registrar los elementos de Chart.js
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
 
 @Component({
-  selector: 'app-environment-chart',
+  selector: 'app-pollution-chart',
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
-  templateUrl: './environment-chart.component.html',
+  templateUrl: './pollution-chart.component.html',
 })
-export class EnvironmentChartComponent implements OnInit {
+export class PollutionChartComponent implements OnInit {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   // Datos de las últimas 24 horas
@@ -23,23 +23,22 @@ export class EnvironmentChartComponent implements OnInit {
     '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
   ];
 
-  // Datos simulados (reemplazar con backend)
-  tempData: number[] = [18, 17.8, 17.5, 17.2, 17.0, 17.5, 18.5, 20.0, 22.0, 23.5, 24.0, 24.5, 25.0, 25.5, 25.2, 24.8, 24.5, 24.0, 23.5, 23.0, 22.5, 21.5, 20.0, 19.0];
-  
-  humidityData: number[] = [72, 73, 74, 75, 76, 77, 75, 73, 70, 68, 65, 63, 62, 60, 61, 62, 63, 65, 67, 69, 70, 71, 71, 71];
+  // Datos simulados de partículas (reemplazar con backend)
+  pm25Data: number[] = [18, 19, 20, 22, 24, 26, 28, 30, 32, 31, 29, 27, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14];
+  pm10Data: number[] = [22, 24, 26, 28, 30, 32, 35, 38, 40, 39, 37, 35, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22];
 
   chartData: ChartConfiguration<'line'>['data'] = {
     labels: this.timeLabels,
     datasets: [
       {
-        label: 'Temperatura (°C)',
-        data: this.tempData,
-        borderColor: '#f97316', // naranja
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+        label: 'PM 2.5 (µg/m³)',
+        data: this.pm25Data,
+        borderColor: '#ef4444', // rojo
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
         borderWidth: 2,
         tension: 0.4,
         fill: true,
-        pointBackgroundColor: '#f97316',
+        pointBackgroundColor: '#ef4444',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         pointRadius: 4,
@@ -47,14 +46,14 @@ export class EnvironmentChartComponent implements OnInit {
         yAxisID: 'y',
       },
       {
-        label: 'Humedad (%)',
-        data: this.humidityData,
-        borderColor: '#3b82f6', // azul
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        label: 'PM 10 (µg/m³)',
+        data: this.pm10Data,
+        borderColor: '#f59e0b', // ámbar
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
         borderWidth: 2,
         tension: 0.4,
         fill: true,
-        pointBackgroundColor: '#3b82f6',
+        pointBackgroundColor: '#f59e0b',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         pointRadius: 4,
@@ -97,7 +96,7 @@ export class EnvironmentChartComponent implements OnInit {
           label: function (context) {
             const label = context.dataset.label || '';
             const value = context.parsed.y;
-            return label + ': ' + (value !== null ? value.toFixed(2) : 'N/A');
+            return label + ': ' + (value !== null ? value.toFixed(1) : 'N/A');
           },
         },
       },
@@ -125,8 +124,8 @@ export class EnvironmentChartComponent implements OnInit {
         position: 'left',
         title: {
           display: true,
-          text: 'Temperatura (°C)',
-          color: '#f97316',
+          text: 'PM 2.5 (µg/m³)',
+          color: '#ef4444',
           font: {
             weight: 'bold',
           },
@@ -138,7 +137,7 @@ export class EnvironmentChartComponent implements OnInit {
           color: 'rgba(107, 114, 128, 0.1)',
         },
         ticks: {
-          color: '#f97316',
+          color: '#ef4444',
         },
       },
       y1: {
@@ -147,8 +146,8 @@ export class EnvironmentChartComponent implements OnInit {
         position: 'right',
         title: {
           display: true,
-          text: 'Humedad (%)',
-          color: '#3b82f6',
+          text: 'PM 10 (µg/m³)',
+          color: '#f59e0b',
           font: {
             weight: 'bold',
           },
@@ -157,7 +156,7 @@ export class EnvironmentChartComponent implements OnInit {
           drawOnChartArea: false,
         },
         ticks: {
-          color: '#3b82f6',
+          color: '#f59e0b',
         },
       },
     },
@@ -165,10 +164,9 @@ export class EnvironmentChartComponent implements OnInit {
 
   ngOnInit() {
     // Aquí conectas con tu servicio backend para obtener datos en tiempo real
-    // this.environmentService.getChartData().subscribe(data => {
-    //   this.chartData.datasets[0].data = data.co2;
-    //   this.chartData.datasets[1].data = data.temperature;
-    //   this.chartData.datasets[2].data = data.humidity;
+    // this.pollutionService.getPollutionData().subscribe(data => {
+    //   this.chartData.datasets[0].data = data.pm25Array;
+    //   this.chartData.datasets[1].data = data.pm10Array;
     //   this.chart?.update();
     // });
   }

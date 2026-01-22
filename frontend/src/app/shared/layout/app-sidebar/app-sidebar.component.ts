@@ -31,16 +31,17 @@ export class AppSidebarComponent {
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M4 21V10M9 21V3M15 21V14M20 21V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
       name: "Inicio",
-      path: "/dashboard/ecommerce",
+      path: "/dashboard/dashboard",
     },
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 7 7 7 12a5 5 0 0 0 10 0c0-5-5-10-5-10Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 22v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
       name: "Ambiente",
       subItems: [
-        { name: "Sensores", path: "/calendar" },
+        { name: "CO₂", path: "/calendar" },
+        { name: "Gases", path: "/calendar" },
+        { name: "Partículas PM2.5 y PM10", path: "/calendar" },
         { name: "Temperatura", path: "/calendar" },
         { name: "Humedad", path: "/calendar" },
-        { name: "CO₂ / Gases", path: "/calendar" },
         { name: "Histórico Ambiental", path: "/calendar" },
         { name: "Alertas Ambientales", path: "/calendar" },
       ],
@@ -55,7 +56,6 @@ export class AppSidebarComponent {
       ],
     },
     {
-      // Cámara: cámara de video
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="13" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M17 9l4-2v10l-4-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
       name: "Cámara",
       subItems: [
@@ -137,7 +137,7 @@ export class AppSidebarComponent {
   constructor(
     public sidebarService: SidebarService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {
     this.isExpanded$ = this.sidebarService.isExpanded$;
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
@@ -151,7 +151,7 @@ export class AppSidebarComponent {
         if (event instanceof NavigationEnd) {
           this.setActiveMenuFromRoute(this.router.url);
         }
-      })
+      }),
     );
 
     // Subscribe to combined observables to close submenus when all are false
@@ -171,7 +171,7 @@ export class AppSidebarComponent {
           // this.subMenuHeights = { ...this.savedSubMenuHeights };
           // this.cdr.detectChanges();
         }
-      })
+      }),
     );
 
     // Initial load
