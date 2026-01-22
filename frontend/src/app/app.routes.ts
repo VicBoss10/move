@@ -18,14 +18,14 @@ import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
-import { LandingComponent } from './pages/landing/landing.component'; // ¡Importa el nuevo componente!
+import { LandingComponent } from './pages/landing/landing.component'; 
 
 // Definir rutas del dashboard una sola vez
 const DASHBOARD_ROUTES: Routes = [
   {
     path: 'ecommerce',
     component: EcommerceComponent,
-    title: 'Dashboard | MOVE - Observatorio Móvil de Emisiones Vehiculares',
+    title: 'Inicio',
   },
   {
     path: 'calendar',
@@ -127,16 +127,16 @@ export const routes: Routes = [
   {
     path: 'signin',
     component: SignInComponent,
-    title: 'Iniciar Sesión | MOVE'
+    title: 'Iniciar Sesión'
   },
   {
     path: 'signup',
     component: SignUpComponent,
-    title: 'Registrarse | MOVE'
+    title: 'Registrarse'
   },
   {
     path: '**',
     component: NotFoundComponent,
-    title: 'Página No Encontrada | MOVE'
+    title: 'Página No Encontrada'
   },
 ];

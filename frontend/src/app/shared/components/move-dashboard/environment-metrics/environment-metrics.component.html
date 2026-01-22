@@ -1,0 +1,43 @@
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
+  <!-- Metric Card Item Start -->
+  <div 
+    *ngFor="let metric of metrics"
+    [class]="'rounded-2xl border p-5 md:p-6 ' + getStatusColor(metric.status)"
+  >
+    <!-- Icon Container -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center justify-center w-12 h-12 rounded-xl" 
+           [class.bg-green-100]="metric.status === 'normal'"
+           [class.dark:bg-green-800]="metric.status === 'normal'"
+           [class.bg-yellow-100]="metric.status === 'warning'"
+           [class.dark:bg-yellow-800]="metric.status === 'warning'"
+           [class.bg-red-100]="metric.status === 'critical'"
+           [class.dark:bg-red-800]="metric.status === 'critical'">
+        <span [innerHTML]="metric.icon | safeHtml" 
+              [class]="getTextColor(metric.status)"></span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="mt-5">
+      <span class="text-sm text-gray-500 dark:text-gray-400">{{ metric.label }}</span>
+      
+      <!-- Valor principal -->
+      <div class="mt-2 flex items-baseline gap-1">
+        <h4 [class]="'font-bold text-title-sm ' + getTextColor(metric.status)">
+          {{ metric.value }}
+        </h4>
+        <span class="text-xs text-gray-500 dark:text-gray-400">{{ metric.unit }}</span>
+      </div>
+
+      <!-- Trend o información secundaria -->
+      <p *ngIf="metric.trend" [class]="'text-xs mt-2 ' + getTrendColor(metric.status)">
+        {{ metric.trend }}
+      </p>
+      <p *ngIf="metric.secondaryValue" class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        Humedad: {{ metric.secondaryValue }}
+      </p>
+    </div>
+  </div>
+  <!-- Metric Card Item End -->
+</div>
