@@ -20,18 +20,30 @@ public class UserService {
     }
 
     public Optional<User> getUserById(String id) {
+        if (id == null) {
+            throw new IllegalArgumentException("User id cannot be null");
+        }
         return userRepository.findById(id);
     }
 
     public User createUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
         return userRepository.save(user);
     }
 
     public User updateUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
         return userRepository.save(user);
     }
 
     public void deleteUser(String id) {
+        if (id == null) {
+            throw new IllegalArgumentException("User id cannot be null");
+        }
         userRepository.deleteById(id);
     }
 }

@@ -24,6 +24,9 @@ public class LocationService {
     }
 
     public Optional<Location> getLocationById(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Location id cannot be null");
+        }
         return locationRepository.findById(id);
     }
 
@@ -40,14 +43,23 @@ public class LocationService {
     }
 
     public Location createLocation(Location location) {
+        if (location == null) {
+            throw new IllegalArgumentException("Location cannot be null");
+        }
         return locationRepository.save(location);
     }
 
     public Location updateLocation(Location location) {
+        if (location == null) {
+            throw new IllegalArgumentException("Location cannot be null");
+        }
         return locationRepository.save(location);
     }
 
     public void deleteLocation(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Location id cannot be null");
+        }
         locationRepository.deleteById(id);
     }
 

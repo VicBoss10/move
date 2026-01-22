@@ -26,6 +26,9 @@ public class VehicleDetectedService {
     }
 
     public Optional<VehicleDetected> getVehicleDetectedById(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id cannot be null");
+        }
         return vehicleDetectedRepository.findById(id);
     }
 
@@ -50,14 +53,23 @@ public class VehicleDetectedService {
     }
 
     public VehicleDetected createVehicleDetected(VehicleDetected vehicleDetected) {
+        if (vehicleDetected == null) {
+            throw new IllegalArgumentException("VehicleDetected cannot be null");
+        }
         return vehicleDetectedRepository.save(vehicleDetected);
     }
 
     public VehicleDetected updateVehicleDetected(VehicleDetected vehicleDetected) {
+        if (vehicleDetected == null) {
+            throw new IllegalArgumentException("VehicleDetected cannot be null");
+        }
         return vehicleDetectedRepository.save(vehicleDetected);
     }
 
     public void deleteVehicleDetected(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id cannot be null");
+        }
         vehicleDetectedRepository.deleteById(id);
     }
 

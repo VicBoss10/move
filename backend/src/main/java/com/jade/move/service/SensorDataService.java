@@ -25,6 +25,9 @@ public class SensorDataService {
     }
 
     public Optional<SensorData> getSensorDataById(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("SensorData id cannot be null");
+        }
         return sensorDataRepository.findById(id);
     }
 
@@ -49,14 +52,23 @@ public class SensorDataService {
     }
 
     public SensorData createSensorData(SensorData sensorData) {
+        if (sensorData == null) {
+            throw new IllegalArgumentException("SensorData cannot be null");
+        }
         return sensorDataRepository.save(sensorData);
     }
 
     public SensorData updateSensorData(SensorData sensorData) {
+        if (sensorData == null) {
+            throw new IllegalArgumentException("SensorData cannot be null");
+        }
         return sensorDataRepository.save(sensorData);
     }
 
     public void deleteSensorData(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id cannot be null");
+        }
         sensorDataRepository.deleteById(id);
     }
 

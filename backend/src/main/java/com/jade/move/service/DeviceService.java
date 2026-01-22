@@ -26,6 +26,9 @@ public class DeviceService {
     }
 
     public Optional<Device> getDeviceById(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Device id cannot be null");
+        }
         return deviceRepository.findById(id);
     }
 
@@ -46,14 +49,23 @@ public class DeviceService {
     }
 
     public Device createDevice(Device device) {
+        if (device == null) {
+            throw new IllegalArgumentException("Device cannot be null");
+        }
         return deviceRepository.save(device);
     }
 
     public Device updateDevice(Device device) {
+        if (device == null) {
+            throw new IllegalArgumentException("Device cannot be null");
+        }
         return deviceRepository.save(device);
     }
 
     public void deleteDevice(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Device id cannot be null");
+        }
         deviceRepository.deleteById(id);
     }
 
