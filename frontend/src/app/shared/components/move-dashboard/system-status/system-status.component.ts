@@ -2,14 +2,30 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 
+/**
+ * Estado de un componente del sistema (online/offline, activo/inactivo)
+ * @interface StatusCard
+ * @property {string} label - Nombre del componente
+ * @property {string} icon - SVG como string
+ * @property {'online' | 'offline' | 'active' | 'inactive'} status - Estado actual
+ * @property {string} primary - Valor o estado principal
+ * @property {string} [secondary] - Texto secundario opcional
+ */
 interface StatusCard {
   label: string;
   icon: string;
   status: 'online' | 'offline' | 'active' | 'inactive';
-  primary: string;      // El número o estado principal
-  secondary?: string;   // Texto secundario (ej: "5 / 6 activos")
+  primary: string;
+  secondary?: string;
 }
 
+/**
+ * Componente que muestra el estado del sistema, dispositivos y cámaras.
+ * Presenta 3 tarjetas con indicadores visuales (online/offline) e información en tiempo real.
+ * 
+ * @selector app-system-status
+ * @standalone true
+ */
 @Component({
   selector: 'app-system-status',
   standalone: true,
@@ -55,6 +71,11 @@ export class SystemStatusComponent implements OnInit {
     // });
   }
 
+  /**
+   * Retorna clases Tailwind para el fondo según estado
+   * @param {string} status - Estado (online/offline/active/inactive)
+   * @returns {string} Clases Tailwind CSS
+   */
   getStatusColor(status: string): string {
     switch (status) {
       case 'online':
@@ -68,6 +89,11 @@ export class SystemStatusComponent implements OnInit {
     }
   }
 
+  /**
+   * Retorna clases Tailwind para el color del texto según estado
+   * @param {string} status - Estado (online/offline/active/inactive)
+   * @returns {string} Clases Tailwind CSS para color
+   */
   getTextColor(status: string): string {
     switch (status) {
       case 'online':

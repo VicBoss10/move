@@ -6,6 +6,13 @@ import { ChartConfiguration, Chart as ChartJS, BarController, BarElement, Linear
 // Registrar los elementos de Chart.js
 ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend);
 
+/**
+ * Componente que muestra un gráfico de barras horizontal con conteo de vehículos
+ * por tipo: Carros, Motos, Buses, Camiones. Actualizado diariamente.
+ * 
+ * @selector app-vehicle-activity
+ * @standalone true
+ */
 @Component({
   selector: 'app-vehicle-activity',
   standalone: true,

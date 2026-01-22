@@ -2,6 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 
+/**
+ * Métrica ambiental con información de valor, unidad y estado
+ * @interface EnvironmentMetric
+ * @property {string} label - Nombre de la métrica
+ * @property {string} icon - SVG como string
+ * @property {string} value - Valor numérico a mostrar
+ * @property {string} unit - Unidad de medida (ppm, °C, %)
+ * @property {'normal' | 'warning' | 'critical'} status - Estado actual
+ * @property {string} [trend] - Indicador de tendencia (↑ Alto, ↓ Bajo)
+ * @property {string} [secondaryValue] - Valor secundario adicional
+ */
 interface EnvironmentMetric {
   label: string;
   icon: string;
@@ -12,6 +23,13 @@ interface EnvironmentMetric {
   secondaryValue?: string; // Para temperatura/humedad: "62%"
 }
 
+/**
+ * Componente que muestra métricas ambientales clave: CO2, Temperatura/Humedad, Vehículos.
+ * Presenta tarjetas con estados visuales (normal, warning, critical) e indicadores de tendencia.
+ * 
+ * @selector app-environment-metrics
+ * @standalone true
+ */
 @Component({
   selector: 'app-environment-metrics',
   standalone: true,
@@ -62,10 +80,13 @@ export class EnvironmentMetricsComponent implements OnInit {
     // this.environmentService.getMetrics().subscribe(data => {
     //   this.metrics = data;
     // });
-    
-    // Por ahora, los datos están quemados arriba
   }
 
+  /**
+   * Retorna clases Tailwind para el fondo según estado
+   * @param {string} status - Estado (normal/warning/critical)
+   * @returns {string} Clases Tailwind CSS
+   */
   getStatusColor(status: string): string {
     switch (status) {
       case 'normal':
@@ -79,6 +100,11 @@ export class EnvironmentMetricsComponent implements OnInit {
     }
   }
 
+  /**
+   * Retorna clases Tailwind para el color del texto según estado
+   * @param {string} status - Estado (normal/warning/critical)
+   * @returns {string} Clases Tailwind CSS para color
+   */
   getTextColor(status: string): string {
     switch (status) {
       case 'normal':
@@ -92,6 +118,11 @@ export class EnvironmentMetricsComponent implements OnInit {
     }
   }
 
+  /**
+   * Retorna clases Tailwind para el color de la tendencia según estado
+   * @param {string} status - Estado (normal/warning/critical)
+   * @returns {string} Clases Tailwind CSS para color
+   */
   getTrendColor(status: string): string {
     switch (status) {
       case 'normal':

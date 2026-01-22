@@ -6,6 +6,13 @@ import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, Poin
 // Registrar los elementos de Chart.js
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
 
+/**
+ * Componente que muestra un gráfico de línea con tendencias de Partículas (PM2.5 y PM10)
+ * en las últimas 24 horas. Usa dos ejes Y para escalas distintas.
+ * 
+ * @selector app-pollution-chart
+ * @standalone true
+ */
 @Component({
   selector: 'app-pollution-chart',
   standalone: true,

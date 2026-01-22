@@ -1,6 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+/**
+ * Fila de contaminante en la tabla de resumen con estadísticas diarias
+ * @interface PollutantRow
+ * @property {string} name - Nombre del contaminante (CO2, PM 2.5, PM 10, etc)
+ * @property {number} current - Valor actual medido
+ * @property {string} unit - Unidad de medida (ppm, µg/m³, ppb)
+ * @property {number} average - Promedio del día
+ * @property {number} min - Valor mínimo del día
+ * @property {number} max - Valor máximo del día
+ * @property {'good' | 'moderate' | 'poor'} status - Estado actual
+ */
 interface PollutantRow {
   name: string;
   current: number;
@@ -11,6 +22,13 @@ interface PollutantRow {
   status: 'good' | 'moderate' | 'poor';
 }
 
+/**
+ * Componente que muestra una tabla con el resumen de contaminantes monitoreados.
+ * Incluye valores actuales, promedios, mínimos, máximos y estado de cada contaminante.
+ * 
+ * @selector app-pollution-summary
+ * @standalone true
+ */
 @Component({
   selector: 'app-pollution-summary',
   standalone: true,

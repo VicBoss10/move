@@ -6,6 +6,13 @@ import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, Poin
 // Registrar los scales y elementos
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
 
+/**
+ * Componente que muestra un gráfico de línea con tendencias de Temperatura y Humedad
+ * en las últimas 24 horas. Utiliza dos ejes Y para escalar independientemente.
+ * 
+ * @selector app-environment-chart
+ * @standalone true
+ */
 @Component({
   selector: 'app-environment-chart',
   standalone: true,

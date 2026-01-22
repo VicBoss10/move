@@ -1,6 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+/**
+ * Indicador de gas con información de niveles y umbrales de calidad
+ * @interface GasIndicator
+ * @property {string} label - Nombre del gas (CO2, CO, NO2, NH3)
+ * @property {number} value - Valor actual medido
+ * @property {string} unit - Unidad de medida (ppm, ppb)
+ * @property {number} min - Valor mínimo de la escala
+ * @property {number} max - Valor máximo de la escala
+ * @property {{good: number, moderate: number, poor: number}} threshold - Umbrales de calidad
+ * @property {'good' | 'moderate' | 'poor'} status - Estado actual
+ * @property {string} color - Color hexadecimal para visualización
+ */
 interface GasIndicator {
   label: string;
   value: number;
@@ -12,6 +24,13 @@ interface GasIndicator {
   color: string;
 }
 
+/**
+ * Componente que muestra 4 indicadores de gases como gauges SVG semicirculares.
+ * Visualiza CO2, CO, NO2 y NH3 con porcentaje, estado y umbral visual.
+ * 
+ * @selector app-gas-indicators
+ * @standalone true
+ */
 @Component({
   selector: 'app-gas-indicators',
   standalone: true,
@@ -68,6 +87,10 @@ export class GasIndicatorsComponent implements OnInit {
     this.updateStatus();
   }
 
+  /**
+   * Actualiza el estado de cada gas basado en su valor actual y umbrales
+   * @private
+   */
   updateStatus() {
     this.gasIndicators.forEach(gas => {
       if (gas.value <= gas.threshold.good) {
@@ -80,10 +103,20 @@ export class GasIndicatorsComponent implements OnInit {
     });
   }
 
+  /**
+   * Calcula el porcentaje del valor actual dentro del rango min-max
+   * @param {GasIndicator} gas - Indicador de gas
+   * @returns {number} Porcentaje 0-100
+   */
   getPercentage(gas: GasIndicator): number {
     return ((gas.value - gas.min) / (gas.max - gas.min)) * 100;
   }
 
+  /**
+   * Convierte estado técnico a etiqueta legible en español
+   * @param {string} status - Estado (good/moderate/poor)
+   * @returns {string} Etiqueta: "Bueno", "Moderado", "Pobre"
+   */
   getStatusLabel(status: string): string {
     switch (status) {
       case 'good':
@@ -97,6 +130,11 @@ export class GasIndicatorsComponent implements OnInit {
     }
   }
 
+  /**
+   * Retorna clases Tailwind para el fondo de badge según estado
+   * @param {string} status - Estado del gas (good/moderate/poor)
+   * @returns {string} Clases Tailwind CSS
+   */
   getStatusBgColor(status: string): string {
     switch (status) {
       case 'good':
@@ -110,6 +148,11 @@ export class GasIndicatorsComponent implements OnInit {
     }
   }
 
+  /**
+   * Retorna clases Tailwind para color de texto del badge
+   * @param {string} status - Estado del gas (good/moderate/poor)
+   * @returns {string} Clases Tailwind CSS
+   */
   getStatusTextColor(status: string): string {
     switch (status) {
       case 'good':
@@ -123,13 +166,24 @@ export class GasIndicatorsComponent implements OnInit {
     }
   }
 
-  // Calcula el ángulo para el SVG gauge
+  /**
+   * Calcula el ángulo del gauge SVG (-180° a +180° para semicírculo)
+   * @param {number} percentage - Porcentaje 0-100
+   * @returns {number} Ángulo en grados
+   * @private
+   */
   getGaugeAngle(percentage: number): number {
     // 0% = -180°, 100% = 180° (semicírculo)
     return (percentage / 100) * 360 - 180;
   }
 
-  // Convierte ángulo a coordenadas SVG
+  /**
+   * Genera el path SVG para el arco del gauge
+   * @param {number} angle - Ángulo final en grados
+   * @param {number} [radius=45] - Radio del arco
+   * @returns {string} Path SVG válido para <path d="..."/>
+   * @private
+   */
   getArcPath(angle: number, radius: number = 45): string {
     const startAngle = -180;
     const endAngle = angle;
@@ -147,6 +201,12 @@ export class GasIndicatorsComponent implements OnInit {
     return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
   }
 
+  /**
+   * Genera el path SVG para el arco de fondo del gauge (semicírculo)
+   * @param {number} [radius=45] - Radio del arco
+   * @returns {string} Path SVG válido para <path d="..."/>
+   * @private
+   */
   getBackgroundArcPath(radius: number = 45): string {
     const startAngle = -180;
     const endAngle = 180;
