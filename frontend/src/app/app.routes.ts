@@ -18,84 +18,126 @@ import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
-import { LandingComponent } from './pages/landing/landing.component'; 
+import { LandingComponent } from './pages/landing/landing.component';
+import { Co2DetailComponent } from './pages/environment/co2-detail/co2-detail.component';
+import { GasesDetailComponent } from './pages/environment/gases-detail/gases-detail.component';
+import { ParticlesDetailComponent } from './pages/environment/particles-detail/particles-detail.component';
+import { TemperatureDetailComponent } from './pages/environment/temperature-detail/temperature-detail.component';
+import { HumidityDetailComponent } from './pages/environment/humidity-detail/humidity-detail.component';
+import { EnvironmentalHistoryComponent } from './pages/environment/environmental-history/environmental-history.component';
+
 
 // Definir rutas del dashboard una sola vez
 const DASHBOARD_ROUTES: Routes = [
   {
     path: 'dashboard',
     component: DashboardComponent,
-    title: 'Inicio | MOVE',
+    title: 'Inicio',
+  },
+  {
+    path: 'environment',
+    children: [
+      {
+        path: 'co2',
+        component: Co2DetailComponent,
+        title: 'CO₂'
+      },
+      {
+        path: 'gases',
+        component: GasesDetailComponent,
+        title: 'Gases'
+      },
+      {
+        path: 'particles',
+        component: ParticlesDetailComponent,
+        title: 'Partículas'
+      },
+      {
+        path: 'temperature',
+        component: TemperatureDetailComponent,
+        title: 'Temperatura'
+      },
+      {
+        path: 'humidity',
+        component: HumidityDetailComponent,
+        title: 'Humedad'
+      },
+      {
+        path: 'history',
+        component: EnvironmentalHistoryComponent,
+        title: 'Histórico Ambiental'
+      }
+    ]
   },
   {
     path: 'calendar',
     component: CalenderComponent,
-    title: 'Calendario | MOVE'
+    title: 'Calendario'
   },
   {
     path: 'profile',
     component: ProfileComponent,
-    title: 'Perfil | MOVE'
+    title: 'Perfil'
   },
   {
     path: 'form-elements',
     component: FormElementsComponent,
-    title: 'Elementos de Formulario | MOVE'
+    title: 'Elementos de Formulario'
   },
   {
     path: 'basic-tables',
     component: BasicTablesComponent,
-    title: 'Tablas Básicas | MOVE'
+    title: 'Tablas Básicas'
   },
   {
     path: 'blank',
     component: BlankComponent,
-    title: 'Página en Blanco | MOVE'
+    title: 'Página en Blanco'
   },
   {
     path: 'invoice',
     component: InvoicesComponent,
-    title: 'Facturas | MOVE'
+    title: 'Facturas'
   },
   {
     path: 'line-chart',
     component: LineChartComponent,
-    title: 'Gráfico de Líneas | MOVE'
+    title: 'Gráfico de Líneas'
   },
   {
     path: 'bar-chart',
     component: BarChartComponent,
-    title: 'Gráfico de Barras | MOVE'
+    title: 'Gráfico de Barras'
   },
   {
     path: 'alerts',
     component: AlertsComponent,
-    title: 'Alertas | MOVE'
+    title: 'Alertas'
   },
   {
     path: 'avatars',
     component: AvatarElementComponent,
-    title: 'Avatares | MOVE'
+    title: 'Avatares'
   },
   {
     path: 'badge',
     component: BadgesComponent,
-    title: 'Insignias | MOVE'
+    title: 'Insignias'
   },
   {
     path: 'buttons',
     component: ButtonsComponent,
-    title: 'Botones | MOVE'
+    title: 'Botones'
   },
   {
     path: 'images',
     component: ImagesComponent,
-    title: 'Imágenes | MOVE'
+    title: 'Imágenes'
   },
   {
     path: 'videos',
     component: VideosComponent,
-    title: 'Videos | MOVE'
+    title: 'Videos'
   },
 ];
 
