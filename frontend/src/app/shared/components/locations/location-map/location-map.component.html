@@ -1,0 +1,98 @@
+<div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+  <table class="min-w-full">
+    <!-- Header -->
+    <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+      <tr>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">
+          ID
+        </th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Descripción
+        </th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Zona
+        </th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Coordenadas
+        </th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Acciones
+        </th>
+      </tr>
+    </thead>
+    <!-- Body -->
+    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+      <tr
+        *ngFor="let location of locations"
+        class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+      >
+        <!-- ID -->
+        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+          #{{ location.id }}
+        </td>
+
+        <!-- Descripción -->
+        <td class="px-6 py-4">
+          <div class="flex items-center gap-3">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900"
+            >
+              <svg
+                class="h-5 w-5 text-red-600 dark:text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+              {{ location.description }}
+            </span>
+          </div>
+        </td>
+
+        <!-- Zona -->
+        <td class="px-6 py-4">
+          <span [ngClass]="getZoneColor(location.latitude)" class="inline-block rounded-full px-3 py-1 text-xs font-medium">
+            {{ getZoneName(location.latitude) }}
+          </span>
+        </td>
+
+        <!-- Coordenadas -->
+        <td class="px-6 py-4">
+          <code class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+            {{ formatCoordinates(location.latitude, location.length) }}
+          </code>
+        </td>
+
+        <!-- Acciones -->
+        <td class="px-6 py-4">
+          <div class="flex gap-2">
+            <button
+              class="rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+            >
+              Ver
+            </button>
+            <button
+              class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+            >
+              Editar
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

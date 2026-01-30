@@ -1,0 +1,112 @@
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <!-- Total de Ubicaciones -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-red-500">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Total de Ubicaciones</p>
+        <h3 class="text-4xl font-bold text-red-600 dark:text-red-400 mt-2">
+          {{ stats.totalLocations | number }}
+        </h3>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Puntos de monitoreo instalados</p>
+      </div>
+      <div class="bg-red-100 dark:bg-red-900 rounded-full p-4">
+        <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ubicaciones Activas -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-green-500">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Ubicaciones Activas</p>
+        <h3 class="text-4xl font-bold text-green-600 dark:text-green-400 mt-2">
+          {{ stats.activeLocations | number }}
+        </h3>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
+          {{ calculatePercentage(stats.activeLocations, stats.totalLocations) | number : '1.0-0' }}% en funcionamiento
+        </p>
+      </div>
+      <div class="bg-green-100 dark:bg-green-900 rounded-full p-4">
+        <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vehículos Detectados -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Vehículos Detectados</p>
+        <h3 class="text-4xl font-bold text-purple-600 dark:text-purple-400 mt-2">
+          {{ stats.vehiclesDetected | number }}
+        </h3>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">En el período de tiempo</p>
+      </div>
+      <div class="bg-purple-100 dark:bg-purple-900 rounded-full p-4">
+        <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm11 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM5 11l1.5-4.5h11L19 11H5z"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calidad Promedio -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Calidad Promedio</p>
+        <h3 class="text-4xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+          {{ stats.averageQuality | number : '1.0-1' }}%
+        </h3>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Calidad de datos captados</p>
+      </div>
+      <div class="bg-blue-100 dark:bg-blue-900 rounded-full p-4">
+        <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cobertura -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-orange-500">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Cobertura</p>
+        <h3 class="text-4xl font-bold text-orange-600 dark:text-orange-400 mt-2">
+          {{ stats.coverage | number : '1.0-1' }}%
+        </h3>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Área de cobertura del sistema</p>
+      </div>
+      <div class="bg-orange-100 dark:bg-orange-900 rounded-full p-4">
+        <svg class="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disponibilidad -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-indigo-500">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Disponibilidad</p>
+        <h3 class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mt-2">
+          {{ stats.uptime | number : '1.0-1' }}%
+        </h3>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Tiempo disponible del sistema</p>
+      </div>
+      <div class="bg-indigo-100 dark:bg-indigo-900 rounded-full p-4">
+        <svg class="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>

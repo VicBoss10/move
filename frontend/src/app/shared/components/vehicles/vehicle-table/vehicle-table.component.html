@@ -1,0 +1,96 @@
+<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+  <!-- Header -->
+  <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+      Vehículos Detectados
+    </h3>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      Listado de vehículos detectados en tiempo real
+    </p>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
+        <tr>
+          <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
+            ID
+          </th>
+          <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
+            Tipo de Vehículo
+          </th>
+          <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
+            Ubicación
+          </th>
+          <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
+            Coordenadas
+          </th>
+          <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
+            Detectado
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let vehicle of vehicles"
+          class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50"
+        >
+          <!-- ID -->
+          <td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-gray-900 dark:text-white sm:px-6">
+            #{{ vehicle.id }}
+          </td>
+
+          <!-- Tipo de Vehículo -->
+          <td class="whitespace-nowrap px-5 py-4 text-sm sm:px-6">
+            <span class="inline-block rounded-full px-3 py-1 text-xs font-semibold" [class]="getTypeColor(vehicle.vehicleType)">
+              {{ getTypeLabel(vehicle.vehicleType) }}
+            </span>
+          </td>
+
+          <!-- Ubicación -->
+          <td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 sm:px-6">
+            <div class="flex flex-col">
+              <span class="font-medium">{{ vehicle.location.description }}</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Ubicación #{{ vehicle.location.id }}</span>
+            </div>
+          </td>
+
+          <!-- Coordenadas -->
+          <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 sm:px-6">
+            <div class="flex flex-col text-xs">
+              <span>Lat: {{ vehicle.location.latitude | number: '1.4-4' }}</span>
+              <span>Lng: {{ vehicle.location.length | number: '1.4-4' }}</span>
+            </div>
+          </td>
+
+          <!-- Detectado -->
+          <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-gray-600 dark:text-gray-400 sm:px-6">
+            <div class="flex flex-col items-end">
+              <span class="font-medium text-gray-900 dark:text-white">{{ formatTime(vehicle.timestamp) }}</span>
+              <span class="text-xs">{{ formatFullDate(vehicle.timestamp) }}</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty state -->
+  <div
+    *ngIf="vehicles.length === 0"
+    class="flex flex-col items-center justify-center border-t border-gray-200 px-5 py-12 text-center dark:border-gray-800 sm:px-6"
+  >
+    <svg class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+    <p class="text-gray-500 dark:text-gray-400">
+      No hay vehículos detectados en este momento
+    </p>
+  </div>
+</div>

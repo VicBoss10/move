@@ -1,0 +1,131 @@
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { GenericStatsCardsComponent, StatCard } from '../../common/generic-stats-cards/generic-stats-cards.component';
+
+/**
+ * Interfaz para estadísticas de vehículos
+ * @interface VehicleStats
+ * @property {number} totalDetected - Total de vehículos detectados
+ * @property {number} activeNow - Vehículos activos en tiempo real
+ * @property {number} carCount - Total de Autos detectados
+ * @property {number} motorcycleCount - Total de Motos detectadas
+ * @property {number} busCount - Total de Buses detectados
+ * @property {number} truckCount - Total de Camiones detectados
+ */
+export interface VehicleStats {
+  totalDetected: number;
+  activeNow: number;
+  carCount: number;
+  motorcycleCount: number;
+  busCount: number;
+  truckCount: number;
+}
+
+/**
+ * VehicleStatsCardsComponent
+ *
+ * Componente que muestra tarjetas con estadísticas generales de vehículos.
+ * Usa el componente genérico GenericStatsCardsComponent para evitar duplicación.
+ *
+ * Características:
+ * - Tarjetas de métrica codificadas por color
+ * - Responsive grid
+ * - Dark mode support
+ * - Reutilizable
+ *
+ * @selector app-vehicle-stats-cards
+ * @standalone true
+ * @imports CommonModule, GenericStatsCardsComponent
+ * @returns Tarjetas de estadísticas
+ *
+ * @example
+ * <app-vehicle-stats-cards [stats]="vehicleStats" />
+ */
+@Component({
+  selector: 'app-vehicle-stats-cards',
+  standalone: true,
+  imports: [CommonModule, GenericStatsCardsComponent],
+  template: `
+    <app-generic-stats-cards [cards]="getStatCards()" />
+  `,
+})
+export class VehicleStatsCardsComponent {
+  /**
+   * Estadísticas a mostrar
+   * @type {VehicleStats}
+   */
+  @Input() stats: VehicleStats = {
+    totalDetected: 1247,
+    activeNow: 23,
+    carCount: 452,
+    motorcycleCount: 234,
+    busCount: 89,
+    truckCount: 56,
+  };
+
+  /**
+   * Convierte las estadísticas a array de StatCards para el componente genérico
+   */
+  getStatCards(): StatCard[] {
+    return [
+      {
+        label: 'Total Detectados',
+        value: this.stats.totalDetected,
+        borderColor: 'red',
+        textColor: 'text-red-600 dark:text-red-400',
+      },
+      {
+        label: 'Activos Ahora',
+        value: this.stats.activeNow,
+        borderColor: 'green',
+        textColor: 'text-green-600 dark:text-green-400',
+      },
+      {
+        label: 'Autos',
+        value: this.stats.carCount,
+        borderColor: 'blue',
+        textColor: 'text-blue-600 dark:text-blue-400',
+      },
+      {
+        label: 'Motos',
+        value: this.stats.motorcycleCount,
+        borderColor: 'purple',
+        textColor: 'text-purple-600 dark:text-purple-400',
+      },
+      {
+        label: 'Buses',
+        value: this.stats.busCount,
+        borderColor: 'orange',
+        textColor: 'text-orange-600 dark:text-orange-400',
+      },
+      {
+        label: 'Camiones',
+        value: this.stats.truckCount,
+        borderColor: 'indigo',
+        textColor: 'text-indigo-600 dark:text-indigo-400',
+      },
+    ];
+  }
+
+  /**
+   * Calcula el porcentaje de cambio respecto al valor anterior
+   * @param {number} current - Valor actual
+   * @param {number} previous - Valor anterior
+   * @returns {number} Porcentaje de cambio
+   */
+  calculateChange(current: number, previous: number): number {
+    if (previous === 0) return 0;
+    return ((current - previous) / previous) * 100;
+  }
+
+  /**
+   * Calcula el porcentaje relativo
+   * @param {number} value - Valor actual
+   * @param {number} total - Valor total
+   * @returns {number} Porcentaje
+   */
+  calculatePercentage(value: number, total: number): number {
+    if (total === 0) return 0;
+    return (value / total) * 100;
+  }
+}

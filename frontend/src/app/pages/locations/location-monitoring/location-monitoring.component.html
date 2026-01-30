@@ -1,0 +1,78 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <div class="flex flex-col gap-2">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Puntos de Monitoreo</h1>
+    <p class="text-gray-600 dark:text-gray-400">
+      Ubicaciones geográficas de dispositivos de monitoreo instalados
+    </p>
+  </div>
+
+  <!-- Grid de Información Rápida -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <!-- Total -->
+    <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">UBICACIONES TOTALES</p>
+      <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
+        {{ systemInfo.totalLocations }}
+      </p>
+    </div>
+
+    <!-- Activas -->
+    <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">ACTIVAS</p>
+      <p class="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
+        {{ systemInfo.activeLocations }}
+      </p>
+    </div>
+
+    <!-- Cobertura -->
+    <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">COBERTURA</p>
+      <p class="mt-2 text-2xl font-bold text-blue-600 dark:text-blue-400">
+        {{ systemInfo.coverage }}
+      </p>
+    </div>
+
+    <!-- Última Actualización -->
+    <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">ÚLTIMA ACT.</p>
+      <p class="mt-2 text-xs font-bold text-gray-900 dark:text-white">
+        {{ systemInfo.lastUpdate }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Sección de Filtros -->
+  <app-location-filters (filtersChanged)="onFiltersChanged($event)" />
+
+  <!-- Mapa de Ubicaciones -->
+  <div class="space-y-4">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Ubicaciones de Monitoreo</h2>
+    <app-location-map />
+  </div>
+
+  <!-- Información Adicional -->
+  <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+    <div class="flex gap-3">
+      <svg
+        class="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0zm3 0a1 1 0 11-2 0 1 1 0 012 0zm3 0a1 1 0 11-2 0 1 1 0 012 0z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <div>
+        <h3 class="font-medium text-blue-900 dark:text-blue-100">
+          Información sobre Ubicaciones
+        </h3>
+        <p class="mt-1 text-sm text-blue-700 dark:text-blue-200">
+          Haz clic en "Ver" para acceder a más detalles de cada ubicación, incluyendo histórico de detecciones y estado de dispositivos asociados.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

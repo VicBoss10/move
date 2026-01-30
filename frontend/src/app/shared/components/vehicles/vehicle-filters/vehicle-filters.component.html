@@ -1,0 +1,81 @@
+<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+  <!-- Header -->
+  <h3 class="mb-6 text-lg font-semibold text-gray-800 dark:text-white/90">
+    Filtros
+  </h3>
+
+  <!-- Filter Grid -->
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <!-- Tipo de Vehículo -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Tipo de Vehículo
+      </label>
+      <select
+        [(ngModel)]="filters.type"
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      >
+        <option value="">Todos los tipos</option>
+        <option *ngFor="let type of vehicleTypes" [value]="type.value">
+          {{ type.label }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Ubicación -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Ubicación
+      </label>
+      <select
+        [(ngModel)]="filters.location"
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      >
+        <option value="">Todas las ubicaciones</option>
+        <option *ngFor="let location of locations" [value]="location.id">
+          {{ location.name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Fecha Inicio -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Fecha Inicio
+      </label>
+      <input
+        type="date"
+        [(ngModel)]="filters.startDate"
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      />
+    </div>
+
+    <!-- Fecha Fin -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Fecha Fin
+      </label>
+      <input
+        type="date"
+        [(ngModel)]="filters.endDate"
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      />
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+    <button
+      (click)="clearFilters()"
+      class="rounded-lg border border-gray-300 bg-white px-6 py-2 font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+    >
+      Limpiar
+    </button>
+    <button
+      (click)="applyFilters()"
+      class="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white transition hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+    >
+      Aplicar Filtros
+    </button>
+  </div>
+</div>

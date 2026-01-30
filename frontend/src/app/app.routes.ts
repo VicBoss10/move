@@ -25,6 +25,13 @@ import { ParticlesDetailComponent } from './pages/environment/particles-detail/p
 import { TemperatureDetailComponent } from './pages/environment/temperature-detail/temperature-detail.component';
 import { HumidityDetailComponent } from './pages/environment/humidity-detail/humidity-detail.component';
 import { EnvironmentalHistoryComponent } from './pages/environment/environmental-history/environmental-history.component';
+import { VehiclesDetectedComponent } from './pages/vehicles/vehicles-detected/vehicles-detected.component';
+import { VehiclesStatsComponent } from './pages/vehicles/vehicles-stats/vehicles-stats.component';
+import { CameraStreamingComponent } from './pages/cameras/camera-streaming/camera-streaming.component';
+import { CameraModelStatusComponent } from './pages/cameras/camera-model-status/camera-model-status.component';
+import { LocationMonitoringComponent } from './pages/locations/location-monitoring/location-monitoring.component';
+import { LocationHistoryComponent } from './pages/locations/location-history/location-history.component';
+import { LocationMapPageComponent } from './pages/locations/location-map/location-map.component';
 
 
 // Definir rutas del dashboard una sola vez
@@ -66,6 +73,56 @@ const DASHBOARD_ROUTES: Routes = [
         path: 'history',
         component: EnvironmentalHistoryComponent,
         title: 'Histórico Ambiental'
+      }
+    ]
+  },
+  {
+    path: 'vehicles',
+    children: [
+      {
+        path: 'detected',
+        component: VehiclesDetectedComponent,
+        title: 'Vehículos Detectados'
+      },
+      {
+        path: 'stats',
+        component: VehiclesStatsComponent,
+        title: 'Estadísticas de Vehículos'
+      }
+    ]
+  },
+  {
+    path: 'cameras',
+    children: [
+      {
+        path: 'streaming',
+        component: CameraStreamingComponent,
+        title: 'Streaming de Cámaras'
+      },
+      {
+        path: 'model-status',
+        component: CameraModelStatusComponent,
+        title: 'Estado del Modelo'
+      }
+    ]
+  },
+  {
+    path: 'locations',
+    children: [
+      {
+        path: 'monitoring',
+        component: LocationMonitoringComponent,
+        title: 'Puntos de Monitoreo'
+      },
+      {
+        path: 'map',
+        component: LocationMapPageComponent,
+        title: 'Mapa de Monitoreo'
+      },
+      {
+        path: 'history',
+        component: LocationHistoryComponent,
+        title: 'Histórico de Ubicaciones'
       }
     ]
   },

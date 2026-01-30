@@ -49,18 +49,16 @@ export class AppSidebarComponent {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="6" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="2"/><circle cx="7.5" cy="17.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="17.5" r="1.5" fill="currentColor"/></svg>`,
       name: "Vehículos",
       subItems: [
-        { name: "Vehículos Detectados", path: "/basic-tables" },
-        { name: "Estadísticas", path: "/basic-tables" },
-        { name: "Eventos", path: "/basic-tables" },
+        { name: "Vehículos Detectados", path: "/dashboard/vehicles/detected" },
+        { name: "Estadísticas", path: "/dashboard/vehicles/stats" },
       ],
     },
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="13" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M17 9l4-2v10l-4-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
       name: "Cámara",
       subItems: [
-        { name: "Streaming", path: "/blank" },
-        { name: "Capturas", path: "/blank" },
-        { name: "Estado del Modelo", path: "/blank" },
+        { name: "Streaming", path: "/dashboard/cameras/streaming" },
+        { name: "Estado del Modelo", path: "/dashboard/cameras/model-status" },
       ],
     },
   ];
@@ -71,9 +69,9 @@ export class AppSidebarComponent {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M12 21s-6-5.686-6-10A6 6 0 0 1 18 11c0 4.314-6 10-6 10Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="11" r="2" stroke="currentColor" stroke-width="2"/></svg>`,
       name: "Ubicaciones",
       subItems: [
-        { name: "Puntos de Monitoreo", path: "/form-elements" },
-        { name: "Mapa", path: "/form-elements" },
-        { name: "Historial por Ubicación", path: "/form-elements" },
+        { name: "Puntos de Monitoreo", path: "/dashboard/locations/monitoring" },
+        { name: "Mapa", path: "/dashboard/locations/map" },
+        { name: "Historial por Ubicación", path: "/dashboard/locations/history" },
       ],
     },
     {

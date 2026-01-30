@@ -1,0 +1,176 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <div class="flex flex-col gap-2">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Streaming de Cámaras</h1>
+    <p class="text-gray-600 dark:text-gray-400">
+      Vista en vivo y monitoreo de dispositivos de cámara instalados en la ciudad
+    </p>
+  </div>
+
+  <!-- Grid Principal: Streaming + Info -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Área de Streaming (2 columnas) -->
+    <div class="lg:col-span-2 space-y-4">
+      <!-- Video Streaming Placeholder -->
+      <div class="rounded-lg border border-gray-200 bg-black p-4 dark:border-gray-700">
+        <div class="aspect-video rounded-lg bg-gray-900 flex items-center justify-center overflow-hidden">
+          <svg
+            class="h-24 w-24 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.219A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Controles de Cámara -->
+      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <p class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">Cámaras disponibles</p>
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <button
+            *ngFor="let cameraId of [1, 2, 3, 4, 5]"
+            (click)="selectCamera(cameraId)"
+            [ngClass]="{
+              'bg-blue-600 text-white dark:bg-blue-700': selectedCameraId === cameraId,
+              'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300':
+                selectedCameraId !== cameraId
+            }"
+            class="rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+          >
+            Cam {{ cameraId }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Información de Cámara Seleccionada -->
+      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          {{ getSelectedCameraName() }}
+        </h3>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div class="flex items-center gap-2">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+              <svg class="h-4 w-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Estado</p>
+              <p class="font-medium text-gray-900 dark:text-white">Activa</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+              <svg class="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Resolución</p>
+              <p class="font-medium text-gray-900 dark:text-white">1080p HD</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
+              <svg class="h-4 w-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">FPS</p>
+              <p class="font-medium text-gray-900 dark:text-white">30 fps</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900">
+              <svg class="h-4 w-4 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.5a1 1 0 002 0V7z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Uptime</p>
+              <p class="font-medium text-gray-900 dark:text-white">99.8%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Lateral: Información del Sistema -->
+    <div class="space-y-4">
+      <!-- Card: Total de Cámaras -->
+      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400">CÁMARAS TOTALES</p>
+            <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">5</p>
+          </div>
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+            <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.219A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Activas -->
+      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400">ACTIVAS</p>
+            <p class="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">4</p>
+          </div>
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+            <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Con Fallo -->
+      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400">CON FALLO</p>
+            <p class="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">1</p>
+          </div>
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
+            <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Última Sincronización -->
+      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">ÚLTIMA SINCRONIZACIÓN</p>
+        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Hace 2 minutos</p>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">30/01/2026 14:35:45</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Filtros -->
+  <app-camera-filters (filtersChanged)="onFiltersChanged($event)" />
+
+  <!-- Tabla de Dispositivos -->
+  <div class="space-y-4">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Dispositivos de Cámara</h2>
+    <app-camera-device-table />
+  </div>
+</div>
