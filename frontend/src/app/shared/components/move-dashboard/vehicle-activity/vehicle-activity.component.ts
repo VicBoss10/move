@@ -1,7 +1,10 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend } from 'chart.js';
+import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
+import { Observable, of, BehaviorSubject } from 'rxjs';
+import { map, catchError, tap, shareReplay } from 'rxjs/operators';
 
 // Registrar los elementos de Chart.js
 ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend);
@@ -9,6 +12,7 @@ ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip,
 /**
  * Componente que muestra un gráfico de barras horizontal con conteo de vehículos
  * por tipo: Carros, Motos, Buses, Camiones. Actualizado diariamente.
+ * Conectado a VehicleDetectedService para obtener datos en tiempo real.
  * 
  * @selector app-vehicle-activity
  * @standalone true
@@ -18,37 +22,25 @@ ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip,
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
   templateUrl: './vehicle-activity.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VehicleActivityComponent implements OnInit {
+export class VehicleActivityComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  // Datos de vehículos detectados
-  vehicleTypes: string[] = ['Carros', 'Motos', 'Buses', 'Camiones'];
-  vehicleCounts: number[] = [82, 31, 10, 5];
+  private isLoading$ = new BehaviorSubject<boolean>(true);
 
-  chartData: ChartConfiguration<'bar'>['data'] = {
-    labels: this.vehicleTypes,
-    datasets: [
-      {
-        label: 'Cantidad de Vehículos',
-        data: this.vehicleCounts,
-        backgroundColor: [
-          '#3b82f6', // Azul para Carros
-          '#10b981', // Verde para Motos
-          '#f97316', // Naranja para Buses
-          '#ef4444', // Rojo para Camiones
-        ],
-        borderColor: [
-          '#1e40af',
-          '#059669',
-          '#ea580c',
-          '#dc2626',
-        ],
-        borderWidth: 1,
-        borderRadius: 4,
-      },
-    ],
-  };
+  /**
+   * Observable que emite la configuración del gráfico de barras con conteos de vehículos
+   */
+  chartData$!: Observable<ChartConfiguration<'bar'>['data']>;
+
+  /**
+   * Observable que emite los conteos individuales de vehículos por tipo
+   */
+  vehicleCounts$!: Observable<number[]>;
+
+  // Datos de vehículos detectados
+  private vehicleTypes: string[] = ['Carros', 'Motos', 'Buses', 'Camiones'];
 
   chartOptions: ChartConfiguration<'bar'>['options'] = {
     indexAxis: 'y',
@@ -119,11 +111,80 @@ export class VehicleActivityComponent implements OnInit {
     },
   };
 
-  ngOnInit() {
-    // Aquí conectas con tu servicio backend para obtener datos en tiempo real
-    // this.vehicleService.getVehicleActivity().subscribe(data => {
-    //   this.chartData.datasets[0].data = data.counts;
-    //   this.chart?.update();
-    // });
+  private readonly defaultChartData: ChartConfiguration<'bar'>['data'] = {
+    labels: this.vehicleTypes,
+    datasets: [
+      {
+        label: 'Cantidad de Vehículos',
+        data: [0, 0, 0, 0],
+        backgroundColor: [
+          '#3b82f6', // Azul para Carros
+          '#10b981', // Verde para Motos
+          '#f97316', // Naranja para Buses
+          '#ef4444', // Rojo para Camiones
+        ],
+        borderColor: [
+          '#1e40af',
+          '#059669',
+          '#ea580c',
+          '#dc2626',
+        ],
+        borderWidth: 1,
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  constructor(private vehicleService: VehicleDetectedService) {
+    // Observable para chart data
+    this.chartData$ = this.vehicleService.getAll().pipe(
+      map((vehicles: any[]) => {
+        if (!vehicles || vehicles.length === 0) {
+          return this.defaultChartData;
+        }
+
+        // Contar vehículos por tipo
+        const carCount = vehicles.filter((v: any) => v.vehicleType === 'CAR').length;
+        const busCount = vehicles.filter((v: any) => v.vehicleType === 'BUS').length;
+
+        const vehicleCounts = [carCount, 0, busCount, 0]; // [Carros, Motos, Buses, Camiones]
+
+        return {
+          ...this.defaultChartData,
+          datasets: [
+            {
+              ...this.defaultChartData.datasets![0],
+              data: vehicleCounts,
+            },
+          ],
+        };
+      }),
+      tap(() => this.isLoading$.next(false)),
+      catchError((err) => {
+        console.error('Error cargando datos de vehículos:', err);
+        this.isLoading$.next(false);
+        return of(this.defaultChartData);
+      }),
+      shareReplay(1)
+    );
+
+    // Observable para conteos
+    this.vehicleCounts$ = this.vehicleService.getAll().pipe(
+      map((vehicles: any[]) => {
+        if (!vehicles || vehicles.length === 0) {
+          return [0, 0, 0, 0];
+        }
+
+        const carCount = vehicles.filter((v: any) => v.vehicleType === 'CAR').length;
+        const busCount = vehicles.filter((v: any) => v.vehicleType === 'BUS').length;
+
+        return [carCount, 0, busCount, 0]; // [Carros, Motos, Buses, Camiones]
+      }),
+      catchError((err) => {
+        console.error('Error cargando conteos de vehículos:', err);
+        return of([0, 0, 0, 0]);
+      }),
+      shareReplay(1)
+    );
   }
 }

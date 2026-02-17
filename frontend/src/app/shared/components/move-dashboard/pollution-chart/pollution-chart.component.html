@@ -13,6 +13,7 @@
   <div class="max-w-full overflow-x-auto custom-scrollbar">
     <div class="-ml-5 min-w-[650px] xl:min-w-full pl-2">
       <canvas
+        *ngIf="chartData$ | async as chartData"
         baseChart
         type="line"
         [data]="chartData"

@@ -1,5 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { ComponentColorUtility } from '../../../../core/utils/component-color.utility';
+import { Observable, of, BehaviorSubject } from 'rxjs';
+import { map, catchError, tap, shareReplay } from 'rxjs/operators';
 
 /**
  * Indicador de gas con información de niveles y umbrales de calidad
@@ -27,6 +31,7 @@ interface GasIndicator {
 /**
  * Componente que muestra 4 indicadores de gases como gauges SVG semicirculares.
  * Visualiza CO2, CO, NO2 y NH3 con porcentaje, estado y umbral visual.
+ * Conectado a SensorDataService para obtener datos reales del backend.
  * 
  * @selector app-gas-indicators
  * @standalone true
@@ -36,71 +41,94 @@ interface GasIndicator {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './gas-indicators.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GasIndicatorsComponent implements OnInit {
+export class GasIndicatorsComponent {
+  private isLoading$ = new BehaviorSubject<boolean>(true);
 
-  gasIndicators: GasIndicator[] = [
+  ColorUtility = ComponentColorUtility;
+
+  /**
+   * Observable que emite los indicadores de gases con datos reactivos
+   */
+  gasIndicators$!: Observable<GasIndicator[]>;
+
+  private readonly defaultIndicators: GasIndicator[] = [
     {
       label: 'CO₂',
-      value: 450,
+      value: 0,
       unit: 'ppm',
-      min: 300,
-      max: 1000,
-      threshold: { good: 400, moderate: 600, poor: 1000 },
-      status: 'moderate',
-      color: '#ef4444', // rojo
+      min: 0,
+      max: 2000,
+      threshold: { good: 400, moderate: 1000, poor: 2000 },
+      status: 'good',
+      color: '#10b981',
     },
     {
       label: 'CO',
-      value: 2.655,
+      value: 0,
       unit: 'ppm',
       min: 0,
       max: 50,
-      threshold: { good: 5, moderate: 15, poor: 50 },
+      threshold: { good: 9, moderate: 25, poor: 50 },
       status: 'good',
-      color: '#10b981', // verde
+      color: '#f59e0b',
     },
     {
       label: 'NO₂',
-      value: 2.772,
+      value: 0,
       unit: 'ppb',
       min: 0,
-      max: 200,
-      threshold: { good: 50, moderate: 100, poor: 200 },
+      max: 500,
+      threshold: { good: 53, moderate: 100, poor: 500 },
       status: 'good',
-      color: '#3b82f6', // azul
+      color: '#ef4444',
     },
     {
       label: 'NH₃',
-      value: 2.697,
+      value: 0,
       unit: 'ppb',
       min: 0,
       max: 100,
-      threshold: { good: 20, moderate: 50, poor: 100 },
+      threshold: { good: 35, moderate: 50, poor: 100 },
       status: 'good',
-      color: '#f59e0b', // ámbar
+      color: '#3b82f6',
     },
   ];
 
-  ngOnInit() {
-    // Actualizar status basado en valores
-    this.updateStatus();
-  }
+  constructor(private sensorDataService: SensorDataService) {
+    this.gasIndicators$ = this.sensorDataService.getLatest().pipe(
+      map((latest) => {
+        const indicators = [...this.defaultIndicators];
+        
+        if (latest) {
+          indicators[0].value = latest.co2 || 0;
+          indicators[1].value = latest.co || 0;
+          indicators[2].value = latest.no2 || 0;
+          indicators[3].value = latest.nh3 || 0;
+        }
 
-  /**
-   * Actualiza el estado de cada gas basado en su valor actual y umbrales
-   * @private
-   */
-  updateStatus() {
-    this.gasIndicators.forEach(gas => {
-      if (gas.value <= gas.threshold.good) {
-        gas.status = 'good';
-      } else if (gas.value <= gas.threshold.moderate) {
-        gas.status = 'moderate';
-      } else {
-        gas.status = 'poor';
-      }
-    });
+        // Actualizar estado de cada gas
+        indicators.forEach(gas => {
+          if (gas.value <= gas.threshold.good) {
+            gas.status = 'good';
+          } else if (gas.value <= gas.threshold.moderate) {
+            gas.status = 'moderate';
+          } else {
+            gas.status = 'poor';
+          }
+        });
+
+        return indicators;
+      }),
+      tap(() => this.isLoading$.next(false)),
+      catchError((err) => {
+        console.error('Error cargando datos de gases:', err);
+        this.isLoading$.next(false);
+        return of(this.defaultIndicators);
+      }),
+      shareReplay(1)
+    );
   }
 
   /**
@@ -110,60 +138,6 @@ export class GasIndicatorsComponent implements OnInit {
    */
   getPercentage(gas: GasIndicator): number {
     return ((gas.value - gas.min) / (gas.max - gas.min)) * 100;
-  }
-
-  /**
-   * Convierte estado técnico a etiqueta legible en español
-   * @param {string} status - Estado (good/moderate/poor)
-   * @returns {string} Etiqueta: "Bueno", "Moderado", "Pobre"
-   */
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case 'good':
-        return 'Bueno';
-      case 'moderate':
-        return 'Moderado';
-      case 'poor':
-        return 'Pobre';
-      default:
-        return 'Desconocido';
-    }
-  }
-
-  /**
-   * Retorna clases Tailwind para el fondo de badge según estado
-   * @param {string} status - Estado del gas (good/moderate/poor)
-   * @returns {string} Clases Tailwind CSS
-   */
-  getStatusBgColor(status: string): string {
-    switch (status) {
-      case 'good':
-        return 'bg-green-100 dark:bg-green-900/20';
-      case 'moderate':
-        return 'bg-yellow-100 dark:bg-yellow-900/20';
-      case 'poor':
-        return 'bg-red-100 dark:bg-red-900/20';
-      default:
-        return 'bg-gray-100 dark:bg-gray-900/20';
-    }
-  }
-
-  /**
-   * Retorna clases Tailwind para color de texto del badge
-   * @param {string} status - Estado del gas (good/moderate/poor)
-   * @returns {string} Clases Tailwind CSS
-   */
-  getStatusTextColor(status: string): string {
-    switch (status) {
-      case 'good':
-        return 'text-green-700 dark:text-green-400';
-      case 'moderate':
-        return 'text-yellow-700 dark:text-yellow-400';
-      case 'poor':
-        return 'text-red-700 dark:text-red-400';
-      default:
-        return 'text-gray-700 dark:text-gray-400';
-    }
   }
 
   /**

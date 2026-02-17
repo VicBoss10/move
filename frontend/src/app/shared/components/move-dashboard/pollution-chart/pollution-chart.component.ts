@@ -1,7 +1,10 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { Observable, of, BehaviorSubject } from 'rxjs';
+import { map, catchError, tap, shareReplay } from 'rxjs/operators';
 
 // Registrar los elementos de Chart.js
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
@@ -9,6 +12,7 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 /**
  * Componente que muestra un gráfico de línea con tendencias de Partículas (PM2.5 y PM10)
  * en las últimas 24 horas. Usa dos ejes Y para escalas distintas.
+ * Conectado a SensorDataService para obtener datos reales del backend.
  * 
  * @selector app-pollution-chart
  * @standalone true
@@ -18,59 +22,22 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
   templateUrl: './pollution-chart.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PollutionChartComponent implements OnInit {
+export class PollutionChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  // Datos de las últimas 24 horas
-  timeLabels: string[] = [
-    '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
-    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-  ];
+  private isLoading$ = new BehaviorSubject<boolean>(true);
 
-  // Datos simulados de partículas (reemplazar con backend)
-  pm25Data: number[] = [18, 19, 20, 22, 24, 26, 28, 30, 32, 31, 29, 27, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14];
-  pm10Data: number[] = [22, 24, 26, 28, 30, 32, 35, 38, 40, 39, 37, 35, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22];
+  /**
+   * Observable que emite la configuración del gráfico con datos reactivos
+   */
+  chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-  chartData: ChartConfiguration<'line'>['data'] = {
-    labels: this.timeLabels,
-    datasets: [
-      {
-        label: 'PM 2.5 (µg/m³)',
-        data: this.pm25Data,
-        borderColor: '#ef4444', // rojo
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#ef4444',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y',
-      },
-      {
-        label: 'PM 10 (µg/m³)',
-        data: this.pm10Data,
-        borderColor: '#f59e0b', // ámbar
-        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#f59e0b',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y1',
-      },
-    ],
-  };
+  private readonly defaultPm25Data: number[] = [25, 24, 23, 22, 21, 20, 19, 20, 22, 24, 26, 28, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19];
+  private readonly defaultPm10Data: number[] = [35, 34, 33, 32, 31, 30, 29, 30, 32, 34, 36, 38, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29];
 
-  chartOptions: ChartConfiguration<'line'>['options'] = {
+  readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
     interaction: {
@@ -169,12 +136,97 @@ export class PollutionChartComponent implements OnInit {
     },
   };
 
-  ngOnInit() {
-    // Aquí conectas con tu servicio backend para obtener datos en tiempo real
-    // this.pollutionService.getPollutionData().subscribe(data => {
-    //   this.chartData.datasets[0].data = data.pm25Array;
-    //   this.chartData.datasets[1].data = data.pm10Array;
-    //   this.chart?.update();
-    // });
+  constructor(private sensorDataService: SensorDataService) {
+    this.chartData$ = this.sensorDataService.getAll().pipe(
+      map((data: any[]) => {
+        const pm25Data = data?.length > 0 ? data.map(d => d.pm25) : this.defaultPm25Data;
+        const pm10Data = data?.length > 0 ? data.map(d => d.pm10) : this.defaultPm10Data;
+        const timeLabels = data?.length > 0 
+          ? data.map((d: any) => {
+              const time = new Date(d.timestamp);
+              const hour = String(time.getHours()).padStart(2, '0');
+              const minute = String(time.getMinutes()).padStart(2, '0');
+              return `${hour}:${minute}`;
+            })
+          : ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
+
+        return {
+          labels: timeLabels,
+          datasets: [
+            {
+              label: 'PM 2.5 (µg/m³)',
+              data: pm25Data,
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#ef4444',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y',
+            },
+            {
+              label: 'PM 10 (µg/m³)',
+              data: pm10Data,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#f59e0b',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y1',
+            },
+          ],
+        };
+      }),
+      tap(() => this.isLoading$.next(false)),
+      catchError((err) => {
+        console.error('Error cargando datos de partículas:', err);
+        this.isLoading$.next(false);
+        return of({
+          labels: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
+          datasets: [
+            {
+              label: 'PM 2.5 (µg/m³)',
+              data: this.defaultPm25Data,
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#ef4444',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y',
+            },
+            {
+              label: 'PM 10 (µg/m³)',
+              data: this.defaultPm10Data,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#f59e0b',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y1',
+            },
+          ],
+        });
+      }),
+      shareReplay(1)
+    );
   }
 }

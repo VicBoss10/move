@@ -1,5 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { Observable, of, BehaviorSubject } from 'rxjs';
+import { map, catchError, tap, shareReplay } from 'rxjs/operators';
 
 /**
  * Fila de contaminante en la tabla de resumen con estadísticas diarias
@@ -25,6 +28,7 @@ interface PollutantRow {
 /**
  * Componente que muestra una tabla con el resumen de contaminantes monitoreados.
  * Incluye valores actuales, promedios, mínimos, máximos y estado de cada contaminante.
+ * Conectado a SensorDataService para obtener datos reales del backend.
  * 
  * @selector app-pollution-summary
  * @standalone true
@@ -34,68 +38,61 @@ interface PollutantRow {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './pollution-summary.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PollutionSummaryComponent implements OnInit {
+export class PollutionSummaryComponent {
+  private isLoading$ = new BehaviorSubject<boolean>(true);
 
-  pollutionData: PollutantRow[] = [
-    {
-      name: 'CO₂',
-      current: 450,
-      unit: 'ppm',
-      average: 425,
-      min: 380,
-      max: 520,
-      status: 'moderate',
-    },
-    {
-      name: 'PM 2.5',
-      current: 26,
-      unit: 'µg/m³',
-      average: 23.4,
-      min: 14,
-      max: 32,
-      status: 'good',
-    },
-    {
-      name: 'PM 10',
-      current: 32,
-      unit: 'µg/m³',
-      average: 30.8,
-      min: 22,
-      max: 40,
-      status: 'good',
-    },
-    {
-      name: 'CO',
-      current: 2.655,
-      unit: 'ppm',
-      average: 2.2,
-      min: 1.2,
-      max: 3.8,
-      status: 'good',
-    },
-    {
-      name: 'NO₂',
-      current: 2.772,
-      unit: 'ppb',
-      average: 2.4,
-      min: 0.8,
-      max: 4.5,
-      status: 'good',
-    },
-    {
-      name: 'NH₃',
-      current: 2.697,
-      unit: 'ppb',
-      average: 2.1,
-      min: 0.5,
-      max: 3.9,
-      status: 'good',
-    },
+  /**
+   * Observable que emite las filas de contaminantes con estadísticas
+   */
+  pollutionData$!: Observable<PollutantRow[]>;
+
+  private readonly defaultPollutionData: PollutantRow[] = [
+    { name: 'CO₂', current: 0, unit: 'ppm', average: 0, min: 0, max: 0, status: 'good' },
+    { name: 'PM 2.5', current: 0, unit: 'µg/m³', average: 0, min: 0, max: 0, status: 'good' },
+    { name: 'PM 10', current: 0, unit: 'µg/m³', average: 0, min: 0, max: 0, status: 'good' },
+    { name: 'CO', current: 0, unit: 'ppm', average: 0, min: 0, max: 0, status: 'good' },
+    { name: 'NO₂', current: 0, unit: 'ppb', average: 0, min: 0, max: 0, status: 'good' },
   ];
 
-  ngOnInit() {
-    // Conectar con servicio de backend si es necesario
+  constructor(private sensorDataService: SensorDataService) {
+    this.pollutionData$ = this.sensorDataService.getAll().pipe(
+      map((data: any[]) => {
+        if (!data || data.length === 0) {
+          return this.defaultPollutionData;
+        }
+
+        // Calcular estadísticas
+        const keys = ['co2', 'pm25', 'pm10', 'co', 'no2'];
+        const stats: { [key: string]: any } = {};
+
+        keys.forEach(key => {
+          const values = data.map((d: any) => d[key]).filter((v: any) => v != null);
+          stats[key] = {
+            current: values[values.length - 1] || 0,
+            average: values.length > 0 ? values.reduce((a: number, b: number) => a + b, 0) / values.length : 0,
+            min: values.length > 0 ? Math.min(...values) : 0,
+            max: values.length > 0 ? Math.max(...values) : 0
+          };
+        });
+
+        return [
+          { ...this.defaultPollutionData[0], ...stats['co2'] },
+          { ...this.defaultPollutionData[1], ...stats['pm25'] },
+          { ...this.defaultPollutionData[2], ...stats['pm10'] },
+          { ...this.defaultPollutionData[3], ...stats['co'] },
+          { ...this.defaultPollutionData[4], ...stats['no2'] },
+        ];
+      }),
+      tap(() => this.isLoading$.next(false)),
+      catchError((err) => {
+        console.error('Error cargando resumen de contaminantes:', err);
+        this.isLoading$.next(false);
+        return of(this.defaultPollutionData);
+      }),
+      shareReplay(1)
+    );
   }
 
   getStatusBadge(status: string): string {

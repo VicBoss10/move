@@ -1,7 +1,11 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
+import { Observable, of, BehaviorSubject } from 'rxjs';
+import { map, catchError, tap, shareReplay } from 'rxjs/operators';
 
 // Registrar los scales y elementos
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
@@ -9,6 +13,7 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 /**
  * Componente que muestra un gráfico de línea con tendencias de Temperatura y Humedad
  * en las últimas 24 horas. Utiliza dos ejes Y para escalar independientemente.
+ * Conectado con SensorDataService para obtener datos reales del backend.
  * 
  * @selector app-environment-chart
  * @standalone true
@@ -18,60 +23,32 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
   templateUrl: './environment-chart.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EnvironmentChartComponent implements OnInit {
+export class EnvironmentChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   // Datos de las últimas 24 horas
-  timeLabels: string[] = [
+  private readonly timeLabels: string[] = [
     '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
     '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
     '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
     '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
   ];
 
-  // Datos simulados (reemplazar con backend)
-  tempData: number[] = [18, 17.8, 17.5, 17.2, 17.0, 17.5, 18.5, 20.0, 22.0, 23.5, 24.0, 24.5, 25.0, 25.5, 25.2, 24.8, 24.5, 24.0, 23.5, 23.0, 22.5, 21.5, 20.0, 19.0];
+  // Datos por defecto (se reemplazan con datos del backend)
+  private readonly defaultTempData: number[] = [18, 17.8, 17.5, 17.2, 17.0, 17.5, 18.5, 20.0, 22.0, 23.5, 24.0, 24.5, 25.0, 25.5, 25.2, 24.8, 24.5, 24.0, 23.5, 23.0, 22.5, 21.5, 20.0, 19.0];
   
-  humidityData: number[] = [72, 73, 74, 75, 76, 77, 75, 73, 70, 68, 65, 63, 62, 60, 61, 62, 63, 65, 67, 69, 70, 71, 71, 71];
+  private readonly defaultHumidityData: number[] = [72, 73, 74, 75, 76, 77, 75, 73, 70, 68, 65, 63, 62, 60, 61, 62, 63, 65, 67, 69, 70, 71, 71, 71];
+  
+  private isLoading$ = new BehaviorSubject<boolean>(true);
+  
+  /**
+   * Observable que emite la configuración del gráfico con datos reactivos
+   */
+  chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-  chartData: ChartConfiguration<'line'>['data'] = {
-    labels: this.timeLabels,
-    datasets: [
-      {
-        label: 'Temperatura (°C)',
-        data: this.tempData,
-        borderColor: '#f97316', // naranja
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#f97316',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y',
-      },
-      {
-        label: 'Humedad (%)',
-        data: this.humidityData,
-        borderColor: '#3b82f6', // azul
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#3b82f6',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y1',
-      },
-    ],
-  };
-
-  chartOptions: ChartConfiguration<'line'>['options'] = {
+  readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
     interaction: {
@@ -170,13 +147,90 @@ export class EnvironmentChartComponent implements OnInit {
     },
   };
 
-  ngOnInit() {
-    // Aquí conectas con tu servicio backend para obtener datos en tiempo real
-    // this.environmentService.getChartData().subscribe(data => {
-    //   this.chartData.datasets[0].data = data.co2;
-    //   this.chartData.datasets[1].data = data.temperature;
-    //   this.chartData.datasets[2].data = data.humidity;
-    //   this.chart?.update();
-    // });
+  constructor(private sensorDataService: SensorDataService) {
+    this.chartData$ = this.sensorDataService.getAll().pipe(
+      map((data: SensorData[]) => {
+        const tempData = data?.length > 0 ? data.map(d => d.temperature) : this.defaultTempData;
+        const humidityData = data?.length > 0 ? data.map(d => d.humidity) : this.defaultHumidityData;
+        
+        return {
+          labels: this.timeLabels,
+          datasets: [
+            {
+              label: 'Temperatura (°C)',
+              data: tempData,
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249, 115, 22, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#f97316',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Humedad (%)',
+              data: humidityData,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#3b82f6',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y1',
+            },
+          ],
+        };
+      }),
+      tap(() => this.isLoading$.next(false)),
+      catchError(err => {
+        console.error('Error cargando datos de sensores:', err);
+        this.isLoading$.next(false);
+        return of({
+          labels: this.timeLabels,
+          datasets: [
+            {
+              label: 'Temperatura (°C)',
+              data: this.defaultTempData,
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249, 115, 22, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#f97316',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Humedad (%)',
+              data: this.defaultHumidityData,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#3b82f6',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y1',
+            },
+          ],
+        });
+      }),
+      shareReplay(1)
+    );
   }
 }
+

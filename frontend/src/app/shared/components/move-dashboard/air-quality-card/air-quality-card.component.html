@@ -1,17 +1,17 @@
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
   <!-- Air Quality Metric Card -->
   <div 
-    *ngFor="let metric of metrics"
-    [class]="'rounded-2xl border p-5 md:p-6 ' + getStatusColor(metric.status)"
+    *ngFor="let metric of metrics$ | async"
+    [class]="'rounded-2xl border p-5 md:p-6 ' + ColorUtility.getStatusBgColor(metric.status)"
   >
     <!-- Icon Container -->
     <div class="flex items-center justify-between">
       <div class="flex items-center justify-center w-12 h-12 rounded-xl"
-           [class]="getIconBgColor(metric.status)">
+           [class]="ColorUtility.getStatusIconBgColor(metric.status)">
         <span [innerHTML]="metric.icon | safeHtml" 
-              [class]="getIconColor(metric.status)"></span>
+              [class]="ColorUtility.getStatusIconColor(metric.status)"></span>
       </div>
-      <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ' + getTextColor(metric.status)">
+      <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ' + ColorUtility.getStatusTextColor(metric.status)">
         {{ metric.statusLabel }}
       </span>
     </div>
@@ -22,7 +22,7 @@
       
       <!-- Valor principal -->
       <div class="mt-2 flex items-baseline gap-1">
-        <h4 [class]="'font-bold text-3xl ' + getTextColor(metric.status)">
+        <h4 [class]="'font-bold text-3xl ' + ColorUtility.getStatusTextColor(metric.status)">
           {{ metric.value }}
         </h4>
         <span class="text-xs text-gray-500 dark:text-gray-400">{{ metric.unit }}</span>
