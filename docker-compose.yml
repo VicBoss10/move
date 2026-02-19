@@ -42,6 +42,20 @@ services:
     networks:
       - move-network
 
+  pgadmin:
+    container_name: move-pgadmin
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    depends_on:
+      - move_db
+    networks:
+      - move-network
+    restart: unless-stopped
+
   #Servicio de Cloudflare Tunnel
   cloudflare-tunnel:
     container_name: cloudflare-tunnel

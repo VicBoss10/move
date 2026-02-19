@@ -1,32 +1,153 @@
-from ultralytics import YOLO
+"""
+Sistema de Detección de Vehículos con YOLO v11
+
+Este módulo es el punto de entrada principal del sistema de detección de vehículos.
+Permite procesar video desde múltiples fuentes (cámaras USB, streams de YouTube,
+archivos locales) y enviar las detecciones automáticamente al backend Spring Boot.
+
+Características:
+    - Detección en tiempo real con YOLO v11
+    - Soporte para múltiples fuentes de video
+    - Conteo de vehículos con deduplicación
+    - Integración automática con backend REST
+    - Interfaz visual con OpenCV
+
+Uso:
+    python src/main.py camera [índice]          # Cámara USB
+    python src/main.py stream [URL]             # Stream/YouTube/archivo
+
+Ejemplos:
+    python src/main.py camera                   # Cámara por defecto (0)
+    python src/main.py camera 1                 # Cámara índice 1
+    python src/main.py stream https://youtu.be/xxxxx
+    python src/main.py stream ./video.mp4       # Archivo local
+
+Author: Victor Narvaez
+Date: 2026-02-19
+"""
 import cv2
 import time
 import sys
-import yt_dlp
+import os
+import logging
 from pathlib import Path
+from datetime import datetime
+import config
+from detectors import VehicleDetector
+from video import CameraSource, StreamSource
+from api import BackendClient, VehicleDetectedEvent, YOLO_TO_VEHICLE_TYPE
 
-# Cargar el modelo YOLO 
-model_path = Path(__file__).parent.parent / "models" / "yolo11n.pt"
-model = YOLO(str(model_path))
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
-# Determinar fuente: camera o stream
-source_type = "stream"  # Por defecto
-video_url = "https://youtu.be/dzxoZoH192c"  # URL por defecto
 
-# Procesar argumentos de línea de comandos
+# =============================================================================
+# INICIALIZACIÓN DE COMPONENTES
+# =============================================================================
+
+try:
+    detector = VehicleDetector(
+        model_path=config.YOLO_MODEL_PATH,
+        vehicle_classes=config.VEHICLE_CLASSES,
+        dist_threshold=config.DIST_THRESHOLD,
+        time_threshold=config.TIME_THRESHOLD,
+        line_tolerance=config.LINE_TOLERANCE
+    )
+except FileNotFoundError:
+    print(f"✗ Error: No se encontró el modelo YOLO en {config.YOLO_MODEL_PATH}")
+    print("  Asegúrate de que el archivo existe en la carpeta 'models/'")
+    sys.exit(1)
+except Exception as e:
+    logger.error(f"Error al cargar el modelo YOLO: {e}")
+    sys.exit(1)
+
+backend_client = None
+if config.SEND_DETECTIONS_ENABLED:
+    if not isinstance(config.LOCATION_ID, int) or config.LOCATION_ID <= 0:
+        print("✗ Error: LOCATION_ID debe ser un entero positivo")
+        print(f"  Valor actual en config.py: {config.LOCATION_ID}")
+        sys.exit(1)
+    
+    if not config.BACKEND_URL or not isinstance(config.BACKEND_URL, str):
+        print("✗ Error: BACKEND_URL no está configurado correctamente")
+        sys.exit(1)
+    
+    try:
+        backend_client = BackendClient(
+            base_url=config.BACKEND_URL,
+            timeout=config.BACKEND_TIMEOUT
+        )
+        print(f"\n✓ Cliente backend configurado: {config.BACKEND_URL}")
+        print(f"  Location ID: {config.LOCATION_ID}")
+        print("  Las detecciones se enviarán automáticamente al backend\n")
+    except Exception as e:
+        print(f"✗ Error al inicializar cliente backend: {e}")
+        print("  Continuando sin integración con backend...\n")
+        backend_client = None
+
+
+# =============================================================================
+# PROCESAMIENTO DE ARGUMENTOS CLI
+# =============================================================================
+
+source_type = "stream"
+video_source = None
+
 if len(sys.argv) > 1:
     source_type = sys.argv[1].lower()
     
     if source_type == "camera":
-        # Usar cámara USB
-        camera_index = 0
+        camera_index = config.DEFAULT_CAMERA_INDEX
         if len(sys.argv) > 2:
-            camera_index = int(sys.argv[2])
-        video_url = camera_index
+            try:
+                camera_index = int(sys.argv[2])
+                if camera_index < 0:
+                    print("✗ Error: El índice de la cámara debe ser un número positivo")
+                    sys.exit(1)
+            except ValueError:
+                print(f"✗ Error: '{sys.argv[2]}' no es un índice de cámara válido")
+                print("  Usa un número entero (ej: 0, 1, 2)")
+                sys.exit(1)
+        video_source = CameraSource(camera_index)
+        
     elif source_type == "stream":
-        # Usar stream/YouTube/archivo
+        url = config.DEFAULT_VIDEO_URL
         if len(sys.argv) > 2:
-            video_url = sys.argv[2]
+            url = sys.argv[2]
+            
+            if not url.startswith(('http://', 'https://', 'rtsp://', 'rtmp://')):
+                file_path = Path(url)
+                if not file_path.exists():
+                    print(f"✗ Error: El archivo '{url}' no existe")
+                    print("  Verifica la ruta del archivo")
+                    sys.exit(1)
+                if not file_path.is_file():
+                    print(f"✗ Error: '{url}' no es un archivo válido")
+                    sys.exit(1)
+                
+                valid_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv', '.webm', '.m4v'}
+                if file_path.suffix.lower() not in valid_extensions:
+                    print(f"⚠ Advertencia: '{file_path.suffix}' puede no ser un formato de video soportado")
+                    print(f"  Formatos recomendados: {', '.join(valid_extensions)}")
+            else:
+                if url.startswith(('http://', 'https://')):
+                    if ' ' in url:
+                        print("✗ Error: La URL no puede contener espacios")
+                        sys.exit(1)
+                    if not ('youtube.com' in url or 'youtu.be' in url or url.endswith(('.m3u8', '.mp4'))):
+                        print("⚠ Advertencia: La URL puede no ser un stream de video válido")
+                        print("  Soportado: YouTube, archivos .mp4, streams .m3u8")
+        
+        video_source = StreamSource(
+            url=url,
+            ytdlp_options=config.YTDLP_OPTIONS,
+            ytdlp_download_options=config.YTDLP_DOWNLOAD_OPTIONS
+        )
+        
     else:
         print("Uso:")
         print("  python src/main.py camera [índice]          # Usar cámara (default 0)")
@@ -37,153 +158,170 @@ if len(sys.argv) > 1:
         print("  python src/main.py stream https://youtu.be/xxxxx")
         print("  python src/main.py stream ./video.mp4")
         sys.exit(0)
-
-# Si es stream de YouTube, obtener URL
-if source_type == "stream":
-    print(f"Obteniendo URL del stream de: {video_url}")
-
-# Extraer la URL del stream real de YouTube
-def get_stream_url(url):
-    ydl_opts = {
-        'format': 'best[ext=mp4]/best',
-        'quiet': False,
-        'no_warnings': False,
-        'socket_timeout': 30,
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['web', 'android'],
-            }
-        },
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-    }
-    try:
-        print("Intentando obtener información del video...")
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            print("Extrayendo información...")
-            info = ydl.extract_info(url, download=False)
-            print(f"✓ Video encontrado: {info.get('title', 'sin título')}")
-            video_url = info['url']
-            print(f"✓ URL del stream obtenida exitosamente")
-            return video_url
-    except Exception as e:
-        print(f"✗ Error: {e}")
-        return None
-
-# Solo procesar stream si es de tipo stream
-if source_type == "stream":
-    stream_url = get_stream_url(video_url)
-    if not stream_url:
-        print("\n⚠ No se pudo obtener el stream directo desde YouTube")
-        print("Intentando descargar el video localmente...")
-        try:
-            ydl_opts = {
-                'format': 'best[ext=mp4]/best',
-                'outtmpl': 'downloaded_video.mp4',
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-            }
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                print("Descargando video...")
-                ydl.download([video_url])
-            stream_url = "downloaded_video.mp4"
-            print("✓ Video descargado exitosamente")
-        except Exception as e:
-            print(f"✗ Error descargando: {e}")
-            print("\nAlternativa: Intenta con un archivo local:")
-            print("  python main.py stream ./tu-video.mp4")
-            exit(1)
 else:
-    # Es camera
-    stream_url = video_url 
+    video_source = StreamSource(
+        url=config.DEFAULT_VIDEO_URL,
+        ytdlp_options=config.YTDLP_OPTIONS,
+        ytdlp_download_options=config.YTDLP_DOWNLOAD_OPTIONS
+    )
 
-# Define las clases de vehículos según el modelo (pueden variar)
-VEHICLE_CLASSES = {"car", "truck", "bus", "motorcycle", "bicycle"}
 
-if source_type == "camera":
-    print(f"Abriendo cámara {stream_url}...")
-else:
-    print("Abriendo stream...")
+# =============================================================================
+# CONFIGURACIÓN DE VIDEO
+# =============================================================================
 
-cap = cv2.VideoCapture(stream_url)
+try:
+    if not video_source.open():
+        print("✗ No se pudo abrir la fuente de video")
+        sys.exit(1)
+except Exception as e:
+    print(f"✗ Error al abrir la fuente de video: {e}")
+    sys.exit(1)
 
-if not cap.isOpened():
-    print("✗ Error: No se pudo abrir el video/stream")
-    exit(1)
+cap = video_source.get_capture()
+if cap is None:
+    print("✗ Error: VideoCapture no está disponible")
+    sys.exit(1)
 
-print("✓ Video/stream abierto exitosamente")
+try:
+    fps = video_source.get_fps()
+    wait_time = int(1000 / fps)
+except ZeroDivisionError:
+    print("⚠ Advertencia: FPS inválido, usando valor por defecto (30)")
+    fps = 30
+    wait_time = 33
 
-fps = cap.get(cv2.CAP_PROP_FPS)
-wait_time = int(1000 / fps) if fps > 0 else 30
-
-# Definir la posición de la línea de conteo (por ejemplo, a la mitad de la imagen)
 ret, frame = cap.read()
 if not ret:
     print("✗ No se pudo leer el primer frame del video")
     print("Asegúrate de que el video sea accesible y esté en formato soportado")
-    exit()
-height, width, _ = frame.shape
-line_y = height // 2
+    sys.exit(1)
 
-vehicle_count = 0
-recent_centers = []  # Lista de (x, y, timestamp)
-DIST_THRESHOLD = 50  # píxeles de tolerancia en X para considerar que es el mismo vehículo
-TIME_THRESHOLD = 1.0  # segundos para considerar un centro como "reciente"
+try:
+    height, width, _ = frame.shape
+    line_y = height // 2
+except AttributeError:
+    print("✗ Error: Frame inválido recibido de la fuente de video")
+    sys.exit(1)
+
+
+# =============================================================================
+# VARIABLES DE CONTROL
+# =============================================================================
+
+frame_count = 0
+last_summary_time = time.time()
+SUMMARY_INTERVAL = 30
+
+
+# =============================================================================
+# INTERFAZ DE USUARIO - BANNER INICIAL
+# =============================================================================
+
+print("\n" + "="*60)
+print("  SISTEMA DE DETECCIÓN DE VEHÍCULOS - ACTIVO")
+print("="*60)
+print(f"  Resolución: {width}x{height} px")
+print(f"  Línea de conteo: Y={line_y}")
+print(f"  Presiona 'q' para salir")
+print("="*60 + "\n")
+
+
+# =============================================================================
+# BUCLE PRINCIPAL DE PROCESAMIENTO
+# =============================================================================
+"""
+El bucle principal procesa cada frame del video en 6 fases:
+1. Detección: YOLO identifica vehículos en el frame
+2. Visualización: Dibuja elementos visuales (línea, bounding boxes)
+3. Procesamiento: Cuenta vehículos que cruzan la línea y envía al backend
+4. Display: Muestra el frame procesado
+5. Resumen: Imprime estadísticas periódicas cada 30 segundos
+6. Control: Gestiona FPS y permite salida con 'q'
+"""
 
 while True:
-    start_time = time.time()
-    ret, frame = cap.read()
-    if not ret:
+    try:
+        start_time = time.time()
+        
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        frame_count += 1
+        
+        detector.clean_old_detections()
+        results = detector.detect(frame)
+        detections = detector.get_vehicle_detections(results)
+    except KeyboardInterrupt:
+        print("\n⚠ Interrupción detectada, finalizando...")
         break
-
-    now = time.time()
-    # Elimina centros viejos
-    recent_centers = [(x, y, t) for (x, y, t) in recent_centers if now - t < TIME_THRESHOLD]
-
-    results = model(frame)
-    boxes = results[0].boxes
-    names = results[0].names
-
+    except Exception as e:
+        print(f"\n✗ Error procesando frame {frame_count}: {e}")
+        print("  Continuando con siguiente frame...")
+        continue
+    
     vehicle_frame = frame.copy()
-    # Dibuja la línea horizontal de conteo
-    cv2.line(vehicle_frame, (0, line_y), (width, line_y), (0, 0, 255), 2)
+    cv2.line(vehicle_frame, (0, line_y), (width, line_y), 
+             config.LINE_COLOR, config.LINE_THICKNESS)
 
-    for i, box in enumerate(boxes):
-        cls_id = int(box.cls)
-        label = names[cls_id]
-        if label in VEHICLE_CLASSES:
-            xyxy = box.xyxy[0].cpu().numpy().astype(int)
-            conf = float(box.conf)
-            center_x = int((xyxy[0] + xyxy[2]) / 2)
-            center_y = int((xyxy[1] + xyxy[3]) / 2)
-            cv2.rectangle(vehicle_frame, (xyxy[0], xyxy[1]), (xyxy[2], xyxy[3]), (0, 255, 0), 2)
+    try:
+        for (xyxy, label, conf, center_x, center_y) in detections:
+            cv2.rectangle(vehicle_frame, (xyxy[0], xyxy[1]), (xyxy[2], xyxy[3]), 
+                         config.BBOX_COLOR, config.BBOX_THICKNESS)
             cv2.putText(vehicle_frame, f"{label} {conf:.2f}", (xyxy[0], xyxy[1] - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
             cv2.circle(vehicle_frame, (center_x, center_y), 4, (255, 0, 0), -1)
-            # Contar si cruza la línea y no ha sido contado antes
-            if abs(center_y - line_y) < 5:
-                if not any(abs(center_x - x) < DIST_THRESHOLD for (x, y, t) in recent_centers):
-                    vehicle_count += 1
-                    recent_centers.append((center_x, center_y, now))
+            
+            if detector.update_count(center_x, center_y, line_y):
+                if backend_client and label in YOLO_TO_VEHICLE_TYPE:
+                    try:
+                        event = VehicleDetectedEvent(
+                            vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
+                            timestamp=datetime.now(),
+                            location_id=config.LOCATION_ID
+                        )
+                        success = backend_client.send_detection(event)
+                        status = "✓" if success else "✗"
+                        print(f"{status} {label.upper():12s} | Total: {detector.get_count():3d} | "
+                              f"Enviado al backend: {'OK' if success else 'FAIL'}")
+                    except Exception as e:
+                        logger.error(f"Error al enviar detección: {e}")
+    except Exception as e:
+        logger.error(f"Error en procesamiento de detecciones: {e}")
 
-    # Asegúrate de que el frame tenga el tamaño correcto
-    vehicle_frame = cv2.resize(vehicle_frame, (width, height))
-
+    if vehicle_frame.shape[:2] != (height, width):
+        vehicle_frame = cv2.resize(vehicle_frame, (width, height))
+    
     title = f"YOLO Vehicle Detection & Counting - {source_type.upper()}"
     cv2.imshow(title, vehicle_frame)
+    
+    current_time = time.time()
+    if current_time - last_summary_time >= SUMMARY_INTERVAL:
+        print(f"\nRESUMEN ({SUMMARY_INTERVAL}s): {detector.get_count()} vehículos detectados | "
+              f"Frames procesados: {frame_count}\n")
+        last_summary_time = current_time
 
-    elapsed = (time.time() - start_time) * 1000  # en ms
+    elapsed = (time.time() - start_time) * 1000
     delay = max(1, int(wait_time - elapsed))
+    
     if cv2.waitKey(delay) & 0xFF == ord('q'):
         break
 
-cap.release()
-cv2.destroyAllWindows()
+
+# =============================================================================
+# LIMPIEZA Y RESUMEN FINAL
+# =============================================================================
+
+try:
+    video_source.release()
+    cv2.destroyAllWindows()
+except Exception as e:
+    logger.warning(f"Advertencia al liberar recursos: {e}")
 
 print(f"\n{'='*50}")
 print(f"Procesamiento completado")
 print(f"Fuente: {source_type.upper()}")
-print(f"Total de vehículos detectados: {vehicle_count}")
+print(f"Total de vehículos detectados: {detector.get_count()}")
+print(f"Frames procesados: {frame_count}")
 print(f"{'='*50}")
