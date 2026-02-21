@@ -1,6 +1,11 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { CameraService } from '../../../../core/services/camera.service';
+import { LocationService } from '../../../../core/services/location.service';
 
 /**
  * Interfaz para filtros de cámara
@@ -46,12 +51,13 @@ export interface LocationOption {
  * Permite filtrar por estado, ubicación y rango de fechas.
  *
  * Características:
- * - Filtro por estado de cámara
- * - Filtro por ubicación
+ * - Filtro por estado de cámara (local, no cambia)
+ * - Filtro por ubicación (dinámico del servicio)
  * - Rango de fechas personalizado
  * - Botones para limpiar y aplicar filtros
  * - Responsive grid layout
  * - Dark mode support
+ * - OnPush change detection para mejor performance
  *
  * @selector app-camera-filters
  * @standalone true
@@ -66,6 +72,7 @@ export interface LocationOption {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './camera-filters.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CameraFiltersComponent {
   /**
@@ -80,7 +87,7 @@ export class CameraFiltersComponent {
   };
 
   /**
-   * Opciones de estados disponibles
+   * Opciones de estados disponibles (constantes, no cambian)
    * @type {StateOption[]}
    */
   states: StateOption[] = [
@@ -91,23 +98,34 @@ export class CameraFiltersComponent {
   ];
 
   /**
-   * Opciones de ubicaciones disponibles
-   * @type {LocationOption[]}
+   * Observable de opciones de ubicaciones disponibles
+   * Cargadas dinámicamente del servicio LocationService
+   * @type {Observable<LocationOption[]>}
    */
-  @Input() locations: LocationOption[] = [
-    { id: 0, name: 'Todas las ubicaciones' },
-    { id: 1, name: 'Carrera 7 con Calle 10' },
-    { id: 2, name: 'Parque Arvi' },
-    { id: 3, name: 'Centro Comercial El Hueco' },
-    { id: 4, name: 'Terminal de Transporte' },
-    { id: 5, name: 'Calle Principal Envigado' },
-  ];
+  locations$: Observable<LocationOption[]>;
 
   /**
    * Evento que emite cuando los filtros cambian
    * @type {EventEmitter<CameraFilters>}
    */
   @Output() filtersChanged = new EventEmitter<CameraFilters>();
+
+  constructor(private locationService: LocationService) {
+    this.locations$ = this.locationService.getAll().pipe(
+      map((locations) => [
+        { id: 0, name: 'Todas las ubicaciones' },
+        ...locations.map((loc) => ({
+          id: loc.id,
+          name: loc.description || `Ubicación ${loc.id}`,
+        })),
+      ]),
+      catchError((error) => {
+        console.error('Error loading locations:', error);
+        return of([{ id: 0, name: 'Todas las ubicaciones' }]);
+      }),
+      shareReplay(1)
+    );
+  }
 
   /**
    * Aplica los filtros actuales

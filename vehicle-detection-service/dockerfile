@@ -1,0 +1,28 @@
+# Imagen única optimizada
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar dependencias del sistema para OpenCV headless y ffmpeg
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copiar e instalar dependencias Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt \
+    && rm -rf /root/.cache/pip
+
+# Copiar código fuente y modelos
+COPY src ./src
+COPY models ./models
+
+EXPOSE 5000
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+CMD ["python", "src/api_server.py"]

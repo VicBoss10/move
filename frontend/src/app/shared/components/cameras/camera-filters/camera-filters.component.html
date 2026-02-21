@@ -30,7 +30,7 @@
         name="location"
         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-400"
       >
-        <option *ngFor="let loc of locations" [value]="loc.id">
+        <option *ngFor="let loc of locations$ | async" [value]="loc.id">
           {{ loc.name }}
         </option>
       </select>

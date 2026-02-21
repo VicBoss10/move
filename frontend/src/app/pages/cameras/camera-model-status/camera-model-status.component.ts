@@ -1,8 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { map, tap, catchError, shareReplay } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { CameraStatusCardsComponent, CameraStats } from '../../../shared/components/cameras/camera-status-cards/camera-status-cards.component';
 import { CameraDeviceTableComponent } from '../../../shared/components/cameras/camera-device-table/camera-device-table.component';
 import { CameraFiltersComponent } from '../../../shared/components/cameras/camera-filters/camera-filters.component';
+import { CameraService } from '../../../core/services/camera.service';
+
+interface ModelInfo {
+  version: string;
+  accuracy: number;
+  lastUpdate: string;
+  detectionFramework: string;
+  processingTime: string;
+  memoryUsage: string;
+}
 
 /**
  * CameraModelStatusComponent
@@ -11,8 +24,8 @@ import { CameraFiltersComponent } from '../../../shared/components/cameras/camer
  * y estadísticas de funcionamiento de las cámaras.
  *
  * Características:
- * - Tarjetas de estado de cámaras
- * - Tabla de dispositivos con sus estados
+ * - Tarjetas de estado de cámaras (datos dinámicos)
+ * - Tabla de dispositivos con sus estados (datos dinámicos)
  * - Filtros para buscar cámaras
  * - Indicadores de salud del sistema
  * - Gráficos de rendimiento
@@ -36,34 +49,65 @@ import { CameraFiltersComponent } from '../../../shared/components/cameras/camer
     CameraFiltersComponent,
   ],
   templateUrl: './camera-model-status.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CameraModelStatusComponent {
-  /**
-   * Estadísticas del sistema de cámaras
-   * En producción, esto vendría de un servicio
-   * @type {CameraStats}
-   */
-  stats: CameraStats = {
-    totalCameras: 12,
-    activeCameras: 10,
-    inactiveCameras: 1,
-    failingCameras: 1,
-    vehiclesDetected: 2847,
-    uptime: 98.5,
-  };
+  isLoading$ = new BehaviorSubject<boolean>(false);
 
-  /**
-   * Información del modelo de detección
-   * @type {object}
-   */
-  modelInfo = {
-    version: '2.1.0',
-    accuracy: 94.7,
-    lastUpdate: '2026-01-28 10:30:00',
-    detectionFramework: 'YOLOv8',
-    processingTime: '45ms',
-    memoryUsage: '2.4 GB',
-  };
+  cameraStats$: Observable<CameraStats>;
+  modelInfo$: Observable<ModelInfo>;
+
+  constructor(private cameraService: CameraService) {
+    this.cameraStats$ = this.cameraService.getAll().pipe(
+      map((cameras) => ({
+        totalCameras: cameras.length,
+        activeCameras: cameras.filter((c) => c.device.state === 'ACTIVE').length,
+        inactiveCameras: cameras.filter((c) => c.device.state === 'INACTIVE').length,
+        failingCameras: cameras.filter((c) => c.device.state === 'FAILING').length,
+        vehiclesDetected: 0, // Este valor sería dinámico de un endpoint si existe
+        uptime: 98.5, // Este valor sería dinámico de un endpoint si existe
+      })),
+      tap(() => this.isLoading$.next(false)),
+      catchError((error) => {
+        console.error('Error loading camera stats:', error);
+        return of({
+          totalCameras: 0,
+          activeCameras: 0,
+          inactiveCameras: 0,
+          failingCameras: 0,
+          vehiclesDetected: 0,
+          uptime: 0,
+        });
+      }),
+      shareReplay(1)
+    );
+
+    this.modelInfo$ = of({
+      version: '2.1.0',
+      accuracy: 94.7,
+      lastUpdate: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      detectionFramework: 'YOLOv8',
+      processingTime: '45ms',
+      memoryUsage: '2.4 GB',
+    }).pipe(
+      tap(() => this.isLoading$.next(false)),
+      catchError((error) => {
+        console.error('Error loading model info:', error);
+        return of({
+          version: 'N/A',
+          accuracy: 0,
+          lastUpdate: 'N/A',
+          detectionFramework: 'N/A',
+          processingTime: 'N/A',
+          memoryUsage: 'N/A',
+        });
+      }),
+      shareReplay(1)
+    );
+
+    this.isLoading$.next(true);
+  }
+
 
   /**
    * Maneja cambios en los filtros

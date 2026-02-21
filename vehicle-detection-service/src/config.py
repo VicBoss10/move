@@ -1,4 +1,5 @@
 """Configuración centralizada para el servicio de detección de vehículos"""
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent
@@ -43,7 +44,14 @@ LINE_THICKNESS = 2
 BBOX_COLOR = (0, 255, 0)
 BBOX_THICKNESS = 2
 
-BACKEND_URL = "http://localhost:8080"
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8080")
 LOCATION_ID = 1
 BACKEND_TIMEOUT = 5
 SEND_DETECTIONS_ENABLED = True
+
+FLASK_HOST = os.environ.get("FLASK_HOST", "0.0.0.0")
+FLASK_PORT = int(os.environ.get("FLASK_PORT", "5000"))
+FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+
+STREAM_MAX_FPS = 30
+STREAM_JPEG_QUALITY = 85

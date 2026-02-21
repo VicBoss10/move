@@ -23,8 +23,22 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - PYTHON_SERVICE_URL=http://vehicle-detection:5000
     depends_on:
       - move_db
+      - vehicle-detection
+    networks:
+      - move-network
+
+  vehicle-detection:
+    container_name: move-vehicle-detection
+    build:
+      context: ./vehicle-detection-service
+      dockerfile: dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - BACKEND_URL=http://backend:8080
     networks:
       - move-network
 
@@ -56,7 +70,6 @@ services:
       - move-network
     restart: unless-stopped
 
-  #Servicio de Cloudflare Tunnel
   cloudflare-tunnel:
     container_name: cloudflare-tunnel
     image: cloudflare/cloudflared:latest

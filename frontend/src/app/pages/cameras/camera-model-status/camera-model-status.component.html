@@ -8,7 +8,9 @@
   </div>
 
   <!-- Tarjetas de Estadísticas -->
-  <app-camera-status-cards [stats]="stats" />
+  <ng-container *ngIf="cameraStats$ | async as stats">
+    <app-camera-status-cards [stats]="stats" />
+  </ng-container>
 
   <!-- Grid de Información del Modelo -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -19,12 +21,12 @@
       <div class="space-y-4">
         <div class="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
           <span class="text-sm text-gray-600 dark:text-gray-400">Versión del Modelo</span>
-          <span class="font-medium text-gray-900 dark:text-white">{{ modelInfo.version }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{ (modelInfo$ | async)?.version }}</span>
         </div>
 
         <div class="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
           <span class="text-sm text-gray-600 dark:text-gray-400">Framework</span>
-          <span class="font-medium text-gray-900 dark:text-white">{{ modelInfo.detectionFramework }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{ (modelInfo$ | async)?.detectionFramework }}</span>
         </div>
 
         <div class="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
@@ -33,26 +35,26 @@
             <div class="h-2 w-32 rounded-full bg-gray-200 dark:bg-gray-700">
               <div
                 class="h-full rounded-full bg-green-500"
-                [style.width]="modelInfo.accuracy + '%'"
+                [style.width]="(modelInfo$ | async)?.accuracy + '%'"
               ></div>
             </div>
-            <span class="font-medium text-gray-900 dark:text-white">{{ modelInfo.accuracy }}%</span>
+            <span class="font-medium text-gray-900 dark:text-white">{{ (modelInfo$ | async)?.accuracy }}%</span>
           </div>
         </div>
 
         <div class="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
           <span class="text-sm text-gray-600 dark:text-gray-400">Tiempo de Procesamiento</span>
-          <span class="font-medium text-gray-900 dark:text-white">{{ modelInfo.processingTime }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{ (modelInfo$ | async)?.processingTime }}</span>
         </div>
 
         <div class="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
           <span class="text-sm text-gray-600 dark:text-gray-400">Uso de Memoria</span>
-          <span class="font-medium text-gray-900 dark:text-white">{{ modelInfo.memoryUsage }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{ (modelInfo$ | async)?.memoryUsage }}</span>
         </div>
 
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-600 dark:text-gray-400">Última Actualización</span>
-          <span class="font-medium text-gray-900 dark:text-white">{{ modelInfo.lastUpdate }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{ (modelInfo$ | async)?.lastUpdate }}</span>
         </div>
       </div>
     </div>

@@ -1,5 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable, of } from 'rxjs';
+import { catchError, shareReplay } from 'rxjs/operators';
+import { CameraService } from '../../../../core/services/camera.service';
+import { Camera } from '../../../../core/models/camera.model';
 
 /**
  * Interfaz para ubicación de cámara
@@ -40,9 +44,10 @@ export interface CameraDevice {
  * Características:
  * - Tabla responsiva con estado visual
  * - Indicadores de color por estado (ACTIVE, INACTIVE, FAILING)
- * - Información de ubicación y coordenadas
+ * - Datos dinámicos del servicio CameraService
  * - Responsive en mobile/tablet/desktop
  * - Dark mode support
+ * - OnPush change detection para mejor performance
  *
  * @selector app-camera-device-table
  * @standalone true
@@ -50,76 +55,31 @@ export interface CameraDevice {
  * @returns Tabla de dispositivos de cámara
  *
  * @example
- * <app-camera-device-table [devices]="cameraDevices" />
+ * <app-camera-device-table />
  */
 @Component({
   selector: 'app-camera-device-table',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './camera-device-table.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CameraDeviceTableComponent {
   /**
-   * Lista de dispositivos de cámara a mostrar
-   * @type {CameraDevice[]}
+   * Cameras Observable - carga datos dinámicamente del servicio
+   * @type {Observable<Camera[]>}
    */
-  @Input() devices: CameraDevice[] = [
-    {
-      id: 1,
-      name: 'Cámara Carrera 7',
-      state: 'ACTIVE',
-      location: {
-        id: 1,
-        latitude: 6.244192,
-        length: -75.563199,
-        description: 'Carrera 7 con Calle 10',
-      },
-    },
-    {
-      id: 2,
-      name: 'Cámara Parque Arvi',
-      state: 'ACTIVE',
-      location: {
-        id: 2,
-        latitude: 6.320284,
-        length: -75.531389,
-        description: 'Parque Arvi',
-      },
-    },
-    {
-      id: 3,
-      name: 'Cámara Centro Comercial',
-      state: 'INACTIVE',
-      location: {
-        id: 3,
-        latitude: 6.217038,
-        length: -75.574668,
-        description: 'Centro Comercial El Hueco',
-      },
-    },
-    {
-      id: 4,
-      name: 'Cámara Terminal',
-      state: 'FAILING',
-      location: {
-        id: 4,
-        latitude: 6.253523,
-        length: -75.527319,
-        description: 'Terminal de Transporte',
-      },
-    },
-    {
-      id: 5,
-      name: 'Cámara Envigado',
-      state: 'ACTIVE',
-      location: {
-        id: 5,
-        latitude: 6.168383,
-        length: -75.595947,
-        description: 'Calle Principale Envigado',
-      },
-    },
-  ];
+  cameras$: Observable<Camera[]>;
+
+  constructor(private cameraService: CameraService) {
+    this.cameras$ = this.cameraService.getAll().pipe(
+      catchError((error) => {
+        console.error('Error loading cameras:', error);
+        return of([] as Camera[]);
+      }),
+      shareReplay(1)
+    );
+  }
 
   /**
    * Obtiene el color del badge según el estado
