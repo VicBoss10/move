@@ -1,4 +1,5 @@
-<div class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02]" [ngClass]="getGaugeBgColor()">
+<ng-container *ngIf="gaugeData$ | async as data">
+  <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02]" [ngClass]="'bg-gradient-to-br ' + getGaugeBgColor(data.humidity)">
   <!-- Header -->
   <div class="px-5 pt-5 sm:px-6 sm:pt-6">
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
@@ -24,15 +25,15 @@
           r="90"
           fill="none"
           [attr.stroke-dasharray]="564.4"
-          [attr.stroke-dashoffset]="564.4 - (564.4 * gaugePercentage) / 100"
+          [attr.stroke-dashoffset]="564.4 - (564.4 * data.gaugePercentage) / 100"
           stroke-width="12"
           stroke-linecap="round"
-          [ngClass]="'origin-center -rotate-90 transition-all duration-500 text-gauge transition-all duration-500 ' + gaugeColor"
+          [ngClass]="'origin-center -rotate-90 transition-all duration-500 ' + data.gaugeColor"
         />
 
         <!-- Center text -->
-        <text x="100" y="95" text-anchor="middle" class="text-3xl font-bold fill-current" [class]="gaugeColor">
-          {{ humidity }}
+        <text x="100" y="95" text-anchor="middle" class="text-3xl font-bold fill-current" [class]="data.gaugeColor">
+          {{ data.humidity }}
         </text>
         <text x="100" y="115" text-anchor="middle" class="text-sm fill-gray-500 dark:fill-gray-400">
           %
@@ -43,8 +44,8 @@
     <!-- Status -->
     <div class="mt-6 text-center">
       <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Estado</p>
-      <p [class]="'mt-1 text-lg font-bold ' + gaugeColor">
-        {{ status }}
+      <p [class]="'mt-1 text-lg font-bold ' + data.gaugeColor">
+        {{ data.status }}
       </p>
     </div>
 
@@ -70,4 +71,5 @@
       </div>
     </div>
   </div>
-</div>
+  </div>
+</ng-container>

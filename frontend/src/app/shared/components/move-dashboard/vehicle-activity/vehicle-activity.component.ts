@@ -39,8 +39,8 @@ export class VehicleActivityComponent {
    */
   vehicleCounts$!: Observable<number[]>;
 
-  // Datos de vehículos detectados
-  private vehicleTypes: string[] = ['Carros', 'Motos', 'Buses', 'Camiones'];
+  // Datos de vehículos detectados - Mapeado al enum VehicleType del backend
+  private vehicleTypes: string[] = ['Carros', 'Motos', 'Buses', 'Camiones', 'Bicicletas'];
 
   chartOptions: ChartConfiguration<'bar'>['options'] = {
     indexAxis: 'y',
@@ -116,18 +116,20 @@ export class VehicleActivityComponent {
     datasets: [
       {
         label: 'Cantidad de Vehículos',
-        data: [0, 0, 0, 0],
+        data: [0, 0, 0, 0, 0],
         backgroundColor: [
           '#3b82f6', // Azul para Carros
           '#10b981', // Verde para Motos
           '#f97316', // Naranja para Buses
           '#ef4444', // Rojo para Camiones
+          '#8b5cf6', // Púrpura para Bicicletas
         ],
         borderColor: [
           '#1e40af',
           '#059669',
           '#ea580c',
           '#dc2626',
+          '#6d28d9',
         ],
         borderWidth: 1,
         borderRadius: 4,
@@ -143,11 +145,14 @@ export class VehicleActivityComponent {
           return this.defaultChartData;
         }
 
-        // Contar vehículos por tipo
+        // Contar vehículos por tipo - Mapeado a: [Carros, Motos, Buses, Camiones, Bicicletas]
         const carCount = vehicles.filter((v: any) => v.vehicleType === 'CAR').length;
+        const motorcycleCount = vehicles.filter((v: any) => v.vehicleType === 'MOTORCYCLE').length;
         const busCount = vehicles.filter((v: any) => v.vehicleType === 'BUS').length;
+        const truckCount = vehicles.filter((v: any) => v.vehicleType === 'TRUCK').length;
+        const bicycleCount = vehicles.filter((v: any) => v.vehicleType === 'BICYCLE').length;
 
-        const vehicleCounts = [carCount, 0, busCount, 0]; // [Carros, Motos, Buses, Camiones]
+        const vehicleCounts = [carCount, motorcycleCount, busCount, truckCount, bicycleCount];
 
         return {
           ...this.defaultChartData,
@@ -172,17 +177,20 @@ export class VehicleActivityComponent {
     this.vehicleCounts$ = this.vehicleService.getAll().pipe(
       map((vehicles: any[]) => {
         if (!vehicles || vehicles.length === 0) {
-          return [0, 0, 0, 0];
+          return [0, 0, 0, 0, 0];
         }
 
         const carCount = vehicles.filter((v: any) => v.vehicleType === 'CAR').length;
+        const motorcycleCount = vehicles.filter((v: any) => v.vehicleType === 'MOTORCYCLE').length;
         const busCount = vehicles.filter((v: any) => v.vehicleType === 'BUS').length;
+        const truckCount = vehicles.filter((v: any) => v.vehicleType === 'TRUCK').length;
+        const bicycleCount = vehicles.filter((v: any) => v.vehicleType === 'BICYCLE').length;
 
-        return [carCount, 0, busCount, 0]; // [Carros, Motos, Buses, Camiones]
+        return [carCount, motorcycleCount, busCount, truckCount, bicycleCount];
       }),
       catchError((err) => {
         console.error('Error cargando conteos de vehículos:', err);
-        return of([0, 0, 0, 0]);
+        return of([0, 0, 0, 0, 0]);
       }),
       shareReplay(1)
     );

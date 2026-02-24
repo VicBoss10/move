@@ -32,6 +32,10 @@ import { CameraModelStatusComponent } from './pages/cameras/camera-model-status/
 import { LocationMonitoringComponent } from './pages/locations/location-monitoring/location-monitoring.component';
 import { LocationHistoryComponent } from './pages/locations/location-history/location-history.component';
 import { LocationMapPageComponent } from './pages/locations/location-map/location-map.component';
+import { RegisterDeviceComponent } from './pages/devices/register-device/register-device.component';
+import { ConnectedSensorsComponent } from './pages/devices/connected-sensors/connected-sensors.component';
+import { DeviceStatusComponent } from './pages/devices/device-status/device-status.component';
+import { DeviceLogsComponent } from './pages/devices/device-logs/device-logs.component';
 
 
 // Definir rutas del dashboard una sola vez
@@ -103,6 +107,31 @@ const DASHBOARD_ROUTES: Routes = [
         path: 'model-status',
         component: CameraModelStatusComponent,
         title: 'Estado del Modelo'
+      }
+    ]
+  },
+  {
+    path: 'devices',
+    children: [
+      {
+        path: 'register-device',
+        component: RegisterDeviceComponent,
+        title: 'Registrar Dispositivo'
+      },
+      {
+        path: 'connected-sensors',
+        component: ConnectedSensorsComponent,
+        title: 'Sensores Conectados'
+      },
+      {
+        path: 'device-status',
+        component: DeviceStatusComponent,
+        title: 'Estado de Dispositivos'
+      },
+      {
+        path: 'device-logs',
+        component: DeviceLogsComponent,
+        title: 'Logs del Sistema'
       }
     ]
   },

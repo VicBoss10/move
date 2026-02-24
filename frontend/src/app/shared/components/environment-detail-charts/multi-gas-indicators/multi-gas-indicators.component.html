@@ -1,5 +1,6 @@
-<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-  @for (gas of gasIndicators; track gas.symbol) {
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+  <ng-container *ngIf="gasIndicators$ | async as indicators">
+    @for (gas of indicators; track gas.symbol) {
   <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02]" [ngClass]="gas.bgColor">
     <!-- Header -->
     <div class="px-4 pt-4 sm:px-5 sm:pt-5">
@@ -48,5 +49,6 @@
       </p>
     </div>
   </div>
-  }
+    }
+  </ng-container>
 </div>

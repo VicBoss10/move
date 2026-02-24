@@ -78,10 +78,10 @@ export class AppSidebarComponent {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><rect x="7" y="7" width="10" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 7v10M21 7v10M7 3h10M7 21h10" stroke="currentColor" stroke-width="2"/></svg>`,
       name: "Dispositivos",
       subItems: [
-        { name: "ESP32", path: "/profile" },
-        { name: "Sensores Conectados", path: "/profile" },
-        { name: "Estado", path: "/profile" },
-        { name: "Logs del Dispositivo", path: "/profile" },
+        { name: "Registrar Dispositivo", path: "/dashboard/devices/register-device" },
+        { name: "Dispositivos Conectados", path: "/dashboard/devices/connected-sensors" },
+        { name: "Estado", path: "/dashboard/devices/device-status" },
+        { name: "Logs del Dispositivo", path: "/dashboard/devices/device-logs" },
       ],
     },
     {

@@ -1,5 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 /**
  * Interface para estadísticas de partículas
@@ -18,8 +21,8 @@ interface PMStats {
 /**
  * PmStatsTableComponent
  *
- * Componente que muestra tabla con estadísticas de PM2.5 y PM10.
- * Incluye actual, mínimo, máximo, promedio y variación porcentual.
+ * Componente que muestra tabla con estadísticas dinámicas de PM2.5 y PM10.
+ * Obtiene datos en tiempo real del backend.
  *
  * @selector app-pm-stats-table
  * @standalone true
@@ -34,44 +37,112 @@ interface PMStats {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './pm-stats-table.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PmStatsTableComponent implements OnInit {
+export class PmStatsTableComponent {
   /**
-   * Estadísticas de partículas
-   * @type {PMStats[]}
+   * Observable que emite estadísticas de partículas
    */
-  pmStats: PMStats[] = [
+  pmStats$!: Observable<PMStats[]>;
+
+  private readonly defaultStats: PMStats[] = [
     {
       symbol: 'PM2.5',
       name: 'Partículas Finas',
-      actual: 18.5,
-      minimo: 12.3,
-      maximo: 28.9,
-      promedio: 20.1,
-      variacion: 5.2,
+      actual: 0,
+      minimo: 0,
+      maximo: 0,
+      promedio: 0,
+      variacion: 0,
       unit: 'µg/m³',
     },
     {
       symbol: 'PM10',
       name: 'Partículas Gruesas',
-      actual: 35.2,
-      minimo: 25.1,
-      maximo: 52.5,
-      promedio: 38.5,
-      variacion: 3.8,
+      actual: 0,
+      minimo: 0,
+      maximo: 0,
+      promedio: 0,
+      variacion: 0,
       unit: 'µg/m³',
     },
   ];
 
-  ngOnInit(): void {
-    // TODO: Cargar datos reales del servicio
-    // this.loadPMStats();
+  constructor(private sensorDataService: SensorDataService) {
+    this.initializePMStats();
+  }
+
+  /**
+   * Inicializa estadísticas de partículas desde el servicio
+   */
+  private initializePMStats(): void {
+    this.pmStats$ = this.sensorDataService.getAll().pipe(
+      map((sensorData: any[]) => {
+        if (!sensorData || sensorData.length === 0) {
+          return this.defaultStats;
+        }
+
+        // Extraer valores de cada partícula
+        const pm25Values = sensorData.map((d) => d.pm25 || 0);
+        const pm10Values = sensorData.map((d) => d.pm10 || 0);
+
+        return [
+          {
+            ...this.defaultStats[0],
+            actual: this.getLatestValue(pm25Values),
+            minimo: Math.min(...pm25Values),
+            maximo: Math.max(...pm25Values),
+            promedio: this.calculateAverage(pm25Values),
+            variacion: this.calculateVariation(pm25Values),
+          },
+          {
+            ...this.defaultStats[1],
+            actual: this.getLatestValue(pm10Values),
+            minimo: Math.min(...pm10Values),
+            maximo: Math.max(...pm10Values),
+            promedio: this.calculateAverage(pm10Values),
+            variacion: this.calculateVariation(pm10Values),
+          },
+        ];
+      }),
+      catchError((error) => {
+        console.error('Error cargando estadísticas de partículas:', error);
+        return of(this.defaultStats);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Obtiene el último valor de un array
+   */
+  private getLatestValue(values: number[]): number {
+    return values.length > 0 ? values[values.length - 1] : 0;
+  }
+
+  /**
+   * Calcula el promedio de un array
+   */
+  private calculateAverage(values: number[]): number {
+    if (values.length === 0) return 0;
+    const sum = values.reduce((acc, val) => acc + val, 0);
+    return Math.round((sum / values.length) * 10) / 10;
+  }
+
+  /**
+   * Calcula la variación porcentual
+   */
+  private calculateVariation(values: number[]): number {
+    if (values.length < 2) return 0;
+    const latest = values[values.length - 1];
+    const previous = values[values.length - 2];
+    if (previous === 0) return 0;
+    const variation = ((latest - previous) / previous) * 100;
+    return Math.round(Math.abs(variation) * 10) / 10;
   }
 
   /**
    * Obtiene clase de color para la variación
-   * @param {number} variacion - Valor de variación
-   * @returns {string} Clases CSS de Tailwind
    */
   getVariationColor(variacion: number): string {
     if (variacion > 5) return 'text-red-600 dark:text-red-400';

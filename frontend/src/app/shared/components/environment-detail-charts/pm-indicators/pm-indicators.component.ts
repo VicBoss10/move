@@ -1,5 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 /**
  * Interface para indicador de partículas
@@ -18,9 +21,9 @@ interface PMIndicator {
 /**
  * PmIndicatorsComponent
  *
- * Componente que muestra 2 indicadores circulares para partículas:
- * PM2.5 (Partículas finas) y PM10 (Partículas gruesas)
- * Cada gauge muestra el nivel con código de color según calidad del aire.
+ * Componente que muestra 2 indicadores circulares dinámicos para partículas:
+ * PM2.5 (Partículas finas) y PM10 (Partículas gruesas).
+ * Obtiene datos en tiempo real del backend.
  *
  * @selector app-pm-indicators
  * @standalone true
@@ -35,38 +38,85 @@ interface PMIndicator {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './pm-indicators.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PmIndicatorsComponent implements OnInit {
+export class PmIndicatorsComponent {
   /**
-   * Array de indicadores de partículas
-   * @type {PMIndicator[]}
+   * Observable que emite array de indicadores de partículas con valores actuales
    */
-  pmIndicators: PMIndicator[] = [
+  pmIndicators$!: Observable<PMIndicator[]>;
+
+  private readonly defaultIndicators: PMIndicator[] = [
     {
       name: 'Partículas Finas',
       symbol: 'PM2.5',
-      value: 18.5,
+      value: 0,
       unit: 'µg/m³',
       color: 'text-indigo-500',
       bgColor: 'from-indigo-500/20 to-indigo-600/20',
       maxValue: 100,
-      status: 'Moderado',
+      status: 'Normal',
     },
     {
       name: 'Partículas Gruesas',
       symbol: 'PM10',
-      value: 35.2,
+      value: 0,
       unit: 'µg/m³',
       color: 'text-orange-500',
       bgColor: 'from-orange-500/20 to-orange-600/20',
       maxValue: 150,
-      status: 'Moderado',
+      status: 'Normal',
     },
   ];
 
-  ngOnInit(): void {
-    // TODO: Cargar datos reales del servicio
-    // this.loadPMData();
+  constructor(private sensorDataService: SensorDataService) {
+    this.initializePMIndicators();
+  }
+
+  /**
+   * Inicializa los indicadores de partículas desde el servicio
+   */
+  private initializePMIndicators(): void {
+    this.pmIndicators$ = this.sensorDataService.getLatest().pipe(
+      map((latestData: any) => [
+        {
+          ...this.defaultIndicators[0],
+          value: Math.round((latestData?.pm25 || 0) * 10) / 10,
+          status: this.getStatusPM(latestData?.pm25, 'PM25'),
+        },
+        {
+          ...this.defaultIndicators[1],
+          value: Math.round((latestData?.pm10 || 0) * 10) / 10,
+          status: this.getStatusPM(latestData?.pm10, 'PM10'),
+        },
+      ]),
+      catchError((error) => {
+        console.error('Error cargando indicadores de partículas:', error);
+        return of(this.defaultIndicators);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Determina el estado de una partícula basado en su valor
+   */
+  private getStatusPM(value: number, type: string): string {
+    if (!value) return 'Normal';
+
+    // Thresholds para calidad del aire
+    if (type === 'PM25') {
+      if (value > 55.5) return 'Muy Malo';
+      if (value > 35.5) return 'Malo';
+      if (value > 12.1) return 'Moderado';
+      if (value > 0) return 'Bueno';
+    } else if (type === 'PM10') {
+      if (value > 154) return 'Muy Malo';
+      if (value > 154) return 'Malo';
+      if (value > 35) return 'Moderado';
+      if (value > 0) return 'Bueno';
+    }
+    return 'Normal';
   }
 
   /**

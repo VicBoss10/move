@@ -1,12 +1,25 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
+
+/**
+ * Interface para datos del gauge de temperatura
+ */
+interface GaugeData {
+  temperature: number;
+  gaugePercentage: number;
+  gaugeColor: string;
+  status: string;
+}
 
 /**
  * TemperatureGaugeComponent
  *
- * Componente que muestra indicador circular de temperatura en °C.
+ * Componente que muestra indicador circular dinámico de temperatura en °C.
  * Rango de -10°C a 50°C con código de color según condiciones.
- * Colores: Azul (frío), Verde (óptimo), Naranja (calor), Rojo (crítico).
+ * Obtiene datos en tiempo real del backend.
  *
  * @selector app-temperature-gauge
  * @standalone true
@@ -21,71 +34,84 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './temperature-gauge.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TemperatureGaugeComponent implements OnInit {
+export class TemperatureGaugeComponent {
   /**
-   * Valor actual de temperatura en °C
-   * @type {number}
+   * Observable que emite datos del gauge (temperatura, porcentaje, color, estado)
    */
-  temperature: number = 22.5;
+  gaugeData$!: Observable<GaugeData>;
 
-  /**
-   * Porcentaje de llenado del gauge (0-100)
-   * @type {number}
-   */
-  gaugePercentage: number = 0;
+  private readonly defaultGaugeData: GaugeData = {
+    temperature: 0,
+    gaugePercentage: 0,
+    gaugeColor: 'text-gray-500',
+    status: 'Normal',
+  };
 
-  /**
-   * Clase de color para el indicador
-   * @type {string}
-   */
-  gaugeColor: string = '';
-
-  /**
-   * Estado de la temperatura
-   * @type {string}
-   */
-  status: string = '';
-
-  ngOnInit(): void {
-    this.calculateGaugeValues();
+  constructor(private sensorDataService: SensorDataService) {
+    this.initializeGaugeData();
   }
 
   /**
-   * Calcula porcentaje y color según temperatura
-   * Rango: -10°C a 50°C
-   * @returns {void}
-   * @private
+   * Inicializa los datos del gauge desde el servicio
    */
-  private calculateGaugeValues(): void {
-    // Mapear rango -10 a 50°C a 0-100%
-    this.gaugePercentage = ((this.temperature + 10) / 60) * 100;
-    this.gaugePercentage = Math.max(0, Math.min(100, this.gaugePercentage));
+  private initializeGaugeData(): void {
+    this.gaugeData$ = this.sensorDataService.getLatest().pipe(
+      map((latestData: any) => {
+        const temperature = Math.round((latestData?.temperature || 0) * 10) / 10;
+        
+        return {
+          temperature,
+          gaugePercentage: this.calculateGaugePercentage(temperature),
+          gaugeColor: this.getGaugeColor(temperature),
+          status: this.getStatus(temperature),
+        };
+      }),
+      catchError((error) => {
+        console.error('Error cargando datos de temperatura:', error);
+        return of(this.defaultGaugeData);
+      }),
+      shareReplay(1)
+    );
+  }
 
-    // Determinar color y estado
-    if (this.temperature < 15) {
-      this.gaugeColor = 'text-blue-500';
-      this.status = 'Frío';
-    } else if (this.temperature < 25) {
-      this.gaugeColor = 'text-green-500';
-      this.status = 'Óptimo';
-    } else if (this.temperature < 35) {
-      this.gaugeColor = 'text-orange-500';
-      this.status = 'Calor';
-    } else {
-      this.gaugeColor = 'text-red-500';
-      this.status = 'Muy Caliente';
-    }
+  /**
+   * Calcula porcentaje de llenado del gauge (rango -10°C a 50°C)
+   */
+  private calculateGaugePercentage(temperature: number): number {
+    // Mapear rango -10 a 50°C a 0-100%
+    const percentage = ((temperature + 10) / 60) * 100;
+    return Math.max(0, Math.min(100, percentage));
+  }
+
+  /**
+   * Obtiene clase de color según temperatura
+   */
+  private getGaugeColor(temperature: number): string {
+    if (temperature < 15) return 'text-blue-500';
+    if (temperature < 25) return 'text-green-500';
+    if (temperature < 35) return 'text-orange-500';
+    return 'text-red-500';
+  }
+
+  /**
+   * Obtiene estado según temperatura
+   */
+  private getStatus(temperature: number): string {
+    if (temperature < 15) return 'Frío';
+    if (temperature < 25) return 'Óptimo';
+    if (temperature < 35) return 'Calor';
+    return 'Muy Caliente';
   }
 
   /**
    * Obtiene color de fondo según temperatura
-   * @returns {string} Clases CSS de Tailwind
    */
-  getGaugeBgColor(): string {
-    if (this.temperature < 15) return 'from-blue-500/20 to-blue-600/20';
-    if (this.temperature < 25) return 'from-green-500/20 to-green-600/20';
-    if (this.temperature < 35) return 'from-orange-500/20 to-orange-600/20';
+  getGaugeBgColor(temperature: number): string {
+    if (temperature < 15) return 'from-blue-500/20 to-blue-600/20';
+    if (temperature < 25) return 'from-green-500/20 to-green-600/20';
+    if (temperature < 35) return 'from-orange-500/20 to-orange-600/20';
     return 'from-red-500/20 to-red-600/20';
   }
 }

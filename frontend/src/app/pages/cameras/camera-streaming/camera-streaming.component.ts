@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Subject, takeUntil } from 'rxjs';
 import { CameraDeviceTableComponent } from '../../../shared/components/cameras/camera-device-table/camera-device-table.component';
@@ -10,7 +11,7 @@ import { Camera, StreamResponse } from '../../../core/models/camera.model';
 @Component({
   selector: 'app-camera-streaming',
   standalone: true,
-  imports: [CommonModule, CameraDeviceTableComponent, CameraFiltersComponent],
+  imports: [CommonModule, RouterModule, CameraDeviceTableComponent, CameraFiltersComponent],
   templateUrl: './camera-streaming.component.html',
 })
 export class CameraStreamingComponent implements OnInit, OnDestroy {

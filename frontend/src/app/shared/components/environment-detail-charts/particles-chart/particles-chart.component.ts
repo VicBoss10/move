@@ -1,80 +1,54 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 // Registrar los scales y elementos
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
 
 /**
- * Componente que muestra un gráfico de línea comparativo de partículas
- * PM2.5 y PM10 en las últimas 24 horas. Mediciones en µg/m³.
+ * Componente que muestra un gráfico dinámico de línea comparativo de partículas
+ * PM2.5 y PM10 en las últimas 24 horas desde la base de datos.
+ * Utiliza RxJS Observables y ChangeDetectionStrategy.OnPush.
  * 
  * @selector app-particles-chart
  * @standalone true
- * @imports CommonModule, BaseChartDirective
- * @param None
- * @returns Gráfico interactivo de comparación de partículas
  */
 @Component({
   selector: 'app-particles-chart',
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
   templateUrl: './particles-chart.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ParticlesChartComponent implements OnInit {
+export class ParticlesChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   // Datos de las últimas 24 horas
-  timeLabels: string[] = [
+  private readonly timeLabels: string[] = [
     '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
     '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
     '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
     '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
   ];
 
-  // Datos simulados en µg/m³ (reemplazar con backend)
-  pm25Data: number[] = [28, 30, 32, 35, 38, 40, 42, 45, 48, 52, 55, 58, 60, 62, 65, 63, 61, 58, 55, 52, 48, 45, 40, 35];
-  
-  pm10Data: number[] = [45, 48, 50, 55, 60, 65, 70, 75, 80, 85, 90, 92, 95, 98, 100, 98, 95, 92, 88, 85, 80, 75, 70, 65];
+  /**
+   * Observable que emite la configuración del gráfico con datos reactivos
+   */
+  chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-  chartData: ChartConfiguration<'line'>['data'] = {
-    labels: this.timeLabels,
-    datasets: [
-      {
-        label: 'PM2.5 (µg/m³)',
-        data: this.pm25Data,
-        borderColor: '#6366f1', // índigo
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#6366f1',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y',
-      },
-      {
-        label: 'PM10 (µg/m³)',
-        data: this.pm10Data,
-        borderColor: '#f97316', // naranja
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#f97316',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y',
-      },
-    ],
-  };
+  /**
+   * Observable que emite valores actuales de partículas
+   */
+  pmValues$!: Observable<{
+    pm25: number;
+    pm10: number;
+  }>;
 
-  chartOptions: ChartConfiguration<'line'>['options'] = {
+  readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
     interaction: {
@@ -154,12 +128,106 @@ export class ParticlesChartComponent implements OnInit {
     },
   };
 
-  ngOnInit() {
-    // Aquí conectas con tu servicio backend para obtener datos en tiempo real
-    // this.environmentService.getParticlesData().subscribe(data => {
-    //   this.chartData.datasets[0].data = data.pm25;
-    //   this.chartData.datasets[1].data = data.pm10;
-    //   this.chart?.update();
-    // });
+  private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
+    labels: this.timeLabels,
+    datasets: [
+      {
+        label: 'PM2.5 (µg/m³)',
+        data: Array(24).fill(0),
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#6366f1',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        yAxisID: 'y',
+      },
+      {
+        label: 'PM10 (µg/m³)',
+        data: Array(24).fill(0),
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#f97316',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        yAxisID: 'y',
+      },
+    ],
+  };
+
+  constructor(private sensorDataService: SensorDataService) {
+    this.initializeChartData();
+    this.initializePMValues();
+  }
+
+  /**
+   * Inicializa los datos del gráfico desde el servicio
+   */
+  private initializeChartData(): void {
+    this.chartData$ = this.sensorDataService.getAll().pipe(
+      map((sensorData: any[]) => {
+        if (!sensorData || sensorData.length === 0) {
+          return this.defaultChartData;
+        }
+
+        // Obtener los últimos 24 valores de cada partícula
+        const pm25Values = sensorData.map((d) => d.pm25 || 0);
+        const pm10Values = sensorData.map((d) => d.pm10 || 0);
+
+        // Tomar últimos 24 valores
+        const displayPM25 = pm25Values.length > 24 ? pm25Values.slice(-24) : pm25Values;
+        const displayPM10 = pm10Values.length > 24 ? pm10Values.slice(-24) : pm10Values;
+
+        // Usar labels según la cantidad de datos
+        const displayLabels = this.timeLabels.slice(0, Math.max(displayPM25.length, displayPM10.length));
+
+        return {
+          labels: displayLabels,
+          datasets: [
+            {
+              ...this.defaultChartData.datasets![0],
+              data: displayPM25,
+            },
+            {
+              ...this.defaultChartData.datasets![1],
+              data: displayPM10,
+            },
+          ],
+        };
+      }),
+      catchError((error) => {
+        console.error('Error cargando datos de partículas:', error);
+        return of(this.defaultChartData);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Inicializa los valores actuales de las partículas
+   */
+  private initializePMValues(): void {
+    this.pmValues$ = this.sensorDataService.getLatest().pipe(
+      map((latestData: any) => ({
+        pm25: Math.round((latestData?.pm25 || 0) * 10) / 10,
+        pm10: Math.round((latestData?.pm10 || 0) * 10) / 10,
+      })),
+      catchError(() =>
+        of({
+          pm25: 0,
+          pm10: 0,
+        })
+      ),
+      shareReplay(1)
+    );
   }
 }

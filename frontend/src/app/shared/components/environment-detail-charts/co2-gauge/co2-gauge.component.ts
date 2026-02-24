@@ -1,90 +1,101 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 /**
  * Co2GaugeComponent
  *
- * Componente especializado para mostrar el nivel de CO₂ actual en un indicador circular (gauge).
- * Muestra el valor en ppm con código de color según rango de calidad del aire.
- * Rangos: Bajo (<600 ppm), Moderado (600-1000), Elevado (1000-1500), Crítico (>1500)
+ * Componente dinámico que muestra el nivel de CO₂ actual en un indicador circular (gauge).
+ * Obtiene datos en tiempo real del backend usando SensorDataService.
+ * Código de color según rango: Óptimo (<600), Moderado (600-1000), Elevado (1000-1500), Crítico (>1500)
  *
  * @selector app-co2-gauge
  * @standalone true
- * @imports CommonModule
- * @returns Indicador circular de CO₂
- *
- * @example
- * <app-co2-gauge />
  */
 @Component({
   selector: 'app-co2-gauge',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './co2-gauge.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Co2GaugeComponent implements OnInit {
+export class Co2GaugeComponent {
   /**
-   * Valor actual de CO₂ en ppm
-   * @type {number}
+   * Observable que emite los datos actuales del gauge de CO₂
    */
-  co2Value: number = 480;
+  gaugeData$!: Observable<{
+    co2Value: number;
+    gaugePercentage: number;
+    gaugeColor: string;
+    status: string;
+    bgColor: string;
+  }>;
 
-  /**
-   * Porcentaje de llenado del gauge (0-100)
-   * @type {number}
-   */
-  gaugePercentage: number = 0;
-
-  /**
-   * Clase de color para el indicador según rango
-   * @type {string}
-   */
-  gaugeColor: string = '';
-
-  /**
-   * Estado/Rango del CO₂
-   * @type {string}
-   */
-  status: string = '';
-
-  ngOnInit(): void {
-    this.calculateGaugeValues();
+  constructor(private sensorDataService: SensorDataService) {
+    this.initializeGaugeData();
   }
 
   /**
-   * Calcula el porcentaje y color del gauge según valor de CO₂
-   * Máximo: 2000 ppm para cálculo de porcentaje
-   * @returns {void}
-   * @private
+   * Inicializa los datos del gauge desde el servicio
    */
-  private calculateGaugeValues(): void {
-    // Calcular porcentaje (máximo 2000 ppm)
-    this.gaugePercentage = Math.min((this.co2Value / 2000) * 100, 100);
+  private initializeGaugeData(): void {
+    this.gaugeData$ = this.sensorDataService.getLatest().pipe(
+      map((latestData: any) => {
+        const co2Value = latestData?.co2 || 0;
+        return this.calculateGaugeData(co2Value);
+      }),
+      catchError((error) => {
+        console.error('Error cargando datos de CO₂:', error);
+        return of(this.calculateGaugeData(0));
+      }),
+      shareReplay(1)
+    );
+  }
 
-    // Determinar color y estado
-    if (this.co2Value < 600) {
-      this.gaugeColor = 'text-green-500';
-      this.status = 'Óptimo';
-    } else if (this.co2Value < 1000) {
-      this.gaugeColor = 'text-blue-500';
-      this.status = 'Moderado';
-    } else if (this.co2Value < 1500) {
-      this.gaugeColor = 'text-orange-500';
-      this.status = 'Elevado';
+  /**
+   * Calcula todos los valores del gauge basado en el valor de CO₂
+   * @param co2Value - Valor de CO₂ en ppm
+   * @returns Objeto con datos del gauge
+   */
+  private calculateGaugeData(co2Value: number): {
+    co2Value: number;
+    gaugePercentage: number;
+    gaugeColor: string;
+    status: string;
+    bgColor: string;
+  } {
+    const gaugePercentage = Math.min((co2Value / 2000) * 100, 100);
+
+    let gaugeColor = '';
+    let status = '';
+    let bgColor = '';
+
+    if (co2Value < 600) {
+      gaugeColor = 'text-green-500';
+      status = 'Óptimo';
+      bgColor = 'from-green-500/20 to-green-600/20';
+    } else if (co2Value < 1000) {
+      gaugeColor = 'text-blue-500';
+      status = 'Moderado';
+      bgColor = 'from-blue-500/20 to-blue-600/20';
+    } else if (co2Value < 1500) {
+      gaugeColor = 'text-orange-500';
+      status = 'Elevado';
+      bgColor = 'from-orange-500/20 to-orange-600/20';
     } else {
-      this.gaugeColor = 'text-red-500';
-      this.status = 'Crítico';
+      gaugeColor = 'text-red-500';
+      status = 'Crítico';
+      bgColor = 'from-red-500/20 to-red-600/20';
     }
-  }
 
-  /**
-   * Obtiene el color de fondo del gauge según rango
-   * @returns {string} Clases CSS de Tailwind
-   */
-  getGaugeBgColor(): string {
-    if (this.co2Value < 600) return 'from-green-500/20 to-green-600/20';
-    if (this.co2Value < 1000) return 'from-blue-500/20 to-blue-600/20';
-    if (this.co2Value < 1500) return 'from-orange-500/20 to-orange-600/20';
-    return 'from-red-500/20 to-red-600/20';
+    return {
+      co2Value,
+      gaugePercentage,
+      gaugeColor,
+      status,
+      bgColor,
+    };
   }
 }

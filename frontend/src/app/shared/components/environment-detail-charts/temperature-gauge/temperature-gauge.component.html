@@ -1,73 +1,75 @@
-<div class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02]" [ngClass]="getGaugeBgColor()">
-  <!-- Header -->
-  <div class="px-5 pt-5 sm:px-6 sm:pt-6">
-    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-      Temperatura Actual
-    </h3>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-      Indicador de temperatura
-    </p>
-  </div>
-
-  <!-- Gauge Container -->
-  <div class="flex flex-col items-center justify-center px-5 py-8 sm:px-6">
-    <!-- SVG Gauge -->
-    <div class="relative w-40 h-40">
-      <svg class="w-full h-full" viewBox="0 0 200 200">
-        <!-- Background circle -->
-        <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" stroke-width="12" class="text-gray-200 dark:text-gray-700" />
-        
-        <!-- Progress circle -->
-        <circle
-          cx="100"
-          cy="100"
-          r="90"
-          fill="none"
-          [attr.stroke-dasharray]="564.4"
-          [attr.stroke-dashoffset]="564.4 - (564.4 * gaugePercentage) / 100"
-          stroke-width="12"
-          stroke-linecap="round"
-          [ngClass]="'origin-center -rotate-90 transition-all duration-500 ' + gaugeColor"
-        />
-
-        <!-- Center text -->
-        <text x="100" y="95" text-anchor="middle" class="text-3xl font-bold fill-current" [class]="gaugeColor">
-          {{ temperature }}
-        </text>
-        <text x="100" y="115" text-anchor="middle" class="text-sm fill-gray-500 dark:fill-gray-400">
-          °C
-        </text>
-      </svg>
-    </div>
-
-    <!-- Status -->
-    <div class="mt-6 text-center">
-      <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Estado</p>
-      <p [class]="'mt-1 text-lg font-bold ' + gaugeColor">
-        {{ status }}
+<ng-container *ngIf="gaugeData$ | async as data">
+  <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02]" [ngClass]="'bg-gradient-to-br ' + getGaugeBgColor(data.temperature)">
+    <!-- Header -->
+    <div class="px-5 pt-5 sm:px-6 sm:pt-6">
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+        Temperatura Actual
+      </h3>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Indicador de temperatura
       </p>
     </div>
 
-    <!-- Temperature Scale -->
-    <div class="mt-8 w-full">
-      <div class="flex items-center justify-between gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-        <div class="text-center">
-          <div class="h-2 w-2 rounded-full bg-blue-500 mx-auto mb-1"></div>
-          <span>&lt;15°C</span>
-        </div>
-        <div class="text-center">
-          <div class="h-2 w-2 rounded-full bg-green-500 mx-auto mb-1"></div>
-          <span>15-25°C</span>
-        </div>
-        <div class="text-center">
-          <div class="h-2 w-2 rounded-full bg-orange-500 mx-auto mb-1"></div>
-          <span>25-35°C</span>
-        </div>
-        <div class="text-center">
-          <div class="h-2 w-2 rounded-full bg-red-500 mx-auto mb-1"></div>
-          <span>&gt;35°C</span>
+    <!-- Gauge Container -->
+    <div class="flex flex-col items-center justify-center px-5 py-8 sm:px-6">
+      <!-- SVG Gauge -->
+      <div class="relative w-40 h-40">
+        <svg class="w-full h-full" viewBox="0 0 200 200">
+          <!-- Background circle -->
+          <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" stroke-width="12" class="text-gray-200 dark:text-gray-700" />
+          
+          <!-- Progress circle -->
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            fill="none"
+            [attr.stroke-dasharray]="564.4"
+            [attr.stroke-dashoffset]="564.4 - (564.4 * data.gaugePercentage) / 100"
+            stroke-width="12"
+            stroke-linecap="round"
+            [ngClass]="'origin-center -rotate-90 transition-all duration-500 ' + data.gaugeColor"
+          />
+
+          <!-- Center text -->
+          <text x="100" y="95" text-anchor="middle" class="text-3xl font-bold fill-current" [class]="data.gaugeColor">
+            {{ data.temperature }}
+          </text>
+          <text x="100" y="115" text-anchor="middle" class="text-sm fill-gray-500 dark:fill-gray-400">
+            °C
+          </text>
+        </svg>
+      </div>
+
+      <!-- Status -->
+      <div class="mt-6 text-center">
+        <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Estado</p>
+        <p [class]="'mt-1 text-lg font-bold ' + data.gaugeColor">
+          {{ data.status }}
+        </p>
+      </div>
+
+      <!-- Temperature Scale -->
+      <div class="mt-8 w-full">
+        <div class="flex items-center justify-between gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+          <div class="text-center">
+            <div class="h-2 w-2 rounded-full bg-blue-500 mx-auto mb-1"></div>
+            <span>&lt;15°C</span>
+          </div>
+          <div class="text-center">
+            <div class="h-2 w-2 rounded-full bg-green-500 mx-auto mb-1"></div>
+            <span>15-25°C</span>
+          </div>
+          <div class="text-center">
+            <div class="h-2 w-2 rounded-full bg-orange-500 mx-auto mb-1"></div>
+            <span>25-35°C</span>
+          </div>
+          <div class="text-center">
+            <div class="h-2 w-2 rounded-full bg-red-500 mx-auto mb-1"></div>
+            <span>&gt;35°C</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</ng-container>

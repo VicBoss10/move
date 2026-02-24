@@ -1,7 +1,13 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
+
+// Registrar los scales y elementos
+ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
 
 /**
  * HumidityChartComponent
@@ -32,45 +38,34 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
   templateUrl: './humidity-chart.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HumidityChartComponent implements OnInit {
+export class HumidityChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Etiquetas de tiempo para el eje X (24 horas)
-   * @type {string[]}
-   * @private
+   * Observable que emite la configuración del gráfico con datos reactivos
    */
-  private timeLabels: string[] = [
+  chartData$!: Observable<ChartConfiguration<'line'>['data']>;
+
+  /**
+   * Observable que emite valor actual de humedad
+   */
+  humidityValue$!: Observable<number>;
+
+  private readonly timeLabels: string[] = [
     '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
     '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
     '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00',
+    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
   ];
 
-  /**
-   * Datos de humedad relativa (%) para 24 horas
-   * Rango: 66-83%
-   * @type {number[]}
-   * @private
-   */
-  private humidityData: number[] = [
-    75, 73, 71, 70, 69, 68,
-    67, 68, 70, 72, 74, 75,
-    76, 77, 78, 80, 81, 83,
-    82, 81, 80, 78, 77, 76,
-  ];
-
-  /**
-   * Configuración de datos del gráfico
-   * @type {ChartConfiguration<'line'>['data']}
-   */
-  chartData: ChartConfiguration<'line'>['data'] = {
+  private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
     labels: this.timeLabels,
     datasets: [
       {
         label: 'Humedad Relativa (%)',
-        data: this.humidityData,
+        data: Array(24).fill(0),
         borderColor: '#3b82f6',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         borderWidth: 3,
@@ -85,11 +80,7 @@ export class HumidityChartComponent implements OnInit {
     ],
   };
 
-  /**
-   * Opciones de configuración del gráfico
-   * @type {ChartOptions<'line'>}
-   */
-  chartOptions: ChartOptions<'line'> = {
+  readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
     interaction: {
@@ -131,12 +122,38 @@ export class HumidityChartComponent implements OnInit {
       },
     },
     scales: {
+      x: {
+        display: true,
+        grid: {
+          display: true,
+          drawOnChartArea: true,
+          drawTicks: false,
+          color: 'rgba(107, 114, 128, 0.1)',
+        },
+        ticks: {
+          color: '#6B7280',
+          font: {
+            size: 11,
+          },
+          maxTicksLimit: 12,
+        },
+      },
       y: {
-        beginAtZero: false,
-        min: 60,
+        type: 'linear',
+        display: true,
+        position: 'left',
+        title: {
+          display: true,
+          text: 'Humedad (%)',
+          color: '#3b82f6',
+          font: {
+            weight: 'bold',
+          },
+        },
+        min: 0,
         max: 100,
         ticks: {
-          color: '#9ca3af',
+          color: '#3b82f6',
           font: {
             size: 11,
           },
@@ -145,47 +162,71 @@ export class HumidityChartComponent implements OnInit {
           },
         },
         grid: {
-          color: 'rgba(156, 163, 175, 0.1)',
+          color: 'rgba(107, 114, 128, 0.1)',
           display: true,
         },
       },
-      x: {
-        ticks: {
-          color: '#9ca3af',
-          font: {
-            size: 10,
-          },
-        },
-        grid: {
-          display: false,
-        },
-      },
+
     },
   };
 
-  ngOnInit(): void {
-    // TODO: Integrar con servicio backend para obtener datos reales de humedad
-    // this.loadHumidityData();
+  constructor(private sensorDataService: SensorDataService) {
+    this.initializeChartData();
+    this.initializeHumidityValue();
   }
 
-  /**
-   * Método para cargar datos reales desde el backend
-   * @returns {void}
-   * @private
-   *
-   * @example
-   * private loadHumidityData(): void {
-   *   this.environmentService.getHumidityData().subscribe({
-   *     next: (data) => {
-   *       this.humidityData = data.values;
-   *       this.chart?.chart?.update();
-   *     },
-   *     error: (error) => console.error('Error loading humidity data:', error),
-   *   });
-   * }
-   */
-  private loadHumidityData(): void {
-    // Placeholder para carga de datos del servicio
-    // Será implementado cuando el backend esté disponible
+  private initializeChartData(): void {
+    this.chartData$ = this.sensorDataService.getAll().pipe(
+      map((sensorData: any[]) => {
+        if (!sensorData || sensorData.length === 0) {
+          return this.defaultChartData;
+        }
+        const humidityValues = sensorData.map((d) => d.humidity || 0);
+        const displayHumidity = humidityValues.length > 24 ? humidityValues.slice(-24) : humidityValues;
+        const displayLabels = this.timeLabels.slice(0, Math.max(displayHumidity.length));
+        return {
+          labels: displayLabels,
+          datasets: [
+            {
+              ...this.defaultChartData.datasets![0],
+              data: displayHumidity,
+            },
+          ],
+        };
+      }),
+      catchError((error) => {
+        console.error('Error cargando datos de humedad:', error);
+        return of(this.defaultChartData);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  private initializeHumidityValue(): void {
+    this.humidityValue$ = this.sensorDataService.getLatest().pipe(
+      map((latestData: any) => Math.round((latestData?.humidity || 0) * 10) / 10),
+      catchError(() => of(0)),
+      shareReplay(1)
+    );
+  }
+
+  getMinValue(values: any[]): number {
+    if (!values || values.length === 0) return 0;
+    const numValues = values.filter(v => typeof v === 'number');
+    return numValues.length > 0 ? Math.min(...numValues) : 0;
+  }
+
+  getAvgValue(values: any[]): number {
+    if (!values || values.length === 0) return 0;
+    const numValues = values.filter(v => typeof v === 'number');
+    if (numValues.length === 0) return 0;
+    const sum = numValues.reduce((acc, val) => acc + val, 0);
+    return Math.round((sum / numValues.length) * 10) / 10;
+  }
+
+  getMaxValue(values: any[]): number {
+    if (!values || values.length === 0) return 0;
+    const numValues = values.filter(v => typeof v === 'number');
+    return numValues.length > 0 ? Math.max(...numValues) : 0;
   }
 }

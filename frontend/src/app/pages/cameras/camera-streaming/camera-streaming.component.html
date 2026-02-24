@@ -1,9 +1,20 @@
 <div class="space-y-6">
-  <div class="flex flex-col gap-2">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Streaming de Cámaras</h1>
-    <p class="text-gray-600 dark:text-gray-400">
-      Vista en vivo y monitoreo de dispositivos de cámara instalados en la ciudad
-    </p>
+  <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Streaming de Cámaras</h1>
+      <p class="text-gray-600 dark:text-gray-400">
+        Vista en vivo y monitoreo de dispositivos de cámara instalados en la ciudad
+      </p>
+    </div>
+    <button
+      [routerLink]="['/dashboard/devices/register-device']"
+      class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+    >
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Registrar Cámara
+    </button>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,5 +1,6 @@
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-  @for (pm of pmIndicators; track pm.symbol) {
+  <ng-container *ngIf="pmIndicators$ | async as indicators">
+    @for (pm of indicators; track pm.symbol) {
   <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02]" [ngClass]="pm.bgColor">
     <!-- Header -->
     <div class="px-5 pt-5 sm:px-6 sm:pt-6">
@@ -48,5 +49,6 @@
       </p>
     </div>
   </div>
-  }
+    }
+  </ng-container>
 </div>

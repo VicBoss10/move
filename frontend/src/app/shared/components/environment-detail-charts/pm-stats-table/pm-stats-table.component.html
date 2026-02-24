@@ -35,31 +35,33 @@
         </tr>
       </thead>
       <tbody>
-        @for (pm of pmStats; track pm.symbol) {
-        <tr class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50">
-          <td class="whitespace-nowrap px-5 py-4 sm:px-6">
-            <div>
-              <p class="font-semibold text-gray-900 dark:text-white">{{ pm.symbol }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">{{ pm.name }}</p>
-            </div>
-          </td>
-          <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
-            {{ pm.actual }} {{ pm.unit }}
-          </td>
-          <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-gray-600 dark:text-gray-400 sm:px-6">
-            {{ pm.minimo }}
-          </td>
-          <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-gray-600 dark:text-gray-400 sm:px-6">
-            {{ pm.maximo }}
-          </td>
-          <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-blue-600 dark:text-blue-400 sm:px-6">
-            {{ pm.promedio }}
-          </td>
-          <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium sm:px-6" [class]="getVariationColor(pm.variacion)">
-            {{ pm.variacion }}%
-          </td>
-        </tr>
-        }
+        <ng-container *ngIf="pmStats$ | async as stats">
+          @for (pm of stats; track pm.symbol) {
+          <tr class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50">
+            <td class="whitespace-nowrap px-5 py-4 sm:px-6">
+              <div>
+                <p class="font-semibold text-gray-900 dark:text-white">{{ pm.symbol }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ pm.name }}</p>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
+              {{ pm.actual | number: '1.0-1' }} {{ pm.unit }}
+            </td>
+            <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-gray-600 dark:text-gray-400 sm:px-6">
+              {{ pm.minimo | number: '1.0-1' }}
+            </td>
+            <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-gray-600 dark:text-gray-400 sm:px-6">
+              {{ pm.maximo | number: '1.0-1' }}
+            </td>
+            <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-blue-600 dark:text-blue-400 sm:px-6">
+              {{ pm.promedio | number: '1.0-1' }}
+            </td>
+            <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium sm:px-6" [class]="getVariationColor(pm.variacion)">
+              {{ pm.variacion | number: '1.0-1' }}%
+            </td>
+          </tr>
+          }
+        </ng-container>
       </tbody>
     </table>
   </div>
