@@ -69,6 +69,7 @@ export class AppSidebarComponent {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M12 21s-6-5.686-6-10A6 6 0 0 1 18 11c0 4.314-6 10-6 10Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="11" r="2" stroke="currentColor" stroke-width="2"/></svg>`,
       name: "Ubicaciones",
       subItems: [
+        { name: "Registrar Ubicación", path: "/dashboard/locations/register-location" },
         { name: "Puntos de Monitoreo", path: "/dashboard/locations/monitoring" },
         { name: "Mapa", path: "/dashboard/locations/map" },
         { name: "Historial por Ubicación", path: "/dashboard/locations/history" },

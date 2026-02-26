@@ -51,16 +51,16 @@ export interface VehicleStats {
 })
 export class VehicleStatsCardsComponent {
   /**
-   * Estadísticas a mostrar
+   * Estadísticas a mostrar (recibidas desde el padre)
    * @type {VehicleStats}
    */
   @Input() stats: VehicleStats = {
-    totalDetected: 1247,
-    activeNow: 23,
-    carCount: 452,
-    motorcycleCount: 234,
-    busCount: 89,
-    truckCount: 56,
+    totalDetected: 0,
+    activeNow: 0,
+    carCount: 0,
+    motorcycleCount: 0,
+    busCount: 0,
+    truckCount: 0,
   };
 
   /**

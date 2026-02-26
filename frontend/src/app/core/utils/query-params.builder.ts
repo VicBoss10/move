@@ -39,18 +39,36 @@ export class QueryParamsBuilder {
 
   /**
    * Agrega un rango de fechas
+   * IMPORTANTE: Se envían como zona local, NO UTC, para coincidir con datos en BD
    * @param start - Fecha inicial
    * @param end - Fecha final
    * @returns this para chainable pattern
    */
   addDateRange(start?: Date, end?: Date): this {
     if (start) {
-      this.params['start'] = start.toISOString();
+      this.params['start'] = this.formatDateToLocal(start);
     }
     if (end) {
-      this.params['end'] = end.toISOString();
+      this.params['end'] = this.formatDateToLocal(end);
     }
     return this;
+  }
+
+  /**
+   * Formatea una fecha como ISO 8601 en zona LOCAL (no UTC)
+   * Esto asegura que fechas coincidan con datos en BD que están en zona local
+   * @private
+   * @param date - Fecha a formatear
+   * @returns Fecha en formato YYYY-MM-DDTHH:mm:ss
+   */
+  private formatDateToLocal(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
 
   /**

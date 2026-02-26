@@ -12,7 +12,7 @@
         Tipo de Vehículo
       </label>
       <select
-        [(ngModel)]="filters.type"
+        [(ngModel)]="selectedType"
         class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
       >
         <option value="">Todos los tipos</option>
@@ -28,12 +28,13 @@
         Ubicación
       </label>
       <select
-        [(ngModel)]="filters.location"
-        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        [(ngModel)]="selectedLocationId"
+        [disabled]="isLoadingLocations"
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:disabled:opacity-40"
       >
-        <option value="">Todas las ubicaciones</option>
-        <option *ngFor="let location of locations" [value]="location.id">
-          {{ location.name }}
+        <option [value]="null">{{ isLoadingLocations ? 'Cargando...' : 'Todas las ubicaciones' }}</option>
+        <option *ngFor="let location of loadedLocations" [value]="location.id">
+          {{ location.description || 'Ubicación ' + location.id }}
         </option>
       </select>
     </div>
@@ -45,7 +46,7 @@
       </label>
       <input
         type="date"
-        [(ngModel)]="filters.startDate"
+        [(ngModel)]="startDate"
         class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
       />
     </div>
@@ -57,7 +58,7 @@
       </label>
       <input
         type="date"
-        [(ngModel)]="filters.endDate"
+        [(ngModel)]="endDate"
         class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
       />
     </div>

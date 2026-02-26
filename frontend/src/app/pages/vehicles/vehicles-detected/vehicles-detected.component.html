@@ -1,11 +1,28 @@
 <div class="grid grid-cols-12 gap-4 md:gap-6">
   <!-- Filtros -->
   <div class="col-span-12">
-    <app-vehicle-filters />
+    <app-vehicle-filters (filterChange)="handleFilterChange($event)" />
   </div>
 
   <!-- Tabla de Vehículos -->
   <div class="col-span-12">
-    <app-vehicle-table [vehicles]="vehicles" />
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+      <div class="text-gray-500">Cargando vehículos...</div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="errorMessage && !isLoading" class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <p class="text-red-600">{{ errorMessage }}</p>
+    </div>
+
+    <!-- Table -->
+    <app-vehicle-table [vehicles]="filteredVehicles" *ngIf="!isLoading && !errorMessage" />
+
+    <!-- Empty state -->
+    <div *ngIf="!isLoading && filteredVehicles.length === 0 && !errorMessage" 
+         class="flex flex-col items-center justify-center py-12 text-gray-500">
+      <p>No hay vehículos detectados</p>
+    </div>
   </div>
 </div>

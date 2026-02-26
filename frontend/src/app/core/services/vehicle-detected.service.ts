@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { tap, map, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { VehicleDetected, VehicleSearchCriteria, VehicleStats } from '../models/vehicle.model';
@@ -42,6 +42,25 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
       .build();
 
     return this.apiService.get<VehicleDetected[]>(`/${this.endpoint}/search`, queryParams).pipe(
+      map(data => {
+        // Si data es un array, usarlo normalmente
+        if (Array.isArray(data)) {
+          return data;
+        }
+        // Si no es array (backend retornó mensaje de texto), retornar array vacío
+        console.warn('Backend retornó respuesta no-JSON:', data);
+        return [];
+      }),
+      catchError((error) => {
+        // Manejo de errores de parsing JSON (cuando backend retorna texto plano)
+        // Esto ocurre cuando no hay datos y el backend retorna un mensaje de texto
+        if (error && (error.message?.includes('Http failure during parsing') || error.message?.includes('Unexpected token'))) {
+          console.warn('No hay datos disponibles para los criterios especificados');
+          return of([]);
+        }
+        // Re-lanzar otros errores
+        throw error;
+      }),
       tap(data => {
         this.dataSubject.next(data);
       })

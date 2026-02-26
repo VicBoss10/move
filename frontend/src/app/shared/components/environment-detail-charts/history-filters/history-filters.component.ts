@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SensorDataSearchCriteria } from '../../../../core/models/sensor-data.model';
 
 /**
  * HistoryFiltersComponent
@@ -58,6 +59,12 @@ export class HistoryFiltersComponent {
   maxValue: number = 100;
 
   /**
+   * Event emitter para cambios de filtro
+   * Emite SensorDataSearchCriteria
+   */
+  @Output() filterChange = new EventEmitter<SensorDataSearchCriteria>();
+
+  /**
    * Array de parámetros disponibles
    * @type {Array}
    */
@@ -72,20 +79,113 @@ export class HistoryFiltersComponent {
   ];
 
   /**
-   * Aplica los filtros
-   * TODO: Emitir evento con los filtros configurados
+   * Mapea el parámetro seleccionado a rangos de valores
+   * @private
+   * @returns {Object} Objeto con min y max para el parámetro
+   */
+  private getValueRangesForParameter(): { min: number; max: number } {
+    switch (this.selectedParameter) {
+      case 'temperature':
+        return { min: -10, max: 50 }; // °C
+      case 'humidity':
+        return { min: 0, max: 100 }; // %
+      case 'co2':
+        return { min: 300, max: 2000 }; // ppm
+      case 'pm25':
+        return { min: 0, max: 500 }; // µg/m³
+      case 'pm10':
+        return { min: 0, max: 500 }; // µg/m³
+      case 'co':
+        return { min: 0, max: 50 }; // ppm
+      case 'no2':
+        return { min: 0, max: 200 }; // ppb
+      case 'nh3':
+        return { min: 0, max: 100 }; // ppb
+      default:
+        return { min: 0, max: 100 };
+    }
+  }
+
+  /**
+   * Convierte los filtros de UI a SensorDataSearchCriteria
+   * @private
+   * @returns {SensorDataSearchCriteria} Criterios de búsqueda
+   */
+  private buildSearchCriteria(): SensorDataSearchCriteria {
+    const criteria: SensorDataSearchCriteria = {};
+
+    // Agregar rango de fechas si están configuradas
+    if (this.startDate) {
+      criteria.start = new Date(this.startDate);
+    }
+    if (this.endDate) {
+      const end = new Date(this.endDate);
+      end.setHours(23, 59, 59, 999); // Incluir todo el día
+      criteria.end = end;
+    }
+
+    // Agregar rangos de valores según el parámetro seleccionado
+    if (this.selectedParameter !== 'all') {
+      const minVal = Math.min(this.minValue, this.maxValue);
+      const maxVal = Math.max(this.minValue, this.maxValue);
+
+      switch (this.selectedParameter) {
+        case 'temperature':
+          criteria.minTemperature = minVal;
+          criteria.maxTemperature = maxVal;
+          break;
+        case 'humidity':
+          criteria.minHumidity = minVal;
+          criteria.maxHumidity = maxVal;
+          break;
+        case 'co2':
+          criteria.minCo2 = minVal;
+          criteria.maxCo2 = maxVal;
+          break;
+        case 'pm25':
+          criteria.minPm25 = minVal;
+          criteria.maxPm25 = maxVal;
+          break;
+        case 'pm10':
+          criteria.minPm10 = minVal;
+          criteria.maxPm10 = maxVal;
+          break;
+        case 'co':
+          criteria.minCo = minVal;
+          criteria.maxCo = maxVal;
+          break;
+        case 'no2':
+          criteria.minNo2 = minVal;
+          criteria.maxNo2 = maxVal;
+          break;
+        case 'nh3':
+          criteria.minNh3 = minVal;
+          criteria.maxNh3 = maxVal;
+          break;
+      }
+    }
+
+    return criteria;
+  }
+
+  /**
+   * Actualiza los rangos cuando se cambia de parámetro
+   * @returns {void}
+   */
+  onParameterChange(): void {
+    const ranges = this.getValueRangesForParameter();
+    this.minValue = ranges.min;
+    this.maxValue = ranges.max;
+  }
+
+  /**
+   * Aplica los filtros y emite el evento
    * @returns {void}
    */
   applyFilters(): void {
-    const filters = {
-      startDate: this.startDate,
-      endDate: this.endDate,
-      parameter: this.selectedParameter,
-      minValue: this.minValue,
-      maxValue: this.maxValue,
-    };
-    console.log('Filtros aplicados:', filters);
-    // this.filterChange.emit(filters);
+    const criteria = this.buildSearchCriteria();
+    console.log('Filtros aplicados:', criteria);
+    this.filterChange.emit(criteria);
   }
 
   /**
@@ -96,8 +196,7 @@ export class HistoryFiltersComponent {
     this.startDate = '';
     this.endDate = '';
     this.selectedParameter = 'all';
-    this.minValue = 0;
-    this.maxValue = 100;
+    this.onParameterChange();
     this.applyFilters();
   }
 

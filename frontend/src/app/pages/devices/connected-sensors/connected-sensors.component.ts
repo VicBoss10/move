@@ -28,7 +28,6 @@ interface ConnectedSensor {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './connected-sensors.component.html',
-  styleUrl: './connected-sensors.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConnectedSensorsComponent {

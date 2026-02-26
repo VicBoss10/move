@@ -27,7 +27,6 @@ import { LocationService } from '../../../core/services/location.service';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './register-device.component.html',
-  styleUrl: './register-device.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterDeviceComponent {
@@ -40,8 +39,8 @@ export class RegisterDeviceComponent {
   locations$: Observable<any[]>;
 
   deviceTypes = [
-    { id: 'CAMERA', label: 'Cámara/Video', icon: '📹' },
-    { id: 'SENSOR', label: 'Sensor Ambiental', icon: '📊' },
+    { id: 'CAMERA', label: 'Cámara/Video' },
+    { id: 'SENSOR', label: 'Sensor Ambiental' },
   ];
 
   streamTypes = [

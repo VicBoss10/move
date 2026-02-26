@@ -31,7 +31,6 @@ interface DeviceStatusInfo {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './device-status.component.html',
-  styleUrl: './device-status.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeviceStatusComponent {

@@ -1,31 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-/**
- * Interfaz para Ubicación
- * @interface Location
- */
-export interface Location {
-  id: number;
-  latitude: number;
-  length: number;
-  description: string;
-}
-
-/**
- * Interfaz para los datos de un vehículo detectado
- * @interface Vehicle
- * @property {number} id - Identificador único del registro
- * @property {string} vehicleType - Tipo de vehículo (CAR, BUS, MOTORCYCLE, BICYCLE, TRUCK)
- * @property {Date} timestamp - Fecha y hora de detección
- * @property {Location} location - Ubicación donde fue detectado
- */
-export interface Vehicle {
-  id: number;
-  vehicleType: 'CAR' | 'BUS' | 'MOTORCYCLE' | 'BICYCLE' | 'TRUCK';
-  timestamp: Date;
-  location: Location;
-}
+import { VehicleDetected } from '../../../../core/models/vehicle.model';
 
 /**
  * VehicleTableComponent
@@ -57,43 +32,9 @@ export interface Vehicle {
 export class VehicleTableComponent {
   /**
    * Lista de vehículos a mostrar
-   * @type {Vehicle[]}
+   * @type {VehicleDetected[]}
    */
-  @Input() vehicles: Vehicle[] = [
-    {
-      id: 1,
-      vehicleType: 'CAR',
-      timestamp: new Date(),
-      location: {
-        id: 1,
-        latitude: 4.7110,
-        length: -74.0721,
-        description: 'Carrera 7 con Calle 10',
-      },
-    },
-    {
-      id: 2,
-      vehicleType: 'MOTORCYCLE',
-      timestamp: new Date(Date.now() - 60000),
-      location: {
-        id: 2,
-        latitude: 4.7150,
-        length: -74.0750,
-        description: 'Parque Arvi',
-      },
-    },
-    {
-      id: 3,
-      vehicleType: 'TRUCK',
-      timestamp: new Date(Date.now() - 300000),
-      location: {
-        id: 3,
-        latitude: 4.7080,
-        length: -74.0680,
-        description: 'Centro Comercial',
-      },
-    },
-  ];
+  @Input() vehicles: VehicleDetected[] = [];
 
   /**
    * Obtiene el color por tipo de vehículo

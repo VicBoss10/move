@@ -1,11 +1,29 @@
 <div class="grid grid-cols-12 gap-4 md:gap-6">
-  <!-- Tarjetas de Estadísticas -->
-  <div class="col-span-12">
-    <app-vehicle-stats-cards [stats]="stats" />
+  <!-- Estado de Carga -->
+  <div class="col-span-12" *ngIf="isLoading && !stats.totalDetected">
+    <div class="rounded-lg border border-gray-200 bg-white p-8 text-center dark:border-gray-800 dark:bg-white/[0.03]">
+      <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-500"></div>
+      <p class="mt-4 text-gray-600 dark:text-gray-400">Cargando estadísticas de vehículos...</p>
+    </div>
   </div>
 
-  <!-- Gráficos -->
-  <div class="col-span-12">
-    <app-vehicle-chart />
+  <!-- Estado de Error -->
+  <div class="col-span-12" *ngIf="errorMessage && !stats.totalDetected">
+    <div class="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800/30 dark:bg-red-900/20">
+      <p class="text-red-700 dark:text-red-400">⚠️ {{ errorMessage }}</p>
+    </div>
+  </div>
+
+  <!-- Contenido (Mostrar siempre si hay datos) -->
+  <div class="col-span-12" *ngIf="stats.totalDetected > 0 || !isLoading">
+    <!-- Tarjetas de Estadísticas -->
+    <div class="col-span-12">
+      <app-vehicle-stats-cards [stats]="stats" />
+    </div>
+
+    <!-- Gráficos -->
+    <div class="col-span-12">
+      <app-vehicle-chart />
+    </div>
   </div>
 </div>

@@ -1,0 +1,47 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <div class="flex flex-col gap-2">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Puntos de Monitoreo</h1>
+    <p class="text-gray-600 dark:text-gray-400">
+      Ubicaciones geográficas de dispositivos de monitoreo instalados
+    </p>
+  </div>
+
+  <!-- Grid de Información Rápida -->
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <!-- Total -->
+    <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">UBICACIONES TOTALES</p>
+      <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
+        {{ systemInfo.totalLocations }}
+      </p>
+    </div>
+
+    <!-- Activas -->
+    <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">ACTIVAS</p>
+      <p class="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
+        {{ systemInfo.activeLocations }}
+      </p>
+    </div>
+
+    <!-- Última Actualización -->
+    <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">ÚLTIMA ACT.</p>
+      <p class="mt-2 text-xs font-bold text-gray-900 dark:text-white">
+        {{ systemInfo.lastUpdate }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Sección de Filtros -->
+  <app-location-filters (filtersChanged)="onFiltersChanged($event)" />
+
+  <!-- Tabla de Ubicaciones -->
+  <div class="space-y-4">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Ubicaciones de Monitoreo</h2>
+    <app-location-table [locations]="locations" />
+  </div>
+
+
+</div>

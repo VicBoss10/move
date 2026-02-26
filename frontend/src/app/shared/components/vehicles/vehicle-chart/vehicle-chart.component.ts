@@ -1,17 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
+import { Subject } from 'rxjs';
+import { takeUntil, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
+import { VehicleDetected } from '../../../../core/models/vehicle.model';
 
 /**
  * VehicleChartComponent
  *
  * Componente que muestra gráficos de estadísticas de vehículos.
  * Visualiza tendencias de detecciones, tipos de vehículos y patrones horarios.
+ * Carga datos en tiempo real desde el backend.
  *
  * Características:
  * - Gráfico de línea: Detecciones por hora
  * - Gráfico de barras: Tipos de vehículos
+ * - Datos actualizados desde el backend
  * - Animaciones suaves
  * - Dark mode support
  * - Responsivo
@@ -29,8 +36,14 @@ import { ChartConfiguration } from 'chart.js';
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
   templateUrl: './vehicle-chart.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VehicleChartComponent implements OnInit {
+export class VehicleChartComponent implements OnInit, OnDestroy {
+  /**
+   * Subject para cleanup de suscripciones
+   */
+  private destroy$ = new Subject<void>();
+
   /**
    * Configuración del gráfico de línea
    * @type {ChartConfiguration}
@@ -42,7 +55,7 @@ export class VehicleChartComponent implements OnInit {
       datasets: [
         {
           label: 'Detecciones por hora',
-          data: [12, 45, 156, 98, 234, 145, 87],
+          data: [0, 0, 0, 0, 0, 0, 0],
           borderColor: '#3b82f6',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
           borderWidth: 2,
@@ -78,18 +91,16 @@ export class VehicleChartComponent implements OnInit {
   barChartConfig: ChartConfiguration<'bar'> = {
     type: 'bar',
     data: {
-      labels: ['Auto', 'Moto', 'Camión', 'Bus', 'Bicicleta'],
+      labels: ['Auto', 'Moto', 'Camión', 'Bus'],
       datasets: [
         {
           label: 'Cantidad detectada',
-          data: [345, 234, 89, 56, 45, 67],
+          data: [0, 0, 0, 0],
           backgroundColor: [
             '#3b82f6',
             '#8b5cf6',
             '#ef4444',
             '#f59e0b',
-            '#10b981',
-            '#06b6d4',
           ],
           borderRadius: 8,
         },
@@ -113,7 +124,98 @@ export class VehicleChartComponent implements OnInit {
     },
   };
 
+  /**
+   * Constructor e inyección de dependencias
+   */
+  constructor(
+    private vehicleService: VehicleDetectedService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  /**
+   * Hook del ciclo de vida: Carga los datos al inicializar
+   */
   ngOnInit(): void {
-    // TODO: Cargar datos reales del servicio
+    this.loadChartData();
+  }
+
+  /**
+   * Hook del ciclo de vida: Limpia las suscripciones
+   */
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Carga y procesa datos del backend para los gráficos
+   * @private
+   * @returns {void}
+   */
+  private loadChartData(): void {
+    this.vehicleService
+      .getAll()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading vehicle chart data:', error);
+          return of([]);
+        })
+      )
+      .subscribe((vehicles: VehicleDetected[]) => {
+        this.updateLineChart(vehicles);
+        this.updateBarChart(vehicles);
+        this.cdr.markForCheck();
+      });
+  }
+
+  /**
+   * Actualiza el gráfico de línea con datos de detecciones por hora
+   * @private
+   * @param {VehicleDetected[]} vehicles - Array de vehículos detectados
+   * @returns {void}
+   */
+  private updateLineChart(vehicles: VehicleDetected[]): void {
+    // Agrupar vehículos por hora
+    const hourBuckets = [0, 4, 8, 12, 16, 20, 24];
+    const counts = new Array(7).fill(0);
+
+    vehicles.forEach((vehicle) => {
+      const hour = new Date(vehicle.timestamp).getHours();
+      let bucketIndex = 0;
+
+      // Encontrar el bucket de hora correspondiente
+      for (let i = hourBuckets.length - 1; i >= 0; i--) {
+        if (hour >= hourBuckets[i]) {
+          bucketIndex = i;
+          break;
+        }
+      }
+
+      counts[bucketIndex]++;
+    });
+
+    // Actualizar datos del gráfico
+    if (this.lineChartConfig.data?.datasets?.[0]) {
+      this.lineChartConfig.data.datasets[0].data = counts;
+    }
+  }
+
+  /**
+   * Actualiza el gráfico de barras con datos de tipos de vehículos
+   * @private
+   * @param {VehicleDetected[]} vehicles - Array de vehículos detectados
+   * @returns {void}
+   */
+  private updateBarChart(vehicles: VehicleDetected[]): void {
+    const carCount = vehicles.filter(v => v.vehicleType === 'CAR').length;
+    const motorcycleCount = vehicles.filter(v => v.vehicleType === 'MOTORCYCLE').length;
+    const truckCount = vehicles.filter(v => v.vehicleType === 'TRUCK').length;
+    const busCount = vehicles.filter(v => v.vehicleType === 'BUS').length;
+
+    // Actualizar datos del gráfico
+    if (this.barChartConfig.data?.datasets?.[0]) {
+      this.barChartConfig.data.datasets[0].data = [carCount, motorcycleCount, truckCount, busCount];
+    }
   }
 }

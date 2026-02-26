@@ -1,22 +1,18 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-/**
- * Interfaz para filtros de vehículos
- */
-export interface VehicleFilters {
-  type: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-}
+import { Observable, Subject, of } from 'rxjs';
+import { catchError, finalize, takeUntil } from 'rxjs/operators';
+import { VehicleSearchCriteria } from '../../../../core/models/vehicle.model';
+import { LocationService } from '../../../../core/services/location.service';
+import { Location } from '../../../../core/models/location.model';
 
 /**
  * VehicleFiltersComponent
  *
  * Componente de filtros para la página de vehículos detectados.
  * Permite filtrar por tipo de vehículo, ubicación y rango de fechas.
+ * Emite VehicleSearchCriteria cuando se aplican los filtros.
  *
  * Características:
  * - Filtro por tipo (CAR, BUS, MOTORCYCLE, BICYCLE, TRUCK)
@@ -30,19 +26,41 @@ export interface VehicleFilters {
  * @returns Panel de filtros para vehículos
  *
  * @example
- * <app-vehicle-filters (filtersChanged)="handleFilterChange($event)" />
+ * <app-vehicle-filters (filterChange)="handleFilterChange($event)" />
  */
 @Component({
   selector: 'app-vehicle-filters',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './vehicle-filters.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VehicleFiltersComponent {
+export class VehicleFiltersComponent implements OnInit, OnDestroy {
+  /**
+   * Subject para cleanup de suscripciones
+   */
+  private destroy$ = new Subject<void>();
+
+  /**
+   * Observable stream de ubicaciones desde el backend
+   */
+  locations$: Observable<Location[]> = of([]);
+
+  /**
+   * Array de ubicaciones para binding en el template
+   */
+  loadedLocations: Location[] = [];
+
+  /**
+   * Estado de carga de ubicaciones
+   */
+  isLoadingLocations = false;
+
   /**
    * Evento que emite cuando cambian los filtros
+   * Emite VehicleSearchCriteria
    */
-  @Output() filtersChanged = new EventEmitter<VehicleFilters>();
+  @Output() filterChange = new EventEmitter<VehicleSearchCriteria>();
 
   /**
    * Tipos de vehículos disponibles (del Enum del backend)
@@ -56,33 +74,90 @@ export class VehicleFiltersComponent {
     { value: 'TRUCK', label: 'Camión' },
   ];
 
-  /**
-   * Ubicaciones disponibles (mock data - vendrá del backend)
-   * @type {Array}
-   */
-  locations = [
-    { id: 1, name: 'Carrera 7 con Calle 10' },
-    { id: 2, name: 'Parque Arvi' },
-    { id: 3, name: 'Centro Comercial' },
-    { id: 4, name: 'Terminal de Transporte' },
-  ];
+
 
   /**
    * Filtros actuales
    */
-  filters: VehicleFilters = {
-    type: '',
-    location: '',
-    startDate: '',
-    endDate: '',
-  };
+  selectedType: string = '';
+  selectedLocationId: number | null = null;
+  startDate: string = '';
+  endDate: string = '';
+
+  /**
+   * Constructor e inyección de dependencias
+   */
+  constructor(
+    private locationService: LocationService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  /**
+   * Carga las ubicaciones desde el backend
+   * @private
+   * @returns {void}
+   */
+  private loadLocations(): void {
+    this.isLoadingLocations = true;
+    this.locations$ = this.locationService.getAll().pipe(
+      takeUntil(this.destroy$),
+      finalize(() => {
+        this.isLoadingLocations = false;
+        this.cdr.markForCheck();
+      }),
+      catchError((error) => {
+        console.error('Error loading locations:', error);
+        return of([]);
+      })
+    );
+
+    // Suscribirse al Observable para obtener los valores para el template
+    this.locations$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((locations) => {
+        this.loadedLocations = locations;
+        this.cdr.markForCheck();
+      });
+  }
+
+  /**
+   * Hook del ciclo de vida: Carga las ubicaciones al inicializar
+   */
+  ngOnInit(): void {
+    this.loadLocations();
+  }
+
+  /**
+   * Hook del ciclo de vida: Limpia las suscripciones
+   */
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   /**
    * Aplica los filtros seleccionados
    * @returns {void}
    */
   applyFilters(): void {
-    this.filtersChanged.emit(this.filters);
+    const criteria: VehicleSearchCriteria = {};
+
+    if (this.selectedType) {
+      criteria.type = this.selectedType as any;
+    }
+    if (this.selectedLocationId) {
+      criteria.locationId = this.selectedLocationId;
+    }
+    if (this.startDate) {
+      criteria.start = new Date(this.startDate);
+    }
+    if (this.endDate) {
+      const end = new Date(this.endDate);
+      end.setHours(23, 59, 59, 999);
+      criteria.end = end;
+    }
+
+    this.filterChange.emit(criteria);
   }
 
   /**
@@ -90,12 +165,10 @@ export class VehicleFiltersComponent {
    * @returns {void}
    */
   clearFilters(): void {
-    this.filters = {
-      type: '',
-      location: '',
-      startDate: '',
-      endDate: '',
-    };
-    this.filtersChanged.emit(this.filters);
+    this.selectedType = '';
+    this.selectedLocationId = null;
+    this.startDate = '';
+    this.endDate = '';
+    this.filterChange.emit({});
   }
 }

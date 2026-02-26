@@ -32,6 +32,7 @@ import { CameraModelStatusComponent } from './pages/cameras/camera-model-status/
 import { LocationMonitoringComponent } from './pages/locations/location-monitoring/location-monitoring.component';
 import { LocationHistoryComponent } from './pages/locations/location-history/location-history.component';
 import { LocationMapPageComponent } from './pages/locations/location-map/location-map.component';
+import { RegisterLocationComponent } from './pages/locations/register-location/register-location.component';
 import { RegisterDeviceComponent } from './pages/devices/register-device/register-device.component';
 import { ConnectedSensorsComponent } from './pages/devices/connected-sensors/connected-sensors.component';
 import { DeviceStatusComponent } from './pages/devices/device-status/device-status.component';
@@ -138,6 +139,11 @@ const DASHBOARD_ROUTES: Routes = [
   {
     path: 'locations',
     children: [
+      {
+        path: 'register-location',
+        component: RegisterLocationComponent,
+        title: 'Registrar Ubicación'
+      },
       {
         path: 'monitoring',
         component: LocationMonitoringComponent,

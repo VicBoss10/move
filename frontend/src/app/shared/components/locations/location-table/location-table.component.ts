@@ -1,26 +1,12 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Location } from '../../../../core/models/location.model';
 
 /**
- * Interfaz para ubicación de monitoreo
- * @interface Location
- * @property {number} id - ID único
- * @property {number} latitude - Latitud
- * @property {number} length - Longitud
- * @property {string} description - Descripción de ubicación
- */
-export interface Location {
-  id: number;
-  latitude: number;
-  length: number;
-  description: string;
-}
-
-/**
- * LocationMapComponent
+ * LocationTableComponent
  *
- * Componente que muestra un mapa de ubicaciones de monitoreo.
- * Incluye tabla de ubicaciones con coordenadas.
+ * Componente que muestra una tabla de ubicaciones de monitoreo.
+ * Incluye información de ubicaciones con coordenadas.
  *
  * Características:
  * - Tabla de ubicaciones disponibles
@@ -30,63 +16,26 @@ export interface Location {
  * - Responsive layout
  * - Dark mode support
  *
- * @selector app-location-map
+ * @selector app-location-table
  * @standalone true
  * @imports CommonModule
- * @returns Tabla/Mapa de ubicaciones
+ * @returns Tabla de ubicaciones
  *
  * @example
- * <app-location-map [locations]="monitoringLocations" />
+ * <app-location-table [locations]="monitoringLocations" />
  */
 @Component({
-  selector: 'app-location-map',
+  selector: 'app-location-table',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './location-map.component.html',
+  templateUrl: './location-table.component.html',
 })
-export class LocationMapComponent {
+export class LocationTableComponent {
   /**
    * Lista de ubicaciones de monitoreo
    * @type {Location[]}
    */
-  @Input() locations: Location[] = [
-    {
-      id: 1,
-      latitude: 6.244192,
-      length: -75.563199,
-      description: 'Carrera 7 con Calle 10 - Centro',
-    },
-    {
-      id: 2,
-      latitude: 6.320284,
-      length: -75.531389,
-      description: 'Parque Arvi - Zona Norte',
-    },
-    {
-      id: 3,
-      latitude: 6.217038,
-      length: -75.574668,
-      description: 'Centro Comercial El Hueco - Zona Comercial',
-    },
-    {
-      id: 4,
-      latitude: 6.253523,
-      length: -75.527319,
-      description: 'Terminal de Transporte - Punto Clave',
-    },
-    {
-      id: 5,
-      latitude: 6.168383,
-      length: -75.595947,
-      description: 'Calle Principal Envigado - Zona Conurbana',
-    },
-    {
-      id: 6,
-      latitude: 6.280556,
-      length: -75.520556,
-      description: 'Estadio Metropolitano - Área Deportiva',
-    },
-  ];
+  @Input() locations: Location[] = [];
 
   /**
    * Formatea las coordenadas para visualización

@@ -27,7 +27,6 @@ interface DeviceLog {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './device-logs.component.html',
-  styleUrl: './device-logs.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeviceLogsComponent {
