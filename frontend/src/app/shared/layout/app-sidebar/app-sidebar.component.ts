@@ -71,7 +71,6 @@ export class AppSidebarComponent {
       subItems: [
         { name: "Registrar Ubicación", path: "/dashboard/locations/register-location" },
         { name: "Puntos de Monitoreo", path: "/dashboard/locations/monitoring" },
-        { name: "Mapa", path: "/dashboard/locations/map" },
         { name: "Historial por Ubicación", path: "/dashboard/locations/history" },
       ],
     },

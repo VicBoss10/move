@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VehicleDetected } from '../../../../core/models/vehicle.model';
 
@@ -28,6 +28,7 @@ import { VehicleDetected } from '../../../../core/models/vehicle.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './vehicle-table.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehicleTableComponent {
   /**

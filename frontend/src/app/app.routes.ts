@@ -31,7 +31,6 @@ import { CameraStreamingComponent } from './pages/cameras/camera-streaming/camer
 import { CameraModelStatusComponent } from './pages/cameras/camera-model-status/camera-model-status.component';
 import { LocationMonitoringComponent } from './pages/locations/location-monitoring/location-monitoring.component';
 import { LocationHistoryComponent } from './pages/locations/location-history/location-history.component';
-import { LocationMapPageComponent } from './pages/locations/location-map/location-map.component';
 import { RegisterLocationComponent } from './pages/locations/register-location/register-location.component';
 import { RegisterDeviceComponent } from './pages/devices/register-device/register-device.component';
 import { ConnectedSensorsComponent } from './pages/devices/connected-sensors/connected-sensors.component';
@@ -39,7 +38,6 @@ import { DeviceStatusComponent } from './pages/devices/device-status/device-stat
 import { DeviceLogsComponent } from './pages/devices/device-logs/device-logs.component';
 
 
-// Definir rutas del dashboard una sola vez
 const DASHBOARD_ROUTES: Routes = [
   {
     path: 'dashboard',
@@ -148,11 +146,6 @@ const DASHBOARD_ROUTES: Routes = [
         path: 'monitoring',
         component: LocationMonitoringComponent,
         title: 'Puntos de Monitoreo'
-      },
-      {
-        path: 'map',
-        component: LocationMapPageComponent,
-        title: 'Mapa de Monitoreo'
       },
       {
         path: 'history',

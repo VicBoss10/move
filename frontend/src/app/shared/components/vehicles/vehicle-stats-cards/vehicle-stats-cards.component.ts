@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GenericStatsCardsComponent, StatCard } from '../../common/generic-stats-cards/generic-stats-cards.component';
 
@@ -6,7 +6,6 @@ import { GenericStatsCardsComponent, StatCard } from '../../common/generic-stats
  * Interfaz para estadísticas de vehículos
  * @interface VehicleStats
  * @property {number} totalDetected - Total de vehículos detectados
- * @property {number} activeNow - Vehículos activos en tiempo real
  * @property {number} carCount - Total de Autos detectados
  * @property {number} motorcycleCount - Total de Motos detectadas
  * @property {number} busCount - Total de Buses detectados
@@ -14,7 +13,6 @@ import { GenericStatsCardsComponent, StatCard } from '../../common/generic-stats
  */
 export interface VehicleStats {
   totalDetected: number;
-  activeNow: number;
   carCount: number;
   motorcycleCount: number;
   busCount: number;
@@ -48,6 +46,7 @@ export interface VehicleStats {
   template: `
     <app-generic-stats-cards [cards]="getStatCards()" />
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehicleStatsCardsComponent {
   /**
@@ -56,7 +55,6 @@ export class VehicleStatsCardsComponent {
    */
   @Input() stats: VehicleStats = {
     totalDetected: 0,
-    activeNow: 0,
     carCount: 0,
     motorcycleCount: 0,
     busCount: 0,
@@ -73,12 +71,6 @@ export class VehicleStatsCardsComponent {
         value: this.stats.totalDetected,
         borderColor: 'red',
         textColor: 'text-red-600 dark:text-red-400',
-      },
-      {
-        label: 'Activos Ahora',
-        value: this.stats.activeNow,
-        borderColor: 'green',
-        textColor: 'text-green-600 dark:text-green-400',
       },
       {
         label: 'Autos',

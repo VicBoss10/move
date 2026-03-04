@@ -93,12 +93,6 @@ export class CameraStatusCardsComponent {
         borderColor: 'purple',
         textColor: 'text-purple-600 dark:text-purple-400',
       },
-      {
-        label: 'Disponibilidad',
-        value: this.stats.uptime.toFixed(1) + '%',
-        borderColor: 'blue',
-        textColor: 'text-blue-600 dark:text-blue-400',
-      },
     ];
   }
 }

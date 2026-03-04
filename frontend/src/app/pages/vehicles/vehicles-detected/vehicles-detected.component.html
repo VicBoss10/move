@@ -16,13 +16,15 @@
       <p class="text-red-600">{{ errorMessage }}</p>
     </div>
 
-    <!-- Table -->
-    <app-vehicle-table [vehicles]="filteredVehicles" *ngIf="!isLoading && !errorMessage" />
+    <!-- Table with async pipe -->
+    <ng-container *ngIf="vehicles$ | async as vehicles">
+      <app-vehicle-table [vehicles]="vehicles" *ngIf="!isLoading && !errorMessage" />
 
-    <!-- Empty state -->
-    <div *ngIf="!isLoading && filteredVehicles.length === 0 && !errorMessage" 
-         class="flex flex-col items-center justify-center py-12 text-gray-500">
-      <p>No hay vehículos detectados</p>
-    </div>
+      <!-- Empty state -->
+      <div *ngIf="!isLoading && vehicles.length === 0 && !errorMessage" 
+           class="flex flex-col items-center justify-center py-12 text-gray-500">
+        <p>No hay vehículos detectados</p>
+      </div>
+    </ng-container>
   </div>
 </div>

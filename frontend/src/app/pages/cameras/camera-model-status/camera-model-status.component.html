@@ -1,37 +1,18 @@
-<app-camera-model-status-content></app-camera-model-status-content>
+<div class="space-y-6">
+  <!-- Tarjetas de Estadísticas -->
+  <ng-container *ngIf="cameraStats$ | async as stats">
+    <app-camera-status-cards [stats]="stats" />
+  </ng-container>
 
-<!-- Sección de Filtros -->
-<app-camera-filters (filtersChanged)="onFiltersChanged($event)" />
+  <!-- Información del Modelo y Acciones -->
+  <app-camera-model-status-content
+    [modelInfo$]="modelInfo$"
+    [isRestarting]="isRestarting"
+    (restartModelClicked)="onRestartModel()"
+  ></app-camera-model-status-content>
 
-<!-- Tabla de Dispositivos -->
-<div class="space-y-4">
-  <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Estado de Dispositivos de Cámara</h2>
-  <app-camera-device-table />
-</div>
-
-<!-- Alertas -->
-<div
-  class="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-900/20"
->
-  <div class="flex gap-3">
-    <svg
-      class="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400"
-      fill="currentColor"
-      viewBox="0 0 20 20"
-    >
-      <path
-        fill-rule="evenodd"
-        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-        clip-rule="evenodd"
-      />
-    </svg>
-    <div>
-      <h3 class="font-medium text-orange-900 dark:text-orange-100">
-        Alerta: Cámara Terminal con Fallo
-      </h3>
-      <p class="mt-1 text-sm text-orange-700 dark:text-orange-200">
-        El dispositivo en la Terminal de Transporte ha dejado de responder. Se recomienda revisar la conexión o reiniciar el dispositivo.
-      </p>
-    </div>
+  <!-- Filtros y Tabla de Dispositivos -->
+  <div class="mt-8 space-y-6">
+    <app-camera-filters-table></app-camera-filters-table>
   </div>
 </div>

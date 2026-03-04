@@ -12,6 +12,12 @@ export interface Camera {
     name: string;
     type: string;
     state: string;
+    location: {
+      id: number;
+      description: string;
+      latitude: number;
+      length: number;
+    };
   };
   streamType: StreamType;
   source: string;

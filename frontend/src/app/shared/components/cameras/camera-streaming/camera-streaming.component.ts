@@ -6,6 +6,14 @@ import { CameraService } from '../../../../core/services/camera.service';
 import { Camera, StreamResponse } from '../../../../core/models/camera.model';
 
 /**
+ * Interfaz para filtros de cámara
+ */
+export interface CameraFilters {
+  state: string;
+  location: number;
+}
+
+/**
  * CameraStreamingComponent
  *
  * Componente que permite visualizar streaming de cámaras en tiempo real.
@@ -62,8 +70,11 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   /** Mensaje de error actual */
   errorMessage: string | null = null;
 
-  /** Contador de vehículos detectados */
-  detectionCount: number = 0;
+  /** Filtros aplicados a la tabla */
+  appliedFilters: CameraFilters = {
+    state: '',
+    location: 0,
+  };
 
   constructor(
     private cameraService: CameraService,
@@ -131,7 +142,6 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
           this.streamUrl = response.streamUrl;
           this.isStreaming = true;
           this.isLoading = false;
-          this.detectionCount = response.detectionCount;
           this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
@@ -155,7 +165,6 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
           this.sessionId = null;
           this.streamUrl = null;
           this.isStreaming = false;
-          this.detectionCount = 0;
           this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
@@ -176,7 +185,8 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     return this.selectedCamera?.device.state || 'N/A';
   }
 
-  onFiltersChanged(filters: any): void {
-    console.log('Filtros aplicados:', filters);
+  onFiltersChanged(filters: CameraFilters): void {
+    this.appliedFilters = filters;
+    this.changeDetectorRef.markForCheck();
   }
 }

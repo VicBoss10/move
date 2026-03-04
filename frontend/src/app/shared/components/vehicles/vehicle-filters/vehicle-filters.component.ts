@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, Subject, of } from 'rxjs';
-import { catchError, finalize, takeUntil } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, map, shareReplay } from 'rxjs/operators';
 import { VehicleSearchCriteria } from '../../../../core/models/vehicle.model';
 import { LocationService } from '../../../../core/services/location.service';
 import { Location } from '../../../../core/models/location.model';
@@ -35,26 +35,12 @@ import { Location } from '../../../../core/models/location.model';
   templateUrl: './vehicle-filters.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VehicleFiltersComponent implements OnInit, OnDestroy {
-  /**
-   * Subject para cleanup de suscripciones
-   */
-  private destroy$ = new Subject<void>();
-
+export class VehicleFiltersComponent {
   /**
    * Observable stream de ubicaciones desde el backend
+   * Cargado al inicializar el componente
    */
-  locations$: Observable<Location[]> = of([]);
-
-  /**
-   * Array de ubicaciones para binding en el template
-   */
-  loadedLocations: Location[] = [];
-
-  /**
-   * Estado de carga de ubicaciones
-   */
-  isLoadingLocations = false;
+  locations$!: Observable<Location[]>;
 
   /**
    * Evento que emite cuando cambian los filtros
@@ -87,52 +73,22 @@ export class VehicleFiltersComponent implements OnInit, OnDestroy {
   /**
    * Constructor e inyección de dependencias
    */
-  constructor(
-    private locationService: LocationService,
-    private cdr: ChangeDetectorRef
-  ) {}
+  constructor(private locationService: LocationService) {
+    this.initializeLocations();
+  }
 
   /**
-   * Carga las ubicaciones desde el backend
+   * Inicializa las ubicaciones desde el backend
    * @private
-   * @returns {void}
    */
-  private loadLocations(): void {
-    this.isLoadingLocations = true;
+  private initializeLocations(): void {
     this.locations$ = this.locationService.getAll().pipe(
-      takeUntil(this.destroy$),
-      finalize(() => {
-        this.isLoadingLocations = false;
-        this.cdr.markForCheck();
-      }),
       catchError((error) => {
         console.error('Error loading locations:', error);
         return of([]);
-      })
+      }),
+      shareReplay(1)
     );
-
-    // Suscribirse al Observable para obtener los valores para el template
-    this.locations$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((locations) => {
-        this.loadedLocations = locations;
-        this.cdr.markForCheck();
-      });
-  }
-
-  /**
-   * Hook del ciclo de vida: Carga las ubicaciones al inicializar
-   */
-  ngOnInit(): void {
-    this.loadLocations();
-  }
-
-  /**
-   * Hook del ciclo de vida: Limpia las suscripciones
-   */
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   /**

@@ -4,8 +4,8 @@ import { VehicleTableComponent } from '../../../shared/components/vehicles/vehic
 import { VehicleFiltersComponent } from '../../../shared/components/vehicles/vehicle-filters/vehicle-filters.component';
 import { VehicleDetectedService } from '../../../core/services/vehicle-detected.service';
 import { VehicleDetected, VehicleSearchCriteria } from '../../../core/models/vehicle.model';
-import { Observable, of, Subject } from 'rxjs';
-import { catchError, finalize, takeUntil, map } from 'rxjs/operators';
+import { Observable, of, Subject, BehaviorSubject } from 'rxjs';
+import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-vehicles-detected',
@@ -21,14 +21,14 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   /**
-   * Observable que emite los vehículos detectados
+   * Subject para disparar búsquedas con filtros
    */
-  vehicles$: Observable<VehicleDetected[]> = of([]);
+  private searchTrigger$ = new BehaviorSubject<VehicleSearchCriteria | null>(null);
 
   /**
-   * Array de vehículos actuales para la vista
+   * Observable que emite los vehículos detectados (ordenados por fecha)
    */
-  filteredVehicles: VehicleDetected[] = [];
+  vehicles$!: Observable<VehicleDetected[]>;
 
   /**
    * Flag de carga
@@ -46,48 +46,48 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Cargar todos los vehículos inicialmente
-    this.loadVehicles();
+    this.initializeVehicles();
   }
 
   /**
-   * Carga vehículos desde el servicio backend
+   * Inicializa el observable de vehículos con patrón reactivo
+   * @private
    */
-  private loadVehicles(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.vehicles$ = this.vehicleDetectedService.getAll()
-      .pipe(
-        takeUntil(this.destroy$),
-        map(data => {
-          // Si data es un array, usarlo normalmente
-          if (Array.isArray(data)) {
-            return data;
-          }
-          // Si no es array, retornar array vacío
+  private initializeVehicles(): void {
+    this.vehicles$ = this.searchTrigger$.pipe(
+      tap(() => {
+        this.isLoading = true;
+        this.errorMessage = '';
+        this.cdr.markForCheck();
+      }),
+      switchMap((criteria) =>
+        criteria
+          ? this.vehicleDetectedService.search(criteria)
+          : this.vehicleDetectedService.getAll()
+      ),
+      map((data) => {
+        if (!Array.isArray(data)) {
           console.warn('Backend retornó respuesta no-JSON:', data);
           return [];
-        }),
-        catchError((error) => {
-          console.error('Error cargando vehículos:', error);
-          this.errorMessage = 'Error al cargar los vehículos';
-          return of([]);
-        }),
-        finalize(() => {
-          this.isLoading = false;
-        })
-      );
-
-    // Suscribirse para actualizar la vista
-    this.vehicles$.pipe(takeUntil(this.destroy$)).subscribe((data) => {
-      this.filteredVehicles = data.sort((a, b) => {
-        const dateA = new Date(b.timestamp).getTime();
-        const dateB = new Date(a.timestamp).getTime();
-        return dateA - dateB; // Más recientes primero
-      });
-      this.cdr.markForCheck();
-    });
+        }
+        // Ordenar por fecha (más recientes primero)
+        return data.sort((a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+      }),
+      tap(() => {
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }),
+      catchError((error) => {
+        console.error('Error cargando vehículos:', error);
+        this.errorMessage = 'Error al cargar los vehículos';
+        this.isLoading = false;
+        this.cdr.markForCheck();
+        return of([]);
+      }),
+      shareReplay(1)
+    );
   }
 
   /**
@@ -95,38 +95,7 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
    * @param criteria - Criterios de búsqueda
    */
   handleFilterChange(criteria: VehicleSearchCriteria): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.vehicles$ = this.vehicleDetectedService.search(criteria)
-      .pipe(
-        takeUntil(this.destroy$),
-        map(data => {
-          if (Array.isArray(data)) {
-            return data;
-          }
-          console.warn('Backend retornó respuesta no-JSON:', data);
-          return [];
-        }),
-        catchError((error) => {
-          console.error('Error buscando vehículos:', error);
-          this.errorMessage = 'Error al buscar vehículos';
-          return of([]);
-        }),
-        finalize(() => {
-          this.isLoading = false;
-        })
-      );
-
-    // Suscribirse para actualizar la vista
-    this.vehicles$.pipe(takeUntil(this.destroy$)).subscribe((data) => {
-      this.filteredVehicles = data.sort((a, b) => {
-        const dateA = new Date(b.timestamp).getTime();
-        const dateB = new Date(a.timestamp).getTime();
-        return dateA - dateB;
-      });
-      this.cdr.markForCheck();
-    });
+    this.searchTrigger$.next(criteria);
   }
 
   /**
