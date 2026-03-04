@@ -1,32 +1,44 @@
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-  <!-- Air Quality Metric Card -->
-  <div 
-    *ngFor="let metric of metrics$ | async"
-    [class]="'rounded-2xl border p-5 md:p-6 ' + ColorUtility.getStatusBgColor(metric.status)"
-  >
-    <!-- Icon Container -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center justify-center w-12 h-12 rounded-xl"
-           [class]="ColorUtility.getStatusIconBgColor(metric.status)">
-        <span [innerHTML]="metric.icon | safeHtml" 
-              [class]="ColorUtility.getStatusIconColor(metric.status)"></span>
-      </div>
-      <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ' + ColorUtility.getStatusTextColor(metric.status)">
-        {{ metric.statusLabel }}
-      </span>
-    </div>
+  <ng-container *ngIf="metrics$ | async as metrics">
+    <ng-container *ngIf="metrics && metrics.length > 0; else noData">
+      <!-- Air Quality Metric Card -->
+      <div 
+        *ngFor="let metric of metrics"
+        [class]="'rounded-2xl border p-5 md:p-6 ' + ColorUtility.getStatusBgColor(metric.status)"
+      >
+        <!-- Icon Container -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center justify-center w-12 h-12 rounded-xl"
+               [class]="ColorUtility.getStatusIconBgColor(metric.status)">
+            <span [innerHTML]="metric.icon | safeHtml" 
+                  [class]="ColorUtility.getStatusIconColor(metric.status)"></span>
+          </div>
+          <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ' + ColorUtility.getStatusTextColor(metric.status)">
+            {{ metric.statusLabel }}
+          </span>
+        </div>
 
-    <!-- Content -->
-    <div class="mt-5">
-      <span class="text-sm text-gray-500 dark:text-gray-400">{{ metric.label }}</span>
-      
-      <!-- Valor principal -->
-      <div class="mt-2 flex items-baseline gap-1">
-        <h4 [class]="'font-bold text-3xl ' + ColorUtility.getStatusTextColor(metric.status)">
-          {{ metric.value }}
-        </h4>
-        <span class="text-xs text-gray-500 dark:text-gray-400">{{ metric.unit }}</span>
+        <!-- Content -->
+        <div class="mt-5">
+          <span class="text-sm text-gray-500 dark:text-gray-400">{{ metric.label }}</span>
+          
+          <!-- Valor principal -->
+          <div class="mt-2 flex items-baseline gap-1">
+            <h4 [class]="'font-bold text-3xl ' + ColorUtility.getStatusTextColor(metric.status)">
+              {{ metric.value }}
+            </h4>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ metric.unit }}</span>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    </ng-container>
+    <ng-template #noData>
+      <div class="col-span-1 sm:col-span-2 py-8 flex items-center justify-center">
+        <div class="text-center">
+          <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Verifica tu conexión con el servidor</p>
+        </div>
+      </div>
+    </ng-template>
+  </ng-container>
 </div>

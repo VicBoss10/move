@@ -3,19 +3,33 @@ import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, catchError, tap, shareReplay } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 
 // Registrar los elementos de Chart.js
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
 
 /**
+ * PollutionChartComponent
+ *
  * Componente que muestra un gráfico de línea con tendencias de Partículas (PM2.5 y PM10)
  * en las últimas 24 horas. Usa dos ejes Y para escalas distintas.
  * Conectado a SensorDataService para obtener datos reales del backend.
- * 
+ *
+ * Características:
+ * - Gráfico de línea dual: PM2.5 y PM10
+ * - Ejes Y independientes para cada métrica
+ * - Datos actualizados desde el backend
+ * - Dark mode support
+ * - Responsivo
+ *
  * @selector app-pollution-chart
  * @standalone true
+ * @imports CommonModule, BaseChartDirective
+ * @returns Gráfico de tendencia de partículas
+ *
+ * @example
+ * <app-pollution-chart />
  */
 @Component({
   selector: 'app-pollution-chart',
@@ -27,15 +41,36 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 export class PollutionChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  private isLoading$ = new BehaviorSubject<boolean>(true);
-
   /**
    * Observable que emite la configuración del gráfico con datos reactivos
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-  private readonly defaultPm25Data: number[] = [25, 24, 23, 22, 21, 20, 19, 20, 22, 24, 26, 28, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19];
-  private readonly defaultPm10Data: number[] = [35, 34, 33, 32, 31, 30, 29, 30, 32, 34, 36, 38, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29];
+  /**
+   * Observable que emite el promedio de PM 2.5
+   */
+  avgPm25$!: Observable<number>;
+
+  /**
+   * Observable que emite el promedio de PM 10
+   */
+  avgPm10$!: Observable<number>;
+
+  /**
+   * Observable compartido para los datos del sensor
+   * @private
+   */
+  private sensorData$!: Observable<any[]>;
+
+  /**
+   * Datos por defecto del gráfico cuando no hay datos disponibles
+   */
+  private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
+    labels: [],
+    datasets: [],
+  };
+
+
 
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
@@ -137,18 +172,44 @@ export class PollutionChartComponent {
   };
 
   constructor(private sensorDataService: SensorDataService) {
-    this.chartData$ = this.sensorDataService.getAll().pipe(
+    this.initializeSensorData();
+    this.initializeChartData();
+    this.initializeAverages();
+  }
+
+  /**
+   * Inicializa el observable compartido de datos del sensor
+   * @private
+   */
+  private initializeSensorData(): void {
+    this.sensorData$ = this.sensorDataService.getAll().pipe(
+      catchError((error) => {
+        console.error('Error cargando datos de partículas:', error);
+        return of([]);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Inicializa los datos del gráfico desde el observable compartido
+   * @private
+   */
+  private initializeChartData(): void {
+    this.chartData$ = this.sensorData$.pipe(
       map((data: any[]) => {
-        const pm25Data = data?.length > 0 ? data.map(d => d.pm25) : this.defaultPm25Data;
-        const pm10Data = data?.length > 0 ? data.map(d => d.pm10) : this.defaultPm10Data;
-        const timeLabels = data?.length > 0 
-          ? data.map((d: any) => {
-              const time = new Date(d.timestamp);
-              const hour = String(time.getHours()).padStart(2, '0');
-              const minute = String(time.getMinutes()).padStart(2, '0');
-              return `${hour}:${minute}`;
-            })
-          : ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
+        if (!data || data.length === 0) {
+          return this.defaultChartData;
+        }
+
+        const pm25Data = data.map(d => d.pm25);
+        const pm10Data = data.map(d => d.pm10);
+        const timeLabels = data.map((d: any) => {
+          const time = new Date(d.timestamp);
+          const hour = String(time.getHours()).padStart(2, '0');
+          const minute = String(time.getMinutes()).padStart(2, '0');
+          return `${hour}:${minute}`;
+        });
 
         return {
           labels: timeLabels,
@@ -186,45 +247,29 @@ export class PollutionChartComponent {
           ],
         };
       }),
-      tap(() => this.isLoading$.next(false)),
-      catchError((err) => {
-        console.error('Error cargando datos de partículas:', err);
-        this.isLoading$.next(false);
-        return of({
-          labels: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
-          datasets: [
-            {
-              label: 'PM 2.5 (µg/m³)',
-              data: this.defaultPm25Data,
-              borderColor: '#ef4444',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: '#ef4444',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              yAxisID: 'y',
-            },
-            {
-              label: 'PM 10 (µg/m³)',
-              data: this.defaultPm10Data,
-              borderColor: '#f59e0b',
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: '#f59e0b',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              yAxisID: 'y1',
-            },
-          ],
-        });
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Inicializa los observables de promedios PM2.5 y PM10
+   * @private
+   */
+  private initializeAverages(): void {
+    this.avgPm25$ = this.sensorData$.pipe(
+      map((data: any[]) => {
+        if (!data || data.length === 0) return 0;
+        const sum = data.reduce((acc, d) => acc + (d.pm25 || 0), 0);
+        return sum / data.length;
+      }),
+      shareReplay(1)
+    );
+
+    this.avgPm10$ = this.sensorData$.pipe(
+      map((data: any[]) => {
+        if (!data || data.length === 0) return 0;
+        const sum = data.reduce((acc, d) => acc + (d.pm10 || 0), 0);
+        return sum / data.length;
       }),
       shareReplay(1)
     );

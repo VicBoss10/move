@@ -1,38 +1,50 @@
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
-  <!-- Metric Card Item Start -->
-  <div 
-    *ngFor="let metric of metrics$ | async"
-    [class]="'rounded-2xl border p-5 md:p-6 ' + ColorUtility.getHealthBgColor(metric.status)"
-  >
-    <!-- Icon Container -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center justify-center w-12 h-12 rounded-xl" 
-           [class]="ColorUtility.getHealthIconBgColor(metric.status)">
-        <span [innerHTML]="metric.icon | safeHtml" 
-              [class]="ColorUtility.getHealthTextColor(metric.status)"></span>
-      </div>
-    </div>
+  <ng-container *ngIf="metrics$ | async as metrics">
+    <ng-container *ngIf="metrics && metrics.length > 0; else noData">
+      <!-- Metric Card Item Start -->
+      <div 
+        *ngFor="let metric of metrics"
+        [class]="'rounded-2xl border p-5 md:p-6 ' + ColorUtility.getHealthBgColor(metric.status)"
+      >
+        <!-- Icon Container -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center justify-center w-12 h-12 rounded-xl" 
+               [class]="ColorUtility.getHealthIconBgColor(metric.status)">
+            <span [innerHTML]="metric.icon | safeHtml" 
+                  [class]="ColorUtility.getHealthTextColor(metric.status)"></span>
+          </div>
+        </div>
 
-    <!-- Content -->
-    <div class="mt-5">
-      <span class="text-sm text-gray-500 dark:text-gray-400">{{ metric.label }}</span>
-      
-      <!-- Valor principal -->
-      <div class="mt-2 flex items-baseline gap-1">
-        <h4 [class]="'font-bold text-title-sm ' + ColorUtility.getHealthTextColor(metric.status)">
-          {{ metric.value }}
-        </h4>
-        <span class="text-xs text-gray-500 dark:text-gray-400">{{ metric.unit }}</span>
-      </div>
+        <!-- Content -->
+        <div class="mt-5">
+          <span class="text-sm text-gray-500 dark:text-gray-400">{{ metric.label }}</span>
+          
+          <!-- Valor principal -->
+          <div class="mt-2 flex items-baseline gap-1">
+            <h4 [class]="'font-bold text-title-sm ' + ColorUtility.getHealthTextColor(metric.status)">
+              {{ metric.value }}
+            </h4>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ metric.unit }}</span>
+          </div>
 
-      <!-- Trend o información secundaria -->
-      <p *ngIf="metric.trend" [class]="'text-xs mt-2 ' + ColorUtility.getHealthTrendColor(metric.status)">
-        {{ metric.trend }}
-      </p>
-      <p *ngIf="metric.secondaryValue" class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-        Humedad: {{ metric.secondaryValue }}
-      </p>
-    </div>
-  </div>
-  <!-- Metric Card Item End -->
+          <!-- Trend o información secundaria -->
+          <p *ngIf="metric.trend" [class]="'text-xs mt-2 ' + ColorUtility.getHealthTrendColor(metric.status)">
+            {{ metric.trend }}
+          </p>
+          <p *ngIf="metric.secondaryValue" class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            Humedad: {{ metric.secondaryValue }}
+          </p>
+        </div>
+      </div>
+      <!-- Metric Card Item End -->
+    </ng-container>
+    <ng-template #noData>
+      <div class="col-span-1 sm:col-span-3 py-8 flex items-center justify-center">
+        <div class="text-center">
+          <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Verifica tu conexión con el servidor</p>
+        </div>
+      </div>
+    </ng-template>
+  </ng-container>
 </div>

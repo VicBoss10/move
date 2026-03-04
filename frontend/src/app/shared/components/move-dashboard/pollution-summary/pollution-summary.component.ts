@@ -1,8 +1,8 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, catchError, tap, shareReplay } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 
 /**
  * Fila de contaminante en la tabla de resumen con estadísticas diarias
@@ -26,12 +26,26 @@ interface PollutantRow {
 }
 
 /**
+ * PollutionSummaryComponent
+ *
  * Componente que muestra una tabla con el resumen de contaminantes monitoreados.
  * Incluye valores actuales, promedios, mínimos, máximos y estado de cada contaminante.
  * Conectado a SensorDataService para obtener datos reales del backend.
- * 
+ *
+ * Características:
+ * - Tabla de resumen de contaminantes
+ * - Estadísticas: actual, promedio, min, max
+ * - Indicadores de tendencia
+ * - Dark mode support
+ * - Responsivo
+ *
  * @selector app-pollution-summary
  * @standalone true
+ * @imports CommonModule
+ * @returns Tabla de resumen de contaminantes
+ *
+ * @example
+ * <app-pollution-summary />
  */
 @Component({
   selector: 'app-pollution-summary',
@@ -41,22 +55,25 @@ interface PollutantRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PollutionSummaryComponent {
-  private isLoading$ = new BehaviorSubject<boolean>(true);
-
   /**
    * Observable que emite las filas de contaminantes con estadísticas
    */
   pollutionData$!: Observable<PollutantRow[]>;
 
-  private readonly defaultPollutionData: PollutantRow[] = [
-    { name: 'CO₂', current: 0, unit: 'ppm', average: 0, min: 0, max: 0, status: 'good' },
-    { name: 'PM 2.5', current: 0, unit: 'µg/m³', average: 0, min: 0, max: 0, status: 'good' },
-    { name: 'PM 10', current: 0, unit: 'µg/m³', average: 0, min: 0, max: 0, status: 'good' },
-    { name: 'CO', current: 0, unit: 'ppm', average: 0, min: 0, max: 0, status: 'good' },
-    { name: 'NO₂', current: 0, unit: 'ppb', average: 0, min: 0, max: 0, status: 'good' },
-  ];
+  /**
+   * Datos por defecto cuando no hay información disponible
+   */
+  private readonly defaultPollutionData: PollutantRow[] = [];
 
   constructor(private sensorDataService: SensorDataService) {
+    this.initializePollutionData();
+  }
+
+  /**
+   * Inicializa los datos de contaminantes desde el servicio
+   * @private
+   */
+  private initializePollutionData(): void {
     this.pollutionData$ = this.sensorDataService.getAll().pipe(
       map((data: any[]) => {
         if (!data || data.length === 0) {
@@ -64,6 +81,8 @@ export class PollutionSummaryComponent {
         }
 
         // Calcular estadísticas
+        const pollutantNames = ['CO₂', 'PM 2.5', 'PM 10', 'CO', 'NO₂'];
+        const pollutantUnits = ['ppm', 'µg/m³', 'µg/m³', 'ppm', 'ppb'];
         const keys = ['co2', 'pm25', 'pm10', 'co', 'no2'];
         const stats: { [key: string]: any } = {};
 
@@ -78,23 +97,26 @@ export class PollutionSummaryComponent {
         });
 
         return [
-          { ...this.defaultPollutionData[0], ...stats['co2'] },
-          { ...this.defaultPollutionData[1], ...stats['pm25'] },
-          { ...this.defaultPollutionData[2], ...stats['pm10'] },
-          { ...this.defaultPollutionData[3], ...stats['co'] },
-          { ...this.defaultPollutionData[4], ...stats['no2'] },
+          { name: pollutantNames[0], unit: pollutantUnits[0], status: 'good' as const, ...stats['co2'] },
+          { name: pollutantNames[1], unit: pollutantUnits[1], status: 'good' as const, ...stats['pm25'] },
+          { name: pollutantNames[2], unit: pollutantUnits[2], status: 'good' as const, ...stats['pm10'] },
+          { name: pollutantNames[3], unit: pollutantUnits[3], status: 'good' as const, ...stats['co'] },
+          { name: pollutantNames[4], unit: pollutantUnits[4], status: 'good' as const, ...stats['no2'] },
         ];
       }),
-      tap(() => this.isLoading$.next(false)),
-      catchError((err) => {
-        console.error('Error cargando resumen de contaminantes:', err);
-        this.isLoading$.next(false);
+      catchError((error) => {
+        console.error('Error cargando resumen de contaminantes:', error);
         return of(this.defaultPollutionData);
       }),
       shareReplay(1)
     );
   }
 
+  /**
+   * Obtiene clases CSS para el badge de estado
+   * @param {string} status - Estado del contaminante
+   * @returns {string} Clases Tailwind CSS
+   */
   getStatusBadge(status: string): string {
     switch (status) {
       case 'good':
@@ -108,6 +130,11 @@ export class PollutionSummaryComponent {
     }
   }
 
+  /**
+   * Obtiene etiqueta de texto para el estado
+   * @param {string} status - Estado del contaminante
+   * @returns {string} Etiqueta en español
+   */
   getStatusLabel(status: string): string {
     switch (status) {
       case 'good':
@@ -121,12 +148,24 @@ export class PollutionSummaryComponent {
     }
   }
 
+  /**
+   * Obtiene icono de tendencia
+   * @param {number} current - Valor actual
+   * @param {number} average - Valor promedio
+   * @returns {string} Icono de tendencia
+   */
   getTrendIcon(current: number, average: number): string {
     if (current > average) return '↑';
     if (current < average) return '↓';
     return '→';
   }
 
+  /**
+   * Obtiene color de tendencia
+   * @param {number} current - Valor actual
+   * @param {number} average - Valor promedio
+   * @returns {string} Clases Tailwind CSS para color
+   */
   getTrendColor(current: number, average: number): string {
     if (current > average) return 'text-red-600 dark:text-red-400';
     if (current < average) return 'text-green-600 dark:text-green-400';

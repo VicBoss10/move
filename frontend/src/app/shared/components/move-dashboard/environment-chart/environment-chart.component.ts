@@ -1,22 +1,36 @@
-import { Component, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { SensorData } from '../../../../core/models/sensor-data.model';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, catchError, tap, shareReplay } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 
 // Registrar los scales y elementos
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
 
 /**
+ * EnvironmentChartComponent
+ *
  * Componente que muestra un gráfico de línea con tendencias de Temperatura y Humedad
  * en las últimas 24 horas. Utiliza dos ejes Y para escalar independientemente.
  * Conectado con SensorDataService para obtener datos reales del backend.
- * 
+ *
+ * Características:
+ * - Gráfico de línea dual: Temperatura y Humedad
+ * - Ejes Y independientes
+ * - Datos actualizados desde el backend
+ * - Dark mode support
+ * - Responsivo
+ *
  * @selector app-environment-chart
  * @standalone true
+ * @imports CommonModule, BaseChartDirective
+ * @returns Gráfico de tendencia ambiental
+ *
+ * @example
+ * <app-environment-chart />
  */
 @Component({
   selector: 'app-environment-chart',
@@ -28,7 +42,9 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 export class EnvironmentChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  // Datos de las últimas 24 horas
+  /**
+   * Labels de tiempo para el eje X
+   */
   private readonly timeLabels: string[] = [
     '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
     '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
@@ -36,17 +52,34 @@ export class EnvironmentChartComponent {
     '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
   ];
 
-  // Datos por defecto (se reemplazan con datos del backend)
-  private readonly defaultTempData: number[] = [18, 17.8, 17.5, 17.2, 17.0, 17.5, 18.5, 20.0, 22.0, 23.5, 24.0, 24.5, 25.0, 25.5, 25.2, 24.8, 24.5, 24.0, 23.5, 23.0, 22.5, 21.5, 20.0, 19.0];
-  
-  private readonly defaultHumidityData: number[] = [72, 73, 74, 75, 76, 77, 75, 73, 70, 68, 65, 63, 62, 60, 61, 62, 63, 65, 67, 69, 70, 71, 71, 71];
-  
-  private isLoading$ = new BehaviorSubject<boolean>(true);
-  
   /**
    * Observable que emite la configuración del gráfico con datos reactivos
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
+
+  /**
+   * Observable que emite el promedio de temperatura
+   */
+  avgTemperature$!: Observable<number>;
+
+  /**
+   * Observable que emite el promedio de humedad
+   */
+  avgHumidity$!: Observable<number>;
+
+  /**
+   * Observable compartido para los datos del sensor
+   * @private
+   */
+  private sensorData$!: Observable<SensorData[]>;
+
+  /**
+   * Datos por defecto del gráfico
+   */
+  private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
+    labels: this.timeLabels,
+    datasets: [],
+  };
 
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
@@ -148,10 +181,38 @@ export class EnvironmentChartComponent {
   };
 
   constructor(private sensorDataService: SensorDataService) {
-    this.chartData$ = this.sensorDataService.getAll().pipe(
+    this.initializeSensorData();
+    this.initializeChartData();
+    this.initializeAverages();
+  }
+
+  /**
+   * Inicializa el observable compartido de datos del sensor
+   * @private
+   */
+  private initializeSensorData(): void {
+    this.sensorData$ = this.sensorDataService.getAll().pipe(
+      catchError((error) => {
+        console.error('Error cargando datos de sensores:', error);
+        return of([]);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Inicializa los datos del gráfico desde el observable compartido
+   * @private
+   */
+  private initializeChartData(): void {
+    this.chartData$ = this.sensorData$.pipe(
       map((data: SensorData[]) => {
-        const tempData = data?.length > 0 ? data.map(d => d.temperature) : this.defaultTempData;
-        const humidityData = data?.length > 0 ? data.map(d => d.humidity) : this.defaultHumidityData;
+        if (!data || data.length === 0) {
+          return this.defaultChartData;
+        }
+
+        const tempData = data.map(d => d.temperature);
+        const humidityData = data.map(d => d.humidity);
         
         return {
           labels: this.timeLabels,
@@ -189,48 +250,31 @@ export class EnvironmentChartComponent {
           ],
         };
       }),
-      tap(() => this.isLoading$.next(false)),
-      catchError(err => {
-        console.error('Error cargando datos de sensores:', err);
-        this.isLoading$.next(false);
-        return of({
-          labels: this.timeLabels,
-          datasets: [
-            {
-              label: 'Temperatura (°C)',
-              data: this.defaultTempData,
-              borderColor: '#f97316',
-              backgroundColor: 'rgba(249, 115, 22, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: '#f97316',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              yAxisID: 'y',
-            },
-            {
-              label: 'Humedad (%)',
-              data: this.defaultHumidityData,
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: '#3b82f6',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              yAxisID: 'y1',
-            },
-          ],
-        });
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Inicializa los observables de promedios de temperatura y humedad
+   * @private
+   */
+  private initializeAverages(): void {
+    this.avgTemperature$ = this.sensorData$.pipe(
+      map((data: SensorData[]) => {
+        if (!data || data.length === 0) return 0;
+        const sum = data.reduce((acc, d) => acc + (d.temperature || 0), 0);
+        return sum / data.length;
+      }),
+      shareReplay(1)
+    );
+
+    this.avgHumidity$ = this.sensorData$.pipe(
+      map((data: SensorData[]) => {
+        if (!data || data.length === 0) return 0;
+        const sum = data.reduce((acc, d) => acc + (d.humidity || 0), 0);
+        return sum / data.length;
       }),
       shareReplay(1)
     );
   }
 }
-

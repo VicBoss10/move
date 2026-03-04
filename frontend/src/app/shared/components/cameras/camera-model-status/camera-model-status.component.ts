@@ -1,11 +1,20 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map, tap, catchError, shareReplay } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 import { CameraStatusCardsComponent, CameraStats } from '../camera-status-cards/camera-status-cards.component';
 import { CameraService } from '../../../../core/services/camera.service';
 
+/**
+ * Información del modelo de detección
+ * @interface ModelInfo
+ * @property {string} version - Versión del modelo
+ * @property {number} accuracy - Precisión del modelo en %
+ * @property {string} lastUpdate - Última actualización
+ * @property {string} detectionFramework - Framework de detección
+ * @property {string} processingTime - Tiempo de procesamiento
+ * @property {string} memoryUsage - Uso de memoria
+ */
 interface ModelInfo {
   version: string;
   accuracy: number;
@@ -48,36 +57,72 @@ interface ModelInfo {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CameraModelStatusComponent {
-  isLoading$ = new BehaviorSubject<boolean>(false);
+  /**
+   * Observable que emite las estadísticas de cámaras
+   */
+  cameraStats$!: Observable<CameraStats>;
 
-  cameraStats$: Observable<CameraStats>;
-  modelInfo$: Observable<ModelInfo>;
+  /**
+   * Observable que emite la información del modelo
+   */
+  modelInfo$!: Observable<ModelInfo>;
+
+  /**
+   * Estadísticas por defecto cuando no hay datos
+   */
+  private readonly defaultCameraStats: CameraStats = {
+    totalCameras: 0,
+    activeCameras: 0,
+    inactiveCameras: 0,
+    failingCameras: 0,
+    vehiclesDetected: 0,
+    uptime: 0,
+  };
+
+  /**
+   * Información del modelo por defecto
+   */
+  private readonly defaultModelInfo: ModelInfo = {
+    version: 'N/A',
+    accuracy: 0,
+    lastUpdate: 'N/A',
+    detectionFramework: 'N/A',
+    processingTime: 'N/A',
+    memoryUsage: 'N/A',
+  };
 
   constructor(private cameraService: CameraService) {
+    this.initializeCameraStats();
+    this.initializeModelInfo();
+  }
+
+  /**
+   * Inicializa las estadísticas de cámaras desde el servicio
+   * @private
+   */
+  private initializeCameraStats(): void {
     this.cameraStats$ = this.cameraService.getAll().pipe(
       map((cameras) => ({
         totalCameras: cameras.length,
         activeCameras: cameras.filter((c) => c.device.state === 'ACTIVE').length,
         inactiveCameras: cameras.filter((c) => c.device.state === 'INACTIVE').length,
         failingCameras: cameras.filter((c) => c.device.state === 'FAILING').length,
-        vehiclesDetected: 0, // Este valor sería dinámico de un endpoint si existe
-        uptime: 98.5, // Este valor sería dinámico de un endpoint si existe
+        vehiclesDetected: 0,
+        uptime: 98.5,
       })),
-      tap(() => this.isLoading$.next(false)),
       catchError((error) => {
         console.error('Error loading camera stats:', error);
-        return of({
-          totalCameras: 0,
-          activeCameras: 0,
-          inactiveCameras: 0,
-          failingCameras: 0,
-          vehiclesDetected: 0,
-          uptime: 0,
-        });
+        return of(this.defaultCameraStats);
       }),
       shareReplay(1)
     );
+  }
 
+  /**
+   * Inicializa la información del modelo
+   * @private
+   */
+  private initializeModelInfo(): void {
     this.modelInfo$ = of({
       version: '2.1.0',
       accuracy: 94.7,
@@ -86,22 +131,12 @@ export class CameraModelStatusComponent {
       processingTime: '45ms',
       memoryUsage: '2.4 GB',
     }).pipe(
-      tap(() => this.isLoading$.next(false)),
       catchError((error) => {
         console.error('Error loading model info:', error);
-        return of({
-          version: 'N/A',
-          accuracy: 0,
-          lastUpdate: 'N/A',
-          detectionFramework: 'N/A',
-          processingTime: 'N/A',
-          memoryUsage: 'N/A',
-        });
+        return of(this.defaultModelInfo);
       }),
       shareReplay(1)
     );
-
-    this.isLoading$.next(true);
   }
 
 

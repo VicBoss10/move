@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GenericStatsCardsComponent, StatCard } from '../../common/generic-stats-cards/generic-stats-cards.component';
 
@@ -42,6 +42,7 @@ export interface CameraStats {
   template: `
     <app-generic-stats-cards [cards]="getStatCards()" />
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CameraStatusCardsComponent {
   /**

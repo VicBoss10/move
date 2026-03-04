@@ -1,32 +1,73 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Subject, takeUntil } from 'rxjs';
 import { CameraService } from '../../../../core/services/camera.service';
 import { Camera, StreamResponse } from '../../../../core/models/camera.model';
 
+/**
+ * CameraStreamingComponent
+ *
+ * Componente que permite visualizar streaming de cámaras en tiempo real.
+ * Maneja la selección de cámaras, inicio/parada de streams y detección de vehículos.
+ *
+ * Características:
+ * - Lista de cámaras disponibles
+ * - Visualización de streaming en tiempo real
+ * - Control de inicio/parada del stream
+ * - Contador de detecciones de vehículos
+ * - Manejo de errores y estados de carga
+ * - Dark mode support
+ *
+ * @selector app-camera-streaming-content
+ * @standalone true
+ * @imports CommonModule, RouterModule
+ * @returns Página de streaming de cámaras
+ *
+ * @example
+ * <app-camera-streaming-content />
+ */
 @Component({
   selector: 'app-camera-streaming-content',
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './camera-streaming.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CameraStreamingComponent implements OnInit, OnDestroy {
+  /**
+   * Subject para manejo de cleanup en ngOnDestroy
+   * @private
+   */
   private destroy$ = new Subject<void>();
 
+  /** Lista de cámaras disponibles */
   cameras: Camera[] = [];
+
+  /** Cámara actualmente seleccionada */
   selectedCamera: Camera | null = null;
-  streamUrl: SafeUrl | null = null;
+
+  /** URL del stream */
+  streamUrl: string | null = null;
+
+  /** ID de sesión del stream activo */
   sessionId: string | null = null;
+
+  /** Indicador de estado de carga */
   isLoading: boolean = false;
+
+  /** Indicador de streaming activo */
   isStreaming: boolean = false;
+
+  /** Mensaje de error actual */
   errorMessage: string | null = null;
+
+  /** Contador de vehículos detectados */
   detectionCount: number = 0;
 
   constructor(
     private cameraService: CameraService,
-    private sanitizer: DomSanitizer
+    private changeDetectorRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -49,11 +90,13 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
         next: (cameras) => {
           this.cameras = Array.isArray(cameras) ? cameras : [];
           this.isLoading = false;
+          this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
           console.error('Error loading cameras:', error);
           this.errorMessage = 'Error al cargar las cámaras';
           this.isLoading = false;
+          this.changeDetectorRef.markForCheck();
         }
       });
   }
@@ -69,6 +112,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
     this.selectedCamera = camera;
     this.errorMessage = null;
+    this.changeDetectorRef.markForCheck();
   }
 
   startStream(): void {
@@ -84,15 +128,17 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response: StreamResponse) => {
           this.sessionId = response.sessionId;
-          this.streamUrl = this.sanitizer.bypassSecurityTrustUrl(response.streamUrl);
+          this.streamUrl = response.streamUrl;
           this.isStreaming = true;
           this.isLoading = false;
           this.detectionCount = response.detectionCount;
+          this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
           console.error('Error starting stream:', error);
           this.errorMessage = error.error?.message || 'Error al iniciar el streaming';
           this.isLoading = false;
+          this.changeDetectorRef.markForCheck();
         }
       });
   }
@@ -110,12 +156,14 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
           this.streamUrl = null;
           this.isStreaming = false;
           this.detectionCount = 0;
+          this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
           console.error('Error stopping stream:', error);
           this.sessionId = null;
           this.streamUrl = null;
           this.isStreaming = false;
+          this.changeDetectorRef.markForCheck();
         }
       });
   }

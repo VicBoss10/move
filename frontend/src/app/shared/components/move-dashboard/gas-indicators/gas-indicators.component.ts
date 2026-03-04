@@ -2,8 +2,8 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { ComponentColorUtility } from '../../../../core/utils/component-color.utility';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, catchError, tap, shareReplay } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 
 /**
  * Indicador de gas con información de niveles y umbrales de calidad
@@ -29,12 +29,26 @@ interface GasIndicator {
 }
 
 /**
+ * GasIndicatorsComponent
+ *
  * Componente que muestra 4 indicadores de gases como gauges SVG semicirculares.
  * Visualiza CO2, CO, NO2 y NH3 con porcentaje, estado y umbral visual.
  * Conectado a SensorDataService para obtener datos reales del backend.
- * 
+ *
+ * Características:
+ * - Gauges semicirculares SVG
+ * - Código de color según umbrales
+ * - Datos actualizados desde el backend
+ * - Dark mode support
+ * - Responsivo
+ *
  * @selector app-gas-indicators
  * @standalone true
+ * @imports CommonModule
+ * @returns Indicadores de gases
+ *
+ * @example
+ * <app-gas-indicators />
  */
 @Component({
   selector: 'app-gas-indicators',
@@ -44,8 +58,9 @@ interface GasIndicator {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GasIndicatorsComponent {
-  private isLoading$ = new BehaviorSubject<boolean>(true);
-
+  /**
+   * Utility de colores expuesto para el template
+   */
   ColorUtility = ComponentColorUtility;
 
   /**
@@ -53,60 +68,64 @@ export class GasIndicatorsComponent {
    */
   gasIndicators$!: Observable<GasIndicator[]>;
 
-  private readonly defaultIndicators: GasIndicator[] = [
-    {
-      label: 'CO₂',
-      value: 0,
-      unit: 'ppm',
-      min: 0,
-      max: 2000,
-      threshold: { good: 400, moderate: 1000, poor: 2000 },
-      status: 'good',
-      color: '#10b981',
-    },
-    {
-      label: 'CO',
-      value: 0,
-      unit: 'ppm',
-      min: 0,
-      max: 50,
-      threshold: { good: 9, moderate: 25, poor: 50 },
-      status: 'good',
-      color: '#f59e0b',
-    },
-    {
-      label: 'NO₂',
-      value: 0,
-      unit: 'ppb',
-      min: 0,
-      max: 500,
-      threshold: { good: 53, moderate: 100, poor: 500 },
-      status: 'good',
-      color: '#ef4444',
-    },
-    {
-      label: 'NH₃',
-      value: 0,
-      unit: 'ppb',
-      min: 0,
-      max: 100,
-      threshold: { good: 35, moderate: 50, poor: 100 },
-      status: 'good',
-      color: '#3b82f6',
-    },
-  ];
+  /**
+   * Indicadores por defecto cuando no hay datos
+   */
+  private readonly defaultIndicators: GasIndicator[] = [];
 
   constructor(private sensorDataService: SensorDataService) {
+    this.initializeGasIndicators();
+  }
+
+  /**
+   * Inicializa los indicadores de gases desde el servicio
+   * @private
+   */
+  private initializeGasIndicators(): void {
     this.gasIndicators$ = this.sensorDataService.getLatest().pipe(
       map((latest) => {
-        const indicators = [...this.defaultIndicators];
-        
-        if (latest) {
-          indicators[0].value = latest.co2 || 0;
-          indicators[1].value = latest.co || 0;
-          indicators[2].value = latest.no2 || 0;
-          indicators[3].value = latest.nh3 || 0;
-        }
+        const indicators: GasIndicator[] = [
+          {
+            label: 'CO₂',
+            value: latest?.co2 || 0,
+            unit: 'ppm',
+            min: 0,
+            max: 2000,
+            threshold: { good: 400, moderate: 1000, poor: 2000 },
+            status: 'good',
+            color: '#10b981',
+          },
+          {
+            label: 'CO',
+            value: latest?.co || 0,
+            unit: 'ppm',
+            min: 0,
+            max: 50,
+            threshold: { good: 9, moderate: 25, poor: 50 },
+            status: 'good',
+            color: '#f59e0b',
+          },
+          {
+            label: 'NO₂',
+            value: latest?.no2 || 0,
+            unit: 'ppb',
+            min: 0,
+            max: 500,
+            threshold: { good: 53, moderate: 100, poor: 500 },
+            status: 'good',
+            color: '#ef4444',
+          },
+          {
+            label: 'NH₃',
+            value: latest?.nh3 || 0,
+            unit: 'ppb',
+            min: 0,
+            max: 100,
+            threshold: { good: 35, moderate: 50, poor: 100 },
+            status: 'good',
+            color: '#3b82f6',
+          },
+        ];
 
         // Actualizar estado de cada gas
         indicators.forEach(gas => {
@@ -121,10 +140,8 @@ export class GasIndicatorsComponent {
 
         return indicators;
       }),
-      tap(() => this.isLoading$.next(false)),
-      catchError((err) => {
-        console.error('Error cargando datos de gases:', err);
-        this.isLoading$.next(false);
+      catchError((error) => {
+        console.error('Error cargando datos de gases:', error);
         return of(this.defaultIndicators);
       }),
       shareReplay(1)

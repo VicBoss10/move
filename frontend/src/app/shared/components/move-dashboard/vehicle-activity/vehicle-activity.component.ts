@@ -3,19 +3,33 @@ import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend } from 'chart.js';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, catchError, tap, shareReplay } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 
 // Registrar los elementos de Chart.js
 ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 /**
+ * VehicleActivityComponent
+ *
  * Componente que muestra un gráfico de barras horizontal con conteo de vehículos
- * por tipo: Carros, Motos, Buses, Camiones. Actualizado diariamente.
+ * por tipo: Carros, Motos, Buses, Camiones, Bicicletas. Actualizado diariamente.
  * Conectado a VehicleDetectedService para obtener datos en tiempo real.
- * 
+ *
+ * Características:
+ * - Gráfico de barras horizontal
+ * - Conteo por tipo de vehículo
+ * - Datos actualizados desde el backend
+ * - Dark mode support
+ * - Responsivo
+ *
  * @selector app-vehicle-activity
  * @standalone true
+ * @imports CommonModule, BaseChartDirective
+ * @returns Gráfico de actividad vehicular
+ *
+ * @example
+ * <app-vehicle-activity />
  */
 @Component({
   selector: 'app-vehicle-activity',
@@ -27,8 +41,6 @@ ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip,
 export class VehicleActivityComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  private isLoading$ = new BehaviorSubject<boolean>(true);
-
   /**
    * Observable que emite la configuración del gráfico de barras con conteos de vehículos
    */
@@ -39,8 +51,24 @@ export class VehicleActivityComponent {
    */
   vehicleCounts$!: Observable<number[]>;
 
-  // Datos de vehículos detectados - Mapeado al enum VehicleType del backend
-  private vehicleTypes: string[] = ['Carros', 'Motos', 'Buses', 'Camiones', 'Bicicletas'];
+  /**
+   * Observable compartido de datos de vehículos
+   * @private
+   */
+  private vehicleData$!: Observable<any[]>;
+
+  /**
+   * Tipos de vehículos mapeados al enum VehicleType del backend
+   */
+  private readonly vehicleTypes: string[] = ['Carros', 'Motos', 'Buses', 'Camiones', 'Bicicletas'];
+
+  /**
+   * Datos por defecto del gráfico
+   */
+  private readonly defaultChartData: ChartConfiguration<'bar'>['data'] = {
+    labels: this.vehicleTypes,
+    datasets: [],
+  };
 
   chartOptions: ChartConfiguration<'bar'>['options'] = {
     indexAxis: 'y',
@@ -111,88 +139,98 @@ export class VehicleActivityComponent {
     },
   };
 
-  private readonly defaultChartData: ChartConfiguration<'bar'>['data'] = {
-    labels: this.vehicleTypes,
-    datasets: [
-      {
-        label: 'Cantidad de Vehículos',
-        data: [0, 0, 0, 0, 0],
-        backgroundColor: [
-          '#3b82f6', // Azul para Carros
-          '#10b981', // Verde para Motos
-          '#f97316', // Naranja para Buses
-          '#ef4444', // Rojo para Camiones
-          '#8b5cf6', // Púrpura para Bicicletas
-        ],
-        borderColor: [
-          '#1e40af',
-          '#059669',
-          '#ea580c',
-          '#dc2626',
-          '#6d28d9',
-        ],
-        borderWidth: 1,
-        borderRadius: 4,
-      },
-    ],
-  };
-
   constructor(private vehicleService: VehicleDetectedService) {
-    // Observable para chart data
-    this.chartData$ = this.vehicleService.getAll().pipe(
+    this.initializeVehicleData();
+    this.initializeChartData();
+    this.initializeVehicleCounts();
+  }
+
+  /**
+   * Inicializa el observable compartido de datos de vehículos
+   * @private
+   */
+  private initializeVehicleData(): void {
+    this.vehicleData$ = this.vehicleService.getAll().pipe(
+      catchError((error) => {
+        console.error('Error cargando datos de vehículos:', error);
+        return of([]);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Inicializa los datos del gráfico desde el observable compartido
+   * @private
+   */
+  private initializeChartData(): void {
+    this.chartData$ = this.vehicleData$.pipe(
       map((vehicles: any[]) => {
         if (!vehicles || vehicles.length === 0) {
           return this.defaultChartData;
         }
 
-        // Contar vehículos por tipo - Mapeado a: [Carros, Motos, Buses, Camiones, Bicicletas]
-        const carCount = vehicles.filter((v: any) => v.vehicleType === 'CAR').length;
-        const motorcycleCount = vehicles.filter((v: any) => v.vehicleType === 'MOTORCYCLE').length;
-        const busCount = vehicles.filter((v: any) => v.vehicleType === 'BUS').length;
-        const truckCount = vehicles.filter((v: any) => v.vehicleType === 'TRUCK').length;
-        const bicycleCount = vehicles.filter((v: any) => v.vehicleType === 'BICYCLE').length;
-
-        const vehicleCounts = [carCount, motorcycleCount, busCount, truckCount, bicycleCount];
+        const vehicleCounts = this.calculateVehicleCounts(vehicles);
 
         return {
-          ...this.defaultChartData,
+          labels: this.vehicleTypes,
           datasets: [
             {
-              ...this.defaultChartData.datasets![0],
+              label: 'Cantidad de Vehículos',
               data: vehicleCounts,
+              backgroundColor: [
+                '#3b82f6', // Azul para Carros
+                '#10b981', // Verde para Motos
+                '#f97316', // Naranja para Buses
+                '#ef4444', // Rojo para Camiones
+                '#8b5cf6', // Púrpura para Bicicletas
+              ],
+              borderColor: [
+                '#1e40af',
+                '#059669',
+                '#ea580c',
+                '#dc2626',
+                '#6d28d9',
+              ],
+              borderWidth: 1,
+              borderRadius: 4,
             },
           ],
         };
       }),
-      tap(() => this.isLoading$.next(false)),
-      catchError((err) => {
-        console.error('Error cargando datos de vehículos:', err);
-        this.isLoading$.next(false);
-        return of(this.defaultChartData);
-      }),
       shareReplay(1)
     );
+  }
 
-    // Observable para conteos
-    this.vehicleCounts$ = this.vehicleService.getAll().pipe(
+  /**
+   * Inicializa los conteos de vehículos desde el observable compartido
+   * @private
+   */
+  private initializeVehicleCounts(): void {
+    this.vehicleCounts$ = this.vehicleData$.pipe(
       map((vehicles: any[]) => {
         if (!vehicles || vehicles.length === 0) {
-          return [0, 0, 0, 0, 0];
+          return [];
         }
-
-        const carCount = vehicles.filter((v: any) => v.vehicleType === 'CAR').length;
-        const motorcycleCount = vehicles.filter((v: any) => v.vehicleType === 'MOTORCYCLE').length;
-        const busCount = vehicles.filter((v: any) => v.vehicleType === 'BUS').length;
-        const truckCount = vehicles.filter((v: any) => v.vehicleType === 'TRUCK').length;
-        const bicycleCount = vehicles.filter((v: any) => v.vehicleType === 'BICYCLE').length;
-
-        return [carCount, motorcycleCount, busCount, truckCount, bicycleCount];
-      }),
-      catchError((err) => {
-        console.error('Error cargando conteos de vehículos:', err);
-        return of([0, 0, 0, 0, 0]);
+        return this.calculateVehicleCounts(vehicles);
       }),
       shareReplay(1)
     );
+  }
+
+  /**
+   * Calcula los conteos de vehículos por tipo
+   * @private
+   * @param {any[]} vehicles - Array de vehículos detectados
+   * @returns {number[]} Array de conteos [carros, motos, buses, camiones, bicicletas]
+   */
+  private calculateVehicleCounts(vehicles: any[]): number[] {
+    const carCount = vehicles.filter((v: any) => v.vehicleType === 'CAR').length;
+    const motorcycleCount = vehicles.filter((v: any) => v.vehicleType === 'MOTORCYCLE').length;
+    const busCount = vehicles.filter((v: any) => v.vehicleType === 'BUS').length;
+    const truckCount = vehicles.filter((v: any) => v.vehicleType === 'TRUCK').length;
+    const bicycleCount = vehicles.filter((v: any) => v.vehicleType === 'BICYCLE').length;
+
+    return [carCount, motorcycleCount, busCount, truckCount, bicycleCount];
   }
 }
