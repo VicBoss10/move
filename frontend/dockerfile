@@ -23,6 +23,12 @@ COPY src/assets/landing /usr/share/nginx/html/landing
 # Copia la configuración de Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Script de entrypoint para inyectar variables de entorno en runtime
+# Reemplaza el placeholder de Google Maps API Key en index.html
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 EXPOSE 80
 
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

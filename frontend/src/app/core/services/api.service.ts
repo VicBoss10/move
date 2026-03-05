@@ -55,6 +55,19 @@ export class ApiService {
   }
 
   /**
+   * POST que espera respuesta en texto plano (no JSON)
+   * Útil para endpoints del backend que retornan strings como "Created successfully..."
+   * @param endpoint - Ruta del endpoint
+   * @param body - Datos a enviar
+   * @returns Observable<string> con la respuesta del servidor
+   */
+  postText(endpoint: string, body: any): Observable<string> {
+    return this.http.post(`${this.apiUrl}${endpoint}`, body, { responseType: 'text' }).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  /**
    * PUT genérico
    * @param endpoint - Ruta del endpoint
    * @param body - Datos a actualizar

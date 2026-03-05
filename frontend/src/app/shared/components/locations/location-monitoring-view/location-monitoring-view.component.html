@@ -34,6 +34,57 @@
     </div>
   </div>
 
+  <!-- Mapa de Google Maps con marcadores de ubicaciones -->
+  <div class="space-y-2">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Mapa de Ubicaciones</h2>
+
+    <div *ngIf="isApiLoaded; else noMapTemplate" class="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+      <google-map
+        [center]="center"
+        [zoom]="zoom"
+        [options]="mapOptions"
+        height="400px"
+        width="100%"
+      >
+        <!-- Marcadores de cada ubicación del backend -->
+        <map-advanced-marker
+          *ngFor="let location of locations"
+          #markerRef="mapAdvancedMarker"
+          [position]="{ lat: location.latitude, lng: location.length }"
+          [title]="location.description || 'Punto de monitoreo'"
+          (mapClick)="onMarkerClick(markerRef, location)"
+        />
+
+        <!-- Info Window compartido -->
+        <map-info-window>
+          <div *ngIf="selectedInfoLocation" class="p-3 max-w-xs">
+            <h4 class="font-semibold text-gray-900 text-sm">
+              {{ selectedInfoLocation.description || 'Punto de monitoreo' }}
+            </h4>
+            <div class="mt-2 text-xs text-gray-500 space-y-1">
+              <p>Lat: {{ selectedInfoLocation.latitude | number : '1.4-6' }}</p>
+              <p>Lng: {{ selectedInfoLocation.length | number : '1.4-6' }}</p>
+            </div>
+          </div>
+        </map-info-window>
+      </google-map>
+    </div>
+
+    <!-- Fallback sin API -->
+    <ng-template #noMapTemplate>
+      <div class="flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <svg class="w-12 h-12 mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">Google Maps no disponible</p>
+        <p class="text-xs text-gray-500 mt-1">Configura la API Key para ver el mapa</p>
+      </div>
+    </ng-template>
+  </div>
+
   <!-- Sección de Filtros -->
   <app-location-filters (filtersChanged)="onFiltersChanged($event)" />
 
@@ -42,6 +93,4 @@
     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Ubicaciones de Monitoreo</h2>
     <app-location-table [locations]="locations" />
   </div>
-
-
 </div>

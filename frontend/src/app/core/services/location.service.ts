@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { Location, LocationSearchCriteria, LocationStats } from '../models/location.model';
@@ -31,6 +31,22 @@ export class LocationService extends BaseDataService<Location> {
     super(apiService);
     // Datos de ubicaciones son casi estáticos - TTL largo (1 hora)
     this.cacheDuration = 60 * 60 * 1000;
+  }
+
+  /**
+   * Crea una nueva ubicación.
+   * Override porque el backend retorna texto plano en vez de JSON.
+   * @param data - Datos de la ubicación
+   * @returns Observable<Location> con los datos enviados
+   */
+  override create(data: Location): Observable<Location> {
+    return this.apiService.postText(`/${this.endpoint}`, data).pipe(
+      tap((response) => {
+        console.log('Ubicación creada:', response);
+        this.invalidateCache();
+      }),
+      map(() => data) // Retornar los datos enviados ya que el backend solo devuelve texto
+    );
   }
 
   /**

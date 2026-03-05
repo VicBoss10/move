@@ -6,6 +6,11 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="assets/img/m_logo.png">
+
+  <!-- Google Maps: en Docker, el entrypoint reemplaza el placeholder con la key real -->
+  <script>
+    window.__GOOGLE_MAPS_API_KEY__ = '__GOOGLE_MAPS_KEY_PLACEHOLDER__';
+  </script>
 </head>
 <body>
   <app-root></app-root>

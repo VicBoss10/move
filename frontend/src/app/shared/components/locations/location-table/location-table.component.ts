@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Location } from '../../../../core/models/location.model';
 
@@ -29,6 +29,7 @@ import { Location } from '../../../../core/models/location.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './location-table.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationTableComponent {
   /**

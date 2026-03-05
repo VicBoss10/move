@@ -10,80 +10,83 @@
   <!-- Filtros -->
   <app-location-filters (filtersChanged)="onFiltersChanged($event)" />
 
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex items-center justify-center py-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <span class="ml-3 text-gray-600 dark:text-gray-400">Cargando ubicaciones...</span>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="errorMessage" class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+    <p class="text-sm text-red-700 dark:text-red-400">{{ errorMessage }}</p>
+  </div>
+
   <!-- Contenedor Principal -->
   <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
     <!-- Mapa -->
     <div class="lg:col-span-3 space-y-4">
-      <!-- Mapa SVG -->
-      <div class="relative w-full rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100 dark:border-gray-700 dark:from-blue-900/20 dark:to-blue-800/20 overflow-hidden">
-        <!-- Background Map -->
-        <svg
-          class="w-full h-96"
-          viewBox="0 0 500 500"
-          preserveAspectRatio="xMidYMid meet"
+
+      <!-- Google Maps -->
+      <div *ngIf="isApiLoaded; else noApiTemplate" class="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        <google-map
+          [center]="center"
+          [zoom]="zoom"
+          [options]="mapOptions"
+          height="480px"
+          width="100%"
         >
-          <!-- Grid background -->
-          <defs>
-            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" stroke-width="0.5" />
-            </pattern>
-          </defs>
-          <rect width="500" height="500" fill="url(#grid)" />
-
-          <!-- Zona labels -->
-          <text x="50" y="30" class="text-xs fill-gray-400" font-size="12">
-            ZONA NORTE
-          </text>
-          <text x="50" y="200" class="text-xs fill-gray-400" font-size="12">
-            CENTRO
-          </text>
-          <text x="50" y="450" class="text-xs fill-gray-400" font-size="12">
-            ZONA SUR
-          </text>
-        </svg>
-
-        <!-- Marcadores de ubicaciones (Overlay) -->
-        <div class="absolute inset-0 pointer-events-auto">
-          <div
+          <!-- Marcadores de ubicaciones -->
+          <map-advanced-marker
             *ngFor="let location of locations"
-            class="absolute w-8 h-8 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
-            [style.top]="getMarkerPosition(location.latitude, location.longitude).top"
-            [style.left]="getMarkerPosition(location.latitude, location.longitude).left"
-            (click)="selectLocation(location)"
-          >
-            <!-- Marcador -->
-            <div
-              class="w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
-              [class]="getStatusColor(location.status)"
-            >
-              <svg
-                class="w-4 h-4 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </div>
+            #markerRef="mapAdvancedMarker"
+            [position]="{ lat: location.latitude, lng: location.longitude }"
+            [content]="location.markerContent"
+            [title]="location.name"
+            (mapClick)="onMarkerClick(markerRef, location)"
+          />
 
-            <!-- Pulso de animación (solo para activos) -->
-            <div
-              *ngIf="location.status === 'active'"
-              class="absolute inset-0 rounded-full border-2 animate-pulse"
-              [class]="getStatusColor(location.status)"
-              style="opacity: 0.3"
-            ></div>
-          </div>
-        </div>
+          <!-- Info Window compartido -->
+          <map-info-window>
+            <div *ngIf="infoWindowContent" class="p-3 max-w-xs">
+              <h4 class="font-semibold text-gray-900 text-sm">{{ infoWindowContent.name }}</h4>
+              <p class="text-xs text-gray-600 mt-1">{{ infoWindowContent.description }}</p>
+              <div class="mt-2 flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full" [class]="getStatusColor(infoWindowContent.status)"></div>
+                <span class="text-xs" [class]="getStatusTextColor(infoWindowContent.status)">
+                  {{ getStatusLabel(infoWindowContent.status) }}
+                </span>
+              </div>
+              <div class="mt-2 text-xs text-gray-500">
+                <span>{{ infoWindowContent.latitude | number : '1.4-4' }}, {{ infoWindowContent.longitude | number : '1.4-4' }}</span>
+              </div>
+              <div class="mt-2 text-xs font-medium text-purple-600">
+                {{ infoWindowContent.vehiclesDetected }} vehículos detectados
+              </div>
+            </div>
+          </map-info-window>
+        </google-map>
       </div>
 
-      <!-- Información de ubicaciones -->
+      <!-- Fallback: API no disponible -->
+      <ng-template #noApiTemplate>
+        <div class="flex flex-col items-center justify-center h-96 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <p class="text-gray-600 dark:text-gray-400 font-medium">Google Maps no disponible</p>
+          <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+            Configura la API Key en la variable de entorno para habilitar el mapa
+          </p>
+        </div>
+      </ng-template>
+
+      <!-- Lista de ubicaciones debajo del mapa -->
       <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-          Ubicaciones en el Mapa
+          Ubicaciones en el Mapa ({{ locations.length }})
         </h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <div
@@ -219,7 +222,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
         <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
-          Selecciona una ubicación en el mapa para ver detalles
+          Selecciona un marcador en el mapa para ver detalles
         </p>
       </div>
     </div>

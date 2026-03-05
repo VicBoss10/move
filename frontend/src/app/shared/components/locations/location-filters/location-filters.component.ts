@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -52,6 +52,7 @@ export interface LocationSearchCriteria {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './location-filters.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationFiltersComponent implements OnInit, OnDestroy {
   /**
@@ -96,7 +97,10 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
    */
   @Output() filtersChanged = new EventEmitter<LocationSearchCriteria>();
 
-  constructor(private locationService: LocationService) {}
+  constructor(
+    private locationService: LocationService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   /**
    * Hook del ciclo de vida: Carga ubicaciones y configura autocomplete
@@ -108,6 +112,7 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
       .subscribe(locations => {
         this.allLocations = locations;
         this.filteredLocations = locations;
+        this.cdr.markForCheck();
       });
 
     // Configurar debounce para búsqueda de descripción
@@ -119,6 +124,7 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
       )
       .subscribe(searchTerm => {
         this.filterLocations(searchTerm);
+        this.cdr.markForCheck();
       });
   }
 
@@ -168,6 +174,7 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
     // Esperar un poco para permitir clicks en el dropdown
     setTimeout(() => {
       this.showDropdown = false;
+      this.cdr.markForCheck();
     }, 200);
   }
 
@@ -179,6 +186,7 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
     this.filters.description = location.description;
     this.showDropdown = false;
     this.filteredLocations = [location];
+    this.cdr.markForCheck();
   }
 
   /**

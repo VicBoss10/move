@@ -1,11 +1,14 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, Subject, of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
+import { GoogleMapsModule, MapInfoWindow, MapAdvancedMarker } from '@angular/google-maps';
 import { LocationTableComponent } from '../location-table/location-table.component';
 import { LocationFiltersComponent, LocationSearchCriteria } from '../location-filters/location-filters.component';
 import { LocationService } from '../../../../core/services/location.service';
 import { Location } from '../../../../core/models/location.model';
+import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
+import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
 
 /**
  * LocationMonitoringViewComponent
@@ -27,7 +30,7 @@ import { Location } from '../../../../core/models/location.model';
 @Component({
   selector: 'app-location-monitoring-view',
   standalone: true,
-  imports: [CommonModule, LocationTableComponent, LocationFiltersComponent],
+  imports: [CommonModule, GoogleMapsModule, LocationTableComponent, LocationFiltersComponent],
   templateUrl: './location-monitoring-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -37,10 +40,8 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    */
   private destroy$ = new Subject<void>();
 
-  /**
-   * Observable stream de ubicaciones desde el backend
-   */
-  locations$: Observable<Location[]> = of([]);
+  /** Referencia al InfoWindow del mapa */
+  @ViewChild(MapInfoWindow) infoWindow!: MapInfoWindow;
 
   /**
    * Array de ubicaciones para binding en el template
@@ -66,11 +67,27 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    */
   errorMessage: string | null = null;
 
+  /** Centro del mapa */
+  center: google.maps.LatLngLiteral = DEFAULT_MAP_CONFIG.center;
+
+  /** Nivel de zoom */
+  zoom = DEFAULT_MAP_CONFIG.zoom;
+
+  /** Opciones del mapa */
+  mapOptions: google.maps.MapOptions = { ...DEFAULT_MAP_CONFIG.options };
+
+  /** Indica si la API de Google Maps está disponible */
+  isApiLoaded = false;
+
+  /** Ubicación seleccionada en el info window */
+  selectedInfoLocation: Location | null = null;
+
   /**
    * Constructor e inyección de dependencias
    */
   constructor(
     private locationService: LocationService,
+    private mapsLoader: GoogleMapsLoaderService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -78,6 +95,25 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * Hook del ciclo de vida: Carga ubicaciones al inicializar
    */
   ngOnInit(): void {
+    this.mapsLoader.load().then((loaded) => {
+      if (!loaded) {
+        this.isApiLoaded = false;
+        this.cdr.markForCheck();
+        return;
+      }
+
+      // Mostrar el mapa inmediatamente con centro por defecto (Pasto)
+      this.isApiLoaded = true;
+      this.cdr.markForCheck();
+
+      // Geolocalización en segundo plano — no bloquea el render del mapa
+      this.mapsLoader.requestUserLocation().then((userLocation) => {
+        if (userLocation && userLocation.accuracy < 1000) {
+          this.center = { lat: userLocation.lat, lng: userLocation.lng };
+          this.cdr.markForCheck();
+        }
+      });
+    });
     this.loadLocations();
   }
 
@@ -98,24 +134,23 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
-    this.locations$ = this.locationService.getAll().pipe(
-      finalize(() => {
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      }),
-      catchError((error) => {
-        console.error('Error loading locations:', error);
-        this.errorMessage = 'Error al cargar las ubicaciones. Usando datos offline.';
-        return of(this.locations);
-      }),
-      takeUntil(this.destroy$)
-    );
-
-    this.locations$
-      .pipe(takeUntil(this.destroy$))
+    this.locationService.getAll()
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
+        catchError((error) => {
+          console.error('Error loading locations:', error);
+          this.errorMessage = 'Error al cargar las ubicaciones. Usando datos offline.';
+          return of(this.locations);
+        }),
+        takeUntil(this.destroy$)
+      )
       .subscribe((locations) => {
         this.locations = locations;
         this.updateSystemInfo();
+        this.fitMapToLocations();
         this.cdr.markForCheck();
       });
   }
@@ -161,7 +196,61 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
       .subscribe((locations) => {
         this.locations = locations;
         this.updateSystemInfo();
+        this.fitMapToLocations();
         this.cdr.markForCheck();
       });
+  }
+
+  /**
+   * Abre el InfoWindow al hacer clic en un marcador del mapa
+   * @param marker - Referencia al MapAdvancedMarker
+   * @param location - Datos de la ubicación
+   */
+  onMarkerClick(marker: MapAdvancedMarker, location: Location): void {
+    this.selectedInfoLocation = location;
+    if (this.infoWindow) {
+      this.infoWindow.open(marker);
+    }
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Centra el mapa en una ubicación específica
+   * @param location - Ubicación a enfocar
+   */
+  focusOnLocation(location: Location): void {
+    this.center = { lat: location.latitude, lng: location.length };
+    this.zoom = 16;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Ajusta el centro del mapa para mostrar todas las ubicaciones.
+   * Si no hay ubicaciones, mantiene el centro actual (Pasto por defecto).
+   * @private
+   */
+  private fitMapToLocations(): void {
+    if (this.locations.length === 0) return;
+
+    // Filtrar ubicaciones con coordenadas válidas
+    const valid = this.locations.filter(loc =>
+      loc.latitude != null && loc.length != null &&
+      isFinite(loc.latitude) && isFinite(loc.length)
+    );
+    if (valid.length === 0) return;
+
+    if (valid.length === 1) {
+      this.center = {
+        lat: valid[0].latitude,
+        lng: valid[0].length,
+      };
+      this.zoom = 15;
+      return;
+    }
+
+    const avgLat = valid.reduce((sum, loc) => sum + loc.latitude, 0) / valid.length;
+    const avgLng = valid.reduce((sum, loc) => sum + loc.length, 0) / valid.length;
+    this.center = { lat: avgLat, lng: avgLng };
+    this.zoom = DEFAULT_MAP_CONFIG.zoom;
   }
 }
