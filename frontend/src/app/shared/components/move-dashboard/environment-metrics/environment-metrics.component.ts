@@ -4,6 +4,7 @@ import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 import { ComponentColorUtility } from '../../../../core/utils/component-color.utility';
+import { getEnvironmentStatus } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -100,20 +101,25 @@ export class EnvironmentMetricsComponent {
         const latestSensor = sensorData?.[sensorData.length - 1];
         const stats = this.vehicleService.getStats();
 
+        const co2Status = getEnvironmentStatus('co2', latestSensor?.co2, false);
+        const tempStatus = getEnvironmentStatus('temperature', latestSensor?.temperature, false);
+
         return [
           {
             label: 'CO₂ / Gases',
             icon: this.icons.gasIcon,
             value: latestSensor?.co2?.toFixed(0) || '0',
             unit: 'ppm',
-            status: 'normal' as const,
+            status: (co2Status.key === 'good' || co2Status.key === 'no-data') ? 'normal' as const
+              : co2Status.key === 'moderate' ? 'warning' as const : 'critical' as const,
           },
           {
             label: 'Temp / Hum',
             icon: this.icons.temperatureIcon,
             value: latestSensor ? `${latestSensor.temperature.toFixed(1)}°C` : '0°C',
             unit: `/ ${latestSensor?.humidity?.toFixed(0) || '0'}%`,
-            status: 'normal' as const,
+            status: (tempStatus.key === 'good' || tempStatus.key === 'no-data') ? 'normal' as const
+              : tempStatus.key === 'moderate' ? 'warning' as const : 'critical' as const,
             secondaryValue: latestSensor?.humidity?.toFixed(0) + '%'
           },
           {

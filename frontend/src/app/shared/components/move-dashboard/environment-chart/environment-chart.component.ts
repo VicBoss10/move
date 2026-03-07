@@ -5,7 +5,7 @@ import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, Poin
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 
 // Registrar los scales y elementos
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
@@ -14,7 +14,7 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
  * EnvironmentChartComponent
  *
  * Componente que muestra un gráfico de línea con tendencias de Temperatura y Humedad
- * en las últimas 24 horas. Utiliza dos ejes Y para escalar independientemente.
+ * en las últimas 12 horas. Utiliza dos ejes Y para escalar independientemente.
  * Conectado con SensorDataService para obtener datos reales del backend.
  *
  * Características:
@@ -43,16 +43,6 @@ export class EnvironmentChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Labels de tiempo para el eje X
-   */
-  private readonly timeLabels: string[] = [
-    '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
-    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-  ];
-
-  /**
    * Observable que emite la configuración del gráfico con datos reactivos
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
@@ -68,6 +58,11 @@ export class EnvironmentChartComponent {
   avgHumidity$!: Observable<number>;
 
   /**
+   * Observable que emite el promedio de CO2
+   */
+  avgCo2$!: Observable<number>;
+
+  /**
    * Observable compartido para los datos del sensor
    * @private
    */
@@ -77,7 +72,7 @@ export class EnvironmentChartComponent {
    * Datos por defecto del gráfico
    */
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
-    labels: this.timeLabels,
+    labels: [],
     datasets: [],
   };
 
@@ -187,11 +182,23 @@ export class EnvironmentChartComponent {
   }
 
   /**
-   * Inicializa el observable compartido de datos del sensor
+   * Horas de datos a mostrar en la gráfica
+   */
+  private readonly HOURS_WINDOW = 12;
+
+  /**
+   * Inicializa el observable compartido de datos del sensor.
+   * Obtiene el último registro para determinar la ventana de tiempo
+   * y luego consulta solo las últimas 12 horas al backend.
    * @private
    */
   private initializeSensorData(): void {
-    this.sensorData$ = this.sensorDataService.getAll().pipe(
+    this.sensorData$ = this.sensorDataService.getLatest().pipe(
+      switchMap((latest) => {
+        const endTime = new Date(latest.timestamp);
+        const startTime = new Date(endTime.getTime() - this.HOURS_WINDOW * 3600000);
+        return this.sensorDataService.search({ start: startTime, end: endTime });
+      }),
       catchError((error) => {
         console.error('Error cargando datos de sensores:', error);
         return of([]);
@@ -201,7 +208,9 @@ export class EnvironmentChartComponent {
   }
 
   /**
-   * Inicializa los datos del gráfico desde el observable compartido
+   * Inicializa los datos del gráfico desde el observable compartido.
+   * Agrupa los datos por hora real del timestamp y genera labels dinámicos
+   * terminando en la hora del dato más reciente.
    * @private
    */
   private initializeChartData(): void {
@@ -211,11 +220,59 @@ export class EnvironmentChartComponent {
           return this.defaultChartData;
         }
 
-        const tempData = data.map(d => d.temperature);
-        const humidityData = data.map(d => d.humidity);
-        
+        // Parsear timestamps y ordenar cronológicamente
+        const parsedData = data
+          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter(d => !isNaN(d._time.getTime()))
+          .sort((a, b) => a._time.getTime() - b._time.getTime());
+
+        if (parsedData.length === 0) {
+          return this.defaultChartData;
+        }
+
+        // Hora del dato más reciente como referencia
+        const latestTime = parsedData[parsedData.length - 1]._time;
+        const latestSlotStart = new Date(
+          latestTime.getFullYear(),
+          latestTime.getMonth(),
+          latestTime.getDate(),
+          latestTime.getHours(),
+          0, 0, 0
+        );
+
+        // Crear 12 slots horarios hacia atrás desde la hora más reciente
+        const slots: { start: Date; end: Date; label: string }[] = [];
+        for (let i = 11; i >= 0; i--) {
+          const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
+          const slotEnd = new Date(slotStart.getTime() + 3600000);
+          const label = `${slotStart.getHours().toString().padStart(2, '0')}:00`;
+          slots.push({ start: slotStart, end: slotEnd, label });
+        }
+
+        const labels = slots.map(s => s.label);
+
+        // Agrupar datos en cada slot horario y promediar
+        const tempData: (number | null)[] = [];
+        const humidityData: (number | null)[] = [];
+
+        for (const slot of slots) {
+          const slotData = parsedData.filter(
+            d => d._time >= slot.start && d._time < slot.end
+          );
+
+          if (slotData.length > 0) {
+            const avgTemp = slotData.reduce((sum, d) => sum + (d.temperature || 0), 0) / slotData.length;
+            const avgHum = slotData.reduce((sum, d) => sum + (d.humidity || 0), 0) / slotData.length;
+            tempData.push(Math.round(avgTemp * 100) / 100);
+            humidityData.push(Math.round(avgHum * 100) / 100);
+          } else {
+            tempData.push(null);
+            humidityData.push(null);
+          }
+        }
+
         return {
-          labels: this.timeLabels,
+          labels,
           datasets: [
             {
               label: 'Temperatura (°C)',
@@ -231,6 +288,7 @@ export class EnvironmentChartComponent {
               pointRadius: 4,
               pointHoverRadius: 6,
               yAxisID: 'y',
+              spanGaps: true,
             },
             {
               label: 'Humedad (%)',
@@ -246,6 +304,7 @@ export class EnvironmentChartComponent {
               pointRadius: 4,
               pointHoverRadius: 6,
               yAxisID: 'y1',
+              spanGaps: true,
             },
           ],
         };
@@ -272,6 +331,15 @@ export class EnvironmentChartComponent {
       map((data: SensorData[]) => {
         if (!data || data.length === 0) return 0;
         const sum = data.reduce((acc, d) => acc + (d.humidity || 0), 0);
+        return sum / data.length;
+      }),
+      shareReplay(1)
+    );
+
+    this.avgCo2$ = this.sensorData$.pipe(
+      map((data: SensorData[]) => {
+        if (!data || data.length === 0) return 0;
+        const sum = data.reduce((acc, d) => acc + (d.co2 || 0), 0);
         return sum / data.length;
       }),
       shareReplay(1)

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { getEnvironmentStatus } from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Interface para indicador de partículas
@@ -82,12 +83,12 @@ export class PmIndicatorsComponent {
         {
           ...this.defaultIndicators[0],
           value: Math.round((latestData?.pm25 || 0) * 10) / 10,
-          status: this.getStatusPM(latestData?.pm25, 'PM25'),
+          status: getEnvironmentStatus('pm25', latestData?.pm25).label,
         },
         {
           ...this.defaultIndicators[1],
           value: Math.round((latestData?.pm10 || 0) * 10) / 10,
-          status: this.getStatusPM(latestData?.pm10, 'PM10'),
+          status: getEnvironmentStatus('pm10', latestData?.pm10).label,
         },
       ]),
       catchError((error) => {
@@ -96,27 +97,6 @@ export class PmIndicatorsComponent {
       }),
       shareReplay(1)
     );
-  }
-
-  /**
-   * Determina el estado de una partícula basado en su valor
-   */
-  private getStatusPM(value: number, type: string): string {
-    if (!value) return 'Normal';
-
-    // Thresholds para calidad del aire
-    if (type === 'PM25') {
-      if (value > 55.5) return 'Muy Malo';
-      if (value > 35.5) return 'Malo';
-      if (value > 12.1) return 'Moderado';
-      if (value > 0) return 'Bueno';
-    } else if (type === 'PM10') {
-      if (value > 154) return 'Muy Malo';
-      if (value > 154) return 'Malo';
-      if (value > 35) return 'Moderado';
-      if (value > 0) return 'Bueno';
-    }
-    return 'Normal';
   }
 
   /**

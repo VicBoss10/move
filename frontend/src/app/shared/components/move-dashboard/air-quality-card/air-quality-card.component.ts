@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { SafeHtmlPipe } from "../../../pipe/safe-html.pipe";
 import { SensorDataService } from "../../../../core/services/sensor-data.service";
 import { ComponentColorUtility } from "../../../../core/utils/component-color.utility";
+import { getEnvironmentStatus } from "../../../../core/config/environment-thresholds.config";
 import { Observable, of } from "rxjs";
 import { map, catchError, shareReplay } from "rxjs/operators";
 
@@ -108,25 +109,25 @@ export class AirQualityCardComponent {
         const pm25 = Math.round(latest?.pm25 || 0);
         const pm10 = Math.round(latest?.pm10 || 0);
 
+        const pm25Status = getEnvironmentStatus('pm25', pm25);
+        const pm10Status = getEnvironmentStatus('pm10', pm10);
+
         return [
           {
             label: "PM 2.5",
             icon: this.icons.pm25Icon,
             value: pm25,
             unit: "µg/m³",
-            status: pm25 <= 25 ? "good" : pm25 <= 50 ? "moderate" : "unhealthy",
-            statusLabel:
-              pm25 <= 25 ? "Bueno" : pm25 <= 50 ? "Moderado" : "Malo",
+            status: pm25Status.key as any,
+            statusLabel: pm25Status.label,
           },
           {
             label: "PM 10",
             icon: this.icons.pm10Icon,
             value: pm10,
             unit: "µg/m³",
-            status:
-              pm10 <= 50 ? "good" : pm10 <= 100 ? "moderate" : "unhealthy",
-            statusLabel:
-              pm10 <= 50 ? "Bueno" : pm10 <= 100 ? "Moderado" : "Malo",
+            status: pm10Status.key as any,
+            statusLabel: pm10Status.label,
           },
         ] as AirQualityMetric[];
       }),

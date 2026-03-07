@@ -40,10 +40,10 @@
               <circle cx="50" cy="50" r="28" fill="currentColor" class="text-white dark:text-gray-800" />
               
               <!-- Value text -->
-              <text x="50" y="48" text-anchor="middle" class="text-sm font-bold" fill="currentColor" class="text-gray-900 dark:text-white">
-                {{ gas.value | number: '1.1-1' }}
+              <text x="50" y="48" text-anchor="middle" class="text-sm font-bold text-gray-900 dark:text-white" fill="currentColor">
+                {{ gas.value | number: '1.0-1' }}
               </text>
-              <text x="50" y="58" text-anchor="middle" class="text-xs" fill="currentColor" class="text-gray-500 dark:text-gray-400">
+              <text x="50" y="58" text-anchor="middle" class="text-xs text-gray-500 dark:text-gray-400" fill="currentColor">
                 {{ gas.unit }}
               </text>
             </svg>
@@ -52,8 +52,8 @@
           <!-- Label and Status -->
           <div class="mt-3 text-center w-full">
             <h4 class="font-semibold text-gray-800 dark:text-white text-sm">{{ gas.label }}</h4>
-            <span [class]="'inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ' + ColorUtility.getGasStatusBgColor(gas.status) + ' ' + ColorUtility.getGasStatusTextColor(gas.status)">
-              {{ ColorUtility.getGasStatusLabel(gas.status) }}
+            <span [class]="'inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ' + gas.statusBgClass + ' ' + gas.statusTextClass">
+              {{ gas.statusLabel }}
             </span>
           </div>
         </div>
@@ -72,9 +72,9 @@
   <!-- Footer info -->
   <div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-800">
     <p class="text-xs text-gray-500 dark:text-gray-400">
-      <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: #10b981;"></span>Verde: Bueno
-      <span class="inline-block w-3 h-3 rounded-full mr-2 ml-3" style="background-color: #f59e0b;"></span>Amarillo: Moderado
-      <span class="inline-block w-3 h-3 rounded-full mr-2 ml-3" style="background-color: #ef4444;"></span>Rojo: Pobre
+      <ng-container *ngFor="let item of statusLegend; let first = first">
+        <span class="inline-block w-3 h-3 rounded-full mr-2" [class.ml-3]="!first" [style.background-color]="item.color"></span>{{ item.label }}
+      </ng-container>
     </p>
   </div>
 </div>

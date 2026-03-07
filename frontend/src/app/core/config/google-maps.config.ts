@@ -28,8 +28,6 @@ export function getGoogleMapsApiKey(): string {
   if (runtimeKey && runtimeKey !== '__GOOGLE_MAPS_KEY_PLACEHOLDER__') {
     return runtimeKey;
   }
-
-  // Fallback seguro: sin key embebida en el código fuente
   return '';
 }
 

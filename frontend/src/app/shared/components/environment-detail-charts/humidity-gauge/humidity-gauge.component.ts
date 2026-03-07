@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { getEnvironmentStatus, getMetricGaugePercentage } from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Interface para datos del gauge de humedad
@@ -80,29 +81,20 @@ export class HumidityGaugeComponent {
    * Obtiene clase de color según humedad
    */
   private getGaugeColor(humidity: number): string {
-    if (humidity < 30) return 'text-blue-500';
-    if (humidity < 60) return 'text-green-500';
-    if (humidity < 80) return 'text-yellow-500';
-    return 'text-orange-500';
+    return getEnvironmentStatus('humidity', humidity, false).textClass;
   }
 
   /**
    * Obtiene estado según humedad
    */
   private getStatus(humidity: number): string {
-    if (humidity < 30) return 'Seco';
-    if (humidity < 60) return 'Óptimo';
-    if (humidity < 80) return 'Húmedo';
-    return 'Muy Húmedo';
+    return getEnvironmentStatus('humidity', humidity, false).label;
   }
 
   /**
    * Obtiene color de fondo según humedad
    */
   getGaugeBgColor(humidity: number): string {
-    if (humidity < 30) return 'from-blue-500/20 to-blue-600/20';
-    if (humidity < 60) return 'from-green-500/20 to-green-600/20';
-    if (humidity < 80) return 'from-yellow-500/20 to-yellow-600/20';
-    return 'from-orange-500/20 to-orange-600/20';
+    return getEnvironmentStatus('humidity', humidity, false).gaugeGradient;
   }
 }

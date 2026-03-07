@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { getEnvironmentStatus, ENV_THRESHOLDS, EnvironmentMetricKey } from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Interface para un indicador de gas
@@ -83,48 +84,29 @@ export class MultiGasIndicatorsComponent {
    */
   private initializeGasIndicators(): void {
     this.gasIndicators$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: any) => [
-        {
-          ...this.defaultIndicators[0],
-          value: Math.round((latestData?.co || 0) * 10) / 10,
-          status: this.getGasStatus('CO', latestData?.co),
-        },
-        {
-          ...this.defaultIndicators[1],
-          value: Math.round(latestData?.no2 || 0),
-          status: this.getGasStatus('NO2', latestData?.no2),
-        },
-        {
-          ...this.defaultIndicators[2],
-          value: Math.round((latestData?.nh3 || 0) * 10) / 10,
-          status: this.getGasStatus('NH3', latestData?.nh3),
-        },
-      ]),
+      map((latestData: any) => {
+        const gasConfigs: { key: EnvironmentMetricKey; field: string; defaultIndicator: GasIndicator }[] = [
+          { key: 'co', field: 'co', defaultIndicator: this.defaultIndicators[0] },
+          { key: 'no2', field: 'no2', defaultIndicator: this.defaultIndicators[1] },
+          { key: 'nh3', field: 'nh3', defaultIndicator: this.defaultIndicators[2] },
+        ];
+
+        return gasConfigs.map(cfg => {
+          const value = Math.round(((latestData as any)?.[cfg.field] || 0) * 10) / 10;
+          const status = getEnvironmentStatus(cfg.key, value);
+          return {
+            ...cfg.defaultIndicator,
+            value,
+            status: status.label,
+          };
+        });
+      }),
       catchError((error) => {
         console.error('Error cargando indicadores de gases:', error);
         return of(this.defaultIndicators);
       }),
       shareReplay(1)
     );
-  }
-
-  /**
-   * Determina el estado de un gas basado en su valor
-   */
-  private getGasStatus(gasType: string, value: number): string {
-    if (!value) return 'Normal';
-
-    // Thresholds aproximados para cada gas
-    switch (gasType) {
-      case 'CO':
-        return value > 2 ? 'Elevado' : value > 1 ? 'Moderado' : 'Bajo';
-      case 'NO2':
-        return value > 100 ? 'Elevado' : value > 50 ? 'Moderado' : 'Bajo';
-      case 'NH3':
-        return value > 15 ? 'Elevado' : value > 10 ? 'Moderado' : 'Bajo';
-      default:
-        return 'Normal';
-    }
   }
 
   /**

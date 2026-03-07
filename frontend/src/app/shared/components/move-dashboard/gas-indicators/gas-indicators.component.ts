@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
-import { ComponentColorUtility } from '../../../../core/utils/component-color.utility';
+import { ENV_THRESHOLDS, getEnvironmentStatus, EnvironmentMetricKey } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -24,7 +24,10 @@ interface GasIndicator {
   min: number;
   max: number;
   threshold: { good: number; moderate: number; poor: number };
-  status: 'good' | 'moderate' | 'poor';
+  status: 'good' | 'moderate' | 'poor' | 'critical' | 'no-data';
+  statusLabel: string;
+  statusBgClass: string;
+  statusTextClass: string;
   color: string;
 }
 
@@ -59,9 +62,13 @@ interface GasIndicator {
 })
 export class GasIndicatorsComponent {
   /**
-   * Utility de colores expuesto para el template
+   * Leyenda de estados derivada de la configuración centralizada.
+   * Toma los niveles de CO₂ como referencia (los niveles son los mismos para todos los gases).
    */
-  ColorUtility = ComponentColorUtility;
+  readonly statusLegend = ENV_THRESHOLDS.co2.levels.map(level => ({
+    color: level.color,
+    label: level.label,
+  }));
 
   /**
    * Observable que emite los indicadores de gases con datos reactivos
@@ -84,58 +91,34 @@ export class GasIndicatorsComponent {
   private initializeGasIndicators(): void {
     this.gasIndicators$ = this.sensorDataService.getLatest().pipe(
       map((latest) => {
-        const indicators: GasIndicator[] = [
-          {
-            label: 'CO₂',
-            value: latest?.co2 || 0,
-            unit: 'ppm',
-            min: 0,
-            max: 2000,
-            threshold: { good: 400, moderate: 1000, poor: 2000 },
-            status: 'good',
-            color: '#10b981',
-          },
-          {
-            label: 'CO',
-            value: latest?.co || 0,
-            unit: 'ppm',
-            min: 0,
-            max: 50,
-            threshold: { good: 9, moderate: 25, poor: 50 },
-            status: 'good',
-            color: '#f59e0b',
-          },
-          {
-            label: 'NO₂',
-            value: latest?.no2 || 0,
-            unit: 'ppb',
-            min: 0,
-            max: 500,
-            threshold: { good: 53, moderate: 100, poor: 500 },
-            status: 'good',
-            color: '#ef4444',
-          },
-          {
-            label: 'NH₃',
-            value: latest?.nh3 || 0,
-            unit: 'ppb',
-            min: 0,
-            max: 100,
-            threshold: { good: 35, moderate: 50, poor: 100 },
-            status: 'good',
-            color: '#3b82f6',
-          },
+        const gasConfigs: { key: EnvironmentMetricKey; field: string; color: string }[] = [
+          { key: 'co2', field: 'co2', color: '#10b981' },
+          { key: 'co',  field: 'co',  color: '#f59e0b' },
+          { key: 'no2', field: 'no2', color: '#ef4444' },
+          { key: 'nh3', field: 'nh3', color: '#3b82f6' },
         ];
 
-        // Actualizar estado de cada gas
-        indicators.forEach(gas => {
-          if (gas.value <= gas.threshold.good) {
-            gas.status = 'good';
-          } else if (gas.value <= gas.threshold.moderate) {
-            gas.status = 'moderate';
-          } else {
-            gas.status = 'poor';
-          }
+        const indicators: GasIndicator[] = gasConfigs.map(cfg => {
+          const config = ENV_THRESHOLDS[cfg.key];
+          const value = (latest as any)?.[cfg.field] || 0;
+          const status = getEnvironmentStatus(cfg.key, value);
+          return {
+            label: config.label,
+            value,
+            unit: config.unit,
+            min: config.scaleMin,
+            max: config.scaleMax,
+            threshold: {
+              good: config.levels[0].max,
+              moderate: config.levels[1].max,
+              poor: config.levels[2].max,
+            },
+            status: status.key as any,
+            statusLabel: status.label,
+            statusBgClass: status.bgClass,
+            statusTextClass: status.textClass,
+            color: status.color,
+          };
         });
 
         return indicators;

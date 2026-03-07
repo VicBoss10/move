@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { getEnvironmentStatus, getMetricGaugePercentage } from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Interface para datos del gauge de temperatura
@@ -77,41 +78,30 @@ export class TemperatureGaugeComponent {
   }
 
   /**
-   * Calcula porcentaje de llenado del gauge (rango -10°C a 50°C)
+   * Calcula porcentaje de llenado del gauge
    */
   private calculateGaugePercentage(temperature: number): number {
-    // Mapear rango -10 a 50°C a 0-100%
-    const percentage = ((temperature + 10) / 60) * 100;
-    return Math.max(0, Math.min(100, percentage));
+    return getMetricGaugePercentage('temperature', temperature);
   }
 
   /**
    * Obtiene clase de color según temperatura
    */
   private getGaugeColor(temperature: number): string {
-    if (temperature < 15) return 'text-blue-500';
-    if (temperature < 25) return 'text-green-500';
-    if (temperature < 35) return 'text-orange-500';
-    return 'text-red-500';
+    return getEnvironmentStatus('temperature', temperature, false).textClass;
   }
 
   /**
    * Obtiene estado según temperatura
    */
   private getStatus(temperature: number): string {
-    if (temperature < 15) return 'Frío';
-    if (temperature < 25) return 'Óptimo';
-    if (temperature < 35) return 'Calor';
-    return 'Muy Caliente';
+    return getEnvironmentStatus('temperature', temperature, false).label;
   }
 
   /**
    * Obtiene color de fondo según temperatura
    */
   getGaugeBgColor(temperature: number): string {
-    if (temperature < 15) return 'from-blue-500/20 to-blue-600/20';
-    if (temperature < 25) return 'from-green-500/20 to-green-600/20';
-    if (temperature < 35) return 'from-orange-500/20 to-orange-600/20';
-    return 'from-red-500/20 to-red-600/20';
+    return getEnvironmentStatus('temperature', temperature, false).gaugeGradient;
   }
 }

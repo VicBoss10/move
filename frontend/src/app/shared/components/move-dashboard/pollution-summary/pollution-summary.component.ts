@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { ENV_THRESHOLDS, getEnvironmentStatus, EnvironmentMetricKey } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -22,7 +23,10 @@ interface PollutantRow {
   average: number;
   min: number;
   max: number;
-  status: 'good' | 'moderate' | 'poor';
+  statusKey: string;
+  statusLabel: string;
+  statusBgClass: string;
+  statusTextClass: string;
 }
 
 /**
@@ -80,29 +84,37 @@ export class PollutionSummaryComponent {
           return this.defaultPollutionData;
         }
 
-        // Calcular estadísticas
-        const pollutantNames = ['CO₂', 'PM 2.5', 'PM 10', 'CO', 'NO₂'];
-        const pollutantUnits = ['ppm', 'µg/m³', 'µg/m³', 'ppm', 'ppb'];
-        const keys = ['co2', 'pm25', 'pm10', 'co', 'no2'];
-        const stats: { [key: string]: any } = {};
+        // Definir las métricas a mostrar
+        const pollutantConfigs: { key: EnvironmentMetricKey; field: string }[] = [
+          { key: 'co2', field: 'co2' },
+          { key: 'pm25', field: 'pm25' },
+          { key: 'pm10', field: 'pm10' },
+          { key: 'co', field: 'co' },
+          { key: 'no2', field: 'no2' },
+        ];
 
-        keys.forEach(key => {
-          const values = data.map((d: any) => d[key]).filter((v: any) => v != null);
-          stats[key] = {
-            current: values[values.length - 1] || 0,
-            average: values.length > 0 ? values.reduce((a: number, b: number) => a + b, 0) / values.length : 0,
-            min: values.length > 0 ? Math.min(...values) : 0,
-            max: values.length > 0 ? Math.max(...values) : 0
+        return pollutantConfigs.map(cfg => {
+          const config = ENV_THRESHOLDS[cfg.key];
+          const values = data.map((d: any) => d[cfg.field]).filter((v: any) => v != null);
+          const current = values[values.length - 1] || 0;
+          const average = values.length > 0 ? values.reduce((a: number, b: number) => a + b, 0) / values.length : 0;
+          const min = values.length > 0 ? Math.min(...values) : 0;
+          const max = values.length > 0 ? Math.max(...values) : 0;
+          const status = getEnvironmentStatus(cfg.key, current);
+
+          return {
+            name: config.label,
+            unit: config.unit,
+            current,
+            average,
+            min,
+            max,
+            statusKey: status.key,
+            statusLabel: status.label,
+            statusBgClass: status.bgClass,
+            statusTextClass: status.textClass,
           };
         });
-
-        return [
-          { name: pollutantNames[0], unit: pollutantUnits[0], status: 'good' as const, ...stats['co2'] },
-          { name: pollutantNames[1], unit: pollutantUnits[1], status: 'good' as const, ...stats['pm25'] },
-          { name: pollutantNames[2], unit: pollutantUnits[2], status: 'good' as const, ...stats['pm10'] },
-          { name: pollutantNames[3], unit: pollutantUnits[3], status: 'good' as const, ...stats['co'] },
-          { name: pollutantNames[4], unit: pollutantUnits[4], status: 'good' as const, ...stats['no2'] },
-        ];
       }),
       catchError((error) => {
         console.error('Error cargando resumen de contaminantes:', error);
@@ -110,42 +122,6 @@ export class PollutionSummaryComponent {
       }),
       shareReplay(1)
     );
-  }
-
-  /**
-   * Obtiene clases CSS para el badge de estado
-   * @param {string} status - Estado del contaminante
-   * @returns {string} Clases Tailwind CSS
-   */
-  getStatusBadge(status: string): string {
-    switch (status) {
-      case 'good':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-      case 'moderate':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-      case 'poor':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
-    }
-  }
-
-  /**
-   * Obtiene etiqueta de texto para el estado
-   * @param {string} status - Estado del contaminante
-   * @returns {string} Etiqueta en español
-   */
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case 'good':
-        return 'Bueno';
-      case 'moderate':
-        return 'Moderado';
-      case 'poor':
-        return 'Pobre';
-      default:
-        return 'Desconocido';
-    }
   }
 
   /**

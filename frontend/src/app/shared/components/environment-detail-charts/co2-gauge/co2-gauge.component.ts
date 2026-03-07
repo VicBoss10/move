@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { getEnvironmentStatus, getMetricGaugePercentage } from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Co2GaugeComponent
@@ -66,36 +67,15 @@ export class Co2GaugeComponent {
     status: string;
     bgColor: string;
   } {
-    const gaugePercentage = Math.min((co2Value / 2000) * 100, 100);
-
-    let gaugeColor = '';
-    let status = '';
-    let bgColor = '';
-
-    if (co2Value < 600) {
-      gaugeColor = 'text-green-500';
-      status = 'Óptimo';
-      bgColor = 'from-green-500/20 to-green-600/20';
-    } else if (co2Value < 1000) {
-      gaugeColor = 'text-blue-500';
-      status = 'Moderado';
-      bgColor = 'from-blue-500/20 to-blue-600/20';
-    } else if (co2Value < 1500) {
-      gaugeColor = 'text-orange-500';
-      status = 'Elevado';
-      bgColor = 'from-orange-500/20 to-orange-600/20';
-    } else {
-      gaugeColor = 'text-red-500';
-      status = 'Crítico';
-      bgColor = 'from-red-500/20 to-red-600/20';
-    }
+    const gaugePercentage = getMetricGaugePercentage('co2', co2Value);
+    const envStatus = getEnvironmentStatus('co2', co2Value, false);
 
     return {
       co2Value,
       gaugePercentage,
-      gaugeColor,
-      status,
-      bgColor,
+      gaugeColor: envStatus.textClass,
+      status: envStatus.label,
+      bgColor: envStatus.gaugeGradient,
     };
   }
 }
