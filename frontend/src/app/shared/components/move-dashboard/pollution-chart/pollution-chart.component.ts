@@ -4,7 +4,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 
 // Registrar los elementos de Chart.js
 ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
@@ -13,7 +13,7 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
  * PollutionChartComponent
  *
  * Componente que muestra un gráfico de línea con tendencias de Partículas (PM2.5 y PM10)
- * en las últimas 24 horas. Usa dos ejes Y para escalas distintas.
+ * en las últimas 12 horas, promediadas por hora. Usa dos ejes Y para escalas distintas.
  * Conectado a SensorDataService para obtener datos reales del backend.
  *
  * Características:
@@ -171,6 +171,11 @@ export class PollutionChartComponent {
     },
   };
 
+  /**
+   * Ventana de horas a mostrar en la gráfica
+   */
+  private readonly HOURS_WINDOW = 12;
+
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
@@ -178,11 +183,18 @@ export class PollutionChartComponent {
   }
 
   /**
-   * Inicializa el observable compartido de datos del sensor
+   * Inicializa el observable compartido de datos del sensor.
+   * Obtiene el último registro para determinar la ventana de tiempo
+   * y luego consulta solo las últimas 12 horas al backend.
    * @private
    */
   private initializeSensorData(): void {
-    this.sensorData$ = this.sensorDataService.getAll().pipe(
+    this.sensorData$ = this.sensorDataService.getLatest().pipe(
+      switchMap((latest) => {
+        const endTime = new Date(latest.timestamp);
+        const startTime = new Date(endTime.getTime() - this.HOURS_WINDOW * 3600000);
+        return this.sensorDataService.search({ start: startTime, end: endTime });
+      }),
       catchError((error) => {
         console.error('Error cargando datos de partículas:', error);
         return of([]);
@@ -192,7 +204,8 @@ export class PollutionChartComponent {
   }
 
   /**
-   * Inicializa los datos del gráfico desde el observable compartido
+   * Inicializa los datos del gráfico desde el observable compartido.
+   * Agrupa los datos por hora y los promedia para tener 12 puntos limpios.
    * @private
    */
   private initializeChartData(): void {
@@ -202,17 +215,59 @@ export class PollutionChartComponent {
           return this.defaultChartData;
         }
 
-        const pm25Data = data.map(d => d.pm25);
-        const pm10Data = data.map(d => d.pm10);
-        const timeLabels = data.map((d: any) => {
-          const time = new Date(d.timestamp);
-          const hour = String(time.getHours()).padStart(2, '0');
-          const minute = String(time.getMinutes()).padStart(2, '0');
-          return `${hour}:${minute}`;
-        });
+        // Parsear timestamps y ordenar cronológicamente
+        const parsedData = data
+          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter(d => !isNaN(d._time.getTime()))
+          .sort((a, b) => a._time.getTime() - b._time.getTime());
+
+        if (parsedData.length === 0) {
+          return this.defaultChartData;
+        }
+
+        // Hora del dato más reciente como referencia
+        const latestTime = parsedData[parsedData.length - 1]._time;
+        const latestSlotStart = new Date(
+          latestTime.getFullYear(),
+          latestTime.getMonth(),
+          latestTime.getDate(),
+          latestTime.getHours(),
+          0, 0, 0
+        );
+
+        // Crear 12 slots horarios hacia atrás desde la hora más reciente
+        const slots: { start: Date; end: Date; label: string }[] = [];
+        for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
+          const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
+          const slotEnd = new Date(slotStart.getTime() + 3600000);
+          const label = `${slotStart.getHours().toString().padStart(2, '0')}:00`;
+          slots.push({ start: slotStart, end: slotEnd, label });
+        }
+
+        const labels = slots.map(s => s.label);
+
+        // Agrupar datos en cada slot horario y promediar
+        const pm25Data: (number | null)[] = [];
+        const pm10Data: (number | null)[] = [];
+
+        for (const slot of slots) {
+          const slotData = parsedData.filter(
+            d => d._time >= slot.start && d._time < slot.end
+          );
+
+          if (slotData.length > 0) {
+            const avgPm25 = slotData.reduce((sum, d) => sum + (d.pm25 || 0), 0) / slotData.length;
+            const avgPm10 = slotData.reduce((sum, d) => sum + (d.pm10 || 0), 0) / slotData.length;
+            pm25Data.push(Math.round(avgPm25 * 100) / 100);
+            pm10Data.push(Math.round(avgPm10 * 100) / 100);
+          } else {
+            pm25Data.push(null);
+            pm10Data.push(null);
+          }
+        }
 
         return {
-          labels: timeLabels,
+          labels,
           datasets: [
             {
               label: 'PM 2.5 (µg/m³)',
@@ -259,8 +314,9 @@ export class PollutionChartComponent {
     this.avgPm25$ = this.sensorData$.pipe(
       map((data: any[]) => {
         if (!data || data.length === 0) return 0;
-        const sum = data.reduce((acc, d) => acc + (d.pm25 || 0), 0);
-        return sum / data.length;
+        const values = data.filter(d => d.pm25 != null).map(d => d.pm25);
+        if (values.length === 0) return 0;
+        return values.reduce((a: number, b: number) => a + b, 0) / values.length;
       }),
       shareReplay(1)
     );
@@ -268,8 +324,9 @@ export class PollutionChartComponent {
     this.avgPm10$ = this.sensorData$.pipe(
       map((data: any[]) => {
         if (!data || data.length === 0) return 0;
-        const sum = data.reduce((acc, d) => acc + (d.pm10 || 0), 0);
-        return sum / data.length;
+        const values = data.filter(d => d.pm10 != null).map(d => d.pm10);
+        if (values.length === 0) return 0;
+        return values.reduce((a: number, b: number) => a + b, 0) / values.length;
       }),
       shareReplay(1)
     );

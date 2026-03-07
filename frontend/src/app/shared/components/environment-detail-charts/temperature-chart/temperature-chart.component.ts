@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 // Registrar los scales y elementos
@@ -11,9 +11,9 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 
 /**
  * Componente que muestra un gráfico dinámico de línea con la tendencia de temperatura
- * en las últimas 24 horas desde la base de datos. Mediciones en grados Celsius.
+ * en las últimas 24 horas, promediando por hora. Mediciones en grados Celsius.
  * Utiliza RxJS Observables y ChangeDetectionStrategy.OnPush.
- * 
+ *
  * @selector app-temperature-chart
  * @standalone true
  */
@@ -27,13 +27,10 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 export class TemperatureChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  // Datos de las últimas 24 horas
-  private readonly timeLabels: string[] = [
-    '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
-    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-  ];
+  /**
+   * Ventana de horas a mostrar
+   */
+  private readonly HOURS_WINDOW = 24;
 
   /**
    * Observable que emite la configuración del gráfico con datos reactivos
@@ -45,6 +42,14 @@ export class TemperatureChartComponent {
    */
   tempValue$!: Observable<number>;
 
+  /**
+   * Observable compartido de datos del sensor (últimas 24h)
+   */
+  private sensorData$!: Observable<any[]>;
+
+  /**
+   * Opciones de configuración del gráfico
+   */
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
@@ -55,30 +60,33 @@ export class TemperatureChartComponent {
     plugins: {
       legend: {
         display: true,
-        position: 'top',
+        position: 'bottom',
         labels: {
-          usePointStyle: true,
-          padding: 15,
+          boxWidth: 12,
           font: {
             size: 12,
-            weight: 500,
+            weight: 500 as any,
           },
-          color: '#6B7280',
+          color: '#6b7280',
+          usePointStyle: true,
+          padding: 16,
         },
       },
       tooltip: {
+        enabled: true,
+        mode: 'index',
+        intersect: false,
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: '#e5e7eb',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: '#f97316',
         borderWidth: 1,
         padding: 12,
         displayColors: true,
         callbacks: {
           label: function (context) {
-            const label = context.dataset.label || '';
-            const value = context.parsed.y;
-            return label + ': ' + (value !== null ? value.toFixed(1) : 'N/A');
+            const value = context.parsed.y ?? 0;
+            return `${context.dataset.label}: ${value.toFixed(1)}°C`;
           },
         },
       },
@@ -112,84 +120,133 @@ export class TemperatureChartComponent {
             weight: 'bold',
           },
         },
-        grid: {
-          display: true,
-          drawOnChartArea: true,
-          drawTicks: false,
-          color: 'rgba(107, 114, 128, 0.1)',
-        },
         ticks: {
           color: '#f97316',
+          font: {
+            size: 11,
+          },
+          callback: function (value) {
+            return value + '°C';
+          },
         },
+        grid: {
+          color: 'rgba(107, 114, 128, 0.1)',
+          display: true,
+        },
+        beginAtZero: false,
       },
     },
   };
 
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
-    labels: this.timeLabels,
-    datasets: [
-      {
-        label: 'Temperatura (°C)',
-        data: Array(24).fill(0),
-        borderColor: '#f97316',
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#f97316',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y',
-      },
-    ],
+    labels: [],
+    datasets: [],
   };
 
   constructor(private sensorDataService: SensorDataService) {
+    this.initializeSensorData();
     this.initializeChartData();
     this.initializeTempValue();
   }
 
   /**
-   * Inicializa los datos del gráfico desde el servicio
+   * Obtiene el último registro para determinar la ventana de tiempo
+   * y luego consulta solo las últimas 24 horas al backend.
    */
-  private initializeChartData(): void {
-    this.chartData$ = this.sensorDataService.getAll().pipe(
-      map((sensorData: any[]) => {
-        if (!sensorData || sensorData.length === 0) {
-          return this.defaultChartData;
-        }
-
-        // Obtener los últimos 24 valores de temperatura
-        const tempValues = sensorData.map((d) => d.temperature || 0);
-
-        // Tomar últimos 24 valores
-        const displayTemp = tempValues.length > 24 ? tempValues.slice(-24) : tempValues;
-
-        // Usar labels según la cantidad de datos
-        const displayLabels = this.timeLabels.slice(0, Math.max(displayTemp.length));
-
-        return {
-          labels: displayLabels,
-          datasets: [
-            {
-              ...this.defaultChartData.datasets![0],
-              data: displayTemp,
-            },
-          ],
-        };
+  private initializeSensorData(): void {
+    this.sensorData$ = this.sensorDataService.getLatest().pipe(
+      switchMap((latest) => {
+        const endTime = new Date(latest.timestamp);
+        const startTime = new Date(endTime.getTime() - this.HOURS_WINDOW * 3600000);
+        return this.sensorDataService.search({ start: startTime, end: endTime });
       }),
       catchError((error) => {
         console.error('Error cargando datos de temperatura:', error);
-        return of(this.defaultChartData);
+        return of([]);
       }),
       shareReplay(1)
     );
   }
 
   /**
-   * Inicializa el valor actual de temperatura
+   * Inicializa los datos del gráfico agrupando por hora y promediando.
+   */
+  private initializeChartData(): void {
+    this.chartData$ = this.sensorData$.pipe(
+      map((data: any[]) => {
+        if (!data || data.length === 0) {
+          return this.defaultChartData;
+        }
+
+        const parsedData = data
+          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter(d => !isNaN(d._time.getTime()))
+          .sort((a, b) => a._time.getTime() - b._time.getTime());
+
+        if (parsedData.length === 0) {
+          return this.defaultChartData;
+        }
+
+        const latestTime = parsedData[parsedData.length - 1]._time;
+        const latestSlotStart = new Date(
+          latestTime.getFullYear(),
+          latestTime.getMonth(),
+          latestTime.getDate(),
+          latestTime.getHours(),
+          0, 0, 0
+        );
+
+        // Crear 24 slots horarios hacia atrás desde la hora más reciente
+        const slots: { start: Date; end: Date; label: string }[] = [];
+        for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
+          const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
+          const slotEnd = new Date(slotStart.getTime() + 3600000);
+          const label = `${slotStart.getHours().toString().padStart(2, '0')}:00`;
+          slots.push({ start: slotStart, end: slotEnd, label });
+        }
+
+        const labels = slots.map(s => s.label);
+        const tempData: (number | null)[] = [];
+
+        for (const slot of slots) {
+          const slotData = parsedData.filter(
+            d => d._time >= slot.start && d._time < slot.end
+          );
+          if (slotData.length > 0) {
+            const avg = slotData.reduce((sum, d) => sum + (d.temperature || 0), 0) / slotData.length;
+            tempData.push(Math.round(avg * 100) / 100);
+          } else {
+            tempData.push(null);
+          }
+        }
+
+        return {
+          labels,
+          datasets: [
+            {
+              label: 'Temperatura (°C)',
+              data: tempData,
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249, 115, 22, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#f97316',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y',
+            },
+          ],
+        };
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Inicializa el valor actual de temperatura (desde el último registro)
    */
   private initializeTempValue(): void {
     this.tempValue$ = this.sensorDataService.getLatest().pipe(
@@ -200,31 +257,28 @@ export class TemperatureChartComponent {
   }
 
   /**
-   * Obtiene el valor mínimo de un array
+   * Calcula el valor mínimo de un array de datos
    */
-  getMinValue(values: any[]): number {
-    if (!values || values.length === 0) return 0;
-    const numValues = values.filter(v => typeof v === 'number');
-    return numValues.length > 0 ? Math.min(...numValues) : 0;
+  getMinValue(data: any[]): number {
+    const validData = data.filter(d => d !== null && typeof d === 'number') as number[];
+    return validData.length > 0 ? Math.min(...validData) : 0;
   }
 
   /**
-   * Obtiene el valor promedio de un array
+   * Calcula el valor promedio de un array de datos
    */
-  getAvgValue(values: any[]): number {
-    if (!values || values.length === 0) return 0;
-    const numValues = values.filter(v => typeof v === 'number');
-    if (numValues.length === 0) return 0;
-    const sum = numValues.reduce((acc, val) => acc + val, 0);
-    return Math.round((sum / numValues.length) * 10) / 10;
+  getAvgValue(data: any[]): number {
+    const validData = data.filter(d => d !== null && typeof d === 'number') as number[];
+    if (validData.length === 0) return 0;
+    const sum = validData.reduce((acc, val) => acc + val, 0);
+    return sum / validData.length;
   }
 
   /**
-   * Obtiene el valor máximo de un array
+   * Calcula el valor máximo de un array de datos
    */
-  getMaxValue(values: any[]): number {
-    if (!values || values.length === 0) return 0;
-    const numValues = values.filter(v => typeof v === 'number');
-    return numValues.length > 0 ? Math.max(...numValues) : 0;
+  getMaxValue(data: any[]): number {
+    const validData = data.filter(d => d !== null && typeof d === 'number') as number[];
+    return validData.length > 0 ? Math.max(...validData) : 0;
   }
 }

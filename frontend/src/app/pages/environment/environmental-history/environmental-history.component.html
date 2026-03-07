@@ -4,138 +4,15 @@
     <app-history-filters (filterChange)="onFilterChange($event)" />
   </div>
 
-  <!-- Table Container -->
+  <!-- Table -->
   <div class="col-span-12">
-    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-      <!-- Header with filters -->
-      <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Historial Ambiental
-            </h3>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Datos históricos de parámetros ambientales
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Table -->
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
-            <tr>
-              <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
-                Fecha y Hora
-              </th>
-              <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
-                CO₂ (ppm)
-              </th>
-              <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
-                Temp. (°C)
-              </th>
-              <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
-                Humedad (%)
-              </th>
-              <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
-                PM2.5 (µg/m³)
-              </th>
-              <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
-                PM10 (µg/m³)
-              </th>
-              <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
-                CO (ppm)
-              </th>
-              <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
-                NO₂ (ppb)
-              </th>
-              <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">
-                NH₃ (ppb)
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Loading state -->
-            <tr *ngIf="isLoading">
-              <td colspan="11" class="px-5 py-4 text-center text-sm text-gray-500">
-                Cargando datos...
-              </td>
-            </tr>
-
-            <!-- Error state -->
-            <tr *ngIf="errorMessage && !isLoading">
-              <td colspan="11" class="px-5 py-4 text-center text-sm text-red-600">
-                {{ errorMessage }}
-              </td>
-            </tr>
-
-            <!-- Empty state -->
-            <tr *ngIf="!isLoading && filteredRecords.length === 0 && !errorMessage">
-              <td colspan="11" class="px-5 py-4 text-center text-sm text-gray-500">
-                No hay datos disponibles
-              </td>
-            </tr>
-
-            <!-- Data rows -->
-            <tr
-              *ngFor="let record of filteredRecords"
-              class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50"
-            >
-              <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-700 dark:text-gray-300 sm:px-6">
-                {{ record.timestamp | date: 'short' }}
-              </td>
-              <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
-                {{ record.co2 | number: '1.1-1' }}
-              </td>
-              <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
-                {{ record.temperature | number: '1.1-1' }}
-              </td>
-              <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
-                {{ record.humidity | number: '1.1-1' }}
-              </td>
-              <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
-                {{ record.pm25 | number: '1.1-1' }}
-              </td>
-              <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
-                {{ record.pm10 | number: '1.1-1' }}
-              </td>
-              <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
-                {{ record.co | number: '1.1-1' }}
-              </td>
-              <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
-                {{ record.no2 | number: '1.1-1' }}
-              </td>
-              <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6">
-                {{ record.nh3 | number: '1.1-1' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Empty state -->
-      <div
-        *ngIf="!isLoading && filteredRecords.length === 0 && !errorMessage"
-        class="flex flex-col items-center justify-center border-t border-gray-200 px-5 py-12 text-center dark:border-gray-800 sm:px-6"
-      >
-        <svg
-          class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <p class="text-gray-500 dark:text-gray-400">
-          No hay registros disponibles
-        </p>
-      </div>
-    </div>
+    <app-sensor-data-table
+      [filteredRecords]="filteredRecords"
+      [isLoading]="isLoading"
+      [errorMessage]="errorMessage"
+      [hasMoreData]="hasMoreData"
+      [pageSize]="pageSize"
+      (loadMore)="loadMore()"
+    />
   </div>
 </div>

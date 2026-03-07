@@ -112,7 +112,9 @@ public class SensorDataController {
             @RequestParam(required = false) Double minNo2,
             @RequestParam(required = false) Double maxNo2,
             @RequestParam(required = false) Double minNh3,
-            @RequestParam(required = false) Double maxNh3) {
+            @RequestParam(required = false) Double maxNh3,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
 
         SensorDataSearchCriteria criteria = new SensorDataSearchCriteria();
         criteria.setMinTemperature(minTemperature);
@@ -135,6 +137,8 @@ public class SensorDataController {
         criteria.setMaxNo2(maxNo2);
         criteria.setMinNh3(minNh3);
         criteria.setMaxNh3(maxNh3);
+        criteria.setPage(page);
+        criteria.setSize(size);
 
         List<SensorData> result = sensorDataService.searchSensorData(criteria);
         if (result.isEmpty()) {

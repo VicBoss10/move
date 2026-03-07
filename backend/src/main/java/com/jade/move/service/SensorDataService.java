@@ -4,6 +4,10 @@ import com.jade.move.dto.SensorDataSearchCriteria;
 import com.jade.move.model.SensorData;
 import com.jade.move.repository.SensorDataRepository;
 import com.jade.move.specification.SensorDataSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -74,6 +78,20 @@ public class SensorDataService {
 
     public List<SensorData> searchSensorData(SensorDataSearchCriteria criteria) {
         Specification<SensorData> spec = SensorDataSpecification.buildSpecification(criteria);
+        
+        // Check if pagination parameters are provided
+        if (criteria.getPage() != null && criteria.getSize() != null) {
+            // Create Pageable with descending order by timestamp
+            Pageable pageable = PageRequest.of(
+                criteria.getPage(), 
+                criteria.getSize(),
+                Sort.by(Sort.Direction.DESC, "timestamp")
+            );
+            Page<SensorData> page = sensorDataRepository.findAll(spec, pageable);
+            return page.getContent();
+        }
+        
+        // If no pagination, return all results
         return sensorDataRepository.findAll(spec);
     }
 }

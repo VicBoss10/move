@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 // Registrar los scales y elementos
@@ -11,9 +11,9 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 
 /**
  * Componente que muestra un gráfico dinámico de línea comparativo de partículas
- * PM2.5 y PM10 en las últimas 24 horas desde la base de datos.
+ * PM2.5 y PM10 en las últimas 24 horas, promediando por hora.
  * Utiliza RxJS Observables y ChangeDetectionStrategy.OnPush.
- * 
+ *
  * @selector app-particles-chart
  * @standalone true
  */
@@ -27,13 +27,10 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 export class ParticlesChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  // Datos de las últimas 24 horas
-  private readonly timeLabels: string[] = [
-    '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
-    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-  ];
+  /**
+   * Ventana de horas a mostrar
+   */
+  private readonly HOURS_WINDOW = 24;
 
   /**
    * Observable que emite la configuración del gráfico con datos reactivos
@@ -47,6 +44,11 @@ export class ParticlesChartComponent {
     pm25: number;
     pm10: number;
   }>;
+
+  /**
+   * Observable compartido de datos del sensor (últimas 24h)
+   */
+  private sensorData$!: Observable<any[]>;
 
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
@@ -129,91 +131,133 @@ export class ParticlesChartComponent {
   };
 
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
-    labels: this.timeLabels,
-    datasets: [
-      {
-        label: 'PM2.5 (µg/m³)',
-        data: Array(24).fill(0),
-        borderColor: '#6366f1',
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#6366f1',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y',
-      },
-      {
-        label: 'PM10 (µg/m³)',
-        data: Array(24).fill(0),
-        borderColor: '#f97316',
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#f97316',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y',
-      },
-    ],
+    labels: [],
+    datasets: [],
   };
 
   constructor(private sensorDataService: SensorDataService) {
+    this.initializeSensorData();
     this.initializeChartData();
     this.initializePMValues();
   }
 
   /**
-   * Inicializa los datos del gráfico desde el servicio
+   * Obtiene el último registro para determinar la ventana de tiempo
+   * y luego consulta solo las últimas 24 horas al backend.
    */
-  private initializeChartData(): void {
-    this.chartData$ = this.sensorDataService.getAll().pipe(
-      map((sensorData: any[]) => {
-        if (!sensorData || sensorData.length === 0) {
-          return this.defaultChartData;
-        }
-
-        // Obtener los últimos 24 valores de cada partícula
-        const pm25Values = sensorData.map((d) => d.pm25 || 0);
-        const pm10Values = sensorData.map((d) => d.pm10 || 0);
-
-        // Tomar últimos 24 valores
-        const displayPM25 = pm25Values.length > 24 ? pm25Values.slice(-24) : pm25Values;
-        const displayPM10 = pm10Values.length > 24 ? pm10Values.slice(-24) : pm10Values;
-
-        // Usar labels según la cantidad de datos
-        const displayLabels = this.timeLabels.slice(0, Math.max(displayPM25.length, displayPM10.length));
-
-        return {
-          labels: displayLabels,
-          datasets: [
-            {
-              ...this.defaultChartData.datasets![0],
-              data: displayPM25,
-            },
-            {
-              ...this.defaultChartData.datasets![1],
-              data: displayPM10,
-            },
-          ],
-        };
+  private initializeSensorData(): void {
+    this.sensorData$ = this.sensorDataService.getLatest().pipe(
+      switchMap((latest) => {
+        const endTime = new Date(latest.timestamp);
+        const startTime = new Date(endTime.getTime() - this.HOURS_WINDOW * 3600000);
+        return this.sensorDataService.search({ start: startTime, end: endTime });
       }),
       catchError((error) => {
         console.error('Error cargando datos de partículas:', error);
-        return of(this.defaultChartData);
+        return of([]);
       }),
       shareReplay(1)
     );
   }
 
   /**
-   * Inicializa los valores actuales de las partículas
+   * Inicializa los datos del gráfico agrupando por hora y promediando.
+   */
+  private initializeChartData(): void {
+    this.chartData$ = this.sensorData$.pipe(
+      map((data: any[]) => {
+        if (!data || data.length === 0) {
+          return this.defaultChartData;
+        }
+
+        const parsedData = data
+          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter(d => !isNaN(d._time.getTime()))
+          .sort((a, b) => a._time.getTime() - b._time.getTime());
+
+        if (parsedData.length === 0) {
+          return this.defaultChartData;
+        }
+
+        const latestTime = parsedData[parsedData.length - 1]._time;
+        const latestSlotStart = new Date(
+          latestTime.getFullYear(),
+          latestTime.getMonth(),
+          latestTime.getDate(),
+          latestTime.getHours(),
+          0, 0, 0
+        );
+
+        // Crear 24 slots horarios hacia atrás desde la hora más reciente
+        const slots: { start: Date; end: Date; label: string }[] = [];
+        for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
+          const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
+          const slotEnd = new Date(slotStart.getTime() + 3600000);
+          const label = `${slotStart.getHours().toString().padStart(2, '0')}:00`;
+          slots.push({ start: slotStart, end: slotEnd, label });
+        }
+
+        const labels = slots.map(s => s.label);
+        const pm25Data: (number | null)[] = [];
+        const pm10Data: (number | null)[] = [];
+
+        for (const slot of slots) {
+          const slotData = parsedData.filter(
+            d => d._time >= slot.start && d._time < slot.end
+          );
+          if (slotData.length > 0) {
+            const avgPm25 = slotData.reduce((sum, d) => sum + (d.pm25 || 0), 0) / slotData.length;
+            const avgPm10 = slotData.reduce((sum, d) => sum + (d.pm10 || 0), 0) / slotData.length;
+            pm25Data.push(Math.round(avgPm25 * 100) / 100);
+            pm10Data.push(Math.round(avgPm10 * 100) / 100);
+          } else {
+            pm25Data.push(null);
+            pm10Data.push(null);
+          }
+        }
+
+        return {
+          labels,
+          datasets: [
+            {
+              label: 'PM2.5 (µg/m³)',
+              data: pm25Data,
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99, 102, 241, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#6366f1',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y',
+            },
+            {
+              label: 'PM10 (µg/m³)',
+              data: pm10Data,
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249, 115, 22, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#f97316',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: 'y',
+            },
+          ],
+        };
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Inicializa los valores actuales de las partículas (desde el último registro)
    */
   private initializePMValues(): void {
     this.pmValues$ = this.sensorDataService.getLatest().pipe(

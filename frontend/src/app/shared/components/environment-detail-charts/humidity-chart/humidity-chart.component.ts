@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 // Registrar los scales y elementos
@@ -12,8 +12,8 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 /**
  * HumidityChartComponent
  *
- * Componente especializado para mostrar la tendencia de humedad relativa en las últimas 24 horas.
- * Utiliza Chart.js para visualizar datos de humedad con una línea de gráfico azul.
+ * Componente especializado para mostrar la tendencia de humedad relativa en las últimas 24 horas,
+ * promediando por hora. Utiliza Chart.js para visualizar datos de humedad con una línea de gráfico azul.
  *
  * @selector app-humidity-chart
  * @standalone true
@@ -44,6 +44,11 @@ export class HumidityChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
+   * Ventana de horas a mostrar
+   */
+  private readonly HOURS_WINDOW = 24;
+
+  /**
    * Observable que emite la configuración del gráfico con datos reactivos
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
@@ -53,31 +58,14 @@ export class HumidityChartComponent {
    */
   humidityValue$!: Observable<number>;
 
-  private readonly timeLabels: string[] = [
-    '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
-    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-  ];
+  /**
+   * Observable compartido de datos del sensor (últimas 24h)
+   */
+  private sensorData$!: Observable<any[]>;
 
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
-    labels: this.timeLabels,
-    datasets: [
-      {
-        label: 'Humedad Relativa (%)',
-        data: Array(24).fill(0),
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 3,
-        fill: true,
-        tension: 0.4,
-        pointRadius: 0,
-        pointHoverRadius: 8,
-        pointBackgroundColor: '#3b82f6',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-      },
-    ],
+    labels: [],
+    datasets: [],
   };
 
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
@@ -171,37 +159,109 @@ export class HumidityChartComponent {
   };
 
   constructor(private sensorDataService: SensorDataService) {
+    this.initializeSensorData();
     this.initializeChartData();
     this.initializeHumidityValue();
   }
 
-  private initializeChartData(): void {
-    this.chartData$ = this.sensorDataService.getAll().pipe(
-      map((sensorData: any[]) => {
-        if (!sensorData || sensorData.length === 0) {
-          return this.defaultChartData;
-        }
-        const humidityValues = sensorData.map((d) => d.humidity || 0);
-        const displayHumidity = humidityValues.length > 24 ? humidityValues.slice(-24) : humidityValues;
-        const displayLabels = this.timeLabels.slice(0, Math.max(displayHumidity.length));
-        return {
-          labels: displayLabels,
-          datasets: [
-            {
-              ...this.defaultChartData.datasets![0],
-              data: displayHumidity,
-            },
-          ],
-        };
+  /**
+   * Obtiene el último registro para determinar la ventana de tiempo
+   * y luego consulta solo las últimas 24 horas al backend.
+   */
+  private initializeSensorData(): void {
+    this.sensorData$ = this.sensorDataService.getLatest().pipe(
+      switchMap((latest) => {
+        const endTime = new Date(latest.timestamp);
+        const startTime = new Date(endTime.getTime() - this.HOURS_WINDOW * 3600000);
+        return this.sensorDataService.search({ start: startTime, end: endTime });
       }),
       catchError((error) => {
         console.error('Error cargando datos de humedad:', error);
-        return of(this.defaultChartData);
+        return of([]);
       }),
       shareReplay(1)
     );
   }
 
+  /**
+   * Inicializa los datos del gráfico agrupando por hora y promediando.
+   */
+  private initializeChartData(): void {
+    this.chartData$ = this.sensorData$.pipe(
+      map((data: any[]) => {
+        if (!data || data.length === 0) {
+          return this.defaultChartData;
+        }
+
+        const parsedData = data
+          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter(d => !isNaN(d._time.getTime()))
+          .sort((a, b) => a._time.getTime() - b._time.getTime());
+
+        if (parsedData.length === 0) {
+          return this.defaultChartData;
+        }
+
+        const latestTime = parsedData[parsedData.length - 1]._time;
+        const latestSlotStart = new Date(
+          latestTime.getFullYear(),
+          latestTime.getMonth(),
+          latestTime.getDate(),
+          latestTime.getHours(),
+          0, 0, 0
+        );
+
+        // Crear 24 slots horarios hacia atrás desde la hora más reciente
+        const slots: { start: Date; end: Date; label: string }[] = [];
+        for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
+          const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
+          const slotEnd = new Date(slotStart.getTime() + 3600000);
+          const label = `${slotStart.getHours().toString().padStart(2, '0')}:00`;
+          slots.push({ start: slotStart, end: slotEnd, label });
+        }
+
+        const labels = slots.map(s => s.label);
+        const humidityData: (number | null)[] = [];
+
+        for (const slot of slots) {
+          const slotData = parsedData.filter(
+            d => d._time >= slot.start && d._time < slot.end
+          );
+          if (slotData.length > 0) {
+            const avg = slotData.reduce((sum, d) => sum + (d.humidity || 0), 0) / slotData.length;
+            humidityData.push(Math.round(avg * 100) / 100);
+          } else {
+            humidityData.push(null);
+          }
+        }
+
+        return {
+          labels,
+          datasets: [
+            {
+              label: 'Humedad Relativa (%)',
+              data: humidityData,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              pointHoverRadius: 8,
+              pointBackgroundColor: '#3b82f6',
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 2,
+            },
+          ],
+        };
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Inicializa el valor actual de humedad (desde el último registro)
+   */
   private initializeHumidityValue(): void {
     this.humidityValue$ = this.sensorDataService.getLatest().pipe(
       map((latestData: any) => Math.round((latestData?.humidity || 0) * 10) / 10),

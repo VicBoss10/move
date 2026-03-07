@@ -50,6 +50,8 @@ export interface SensorDataSearchCriteria {
   locationId?: number;
   start?: Date;
   end?: Date;
+  page?: number;
+  size?: number;
 }
 
 /**

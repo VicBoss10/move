@@ -32,7 +32,7 @@ export class SensorDataService extends BaseDataService<SensorData> {
 
   /**
    * Busca datos de sensores con criterios complejos
-   * @param criteria - Criterios de búsqueda (rangos de temperatura, humedad, etc)
+   * @param criteria - Criterios de búsqueda (rangos de temperatura, humedad, paginación, etc)
    * @returns Observable<SensorData[]>
    */
   search(criteria: SensorDataSearchCriteria): Observable<SensorData[]> {
@@ -48,6 +48,8 @@ export class SensorDataService extends BaseDataService<SensorData> {
       .addIfPresent('deviceId', criteria.deviceId)
       .addIfPresent('locationId', criteria.locationId)
       .addDateRange(criteria.start, criteria.end)
+      .addIfPresent('page', criteria.page)
+      .addIfPresent('size', criteria.size)
       .build();
 
     return this.apiService.get<SensorData[]>(`/${this.endpoint}/search`, queryParams).pipe(

@@ -2,8 +2,8 @@ import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 // Registrar los scales y elementos
@@ -11,12 +11,12 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 
 /**
  * Componente que muestra un gráfico dinámico de línea con la tendencia de CO₂
- * en las últimas 24 horas desde la base de datos. Utiliza RxJS Observables
+ * en las últimas 12 horas, promediando por hora. Utiliza RxJS Observables
  * y sigue el patrón reactivo con ChangeDetectionStrategy.OnPush.
- * 
+ *
  * Datos obtenidos de: SensorDataService
  * Unidad: ppm (partes por millón)
- * 
+ *
  * @selector app-co2-chart
  * @standalone true
  */
@@ -30,15 +30,10 @@ ChartJS.register(LineController, LineElement, PointElement, LinearScale, Categor
 export class Co2ChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  private isLoading$ = new BehaviorSubject<boolean>(true);
-
-  // Labels de las últimas 24 horas
-  private readonly timeLabels: string[] = [
-    '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
-    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-  ];
+  /**
+   * Ventana de horas a mostrar
+   */
+  private readonly HOURS_WINDOW = 12;
 
   /**
    * Observable con la configuración del gráfico
@@ -49,6 +44,11 @@ export class Co2ChartComponent {
    * Observable con estadísticas de CO₂
    */
   stats$!: Observable<{ min: number; avg: number; max: number }>;
+
+  /**
+   * Observable compartido de datos del sensor (últimas 12h)
+   */
+  private sensorData$!: Observable<any[]>;
 
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
@@ -131,51 +131,93 @@ export class Co2ChartComponent {
   };
 
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
-    labels: this.timeLabels,
-    datasets: [
-      {
-        label: 'CO₂ (ppm)',
-        data: Array(24).fill(0),
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#ef4444',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: 'y',
-      },
-    ],
+    labels: [],
+    datasets: [],
   };
 
   constructor(private sensorDataService: SensorDataService) {
-    // Observable para datos del gráfico
-    this.chartData$ = this.sensorDataService.getAll().pipe(
-      map((sensorData: any[]) => {
-        if (!sensorData || sensorData.length === 0) {
+    this.initializeSensorData();
+    this.initializeChartData();
+    this.initializeStats();
+  }
+
+  /**
+   * Obtiene el último registro para determinar la ventana de tiempo
+   * y luego consulta solo las últimas 12 horas al backend.
+   */
+  private initializeSensorData(): void {
+    this.sensorData$ = this.sensorDataService.getLatest().pipe(
+      switchMap((latest) => {
+        const endTime = new Date(latest.timestamp);
+        const startTime = new Date(endTime.getTime() - this.HOURS_WINDOW * 3600000);
+        return this.sensorDataService.search({ start: startTime, end: endTime });
+      }),
+      catchError((error) => {
+        console.error('Error cargando datos de CO₂:', error);
+        return of([]);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Agrupa los datos por hora y los promedia para tener 12 puntos limpios.
+   */
+  private initializeChartData(): void {
+    this.chartData$ = this.sensorData$.pipe(
+      map((data: any[]) => {
+        if (!data || data.length === 0) {
           return this.defaultChartData;
         }
 
-        // Tomar los últimos 24 valores de CO₂ (o menos si no hay 24)
-        const co2Values = sensorData.map((d) => d.co2 || 0);
-        
-        // Si hay más de 24 datos, tomar solo los últimos 24
-        const displayData = co2Values.length > 24 
-          ? co2Values.slice(-24)
-          : co2Values;
+        const parsedData = data
+          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter(d => !isNaN(d._time.getTime()))
+          .sort((a, b) => a._time.getTime() - b._time.getTime());
 
-        // Usar labels según la cantidad de datos
-        const displayLabels = this.timeLabels.slice(0, displayData.length);
+        if (parsedData.length === 0) {
+          return this.defaultChartData;
+        }
+
+        const latestTime = parsedData[parsedData.length - 1]._time;
+        const latestSlotStart = new Date(
+          latestTime.getFullYear(),
+          latestTime.getMonth(),
+          latestTime.getDate(),
+          latestTime.getHours(),
+          0, 0, 0
+        );
+
+        // Crear 12 slots horarios hacia atrás desde la hora más reciente
+        const slots: { start: Date; end: Date; label: string }[] = [];
+        for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
+          const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
+          const slotEnd = new Date(slotStart.getTime() + 3600000);
+          const label = `${slotStart.getHours().toString().padStart(2, '0')}:00`;
+          slots.push({ start: slotStart, end: slotEnd, label });
+        }
+
+        const labels = slots.map(s => s.label);
+        const co2Data: (number | null)[] = [];
+
+        for (const slot of slots) {
+          const slotData = parsedData.filter(
+            d => d._time >= slot.start && d._time < slot.end
+          );
+          if (slotData.length > 0) {
+            const avg = slotData.reduce((sum, d) => sum + (d.co2 || 0), 0) / slotData.length;
+            co2Data.push(Math.round(avg * 100) / 100);
+          } else {
+            co2Data.push(null);
+          }
+        }
 
         return {
-          labels: displayLabels,
+          labels,
           datasets: [
             {
               label: 'CO₂ (ppm)',
-              data: displayData,
+              data: co2Data,
               borderColor: '#ef4444',
               backgroundColor: 'rgba(239, 68, 68, 0.1)',
               borderWidth: 2,
@@ -191,43 +233,29 @@ export class Co2ChartComponent {
           ],
         };
       }),
-      catchError((error) => {
-        console.error('Error cargando datos de CO₂:', error);
-        this.isLoading$.next(false);
-        return of(this.defaultChartData);
-      }),
       shareReplay(1)
     );
+  }
 
-    // Observable para estadísticas
-    this.stats$ = this.sensorDataService.getAll().pipe(
-      map((sensorData: any[]) => {
-        if (!sensorData || sensorData.length === 0) {
+  /**
+   * Calcula estadísticas (min, avg, max) sobre todos los datos de las 12h.
+   */
+  private initializeStats(): void {
+    this.stats$ = this.sensorData$.pipe(
+      map((data: any[]) => {
+        if (!data || data.length === 0) {
           return { min: 0, avg: 0, max: 0 };
         }
-
-        // Tomar solo los últimos 24 valores (consistente con el gráfico)
-        const co2Values = sensorData.map((d) => d.co2 || 0).filter((v) => v > 0);
+        const co2Values = data.map(d => d.co2).filter((v: any) => v != null && v > 0);
         if (co2Values.length === 0) {
           return { min: 0, avg: 0, max: 0 };
         }
-
-        const displayValues = co2Values.length > 24 
-          ? co2Values.slice(-24)
-          : co2Values;
-
-        const min = Math.min(...displayValues);
-        const max = Math.max(...displayValues);
-        const avg = displayValues.reduce((a, b) => a + b, 0) / displayValues.length;
-
-        this.isLoading$.next(false);
+        const min = Math.min(...co2Values);
+        const max = Math.max(...co2Values);
+        const avg = co2Values.reduce((a: number, b: number) => a + b, 0) / co2Values.length;
         return { min: Math.round(min), avg: Math.round(avg), max: Math.round(max) };
       }),
-      catchError((error) => {
-        console.error('Error calculando estadísticas de CO₂:', error);
-        this.isLoading$.next(false);
-        return of({ min: 0, avg: 0, max: 0 });
-      }),
+      catchError(() => of({ min: 0, avg: 0, max: 0 })),
       shareReplay(1)
     );
   }

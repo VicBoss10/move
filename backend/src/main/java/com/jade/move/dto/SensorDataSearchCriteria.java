@@ -31,4 +31,8 @@ public class SensorDataSearchCriteria {
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime end;
+
+    // Pagination fields
+    private Integer page;
+    private Integer size;
 }
