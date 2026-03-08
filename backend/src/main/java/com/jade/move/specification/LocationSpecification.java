@@ -33,7 +33,7 @@ public class LocationSpecification {
             }
 
             if (criteria.getLongitude() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("length"), criteria.getLongitude()));
+                predicates.add(criteriaBuilder.equal(root.get("longitude"), criteria.getLongitude()));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

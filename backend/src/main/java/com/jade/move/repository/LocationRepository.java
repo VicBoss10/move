@@ -18,7 +18,7 @@ public interface LocationRepository extends JpaRepository<Location, Integer>, Jp
     // Consulta personalizada para búsqueda por proximidad usando fórmula de Haversine
     @Query(value = "SELECT * FROM locations l WHERE " +
             "(6371 * acos(cos(radians(:latitude)) * cos(radians(l.latitude)) * " +
-            "cos(radians(l.length) - radians(:longitude)) + sin(radians(:latitude)) * " +
+            "cos(radians(l.longitude) - radians(:longitude)) + sin(radians(:latitude)) * " +
             "sin(radians(l.latitude)))) <= :radiusKm", nativeQuery = true)
     List<Location> findLocationsByProximity(@Param("latitude") Double latitude,
                                             @Param("longitude") Double longitude,
