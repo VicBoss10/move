@@ -38,8 +38,8 @@ public class LocationService {
         return locationRepository.findByDescriptionContaining(keyword);
     }
 
-    public List<Location> getLocationsByLatitudeAndLength(Double latitude, Double length) {
-        return locationRepository.findByLatitudeAndLength(latitude, length);
+    public List<Location> getLocationsByLatitudeAndLongitude(Double latitude, Double longitude) {
+        return locationRepository.findByLatitudeAndLongitude(latitude, longitude);
     }
 
     public Location createLocation(Location location) {

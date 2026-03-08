@@ -13,7 +13,7 @@ import java.util.List;
 public interface LocationRepository extends JpaRepository<Location, Integer>, JpaSpecificationExecutor<Location> {
     Location findByDescription(String description);
     List<Location> findByDescriptionContaining(String keyword);
-    List<Location> findByLatitudeAndLength(Double latitude, Double length);
+    List<Location> findByLatitudeAndLongitude(Double latitude, Double longitude);
 
     // Consulta personalizada para búsqueda por proximidad usando fórmula de Haversine
     @Query(value = "SELECT * FROM locations l WHERE " +
