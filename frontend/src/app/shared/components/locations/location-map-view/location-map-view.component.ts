@@ -197,11 +197,11 @@ export class LocationMapViewComponent implements OnInit, OnDestroy {
       id: loc.id,
       name: loc.description || `Ubicación ${loc.id}`,
       latitude: loc.latitude,
-      longitude: loc.length, // length = longitude en el modelo
+      longitude: loc.longitude,
       description: loc.description || 'Punto de monitoreo',
       status: 'active' as const,
       vehiclesDetected: Math.floor(Math.random() * 350), // TODO: Obtener del backend
-      zone: this.getZoneFromLatLng(loc.latitude, loc.length),
+      zone: this.getZoneFromLatLng(loc.latitude, loc.longitude),
       markerContent: null,
     }));
   }

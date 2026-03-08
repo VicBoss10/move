@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { map, shareReplay, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { ApiService } from './api.service';
@@ -56,6 +56,7 @@ export class SensorDataService extends BaseDataService<SensorData> {
       map(data => {
         // Si data es un array, mapear los timestamps
         if (Array.isArray(data)) {
+          this.clearServiceError();
           return data.map(d => ({
             ...d,
             timestamp: new Date(d.timestamp)
@@ -63,6 +64,7 @@ export class SensorDataService extends BaseDataService<SensorData> {
         }
         // Si no es array (backend retornó mensaje de texto), retornar array vacío
         console.warn('Backend retornó respuesta no-JSON:', data);
+        this.setServiceError(null, 'Respuesta inválida del backend para sensores');
         return [];
       }),
       catchError((error) => {
@@ -70,10 +72,12 @@ export class SensorDataService extends BaseDataService<SensorData> {
         // Esto ocurre cuando no hay datos y el backend retorna un mensaje de texto
         if (error && (error.message?.includes('Http failure during parsing') || error.message?.includes('Unexpected token'))) {
           console.warn('No hay datos disponibles para los criterios especificados');
+          this.clearServiceError();
           return of([]);
         }
         // Re-lanzar otros errores
-        throw error;
+        this.setServiceError(error, 'Error al buscar datos de sensores');
+        return throwError(() => error);
       })
     );
   }

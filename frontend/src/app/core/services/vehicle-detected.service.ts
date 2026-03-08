@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { tap, map, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
@@ -49,6 +49,7 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
         }
         // Si no es array (backend retornó mensaje de texto), retornar array vacío
         console.warn('Backend retornó respuesta no-JSON:', data);
+        this.setServiceError(null, 'Respuesta inválida del backend para vehículos');
         return [];
       }),
       catchError((error) => {
@@ -56,13 +57,16 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
         // Esto ocurre cuando no hay datos y el backend retorna un mensaje de texto
         if (error && (error.message?.includes('Http failure during parsing') || error.message?.includes('Unexpected token'))) {
           console.warn('No hay datos disponibles para los criterios especificados');
+          this.clearServiceError();
           return of([]);
         }
         // Re-lanzar otros errores
-        throw error;
+        this.setServiceError(error, 'Error al buscar vehículos');
+        return throwError(() => error);
       }),
       tap(data => {
         this.dataSubject.next(data);
+        this.clearServiceError();
       })
     );
   }

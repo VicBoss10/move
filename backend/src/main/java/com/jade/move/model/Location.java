@@ -19,7 +19,7 @@ public class Location {
     private Double latitude;
 
     @Column(nullable = false)
-    private Double length;
+    private Double longitude;
 
     @Column(length = 255, unique = true)
     private String description;

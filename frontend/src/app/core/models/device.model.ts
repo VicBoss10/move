@@ -15,6 +15,12 @@ export enum DeviceState {
   ERROR = 'ERROR'
 }
 
+/**
+ * Tipos de stream válidos para registro de cámaras.
+ * Se mantiene local para evitar acoplar este modelo al de cámara.
+ */
+export type DeviceStreamType = 'RTSP' | 'URL' | 'USB' | 'YOUTUBE';
+
 export interface Device {
   id: number;
   name: string;
@@ -23,8 +29,11 @@ export interface Device {
   location: {
     id: number;
     latitude: number;
-    length: number;
-    description?: string;
+    longitude: number;
+    /**
+     * Puede no venir en todas las respuestas o venir como null.
+     */
+    description?: string | null;
   };
 }
 
@@ -51,3 +60,23 @@ export interface DeviceStats {
   };
   lastUpdated: Date;
 }
+
+/**
+ * DTO tipado para registrar dispositivos en backend.
+ * Para cámaras exige streamType y source; para otros tipos no aplica.
+ */
+export type RegisterDeviceRequest =
+  | {
+      name: string;
+      type: DeviceType.CAMERA;
+      state: DeviceState;
+      locationId: number;
+      streamType: DeviceStreamType;
+      source: string;
+    }
+  | {
+      name: string;
+      type: Exclude<DeviceType, DeviceType.CAMERA>;
+      state: DeviceState;
+      locationId: number;
+    };

@@ -183,7 +183,7 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
    * @param location - Ubicación seleccionada
    */
   selectLocation(location: Location): void {
-    this.filters.description = location.description;
+    this.filters.description = location.description ?? '';
     this.showDropdown = false;
     this.filteredLocations = [location];
     this.cdr.markForCheck();

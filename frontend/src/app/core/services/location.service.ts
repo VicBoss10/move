@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { tap, map, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { Location, LocationSearchCriteria, LocationStats } from '../models/location.model';
@@ -44,8 +44,13 @@ export class LocationService extends BaseDataService<Location> {
       tap((response) => {
         console.log('Ubicación creada:', response);
         this.invalidateCache();
+        this.clearServiceError();
       }),
-      map(() => data) // Retornar los datos enviados ya que el backend solo devuelve texto
+      map(() => data),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al crear ubicación');
+        return throwError(() => error);
+      })
     );
   }
 
@@ -66,6 +71,11 @@ export class LocationService extends BaseDataService<Location> {
     return this.apiService.get<Location[]>(`/${this.endpoint}/search`, queryParams).pipe(
       tap(data => {
         this.dataSubject.next(data);
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al buscar ubicaciones');
+        return throwError(() => error);
       })
     );
   }

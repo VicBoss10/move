@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { User, UserSearchCriteria, UserStats } from '../models/user.model';
@@ -43,6 +43,11 @@ export class UserService extends BaseDataService<User> {
     return this.apiService.get<User[]>(`/${this.endpoint}/search`, queryParams).pipe(
       tap(data => {
         this.dataSubject.next(data);
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al buscar usuarios');
+        return throwError(() => error);
       })
     );
   }

@@ -33,7 +33,7 @@ export interface CameraFilters {
 export interface Location {
   id: number;
   latitude: number;
-  length: number;
+  longitude: number;
   description: string;
 }
 

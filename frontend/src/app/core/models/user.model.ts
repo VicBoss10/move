@@ -6,7 +6,10 @@ export interface User {
   email: string;
   username: string;
   role: 'ADMIN' | 'USER' | 'VIEWER';
-  createdAt?: Date;
+  /**
+   * Puede omitirse o venir null en respuestas parciales.
+   */
+  createdAt?: Date | null;
 }
 
 /**

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { Camera, StreamStartRequest, StreamResponse, StreamStopResponse, StreamType } from '../models/camera.model';
@@ -16,23 +17,53 @@ export class CameraService extends BaseDataService<Camera> {
   }
 
   getCameraByDeviceId(deviceId: number): Observable<Camera> {
-    return this.apiService.get<Camera>(`/${this.endpoint}/device/${deviceId}`);
+    return this.apiService.get<Camera>(`/${this.endpoint}/device/${deviceId}`).pipe(
+      tap(() => this.clearServiceError()),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al obtener cámara por dispositivo');
+        return throwError(() => error);
+      })
+    );
   }
 
   getCamerasByStreamType(streamType: StreamType): Observable<Camera[]> {
-    return this.apiService.get<Camera[]>(`/${this.endpoint}/type/${streamType}`);
+    return this.apiService.get<Camera[]>(`/${this.endpoint}/type/${streamType}`).pipe(
+      tap(() => this.clearServiceError()),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al filtrar cámaras por tipo de stream');
+        return throwError(() => error);
+      })
+    );
   }
 
   startStream(cameraId: number): Observable<StreamResponse> {
     const request: StreamStartRequest = { cameraId };
-    return this.apiService.post<StreamResponse>('/streams/start', request);
+    return this.apiService.post<StreamResponse>('/streams/start', request).pipe(
+      tap(() => this.clearServiceError()),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al iniciar stream');
+        return throwError(() => error);
+      })
+    );
   }
 
   stopStream(sessionId: string): Observable<StreamStopResponse> {
-    return this.apiService.post<StreamStopResponse>(`/streams/stop/${sessionId}`, null);
+    return this.apiService.post<StreamStopResponse>(`/streams/stop/${sessionId}`, null).pipe(
+      tap(() => this.clearServiceError()),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al detener stream');
+        return throwError(() => error);
+      })
+    );
   }
 
   getStreamStatus(sessionId: string): Observable<StreamResponse> {
-    return this.apiService.get<StreamResponse>(`/streams/status/${sessionId}`);
+    return this.apiService.get<StreamResponse>(`/streams/status/${sessionId}`).pipe(
+      tap(() => this.clearServiceError()),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al consultar estado del stream');
+        return throwError(() => error);
+      })
+    );
   }
 }

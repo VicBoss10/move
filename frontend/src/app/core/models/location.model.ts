@@ -5,8 +5,11 @@
 export interface Location {
   id: number;
   latitude: number;
-  length: number; // longitude
-  description?: string;
+  longitude: number;
+  /**
+   * Campo opcional; puede venir como null cuando no se registró descripción.
+   */
+  description?: string | null;
 }
 
 /**
@@ -24,8 +27,11 @@ export interface LocationSearchCriteria {
  * Ubicación con información extendida
  */
 export interface LocationDetails extends Location {
+  /** Cantidad opcional calculada en frontend o backend. */
   deviceCount?: number;
+  /** Cantidad opcional agregada desde detecciones. */
   vehicleDetectionCount?: number;
+  /** Puede no estar disponible para ubicaciones sin actividad. */
   lastActivity?: Date;
 }
 

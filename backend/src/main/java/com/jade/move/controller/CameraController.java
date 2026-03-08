@@ -32,11 +32,8 @@ public class CameraController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping
-    public ResponseEntity<?> getAllCameras() {
+    public ResponseEntity<List<Camera>> getAllCameras() {
         List<Camera> cameras = cameraService.getAllCameras();
-        if (cameras.isEmpty()) {
-            return ResponseEntity.ok("No cameras found.");
-        }
         return ResponseEntity.ok(cameras);
     }
 
@@ -90,11 +87,8 @@ public class CameraController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/type/{streamType}")
-    public ResponseEntity<?> getCamerasByStreamType(@PathVariable StreamType streamType) {
+    public ResponseEntity<List<Camera>> getCamerasByStreamType(@PathVariable StreamType streamType) {
         List<Camera> cameras = cameraService.getCamerasByStreamType(streamType);
-        if (cameras.isEmpty()) {
-            return ResponseEntity.ok("No cameras found with stream type: " + streamType);
-        }
         return ResponseEntity.ok(cameras);
     }
 

@@ -1,3 +1,6 @@
+# Core dependencies - NumPy 1.x compatible con PyTorch 2.2
+numpy>=1.24.0,<2.0.0
+
 # PyTorch CPU-only (mucho más ligero, ~200MB vs ~2GB con CUDA)
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.2.0+cpu

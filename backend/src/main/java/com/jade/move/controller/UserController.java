@@ -33,11 +33,8 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping
-    public ResponseEntity<?> getAllUsers() {
+    public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
-        if (users.isEmpty()) {
-            return ResponseEntity.ok("No users found.");
-        }
         return ResponseEntity.ok(users);
     }
 

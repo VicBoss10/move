@@ -36,11 +36,8 @@ public class LocationController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping
-    public ResponseEntity<?> getAllLocations() {
+    public ResponseEntity<List<Location>> getAllLocations() {
         List<Location> locations = locationService.getAllLocations();
-        if (locations.isEmpty()) {
-            return ResponseEntity.ok("No locations found.");
-        }
         return ResponseEntity.ok(locations);
     }
 
@@ -89,10 +86,6 @@ public class LocationController {
         criteria.setRadiusKm(radiusKm);
 
         List<Location> locations = locationService.searchLocations(criteria);
-
-        if (locations.isEmpty()) {
-            return ResponseEntity.ok("No locations found matching the specified criteria.");
-        }
         return ResponseEntity.ok(locations);
     }
 

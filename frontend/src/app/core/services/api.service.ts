@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 /**
@@ -21,13 +21,19 @@ export class ApiService {
    */
   private readonly apiUrl = 'http://localhost:8080';
 
+  /** Último error HTTP detectado por el servicio. */
+  private readonly errorSubject = new BehaviorSubject<string | null>(null);
+
+  /** Stream público de error HTTP para componentes/servicios consumidores. */
+  public readonly error$ = this.errorSubject.asObservable();
+
   constructor(private http: HttpClient) {}
 
   /**
    * Constructor privado para validar que la URL está disponible
    */
   ngOnInit() {
-    console.log(`🔌 ApiService inicializado - Backend: ${this.apiUrl}`);
+    console.log(`ApiService inicializado - Backend: ${this.apiUrl}`);
   }
 
   /**
@@ -63,6 +69,18 @@ export class ApiService {
    */
   postText(endpoint: string, body: any): Observable<string> {
     return this.http.post(`${this.apiUrl}${endpoint}`, body, { responseType: 'text' }).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  /**
+   * GET que espera respuesta en texto plano (no JSON)
+   * @param endpoint - Ruta del endpoint
+   * @param params - Parámetros de query opcionales
+   * @returns Observable<string> con la respuesta del servidor
+   */
+  getText(endpoint: string, params?: HttpParams | { [key: string]: string | string[] }): Observable<string> {
+    return this.http.get(`${this.apiUrl}${endpoint}`, { params, responseType: 'text' }).pipe(
       catchError(error => this.handleError(error))
     );
   }
@@ -109,6 +127,7 @@ export class ApiService {
     }
 
     console.error('❌ ApiService Error:', errorMessage);
+    this.errorSubject.next(errorMessage);
     return throwError(() => new Error(errorMessage));
   }
 

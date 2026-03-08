@@ -1,25 +1,49 @@
-# Imagen única optimizada
+# ==================== STAGE 1: Builder ====================
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+# 1) Instalar torch CPU-only (sin CUDA ~200MB vs ~2GB)
+RUN pip install --no-cache-dir \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    torch==2.2.0+cpu torchvision==0.17.0+cpu
+
+# 2) Instalar el resto de dependencias
+RUN pip install --no-cache-dir \
+    "ultralytics>=8.0.0" \
+    "opencv-python-headless>=4.8.0" \
+    "yt-dlp>=2023.12.0" \
+    "requests>=2.31.0" \
+    "flask>=3.0.0" \
+    "flask-cors>=4.0.0"
+
+# 3) FORZAR NumPy 1.x al final (PyTorch 2.2 no es compatible con NumPy 2.x)
+RUN pip install --no-cache-dir --force-reinstall "numpy>=1.24.0,<2.0.0"
+
+# 4) SOLO borrar cache para reducir tamaño sin romper nada
+RUN find /usr/local/lib/python3.11/site-packages -type f -name "*.pyc" -delete \
+    && find /usr/local/lib/python3.11/site-packages -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# ==================== STAGE 2: Runtime ====================
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar dependencias del sistema para OpenCV headless y ffmpeg
+# Dependencias de sistema para OpenCV, ffmpeg y NumPy
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
+    libgomp1 \
+    libopenblas0 \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Copiar e instalar dependencias Python (PyTorch CPU-only)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt \
-    && rm -rf /root/.cache/pip \
-    && find /usr/local/lib/python3.11/site-packages -name "*.pyc" -delete \
-    && find /usr/local/lib/python3.11/site-packages -name "__pycache__" -type d -delete \
-    && rm -rf /usr/local/lib/python3.11/site-packages/torch/test \
-    && rm -rf /usr/local/lib/python3.11/site-packages/torch/include \
-    && rm -rf /usr/local/lib/python3.11/site-packages/nvidia
+# Copiar SOLO los paquetes ya limpiados del builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copiar código fuente y modelos
 COPY src ./src

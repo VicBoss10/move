@@ -52,7 +52,7 @@ export class RegisterLocationViewComponent {
     this.locationForm = this.fb.group({
       description: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
       latitude: ['', [Validators.required, Validators.pattern(/^-?([0-8]?[0-9]|90)(\.[0-9]{1,8})?$/)]],
-      length: ['', [Validators.required, Validators.pattern(/^-?(1[0-7][0-9]|[1-9]?[0-9])(\.[0-9]{1,8})?$/)]], // length = longitude
+      longitude: ['', [Validators.required, Validators.pattern(/^-?(1[0-7][0-9]|[1-9]?[0-9])(\.[0-9]{1,8})?$/)]],
     });
   }
 
@@ -72,7 +72,7 @@ export class RegisterLocationViewComponent {
     const formValue = this.locationForm.value;
     const locationData = {
       latitude: parseFloat(formValue.latitude),
-      length: parseFloat(formValue.length),
+      longitude: parseFloat(formValue.longitude),
       description: formValue.description,
     } as Location;
 
@@ -113,10 +113,10 @@ export class RegisterLocationViewComponent {
   onMapCoordinatesSelected(coords: MapCoordinates): void {
     this.locationForm.patchValue({
       latitude: coords.latitude.toFixed(6),
-      length: coords.longitude.toFixed(6),
+      longitude: coords.longitude.toFixed(6),
     });
     this.locationForm.get('latitude')?.markAsTouched();
-    this.locationForm.get('length')?.markAsTouched();
+    this.locationForm.get('longitude')?.markAsTouched();
   }
 
   /**

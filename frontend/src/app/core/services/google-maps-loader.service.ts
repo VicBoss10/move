@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { getGoogleMapsApiKey } from '../config/google-maps.config';
 
 /**
@@ -29,6 +30,12 @@ export interface GeoLocationResult {
   providedIn: 'root',
 })
 export class GoogleMapsLoaderService {
+  /** Último error de carga/geolocalización del servicio. */
+  private readonly errorSubject = new BehaviorSubject<string | null>(null);
+
+  /** Stream público de errores de Google Maps. */
+  public readonly error$ = this.errorSubject.asObservable();
+
   /**
    * Promesa que se resuelve cuando la API de Google Maps está lista
    */
@@ -54,6 +61,7 @@ export class GoogleMapsLoaderService {
 
     if (!apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY') {
       console.warn('Google Maps API Key no configurada');
+      this.errorSubject.next('Google Maps API Key no configurada');
       this.loadPromise = Promise.resolve(false);
       return this.loadPromise;
     }
@@ -99,13 +107,16 @@ export class GoogleMapsLoaderService {
         // Trigger the load and wait for it
         bootstrap().then(() => {
           console.log('Google Maps API cargada correctamente');
+          this.errorSubject.next(null);
           resolve(true);
         }).catch(() => {
           console.error('Error al cargar Google Maps API');
+          this.errorSubject.next('Error al cargar Google Maps API');
           resolve(false);
         });
       } catch {
         console.error('Error al inicializar Google Maps bootstrap');
+        this.errorSubject.next('Error al inicializar Google Maps bootstrap');
         resolve(false);
       }
     });
@@ -138,6 +149,7 @@ export class GoogleMapsLoaderService {
     this.geoPromise = new Promise((resolve) => {
       if (!navigator.geolocation) {
         console.warn('Geolocalización no soportada por el navegador');
+        this.errorSubject.next('Geolocalización no soportada por el navegador');
         resolve(null);
         return;
       }
@@ -159,10 +171,12 @@ export class GoogleMapsLoaderService {
             accuracy: position.coords.accuracy,
           };
           console.log(`Geolocation: lat=${result.lat.toFixed(6)}, lng=${result.lng.toFixed(6)}, accuracy=${result.accuracy.toFixed(0)}m`);
+          this.errorSubject.next(null);
           done(result);
         },
         (error) => {
           console.warn('Geolocalización error:', error.message);
+          this.errorSubject.next(`Geolocalización error: ${error.message}`);
           done(null);
         },
         { enableHighAccuracy: true, timeout: 3000, maximumAge: 60000 }

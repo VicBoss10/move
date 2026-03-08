@@ -1,5 +1,5 @@
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap, shareReplay, map, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { tap, shareReplay, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 
 /**
@@ -21,6 +21,16 @@ export abstract class BaseDataService<T> {
    * Observable público para subscribirse a cambios
    */
   public data$: Observable<T[]>;
+
+  /**
+   * Último error emitido por el servicio (null cuando no hay error)
+   */
+  protected errorSubject: BehaviorSubject<string | null>;
+
+  /**
+   * Observable público para reaccionar a errores del servicio
+   */
+  public error$: Observable<string | null>;
 
   /**
    * Caché local de datos
@@ -55,6 +65,8 @@ export abstract class BaseDataService<T> {
   constructor(protected apiService: ApiService) {
     this.dataSubject = new BehaviorSubject<T[]>([]);
     this.data$ = this.dataSubject.asObservable();
+    this.errorSubject = new BehaviorSubject<string | null>(null);
+    this.error$ = this.errorSubject.asObservable();
   }
 
   /**
@@ -75,28 +87,15 @@ export abstract class BaseDataService<T> {
 
     // Si no, hacer petición HTTP
     return this.apiService.get<T[]>(`/${this.endpoint}`).pipe(
-      map(data => {
-        // Si data es un array, usarlo normalmente
-        if (Array.isArray(data)) {
-          return data;
-        }
-        // Si no es array (backend retornó mensaje de texto), retornar array vacío
-        console.warn('Backend retornó respuesta no-JSON:', data);
-        return [];
-      }),
-      catchError((error) => {
-        // Manejo de errores de parsing JSON
-        if (error && (error.message?.includes('Http failure during parsing') || error.message?.includes('Unexpected token'))) {
-          console.warn('Backend retornó respuesta no-JSON, usando caché vacío');
-          return of([]);
-        }
-        // Re-lanzar otros errores
-        throw error;
-      }),
       tap(data => {
         this.cacheData = data;
         this.lastFetch = now;
         this.dataSubject.next(this.cacheData);
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, `Error al obtener datos de ${this.endpoint}`);
+        return throwError(() => error);
       }),
       shareReplay(1)
     );
@@ -108,7 +107,13 @@ export abstract class BaseDataService<T> {
    * @returns Observable<T>
    */
   getById(id: number): Observable<T> {
-    return this.apiService.get<T>(`/${this.endpoint}/${id}`);
+    return this.apiService.get<T>(`/${this.endpoint}/${id}`).pipe(
+      tap(() => this.clearServiceError()),
+      catchError((error) => {
+        this.setServiceError(error, `Error al obtener recurso ${id} en ${this.endpoint}`);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
@@ -118,7 +123,14 @@ export abstract class BaseDataService<T> {
    */
   create(data: T): Observable<T> {
     return this.apiService.post<T>(`/${this.endpoint}`, data).pipe(
-      tap(() => this.invalidateCache())
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, `Error al crear recurso en ${this.endpoint}`);
+        return throwError(() => error);
+      })
     );
   }
 
@@ -129,7 +141,14 @@ export abstract class BaseDataService<T> {
    */
   update(data: T): Observable<T> {
     return this.apiService.put<T>(`/${this.endpoint}`, data).pipe(
-      tap(() => this.invalidateCache())
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, `Error al actualizar recurso en ${this.endpoint}`);
+        return throwError(() => error);
+      })
     );
   }
 
@@ -140,7 +159,14 @@ export abstract class BaseDataService<T> {
    */
   delete(id: number): Observable<any> {
     return this.apiService.delete(`/${this.endpoint}/${id}`).pipe(
-      tap(() => this.invalidateCache())
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, `Error al eliminar recurso ${id} en ${this.endpoint}`);
+        return throwError(() => error);
+      })
     );
   }
 
@@ -171,5 +197,38 @@ export abstract class BaseDataService<T> {
   refresh(): Observable<T[]> {
     this.invalidateCache();
     return this.getAll();
+  }
+
+  /**
+   * Limpia el último error del servicio.
+   */
+  protected clearServiceError(): void {
+    this.errorSubject.next(null);
+  }
+
+  /**
+   * Registra un error en el stream del servicio con un fallback amigable.
+   */
+  protected setServiceError(error: unknown, fallbackMessage: string): void {
+    const message = this.extractErrorMessage(error, fallbackMessage);
+    this.errorSubject.next(message);
+  }
+
+  /**
+   * Extrae un mensaje de error seguro para UI/log.
+   */
+  protected extractErrorMessage(error: unknown, fallbackMessage: string): string {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === 'string' && message.trim().length > 0) {
+        return message;
+      }
+    }
+
+    return fallbackMessage;
   }
 }

@@ -16,8 +16,11 @@ export interface VehicleDetected {
   location: {
     id: number;
     latitude: number;
-    length: number; // longitude
-    description?: string;
+    longitude: number;
+    /**
+     * Puede no existir o venir null dependiendo del endpoint.
+     */
+    description?: string | null;
   };
 }
 

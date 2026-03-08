@@ -1,0 +1,168 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+  <div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-white mb-2">Registrar Dispositivo</h1>
+      <p class="text-slate-400">Añade una nueva cámara o sensor al sistema</p>
+    </div>
+
+    <!-- Messages -->
+    <div *ngIf="successMessage$ | async as message" class="mb-6 p-4 bg-green-500/20 border border-green-500 rounded-lg">
+      <p class="text-green-400">✓ {{ message }}</p>
+    </div>
+
+    <div *ngIf="errorMessage$ | async as message" class="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg">
+      <p class="text-red-400">✗ {{ message }}</p>
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="bg-slate-800 rounded-lg border border-slate-700 shadow-2xl overflow-hidden">
+      <form [formGroup]="deviceForm" (ngSubmit)="onSubmit()" class="p-8">
+        <!-- Step 1: Device Type Selection -->
+        <div class="mb-8 pb-8 border-b border-slate-700">
+          <label class="block text-lg font-semibold text-white mb-4">Tipo de Dispositivo</label>
+          <div class="grid grid-cols-2 gap-4">
+            <button
+              *ngFor="let type of deviceTypes"
+              type="button"
+              (click)="deviceForm.patchValue({ type: type.id })"
+              [class.ring-2]="(selectedType$ | async) === type.id"
+              [class.ring-blue-500]="(selectedType$ | async) === type.id"
+              [ngClass]="{ 'bg-blue-500/10': (selectedType$ | async) === type.id }"
+              class="p-4 rounded-lg border border-slate-600 hover:border-blue-500 transition-all cursor-pointer text-left"
+            >
+              <div class="font-medium text-white">{{ type.label }}</div>
+            </button>
+          </div>
+          <input type="hidden" formControlName="type" />
+        </div>
+
+        <!-- Step 2: Basic Device Information -->
+        <div *ngIf="(selectedType$ | async)" class="space-y-6 mb-8 pb-8 border-b border-slate-700">
+          <div>
+            <label for="name" class="block text-sm font-medium text-slate-300 mb-2">Nombre del Dispositivo *</label>
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              placeholder="Ej: Cámara Entrada Principal"
+              class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+            />
+            <p *ngIf="deviceForm.get('name')?.hasError('required') && deviceForm.get('name')?.touched" class="mt-1 text-sm text-red-400">El nombre es requerido</p>
+            <p *ngIf="deviceForm.get('name')?.hasError('minlength') && deviceForm.get('name')?.touched" class="mt-1 text-sm text-red-400">Mínimo 3 caracteres</p>
+          </div>
+
+          <div>
+            <label for="location" class="block text-sm font-medium text-slate-300 mb-2">Ubicación *</label>
+            <select
+              id="location"
+              formControlName="locationId"
+              class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+            >
+              <option value="">-- Selecciona una ubicación --</option>
+              <option *ngFor="let location of locations$ | async" [value]="location.id">
+                {{ location.description || 'Ubicación ' + location.id }}
+              </option>
+            </select>
+            <p *ngIf="deviceForm.get('locationId')?.hasError('required') && deviceForm.get('locationId')?.touched" class="mt-1 text-sm text-red-400">La ubicación es requerida</p>
+          </div>
+
+          <div>
+            <label for="state" class="block text-sm font-medium text-slate-300 mb-2">Estado Inicial *</label>
+            <select
+              id="state"
+              formControlName="state"
+              class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+            >
+              <option *ngFor="let state of states" [value]="state.id">
+                {{ state.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Step 3: Camera-Specific Configuration -->
+        <div *ngIf="(selectedType$ | async) === 'CAMERA'" class="space-y-6 mb-8 pb-8 border-b border-slate-700">
+          <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+            <p class="text-blue-300 text-sm">📹 Configuración de Cámara</p>
+          </div>
+
+          <div>
+            <label for="streamType" class="block text-sm font-medium text-slate-300 mb-2">Tipo de Streaming *</label>
+            <select
+              id="streamType"
+              formControlName="streamType"
+              class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+            >
+              <option value="">-- Selecciona tipo de streaming --</option>
+              <option *ngFor="let st of streamTypes" [value]="st.id">
+                {{ st.label }}
+              </option>
+            </select>
+            <p *ngIf="deviceForm.get('streamType')?.value" class="mt-2 text-xs text-slate-400">
+              {{ getStreamTypeDescription(deviceForm.get('streamType')?.value) }}
+            </p>
+            <p *ngIf="deviceForm.get('streamType')?.hasError('required') && deviceForm.get('streamType')?.touched" class="mt-1 text-sm text-red-400">El tipo de streaming es requerido</p>
+          </div>
+
+          <div>
+            <label for="source" class="block text-sm font-medium text-slate-300 mb-2">URL/Ruta del Stream *</label>
+            <input
+              id="source"
+              type="text"
+              formControlName="source"
+              placeholder="Ej: rtsp://camera.local:554/stream o https://youtube.com/watch?v=..."
+              class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition font-mono text-sm"
+            />
+            <p class="mt-2 text-xs text-slate-400">Proporciona la URL completa del stream de tu cámara</p>
+            <p *ngIf="deviceForm.get('source')?.hasError('required') && deviceForm.get('source')?.touched" class="mt-1 text-sm text-red-400">La URL del stream es requerida</p>
+            <p *ngIf="deviceForm.get('source')?.hasError('minlength') && deviceForm.get('source')?.touched" class="mt-1 text-sm text-red-400">La URL debe tener al menos 5 caracteres</p>
+          </div>
+        </div>
+
+        <!-- Step 3: Sensor-Specific Configuration -->
+        <div *ngIf="(selectedType$ | async) === 'SENSOR'" class="space-y-6 mb-8 pb-8 border-b border-slate-700">
+          <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-6">
+            <p class="text-purple-300 text-sm">📊 Configuración de Sensor</p>
+            <p class="text-purple-300/70 text-xs mt-1">Los datos de mediciones se registran automáticamente cuando el sensor está activo</p>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex gap-4 justify-end">
+          <button
+            type="button"
+            (click)="resetForm()"
+            class="px-6 py-2 rounded-lg border border-slate-600 text-slate-300 hover:border-slate-500 hover:text-white transition"
+          >
+            Limpiar
+          </button>
+          <button
+            type="submit"
+            [disabled]="!canSubmit()"
+            [class.opacity-50]="!canSubmit()"
+            [class.cursor-not-allowed]="!canSubmit()"
+            class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition disabled:hover:bg-blue-600"
+          >
+            <span *ngIf="!(isLoading$ | async)">Registrar Dispositivo</span>
+            <span *ngIf="isLoading$ | async" class="flex items-center gap-2">
+              <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              Registrando...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-8 bg-slate-800/50 rounded-lg border border-slate-700 p-6">
+      <h3 class="text-white font-semibold mb-4">💡 Ayuda</h3>
+      <ul class="space-y-2 text-slate-400 text-sm">
+        <li><strong class="text-white">Cámaras:</strong> Proporciona la URL del stream (RTSP, HTTP, YouTube)</li>
+        <li><strong class="text-white">Sensores:</strong> Registra sensores ambientales que medirán temperatura, humedad, CO₂ y más</li>
+        <li><strong class="text-white">Estado:</strong> Define si el dispositivo está activo, inactivo o fallando al momento del registro</li>
+        <li><strong class="text-white">Ubicación:</strong> Asigna el dispositivo a una ubicación existente en el sistema</li>
+      </ul>
+    </div>
+  </div>
+</div>

@@ -46,7 +46,7 @@
           </label>
           <app-location-map-picker
             [initialLatitude]="locationForm.get('latitude')?.value || null"
-            [initialLongitude]="locationForm.get('length')?.value || null"
+            [initialLongitude]="locationForm.get('longitude')?.value || null"
             mapHeight="350px"
             (coordinatesSelected)="onMapCoordinatesSelected($event)"
           />
@@ -73,18 +73,18 @@
 
           <!-- Longitude -->
           <div>
-            <label for="length" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label for="longitude" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Longitud *
             </label>
             <input
-              id="length"
+              id="longitude"
               type="text"
-              formControlName="length"
+              formControlName="longitude"
               placeholder="Ej: -77.2811"
               class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
             />
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">-180 a 180</p>
-            <div *ngIf="locationForm.get('length')?.invalid && locationForm.get('length')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
+            <div *ngIf="locationForm.get('longitude')?.invalid && locationForm.get('longitude')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
               Longitud inválida
             </div>
           </div>

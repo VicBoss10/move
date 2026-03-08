@@ -12,6 +12,8 @@ services:
       - backend
     networks:
       - move-network
+    profiles:
+      - full
 
   backend:
     container_name: move-backend
@@ -28,7 +30,6 @@ services:
       - PYTHON_SERVICE_URL=http://vehicle-detection:5000
     depends_on:
       - move_db
-      - vehicle-detection
     networks:
       - move-network
 
@@ -40,9 +41,11 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - BACKEND_URL=http://backend:8080
+      - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
     networks:
       - move-network
+    profiles:
+      - full
 
   move_db:
     container_name: move_db
@@ -71,6 +74,8 @@ services:
     networks:
       - move-network
     restart: unless-stopped
+    profiles:
+      - full
 
   cloudflare-tunnel:
     container_name: cloudflare-tunnel
@@ -79,10 +84,11 @@ services:
     volumes:
       - ~/cloudflared:/home/nonroot/.cloudflared
     depends_on:
-      - frontend
       - backend
     restart: unless-stopped
     network_mode: host
+    profiles:
+      - full
 
 volumes:
   move_db_data:

@@ -50,7 +50,7 @@
         <map-advanced-marker
           *ngFor="let location of locations"
           #markerRef="mapAdvancedMarker"
-          [position]="{ lat: location.latitude, lng: location.length }"
+          [position]="{ lat: location.latitude, lng: location.longitude }"
           [title]="location.description || 'Punto de monitoreo'"
           (mapClick)="onMarkerClick(markerRef, location)"
         />
@@ -63,7 +63,7 @@
             </h4>
             <div class="mt-2 text-xs text-gray-500 space-y-1">
               <p>Lat: {{ selectedInfoLocation.latitude | number : '1.4-6' }}</p>
-              <p>Lng: {{ selectedInfoLocation.length | number : '1.4-6' }}</p>
+              <p>Lng: {{ selectedInfoLocation.longitude | number : '1.4-6' }}</p>
             </div>
           </div>
         </map-info-window>

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
-import { Device, DeviceSearchCriteria, DeviceStats } from '../models/device.model';
+import { Device, DeviceSearchCriteria, DeviceStats, RegisterDeviceRequest } from '../models/device.model';
 import { QueryParamsBuilder } from '../utils/query-params.builder';
 
 /**
@@ -44,6 +44,11 @@ export class DeviceService extends BaseDataService<Device> {
     return this.apiService.get<Device[]>(`/${this.endpoint}/search`, queryParams).pipe(
       tap(data => {
         this.dataSubject.next(data);
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al buscar dispositivos');
+        return throwError(() => error);
       })
     );
   }
@@ -64,5 +69,24 @@ export class DeviceService extends BaseDataService<Device> {
       },
       lastUpdated: new Date()
     };
+  }
+
+  /**
+   * Registra un dispositivo completo (Device + Camera si aplica)
+   * @param deviceData - Datos del dispositivo a registrar
+   * @returns Observable<string> con mensaje de confirmación
+   */
+  register(deviceData: RegisterDeviceRequest): Observable<string> {
+    return this.apiService.postText(`/${this.endpoint}/register`, deviceData).pipe(
+      tap(() => {
+        // Invalidar caché para forzar recarga
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al registrar dispositivo');
+        return throwError(() => error);
+      })
+    );
   }
 }

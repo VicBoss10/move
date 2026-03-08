@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.jade.move.dto.DevicesSearchCriteria;
+import com.jade.move.dto.RegisterDeviceRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -37,11 +38,8 @@ public class DeviceController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping
-    public ResponseEntity<?> getAllDevices() {
+    public ResponseEntity<List<Device>> getAllDevices() {
         List<Device> devices = deviceService.getAllDevices();
-        if (devices.isEmpty()) {
-            return ResponseEntity.ok("No devices found.");
-        }
         return ResponseEntity.ok(devices);
     }
 
@@ -106,10 +104,6 @@ public class DeviceController {
         criteria.setLocationId(locationId);
 
         List<Device> devices = deviceService.searchDevices(criteria);
-
-        if (devices.isEmpty()) {
-            return ResponseEntity.ok("No devices found matching the specified criteria.");
-        }
         return ResponseEntity.ok(devices);
     }
 
@@ -127,6 +121,29 @@ public class DeviceController {
     public ResponseEntity<?> createDevice(@RequestBody Device device) {
         Device createdDevice = deviceService.createDevice(device);
         return ResponseEntity.ok("Device created successfully with id: " + createdDevice.getId());
+    }
+
+    @Operation(
+            summary = "Register a complete device (Device + Camera if applicable) / Registrar un dispositivo completo (Device + Camera si aplica)",
+            description = "Registers a new device with all its information. For cameras, creates both Device and Camera entities in a single transaction. For sensors, creates only the Device entity. / Registra un nuevo dispositivo con toda su información. Para cámaras, crea ambas entidades Device y Camera en una sola transacción. Para sensores, crea solo la entidad Device."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device registered successfully / Dispositivo registrado exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Invalid device data, missing required fields, or location not found / Datos de dispositivo inválidos, faltan campos requeridos o ubicación no encontrada"),
+            @ApiResponse(responseCode = "409", description = "Device with same name already exists / Ya existe un dispositivo con el mismo nombre"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+    @PostMapping("/register")
+    public ResponseEntity<?> registerDevice(@RequestBody RegisterDeviceRequest request) {
+        try {
+            Device registeredDevice = deviceService.registerDevice(request);
+            String typeName = registeredDevice.getType() == DeviceType.CAMERA ? "Camera" : "Sensor";
+            return ResponseEntity.ok("Device registered successfully. " + typeName + " ID: " + registeredDevice.getId());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Registration failed: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Internal error during registration: " + e.getMessage());
+        }
     }
 
     @Operation(

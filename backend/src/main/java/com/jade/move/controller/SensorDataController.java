@@ -36,11 +36,8 @@ public class SensorDataController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping
-    public ResponseEntity<?> getAllSensorData() {
+    public ResponseEntity<List<SensorData>> getAllSensorData() {
         List<SensorData> sensorDataList = sensorDataService.getAllSensorData();
-        if (sensorDataList.isEmpty()) {
-            return ResponseEntity.ok("No sensor data found.");
-        }
         return ResponseEntity.ok(sensorDataList);
     }
 
@@ -74,11 +71,8 @@ public class SensorDataController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/device/{deviceId}")
-    public ResponseEntity<?> getSensorDataByDeviceId(@PathVariable Integer deviceId) {
+    public ResponseEntity<List<SensorData>> getSensorDataByDeviceId(@PathVariable Integer deviceId) {
         List<SensorData> sensorDataList = sensorDataService.getSensorDataByDeviceId(deviceId);
-        if (sensorDataList.isEmpty()) {
-            return ResponseEntity.ok("No sensor data found for device with id: " + deviceId);
-        }
         return ResponseEntity.ok(sensorDataList);
     }
 
@@ -141,9 +135,6 @@ public class SensorDataController {
         criteria.setSize(size);
 
         List<SensorData> result = sensorDataService.searchSensorData(criteria);
-        if (result.isEmpty()) {
-            return ResponseEntity.ok("No sensor data found matching the specified criteria.");
-        }
         return ResponseEntity.ok(result);
     }
 

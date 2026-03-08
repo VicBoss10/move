@@ -14,9 +14,12 @@ export interface Camera {
     state: string;
     location: {
       id: number;
-      description: string;
+      /**
+       * Puede venir null cuando la cámara está asociada a una ubicación sin descripción.
+       */
+      description: string | null;
       latitude: number;
-      length: number;
+      longitude: number;
     };
   };
   streamType: StreamType;

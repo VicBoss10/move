@@ -219,7 +219,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * @param location - Ubicación a enfocar
    */
   focusOnLocation(location: Location): void {
-    this.center = { lat: location.latitude, lng: location.length };
+    this.center = { lat: location.latitude, lng: location.longitude };
     this.zoom = 16;
     this.cdr.markForCheck();
   }
@@ -234,22 +234,22 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
 
     // Filtrar ubicaciones con coordenadas válidas
     const valid = this.locations.filter(loc =>
-      loc.latitude != null && loc.length != null &&
-      isFinite(loc.latitude) && isFinite(loc.length)
+      loc.latitude != null && loc.longitude != null &&
+      isFinite(loc.latitude) && isFinite(loc.longitude)
     );
     if (valid.length === 0) return;
 
     if (valid.length === 1) {
       this.center = {
         lat: valid[0].latitude,
-        lng: valid[0].length,
+        lng: valid[0].longitude,
       };
       this.zoom = 15;
       return;
     }
 
     const avgLat = valid.reduce((sum, loc) => sum + loc.latitude, 0) / valid.length;
-    const avgLng = valid.reduce((sum, loc) => sum + loc.length, 0) / valid.length;
+    const avgLng = valid.reduce((sum, loc) => sum + loc.longitude, 0) / valid.length;
     this.center = { lat: avgLat, lng: avgLng };
     this.zoom = DEFAULT_MAP_CONFIG.zoom;
   }

@@ -37,11 +37,8 @@ public class VehicleDetectedController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping
-    public ResponseEntity<?> getAllVehicleDetected() {
+    public ResponseEntity<List<VehicleDetected>> getAllVehicleDetected() {
         List<VehicleDetected> list = vehicleDetectedService.getAllVehicleDetected();
-        if (list.isEmpty()) {
-            return ResponseEntity.ok("No vehicles detected found.");
-        }
         return ResponseEntity.ok(list);
     }
 
@@ -88,10 +85,6 @@ public class VehicleDetectedController {
         criteria.setEnd(end);
 
         List<VehicleDetected> vehicles = vehicleDetectedService.searchVehicles(criteria);
-
-        if (vehicles.isEmpty()) {
-            return ResponseEntity.ok("No vehicles found matching the specified criteria.");
-        }
         return ResponseEntity.ok(vehicles);
     }
 

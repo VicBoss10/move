@@ -14,14 +14,21 @@ export interface SensorData {
   nh3: number;             // ppb
   timestamp: Date;
   deviceId: number;
+  /**
+   * Relación opcional expandida; algunos endpoints solo retornan deviceId.
+   */
   device?: {
     id: number;
     name: string;
+    /**
+     * Ubicación opcional cuando el backend no hace join de location.
+     */
     location?: {
       id: number;
       latitude: number;
-      length: number;
-      description?: string;
+      longitude: number;
+      /** Puede ser null si la ubicación no tiene descripción. */
+      description?: string | null;
     };
   };
 }
