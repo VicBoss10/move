@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, Chart as ChartJS, BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend } from 'chart.js';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
+import { VehicleDetected } from '../../../../core/models/vehicle.model';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -55,7 +56,7 @@ export class VehicleActivityComponent {
    * Observable compartido de datos de vehículos
    * @private
    */
-  private vehicleData$!: Observable<any[]>;
+  private vehicleData$!: Observable<VehicleDetected[]>;
 
   /**
    * Tipos de vehículos mapeados al enum VehicleType del backend

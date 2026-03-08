@@ -5,12 +5,14 @@ import {
   QueryList,
   ViewChildren,
   ChangeDetectorRef,
+  OnDestroy,
 } from "@angular/core";
 import { SidebarService } from "../../services/sidebar.service";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { SafeHtmlPipe } from "../../pipe/safe-html.pipe";
 import { SidebarWidgetComponent } from "./app-sidebar-widget.component";
-import { combineLatest, Subscription } from "rxjs";
+import { combineLatest, Subject } from "rxjs";
+import { takeUntil } from "rxjs/operators";
 
 type NavItem = {
   name: string;
@@ -25,7 +27,7 @@ type NavItem = {
   imports: [CommonModule, RouterModule, SafeHtmlPipe],
   templateUrl: "./app-sidebar.component.html",
 })
-export class AppSidebarComponent {
+export class AppSidebarComponent implements OnDestroy {
   // Main nav items - Core del Sistema
   navItems: NavItem[] = [
     {
@@ -129,7 +131,7 @@ export class AppSidebarComponent {
   readonly isMobileOpen$;
   readonly isHovered$;
 
-  private subscription: Subscription = new Subscription();
+  private destroy$ = new Subject<void>();
 
   constructor(
     public sidebarService: SidebarService,
@@ -143,33 +145,26 @@ export class AppSidebarComponent {
 
   ngOnInit() {
     // Subscribe to router events
-    this.subscription.add(
-      this.router.events.subscribe((event) => {
+    this.router.events
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event) => {
         if (event instanceof NavigationEnd) {
           this.setActiveMenuFromRoute(this.router.url);
         }
-      }),
-    );
+      });
 
     // Subscribe to combined observables to close submenus when all are false
-    this.subscription.add(
-      combineLatest([
-        this.isExpanded$,
-        this.isMobileOpen$,
-        this.isHovered$,
-      ]).subscribe(([isExpanded, isMobileOpen, isHovered]) => {
+    combineLatest([
+      this.isExpanded$,
+      this.isMobileOpen$,
+      this.isHovered$,
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([isExpanded, isMobileOpen, isHovered]) => {
         if (!isExpanded && !isMobileOpen && !isHovered) {
-          // this.openSubmenu = null;
-          // this.savedSubMenuHeights = { ...this.subMenuHeights };
-          // this.subMenuHeights = {};
           this.cdr.detectChanges();
-        } else {
-          // Restore saved heights when reopening
-          // this.subMenuHeights = { ...this.savedSubMenuHeights };
-          // this.cdr.detectChanges();
         }
-      }),
-    );
+      });
 
     // Initial load
     this.setActiveMenuFromRoute(this.router.url);
@@ -177,7 +172,8 @@ export class AppSidebarComponent {
 
   ngOnDestroy() {
     // Clean up subscriptions
-    this.subscription.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   isActive(path: string): boolean {
@@ -205,12 +201,12 @@ export class AppSidebarComponent {
 
   onSidebarMouseEnter() {
     this.isExpanded$
+      .pipe(takeUntil(this.destroy$))
       .subscribe((expanded) => {
         if (!expanded) {
           this.sidebarService.setHovered(true);
         }
-      })
-      .unsubscribe();
+      });
   }
 
   private setActiveMenuFromRoute(currentUrl: string) {
@@ -242,13 +238,12 @@ export class AppSidebarComponent {
   }
 
   onSubmenuClick() {
-    console.log("click submenu");
     this.isMobileOpen$
+      .pipe(takeUntil(this.destroy$))
       .subscribe((isMobile) => {
         if (isMobile) {
           this.sidebarService.setMobileOpen(false);
         }
-      })
-      .unsubscribe();
+      });
   }
 }

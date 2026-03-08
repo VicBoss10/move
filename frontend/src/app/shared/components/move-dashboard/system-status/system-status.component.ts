@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 import { DeviceService } from '../../../../core/services/device.service';
 import { LocationService } from '../../../../core/services/location.service';
+import { Device } from '../../../../core/models/device.model';
+import { Location } from '../../../../core/models/location.model';
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -109,8 +111,8 @@ export class SystemStatusComponent {
       this.deviceService.getAll(),
       this.locationService.getAll()
     ]).pipe(
-      map(([devices, locations]: [any[], any[]]) => {
-        const activeDevices = (devices || []).filter((d: any) => d.state === 'ACTIVE').length;
+      map(([devices, locations]: [Device[], Location[]]) => {
+        const activeDevices = (devices || []).filter((d) => d.state ==='ACTIVE').length;
         const totalDevices = (devices || []).length;
         const totalLocations = (locations || []).length;
 

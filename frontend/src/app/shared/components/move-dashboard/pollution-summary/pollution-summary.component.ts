@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 import { ENV_THRESHOLDS, getEnvironmentStatus, EnvironmentMetricKey } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
@@ -79,7 +80,7 @@ export class PollutionSummaryComponent {
    */
   private initializePollutionData(): void {
     this.pollutionData$ = this.sensorDataService.getAll().pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) {
           return this.defaultPollutionData;
         }
