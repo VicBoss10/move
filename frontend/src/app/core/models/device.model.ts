@@ -11,8 +11,7 @@ export enum DeviceType {
 export enum DeviceState {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
-  MAINTENANCE = 'MAINTENANCE',
-  ERROR = 'ERROR'
+  FAILING = 'FAILING'
 }
 
 /**

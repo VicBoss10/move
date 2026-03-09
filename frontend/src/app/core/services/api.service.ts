@@ -19,7 +19,7 @@ export class ApiService {
    * En desarrollo: http://localhost:8080
    * En producción: https://api.moveiot.online
    */
-  private readonly apiUrl = 'http://localhost:8080';
+  private readonly apiUrl = 'https://api.moveiot.online';
 
   /** Último error HTTP detectado por el servicio. */
   private readonly errorSubject = new BehaviorSubject<string | null>(null);

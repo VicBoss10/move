@@ -3,22 +3,19 @@ import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { DeviceService } from '../../../../core/services/device.service';
-import { DeviceType } from '../../../../core/models/device.model';
 
-interface ConnectedSensor {
+interface ConnectedDevice {
   id: number;
   name: string;
   type: string;
   status: 'ONLINE' | 'OFFLINE' | 'ERROR';
-  lastReading: number | null;
-  unit: string;
-  lastUpdate: Date;
 }
 
 /**
- * ConnectedSensorsListComponent (Shared/Smart Component)
+ * ConnectedDevicesListComponent (Shared/Smart Component)
  *
- * Muestra lista de sensores conectados y disponibles para el sistema.
+ * Muestra lista de dispositivos conectados disponibles en el sistema.
+ * Filtra solo los dispositivos de tipo SENSOR.
  *
  * @selector app-connected-sensors-list
  * @standalone true
@@ -31,26 +28,23 @@ interface ConnectedSensor {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConnectedSensorsListComponent {
-  sensors$: Observable<ConnectedSensor[]>;
+  devices$: Observable<ConnectedDevice[]>;
 
   constructor(private deviceService: DeviceService) {
-    this.sensors$ = this.deviceService.getAll().pipe(
+    this.devices$ = this.deviceService.getAll().pipe(
       map((devices) =>
         devices
-          .filter((d) => d.type === DeviceType.SENSOR)
+          .filter((d) => d.type === 'SENSOR')
           .map((d) => ({
             id: d.id,
             name: d.name,
-            type: 'ENVIRONMENTAL',
-            status: d.state === 'ACTIVE' ? 'ONLINE' as const : d.state === 'ERROR' ? 'ERROR' as const : 'OFFLINE' as const,
-            lastReading: Math.random() * 100,
-            unit: 'ppm',
-            lastUpdate: new Date(),
+            type: 'DISPOSITIVO AMBIENTAL',
+            status: d.state === 'ACTIVE' ? ('ONLINE' as const) : d.state === 'FAILING' ? ('ERROR' as const) : ('OFFLINE' as const),
           }))
       ),
       catchError((error) => {
-        console.error('Error loading sensors:', error);
-        return of([] as ConnectedSensor[]);
+        console.error('Error cargando dispositivos:', error);
+        return of([] as ConnectedDevice[]);
       }),
       shareReplay(1)
     );

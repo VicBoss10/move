@@ -2,10 +2,8 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 import { DeviceService } from '../../../../core/services/device.service';
-import { LocationService } from '../../../../core/services/location.service';
 import { Device } from '../../../../core/models/device.model';
-import { Location } from '../../../../core/models/location.model';
-import { Observable, of, combineLatest } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
 /**
@@ -87,7 +85,7 @@ export class SystemStatusComponent {
       secondary: 'Sin conexión'
     },
     {
-      label: 'Ubicaciones',
+      label: 'Cámaras',
       icon: this.icons.cameraIcon,
       status: 'inactive',
       primary: '0',
@@ -96,8 +94,7 @@ export class SystemStatusComponent {
   ];
 
   constructor(
-    private deviceService: DeviceService,
-    private locationService: LocationService
+    private deviceService: DeviceService
   ) {
     this.initializeStatusCards();
   }
@@ -107,14 +104,11 @@ export class SystemStatusComponent {
    * @private
    */
   private initializeStatusCards(): void {
-    this.statusCards$ = combineLatest([
-      this.deviceService.getAll(),
-      this.locationService.getAll()
-    ]).pipe(
-      map(([devices, locations]: [Device[], Location[]]) => {
-        const activeDevices = (devices || []).filter((d) => d.state ==='ACTIVE').length;
+    this.statusCards$ = this.deviceService.getAll().pipe(
+      map((devices: Device[]) => {
+        const activeDevices = (devices || []).filter((d) => d.state === 'ACTIVE').length;
         const totalDevices = (devices || []).length;
-        const totalLocations = (locations || []).length;
+        const totalCameras = (devices || []).filter((d) => d.type === 'CAMERA').length;
 
         return [
           {
@@ -132,11 +126,11 @@ export class SystemStatusComponent {
             secondary: 'Activos'
           },
           {
-            label: 'Ubicaciones',
+            label: 'Cámaras',
             icon: this.icons.cameraIcon,
-            status: 'active' as const,
-            primary: `${totalLocations}`,
-            secondary: 'Registradas'
+            status: (totalCameras > 0 ? 'active' : 'inactive') as 'active' | 'inactive',
+            primary: `${totalCameras}`,
+            secondary: 'Conectadas'
           },
         ];
       }),

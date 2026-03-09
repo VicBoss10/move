@@ -2,21 +2,8 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
-import { DeviceService } from '../../../../core/services/device.service';
-import { DeviceState } from '../../../../core/models/device.model';
-
-interface DeviceStatusInfo {
-  id: number;
-  name: string;
-  type: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'ERROR' | 'MAINTENANCE';
-  uptime: number;
-  lastSeen: Date;
-  signalStrength: number;
-  temperature: number;
-  cpuUsage: number;
-  memoryUsage: number;
-}
+import { DeviceStatusService, DeviceStatusInfo } from '../../../../core/services/device-status.service';
+import { DeviceType } from '../../../../core/models/device.model';
 
 /**
  * DeviceStatusTableComponent (Shared/Smart Component)
@@ -36,25 +23,11 @@ interface DeviceStatusInfo {
 export class DeviceStatusTableComponent {
   devices$: Observable<DeviceStatusInfo[]>;
 
-  constructor(private deviceService: DeviceService) {
-    this.devices$ = this.deviceService.getAll().pipe(
-      map((devices) =>
-        devices.map((d) => ({
-          id: d.id,
-          name: d.name,
-          type: d.type,
-          status: d.state as 'ACTIVE' | 'INACTIVE' | 'ERROR' | 'MAINTENANCE',
-          uptime: Math.random() * 100,
-          lastSeen: new Date(),
-          signalStrength: Math.random() * 100,
-          temperature: 35 + Math.random() * 15,
-          cpuUsage: Math.random() * 80,
-          memoryUsage: Math.random() * 85,
-        }))
-      ),
+  constructor(private deviceStatusService: DeviceStatusService) {
+    this.devices$ = this.deviceStatusService.getDeviceStatuses().pipe(
       catchError((error) => {
-        console.error('Error loading devices:', error);
-        return of([] as DeviceStatusInfo[]);
+        console.error('Error loading device statuses:', error);
+        return of([]);
       }),
       shareReplay(1)
     );
@@ -72,23 +45,29 @@ export class DeviceStatusTableComponent {
 
   getStatusIcon(status: string): string {
     const icons: Record<string, string> = {
-      ACTIVE: '🟢',
-      INACTIVE: '⚫',
-      ERROR: '🔴',
-      MAINTENANCE: '🟡',
+      ACTIVE: '●',
+      INACTIVE: '○',
+      ERROR: '●',
+      MAINTENANCE: '●',
     };
-    return icons[status] || '⚪';
+    return icons[status] || '○';
   }
 
-  getSignalColor(strength: number): string {
-    if (strength >= 75) return 'text-green-600 dark:text-green-400';
-    if (strength >= 50) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
+  getStatusText(status: string): string {
+    const texts: Record<string, string> = {
+      ACTIVE: 'Activo',
+      INACTIVE: 'Inactivo',
+      ERROR: 'Error',
+      MAINTENANCE: 'Mantenimiento',
+    };
+    return texts[status] || 'Desconocido';
   }
 
-  getUsageColor(usage: number): string {
-    if (usage <= 50) return 'bg-green-500';
-    if (usage <= 75) return 'bg-yellow-500';
-    return 'bg-red-500';
+  getDeviceTypeText(type: string): string {
+    const texts: Record<string, string> = {
+      SENSOR: 'Sensor',
+      CAMERA: 'Cámara',
+    };
+    return texts[type] || type;
   }
 }
