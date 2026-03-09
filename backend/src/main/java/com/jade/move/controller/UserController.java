@@ -60,7 +60,7 @@ public class UserController {
 
     @Operation(
             summary = "Create a new user / Crear un nuevo usuario",
-            description = "Creates a new user in the system with the provided information. Checks for existing users with the same ID to prevent duplicates. All required fields must be included. / Crea un nuevo usuario en el sistema con la información proporcionada. Verifica usuarios existentes con el mismo ID para prevenir duplicados. Todos los campos requeridos deben incluirse."
+            description = "Public endpoint for creating/registering a new user in the system. Checks for existing users with the same ID to prevent duplicates. All required fields must be included. / Endpoint público para crear/registrar un nuevo usuario en el sistema. Verifica usuarios existentes con el mismo ID para prevenir duplicados. Todos los campos requeridos deben incluirse."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User created successfully / Usuario creado exitosamente"),

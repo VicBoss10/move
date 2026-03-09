@@ -47,6 +47,48 @@ services:
     profiles:
       - full
 
+  keycloak_db:
+    container_name: keycloak_db
+    image: postgres:17
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak123
+      POSTGRES_DB: keycloak_db
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - move-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    container_name: move-keycloak
+    image: keycloak/keycloak:latest
+    ports:
+      - "8081:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak_db
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak123
+      KC_PROXY: edge
+      KC_HTTP_ENABLED: "true"
+    volumes:
+      - ./keycloak/move-realm-import.json:/opt/keycloak/data/import/move-realm-import.json:ro
+    depends_on:
+      keycloak_db:
+        condition: service_healthy
+    networks:
+      - move-network
+    command: start-dev --import-realm
+
   move_db:
     container_name: move_db
     image: postgres:17
@@ -92,6 +134,7 @@ services:
 
 volumes:
   move_db_data:
+  keycloak_db_data:
 
 networks:
   move-network:
