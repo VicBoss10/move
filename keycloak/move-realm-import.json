@@ -10,7 +10,13 @@
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
-  "bruteForceProtected": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
   "accessTokenLifespan": 300,
   "accessTokenLifespanForImplicitFlow": 900,
   "offlineSessionIdleTimeout": 2592000,
@@ -70,10 +76,9 @@
       "clientId": "move-frontend",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "move-frontend-secret-dev",
       "protocol": "openid-connect",
-      "publicClient": false,
-      "directAccessGrantsEnabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
@@ -87,11 +92,11 @@
       "webOrigins": [
         "http://localhost:4200",
         "http://localhost",
-        "http://localhost:80",
-        "*"
+        "http://localhost:80"
       ],
       "attributes": {
-        "display.on.consent.screen": "false"
+        "display.on.consent.screen": "false",
+        "pkce.code.challenge.method": "S256"
       },
       "defaultClientScopes": [
         "web-origins",
@@ -132,6 +137,23 @@
         "phone",
         "offline_access"
       ]
+    },
+    {
+      "clientId": "admin-cli",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "admin-cli-secret",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "name": "Admin CLI",
+      "description": "Admin CLI for user management",
+      "attributes": {
+        "display.on.consent.screen": "false"
+      }
     }
   ],
   "users": [

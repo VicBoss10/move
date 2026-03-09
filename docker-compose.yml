@@ -28,8 +28,18 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - PYTHON_SERVICE_URL=http://vehicle-detection:5000
+      # Keycloak - ISSUER_URI debe coincidir con el 'iss' del JWT (URL publica)
+      - KEYCLOAK_ISSUER_URI=http://localhost:8081/realms/move
+      # JWK_SET_URI usa la red interna Docker para obtener las claves publicas
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/move/protocol/openid-connect/certs
+      # Admin client usa la red interna Docker
+      - KEYCLOAK_SERVER_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=move
+      - KEYCLOAK_ADMIN_USERNAME=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin123
     depends_on:
       - move_db
+      - keycloak
     networks:
       - move-network
 
