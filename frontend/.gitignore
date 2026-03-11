@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Local runtime config (do not commit your real keys)
+/src/assets/config.json
