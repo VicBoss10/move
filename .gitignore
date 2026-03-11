@@ -1,0 +1,25 @@
+# Keycloak exports (contienen claves privadas RSA, HMAC, AES y secrets de clientes)
+keycloak/*-full-export.json
+keycloak/*-export*.json
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+frontend/dist/
+backend/target/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

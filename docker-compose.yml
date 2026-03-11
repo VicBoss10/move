@@ -91,7 +91,7 @@ services:
       KC_PROXY: edge
       KC_HTTP_ENABLED: "true"
     volumes:
-      - ./keycloak/move-realm-import.json:/opt/keycloak/data/import/move-realm-import.json:ro
+      - ./keycloak/move-realm-full-export.json:/opt/keycloak/data/import/move-realm-import.json:ro
     depends_on:
       keycloak_db:
         condition: service_healthy
