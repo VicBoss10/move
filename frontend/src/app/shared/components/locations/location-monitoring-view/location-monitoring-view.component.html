@@ -47,13 +47,14 @@
         width="100%"
       >
         <!-- Marcadores de cada ubicación del backend -->
-        <map-advanced-marker
+        <map-marker
           *ngFor="let location of locations"
-          #markerRef="mapAdvancedMarker"
+          #markerRef="mapMarker"
           [position]="{ lat: location.latitude, lng: location.longitude }"
           [title]="location.description || 'Punto de monitoreo'"
+          [icon]="getMarkerIcon(location)"
           (mapClick)="onMarkerClick(markerRef, location)"
-        />
+        ></map-marker>
 
         <!-- Info Window compartido -->
         <map-info-window>

@@ -33,6 +33,11 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "/assets/"
+              },
+              {
+                "glob": "silent-check-sso.html",
+                "input": "src",
+                "output": "/"
               }
             ],
             "styles": [

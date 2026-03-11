@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
-import { GoogleMapsModule, MapInfoWindow, MapAdvancedMarker } from '@angular/google-maps';
+import { GoogleMapsModule, MapInfoWindow, MapMarker } from '@angular/google-maps';
 import { LocationTableComponent } from '../location-table/location-table.component';
 import { LocationFiltersComponent, LocationSearchCriteria } from '../location-filters/location-filters.component';
 import { LocationService } from '../../../../core/services/location.service';
@@ -206,12 +206,29 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * @param marker - Referencia al MapAdvancedMarker
    * @param location - Datos de la ubicación
    */
-  onMarkerClick(marker: MapAdvancedMarker, location: Location): void {
+  onMarkerClick(marker: MapMarker | any, location: Location): void {
     this.selectedInfoLocation = location;
     if (this.infoWindow) {
       this.infoWindow.open(marker);
     }
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Genera un icono SVG como data-URL para usar como marcador
+   * Color y estilo se calculan según actividad/estado de la ubicación
+   */
+  getMarkerIcon(location: Location): string {
+    const lastActivity = (location as any).lastActivity ? new Date((location as any).lastActivity).getTime() : 0;
+    const isRecent = lastActivity && (Date.now() - lastActivity) < 24 * 60 * 60 * 1000; // 24h
+    const color = isRecent ? '#10B981' : '#6B7280'; // green-500 or gray-500
+
+    const svg = `<?xml version='1.0' encoding='utf-8'?><svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'>
+      <circle cx='12' cy='10' r='6' fill='${color}' stroke='%23ffffff' stroke-width='1.5'/>
+      <path d='M12 22s6-4.5 6-9a6 6 0 10-12 0c0 4.5 6 9 6 9z' fill='none' stroke='${color}' stroke-width='0' />
+    </svg>`;
+
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
   }
 
   /**

@@ -82,7 +82,7 @@
           <app-input-field
             type="email"
             placeholder="correo@ejemplo.com"
-            [value]="email"
+            [(value)]="email"
             name="email"
             class="form-input"
             required
@@ -95,7 +95,7 @@
             <app-input-field
               [type]="showPassword ? 'text' : 'password'"
               placeholder="Ingresa tu contraseña"
-              [value]="password"
+              [(value)]="password"
               name="password"
               class="form-input"
               required
@@ -131,11 +131,16 @@
         <app-button
           className="w-full"
           size="sm"
+          [disabled]="loading"
           (btnClick)="onSignIn()"
         >
-          Iniciar sesión
+          {{ loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
         </app-button>
       </form>
+
+      @if (errorMessage) {
+        <p class="mt-3 text-sm text-center text-error-500">{{ errorMessage }}</p>
+      }
 
       <div class="mt-5">
         <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
