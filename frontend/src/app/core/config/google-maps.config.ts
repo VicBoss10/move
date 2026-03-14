@@ -3,9 +3,11 @@ import { InjectionToken } from '@angular/core';
 /**
  * Configuración de Google Maps para la aplicación MOVE.
  *
- * La API Key se carga desde:
- * - Desarrollo: Variable directa en este archivo
- * - Producción/Docker: Inyectada via script en index.html (window.__GOOGLE_MAPS_API_KEY__)
+ * Flujo de la API Key:
+ * - Desarrollo (ng serve): Se lee desde assets/config.json (gitignored).
+ *   Copia config.json.example → config.json y pon tu key ahí.
+ * - Docker/producción: Se inyecta vía la variable de entorno GOOGLE_MAPS_API_KEY.
+ *   El entrypoint de nginx reemplaza el placeholder en index.html en runtime.
  *
  * Para obtener una API Key:
  * 1. Ir a https://console.cloud.google.com/
@@ -14,16 +16,15 @@ import { InjectionToken } from '@angular/core';
  * 4. Restringir la key a "Maps JavaScript API" y al dominio de producción
  */
 
-/** Token de inyección para la API Key de Google Maps */
+/** Token de inyección para la API Key de Google Maps (reservado para uso futuro) */
 export const GOOGLE_MAPS_API_KEY = new InjectionToken<string>('GOOGLE_MAPS_API_KEY');
 
 /**
- * Obtiene la API Key de Google Maps desde la configuración runtime o el valor por defecto.
- * En Docker, el entrypoint de nginx inyecta window.__GOOGLE_MAPS_API_KEY__.
- * @returns La API Key de Google Maps
+ * Obtiene la API Key de Google Maps desde window.__GOOGLE_MAPS_API_KEY__.
+ * En desarrollo, main.ts la carga desde assets/config.json antes del bootstrap.
+ * En Docker, el entrypoint de nginx la inyecta reemplazando el placeholder.
  */
 export function getGoogleMapsApiKey(): string {
-  // Primero intenta la config runtime (Docker/producción)
   const runtimeKey = (window as any).__GOOGLE_MAPS_API_KEY__;
   if (runtimeKey && runtimeKey !== '__GOOGLE_MAPS_KEY_PLACEHOLDER__') {
     return runtimeKey;

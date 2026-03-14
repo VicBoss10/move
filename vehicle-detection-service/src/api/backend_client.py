@@ -1,6 +1,8 @@
 """
 Cliente HTTP para comunicación con el backend Spring Boot
 """
+import os
+import time
 import requests
 import logging
 from typing import Optional
@@ -27,6 +29,17 @@ class BackendClient:
         self.timeout = timeout
         self.logger = logging.getLogger(__name__)
         self._is_available = False
+        # Token cache for client_credentials
+        self._token: Optional[str] = None
+        self._token_expiry: float = 0.0
+
+        # Keycloak client-credentials configuration (read from env)
+        self.kc_token_url = os.getenv(
+            "KEYCLOAK_TOKEN_URL",
+            "http://keycloak:8080/realms/move/protocol/openid-connect/token",
+        )
+        self.client_id = os.getenv("VEHICLE_CLIENT_ID")
+        self.client_secret = os.getenv("VEHICLE_CLIENT_SECRET")
     
     def health_check(self) -> bool:
         """
@@ -66,11 +79,17 @@ class BackendClient:
         endpoint = f"{self.base_url}/vehicles"
         
         try:
+            # Acquire access token via client_credentials (cached)
+            token = self._get_token()
+            headers = {"Content-Type": "application/json"}
+            if token:
+                headers["Authorization"] = f"Bearer {token}"
+
             response = requests.post(
                 endpoint,
                 json=event.to_dict(),
-                headers={"Content-Type": "application/json"},
-                timeout=self.timeout
+                headers=headers,
+                timeout=self.timeout,
             )
             
             if response.status_code in [200, 201]:
@@ -101,6 +120,47 @@ class BackendClient:
         except Exception as e:
             self.logger.error(f"✗ Error inesperado al enviar detección: {e}")
             return False
+
+    def _get_token(self) -> Optional[str]:
+        """Obtener y cachear un access_token usando client_credentials.
+
+        Retorna None si no hay credenciales configuradas o si falla la petición.
+        """
+        try:
+            if self._token and time.time() < self._token_expiry - 10:
+                return self._token
+
+            if not self.client_id or not self.client_secret:
+                self.logger.debug("VEHICLE_CLIENT_ID/VEHICLE_CLIENT_SECRET no configurados; enviando sin token")
+                return None
+
+            data = {
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+            }
+            # Allow forcing the Host header when requesting the token from
+            # inside Docker so Keycloak issues an `iss` that matches the
+            # backend's expected public issuer (e.g. localhost:8081).
+            headers = {}
+            token_host = os.getenv("KEYCLOAK_TOKEN_HOST")
+            if token_host:
+                headers["Host"] = token_host
+            resp = requests.post(self.kc_token_url, data=data, timeout=5, headers=headers)
+            resp.raise_for_status()
+            j = resp.json()
+            access_token = j.get("access_token")
+            expires_in = int(j.get("expires_in", 60))
+            if access_token:
+                self._token = access_token
+                self._token_expiry = time.time() + expires_in
+                return self._token
+            else:
+                self.logger.warning("No se recibió access_token del token endpoint")
+                return None
+        except Exception as e:
+            self.logger.warning(f"Fallo al obtener token de Keycloak: {e}")
+            return None
     
     def is_available(self) -> bool:
         """

@@ -10,19 +10,23 @@ RUN pip install --no-cache-dir \
     --extra-index-url https://download.pytorch.org/whl/cpu \
     torch==2.2.0+cpu torchvision==0.17.0+cpu
 
-# 2) Instalar el resto de dependencias
+# 2) Instalar opencv-headless PRIMERO para evitar que ultralytics instale opencv-python (con GUI)
+RUN pip install --no-cache-dir "opencv-python-headless>=4.8.0"
+
+# 3) Instalar ultralytics y dependencias (aprovecha caché si falla)
+RUN pip install --no-cache-dir "ultralytics>=8.0.0"
+
+# 4) Instalar resto de dependencias ligeras
 RUN pip install --no-cache-dir \
-    "ultralytics>=8.0.0" \
-    "opencv-python-headless>=4.8.0" \
     "yt-dlp>=2023.12.0" \
     "requests>=2.31.0" \
     "flask>=3.0.0" \
     "flask-cors>=4.0.0"
 
-# 3) FORZAR NumPy 1.x al final (PyTorch 2.2 no es compatible con NumPy 2.x)
+# 5) FORZAR NumPy 1.x al final (PyTorch 2.2 no es compatible con NumPy 2.x)
 RUN pip install --no-cache-dir --force-reinstall "numpy>=1.24.0,<2.0.0"
 
-# 4) SOLO borrar cache para reducir tamaño sin romper nada
+# 6) SOLO borrar cache para reducir tamaño sin romper nada
 RUN find /usr/local/lib/python3.11/site-packages -type f -name "*.pyc" -delete \
     && find /usr/local/lib/python3.11/site-packages -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 
@@ -53,5 +57,10 @@ EXPOSE 5000
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
+
+# Create non-root user for security and set ownership of app directory
+RUN useradd -m appuser || true
+RUN chown -R appuser:appuser /app
+USER appuser
 
 CMD ["python", "src/api_server.py"]

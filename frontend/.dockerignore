@@ -1,0 +1,7 @@
+node_modules
+dist
+.angular
+
+# Excluir config.json local para que la API key no quede
+# bakeada en la imagen. En Docker se inyecta via variable de entorno.
+src/assets/config.json
