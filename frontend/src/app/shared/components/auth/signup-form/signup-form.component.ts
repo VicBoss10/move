@@ -33,10 +33,12 @@ export class SignupFormComponent {
   }
 
   onSignUp(): void {
-    if (!this.fname || !this.lname || !this.email || !this.password || !this.isChecked) return;
+    // Client-side validation
+    // Submit to backend and show backend errors if any. Keep client-side checks minimal.
     this.loading = true;
     this.errorMessage = '';
     const registerData = {
+      username: this.email,
       firstName: this.fname,
       lastName: this.lname,
       email: this.email,
@@ -46,8 +48,14 @@ export class SignupFormComponent {
       switchMap(() => this.auth.login(this.email, this.password))
     ).subscribe({
       next: () => this.router.navigate(['/dashboard/dashboard']),
-      error: () => {
-        this.errorMessage = 'Error al registrarse. Verifica los datos e inténtalo de nuevo.';
+      error: (err) => {
+        // Try to show backend validation message if present
+        try {
+          const msg = err?.error?.message || err?.error?.error_description || err?.message;
+          this.errorMessage = msg || 'Error al registrarse. Verifica los datos e inténtalo de nuevo.';
+        } catch {
+          this.errorMessage = 'Error al registrarse. Verifica los datos e inténtalo de nuevo.';
+        }
         this.loading = false;
       }
     });

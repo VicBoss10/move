@@ -138,7 +138,22 @@ export class AuthService {
   getUserInfo(): { username?: string; email?: string; firstName?: string; lastName?: string; roles: string[] } {
     if (!this.accessToken) return { roles: [] };
     try {
-      const payload = JSON.parse(atob(this.accessToken.split('.')[1]));
+      // Properly decode base64url JWT payload and interpret as UTF-8
+      const base64Url = this.accessToken.split('.')[1] || '';
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
+      const raw = atob(padded);
+      const bytes = Uint8Array.from(raw.split('').map(c => c.charCodeAt(0)));
+      let payload: any;
+      try {
+        // Use TextDecoder when available to correctly decode UTF-8
+        const decoder = new TextDecoder('utf-8');
+        payload = JSON.parse(decoder.decode(bytes));
+      } catch {
+        // Fallback: percent-encoding trick
+        const escaped = raw.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+        payload = JSON.parse(decodeURIComponent(escaped));
+      }
       return {
         username: payload['preferred_username'],
         email: payload['email'],

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ModalService } from '../../../services/modal.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { InputFieldComponent } from '../../form/input/input-field.component';
 import { ButtonComponent } from '../../ui/button/button.component';
@@ -18,27 +19,29 @@ import { ModalComponent } from '../../ui/modal/modal.component';
   templateUrl: './user-info-card.component.html',
   styles: ``
 })
-export class UserInfoCardComponent {
+export class UserInfoCardComponent implements OnInit {
 
-  constructor(public modal: ModalService) {}
+  constructor(public modal: ModalService, private auth: AuthService) {}
 
   isOpen = false;
   openModal() { this.isOpen = true; }
   closeModal() { this.isOpen = false; }
 
-  user = {
-    firstName: 'Musharof',
-    lastName: 'Chowdhury',
-    email: 'randomuser@pimjo.com',
-    phone: '+09 363 398 46',
-    bio: 'Team Manager',
-    social: {
-      facebook: 'https://www.facebook.com/PimjoHQ',
-      x: 'https://x.com/PimjoHQ',
-      linkedin: 'https://www.linkedin.com/company/pimjo',
-      instagram: 'https://instagram.com/PimjoHQ',
-    },
+  user: any = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    bio: '',
+    social: {},
   };
+
+  ngOnInit(): void {
+    const info = this.auth.getUserInfo();
+    this.user.firstName = info.firstName || info.username || '';
+    this.user.lastName = info.lastName || '';
+    this.user.email = info.email || '';
+  }
 
   handleSave() {
     // Handle save logic here

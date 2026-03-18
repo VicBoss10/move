@@ -6,7 +6,7 @@ import { DropdownItemTwoComponent } from '../../ui/dropdown/dropdown-item/dropdo
 import { UserService } from '../../../../core/services/user.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-user-dropdown',
@@ -20,18 +20,15 @@ export class UserDropdownComponent {
   user$: Observable<{ firstName?: string; lastName?: string; email?: string; username?: string } | null>;
 
   constructor(private userService: UserService, private auth: AuthService) {
-    // Cargar lista de usuarios y emparejar con el usuario logueado por email.
-    const currentEmail = this.auth.getUserInfo().email;
-
-    this.user$ = this.userService.getAll().pipe(
-      map(users => {
-        if (!users || users.length === 0) return null;
-        if (currentEmail) {
-          const found = (users as any[]).find(u => u.email === currentEmail);
-          if (found) return found;
-        }
-        // fallback: devolver el primer usuario
-        return users[0] as any;
+    // When login status changes, refresh users so newly created users appear immediately.
+    // Use token claims only — avoid calling backend (403/roles issues). Show null if no token claims.
+    this.user$ = this.auth.isLoggedIn$.pipe(
+      map(() => {
+        const info = this.auth.getUserInfo();
+        if (!info) return null;
+        // Only return object if it contains displayable info
+        if (info.firstName || info.lastName || info.username || info.email) return info;
+        return null;
       }),
       catchError(() => of(null)),
       shareReplay(1)

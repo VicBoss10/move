@@ -126,7 +126,7 @@
           fill=""
         />
       </svg>
-      Edit
+      Editar
     </button>
   </div>
 </div>
@@ -140,17 +140,17 @@
   <div class="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
     <div class="px-2 pr-14">
       <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-        Edit Personal Information
+        Editar información personal
       </h4>
       <p class="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-        Update your details to keep your profile up-to-date.
+        Actualiza tus datos para mantener tu perfil al día.
       </p>
     </div>
     <form class="flex flex-col" (ngSubmit)="handleSave()">
       <div class="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
         <div>
           <h5 class="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-            Social Links
+            Redes sociales
           </h5>
           <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
             <div>
@@ -162,7 +162,7 @@
               <app-input-field type="text" [value]="user.social.x" />
             </div>
             <div>
-              <label>Linkedin</label>
+              <label>LinkedIn</label>
               <app-input-field type="text" [value]="user.social.linkedin" />
             </div>
             <div>
@@ -173,46 +173,35 @@
         </div>
         <div class="mt-7">
           <h5 class="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-            Personal Information
+            Información personal
           </h5>
           <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
             <div class="col-span-2 lg:col-span-1">
-              <label>First Name</label>
+              <label>Nombre</label>
               <app-input-field type="text" [value]="user.firstName" />
             </div>
             <div class="col-span-2 lg:col-span-1">
-              <label>Last Name</label>
+              <label>Apellido</label>
               <app-input-field type="text" [value]="user.lastName" />
             </div>
             <div class="col-span-2 lg:col-span-1">
-              <label>Email Address</label>
+              <label>Correo electrónico</label>
               <app-input-field type="text" [value]="user.email" />
             </div>
             <div class="col-span-2 lg:col-span-1">
-              <label>Phone</label>
+              <label>Teléfono</label>
               <app-input-field type="text" [value]="user.phone" />
             </div>
             <div class="col-span-2">
-              <label>Bio</label>
+              <label>Biografía</label>
               <app-input-field type="text" [value]="user.bio" />
             </div>
           </div>
         </div>
       </div>
       <div class="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-        <app-button
-          size="sm"
-          variant="outline"
-          (btnClick)="closeModal()"
-        >
-          Close
-        </app-button>
-        <app-button
-          size="sm"
-          (btnClick)="handleSave()"
-        >
-          Save Changes
-        </app-button>
+        <app-button size="sm" variant="outline" (btnClick)="closeModal()">Cerrar</app-button>
+        <app-button size="sm" (btnClick)="handleSave()">Guardar cambios</app-button>
       </div>
     </form>
   </div>

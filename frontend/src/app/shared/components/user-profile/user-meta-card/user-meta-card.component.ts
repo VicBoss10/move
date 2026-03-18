@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { InputFieldComponent } from '../../form/input/input-field.component';
 import { ModalService } from '../../../services/modal.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { ModalComponent } from '../../ui/modal/modal.component';
 import { ButtonComponent } from '../../ui/button/button.component';
@@ -16,31 +17,49 @@ import { ButtonComponent } from '../../ui/button/button.component';
   templateUrl: './user-meta-card.component.html',
   styles: ``
 })
-export class UserMetaCardComponent {
+export class UserMetaCardComponent implements OnInit {
 
-  constructor(public modal: ModalService) {}
+  constructor(public modal: ModalService, private auth: AuthService) {}
 
   isOpen = false;
   openModal() { this.isOpen = true; }
   closeModal() { this.isOpen = false; }
 
-  // Example user data (could be made dynamic)
-  user = {
-    firstName: 'Musharof',
-    lastName: 'Chowdhury',
-    role: 'Team Manager',
-    location: 'Arizona, United States',
+  // User data sourced from token / AuthService
+  user: any = {
+    firstName: '',
+    lastName: '',
+    role: 'User',
+    location: '',
     avatar: '/images/user/owner.jpg',
-    social: {
-      facebook: 'https://www.facebook.com/PimjoHQ',
-      x: 'https://x.com/PimjoHQ',
-      linkedin: 'https://www.linkedin.com/company/pimjo',
-      instagram: 'https://instagram.com/PimjoHQ',
-    },
-    email: 'randomuser@pimjo.com',
-    phone: '+09 363 398 46',
-    bio: 'Team Manager',
+    social: {},
+    email: '',
+    phone: '',
+    bio: '',
   };
+
+  ngOnInit(): void {
+    const info = this.auth.getUserInfo();
+    this.user.firstName = info.firstName || info.username || '';
+    this.user.lastName = info.lastName || '';
+    this.user.email = info.email || '';
+    this.user.role = this.getDisplayRole(info.roles);
+  }
+
+  private getDisplayRole(roles?: string[]): string {
+    if (!roles || roles.length === 0) return 'Usuario';
+    const lower = roles.map(r => r.toLowerCase());
+    // Prefer explicit admin
+    if (lower.includes('admin') || lower.includes('administrator') || lower.some(r => r.includes('admin'))) {
+      return 'Administrador';
+    }
+    // Prefer explicit user
+    if (lower.includes('user')) return 'Usuario';
+    // Fallback: skip default-roles entries if possible
+    const nonDefault = roles.find(r => !r.toLowerCase().startsWith('default-roles'));
+    if (nonDefault) return nonDefault;
+    return 'Usuario';
+  }
 
   handleSave() {
     // Handle save logic here
