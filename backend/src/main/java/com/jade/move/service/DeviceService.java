@@ -1,10 +1,10 @@
 package com.jade.move.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.jade.move.dto.DevicesSearchCriteria;
 import com.jade.move.dto.RegisterDeviceRequest;
+import com.jade.move.exception.EntityNotFoundException;
 import com.jade.move.model.*;
 import com.jade.move.specification.DevicesSpecification;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,15 +31,20 @@ public class DeviceService {
         return deviceRepository.findAll();
     }
 
-    public Optional<Device> getDeviceById(Integer id) {
+    public Device getDeviceById(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("Device id cannot be null");
         }
-        return deviceRepository.findById(id);
+        return deviceRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Device not found with id: " + id));
     }
 
-    public Optional<Device> getDeviceByName(String name) {
-        return Optional.ofNullable(deviceRepository.findByName(name));
+    public Device getDeviceByName(String name) {
+        Device device = deviceRepository.findByName(name);
+        if (device == null) {
+            throw new EntityNotFoundException("Device not found with name: " + name);
+        }
+        return device;
     }
 
     public List<Device> getDevicesByType(DeviceType type) {
@@ -103,8 +108,7 @@ public class DeviceService {
         }
         
         // Obtener Location
-        Location location = locationService.getLocationById(request.getLocationId())
-            .orElseThrow(() -> new IllegalArgumentException("Location not found with id: " + request.getLocationId()));
+        Location location = locationService.getLocationById(request.getLocationId());
         
         // Crear Device
         Device device = new Device();

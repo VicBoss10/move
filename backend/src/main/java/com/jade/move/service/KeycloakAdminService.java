@@ -1,5 +1,7 @@
 package com.jade.move.service;
 
+import com.jade.move.exception.ConflictException;
+import com.jade.move.exception.EntityNotFoundException;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -46,7 +48,7 @@ public class KeycloakAdminService {
         try {
             return keycloakAdminClient.realm(realm).users().get(userId).toRepresentation();
         } catch (NotFoundException e) {
-            return null;
+            throw new EntityNotFoundException("User not found with id: " + userId);
         }
     }
 
@@ -62,6 +64,11 @@ public class KeycloakAdminService {
      */
     @Transactional
     public String createUser(String username, String password, String email, String firstName, String lastName) {
+        UserRepresentation existing = getUserByUsername(username);
+        if (existing != null) {
+            throw new ConflictException("User already exists with username: " + username);
+        }
+
         UserRepresentation user = new UserRepresentation();
         user.setUsername(username);
         user.setEmail(email);

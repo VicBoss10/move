@@ -34,17 +34,8 @@ public class StreamController {
             @ApiResponse(responseCode = "500", description = "Internal server error or Python service unavailable / Error interno del servidor o servicio Python no disponible")
     })
     @PostMapping("/start")
-    public ResponseEntity<?> startStream(@Valid @RequestBody StreamStartRequest request) {
-        try {
-            StreamResponse response = streamService.startStream(request.getCameraId());
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(409).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(500).body("Error starting stream: " + e.getMessage());
-        }
+    public ResponseEntity<StreamResponse> startStream(@Valid @RequestBody StreamStartRequest request) {
+        return ResponseEntity.ok(streamService.startStream(request.getCameraId()));
     }
 
     @Operation(
@@ -58,15 +49,8 @@ public class StreamController {
             @ApiResponse(responseCode = "500", description = "Internal server error or Python service unavailable / Error interno del servidor o servicio Python no disponible")
     })
     @PostMapping("/stop/{sessionId}")
-    public ResponseEntity<?> stopStream(@PathVariable String sessionId) {
-        try {
-            StreamStopResponse response = streamService.stopStream(sessionId);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(500).body("Error stopping stream: " + e.getMessage());
-        }
+    public ResponseEntity<StreamStopResponse> stopStream(@PathVariable String sessionId) {
+        return ResponseEntity.ok(streamService.stopStream(sessionId));
     }
 
     @Operation(
@@ -80,14 +64,7 @@ public class StreamController {
             @ApiResponse(responseCode = "500", description = "Internal server error or Python service unavailable / Error interno del servidor o servicio Python no disponible")
     })
     @GetMapping("/status/{sessionId}")
-    public ResponseEntity<?> getStreamStatus(@PathVariable String sessionId) {
-        try {
-            StreamResponse response = streamService.getStreamStatus(sessionId);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(500).body("Error getting stream status: " + e.getMessage());
-        }
+    public ResponseEntity<StreamResponse> getStreamStatus(@PathVariable String sessionId) {
+        return ResponseEntity.ok(streamService.getStreamStatus(sessionId));
     }
 }

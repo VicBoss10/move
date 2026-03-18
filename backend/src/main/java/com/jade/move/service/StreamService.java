@@ -2,6 +2,7 @@ package com.jade.move.service;
 
 import com.jade.move.dto.StreamResponse;
 import com.jade.move.dto.StreamStopResponse;
+import com.jade.move.exception.EntityNotFoundException;
 import com.jade.move.model.Camera;
 import com.jade.move.model.Device;
 import com.jade.move.model.DeviceState;
@@ -10,11 +11,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class StreamService {
@@ -38,12 +40,7 @@ public class StreamService {
             throw new IllegalArgumentException("Camera ID cannot be null");
         }
 
-        Optional<Camera> cameraOpt = cameraService.getCameraById(cameraId);
-        if (cameraOpt.isEmpty()) {
-            throw new IllegalArgumentException("Camera not found with id: " + cameraId);
-        }
-
-        Camera camera = cameraOpt.get();
+        Camera camera = cameraService.getCameraById(cameraId);
         Device device = camera.getDevice();
 
         if (device == null) {
@@ -68,14 +65,16 @@ public class StreamService {
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(pythonRequest, headers);
 
         try {
-            ResponseEntity<Map<String, Object>> pythonResponse = restTemplate.postForEntity(
+            ParameterizedTypeReference<Map<String, Object>> typeRef = new ParameterizedTypeReference<>() {};
+            ResponseEntity<Map<String, Object>> pythonResponse = restTemplate.exchange(
                 pythonServiceUrl + "/stream/start",
+                HttpMethod.POST,
                 requestEntity,
-                (Class<Map<String, Object>>)(Class<?>)Map.class
+                typeRef
             );
 
-            if (pythonResponse.getStatusCode() == HttpStatus.CREATED && pythonResponse.getBody() != null) {
-                Map<String, Object> body = pythonResponse.getBody();
+            Map<String, Object> body = pythonResponse.getBody();
+            if (pythonResponse.getStatusCode() == HttpStatus.CREATED && body != null) {
                 String sessionId = body.get("sessionId") != null ? body.get("sessionId").toString() : null;
                 String status = body.get("status") != null ? body.get("status").toString() : "unknown";
                 String streamType = body.get("streamType") != null ? body.get("streamType").toString() : null;
@@ -92,9 +91,9 @@ public class StreamService {
             }
 
         } catch (HttpClientErrorException e) {
-            throw new RuntimeException("Python service client error: " + e.getStatusCode() + " - " + e.getMessage());
-        } catch (Exception e) {
-            throw new RuntimeException("Error starting stream: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            throw new RuntimeException("Python service client error: " + e.getStatusCode() + " - " + e.getMessage(), e);
+        } catch (RestClientException e) {
+            throw new RuntimeException("Error starting stream: " + e.getClass().getSimpleName() + " - " + e.getMessage(), e);
         }
     }
 
@@ -104,14 +103,16 @@ public class StreamService {
         }
 
         try {
-            ResponseEntity<Map<String, Object>> pythonResponse = restTemplate.postForEntity(
+            ParameterizedTypeReference<Map<String, Object>> typeRef = new ParameterizedTypeReference<>() {};
+            ResponseEntity<Map<String, Object>> pythonResponse = restTemplate.exchange(
                 pythonServiceUrl + "/stream/stop/" + sessionId,
+                HttpMethod.POST,
                 null,
-                (Class<Map<String, Object>>)(Class<?>)Map.class
+                typeRef
             );
 
-            if (pythonResponse.getStatusCode() == HttpStatus.OK && pythonResponse.getBody() != null) {
-                Map<String, Object> body = pythonResponse.getBody();
+            Map<String, Object> body = pythonResponse.getBody();
+            if (pythonResponse.getStatusCode() == HttpStatus.OK && body != null) {
                 String message = body.get("message") != null ? body.get("message").toString() : "Stream stopped";
                 return new StreamStopResponse(message, sessionId);
             } else {
@@ -120,9 +121,11 @@ public class StreamService {
 
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                throw new IllegalArgumentException("Stream session not found: " + sessionId);
+                throw new EntityNotFoundException("Stream session not found: " + sessionId);
             }
-            throw new RuntimeException("Python service error: " + e.getMessage());
+            throw new RuntimeException("Python service error: " + e.getMessage(), e);
+        } catch (RestClientException e) {
+            throw new RuntimeException("Python service error: " + e.getMessage(), e);
         }
     }
 
@@ -132,13 +135,16 @@ public class StreamService {
         }
 
         try {
-            ResponseEntity<Map<String, Object>> pythonResponse = restTemplate.getForEntity(
+            ParameterizedTypeReference<Map<String, Object>> typeRef = new ParameterizedTypeReference<>() {};
+            ResponseEntity<Map<String, Object>> pythonResponse = restTemplate.exchange(
                 pythonServiceUrl + "/stream/status/" + sessionId,
-                (Class<Map<String, Object>>)(Class<?>)Map.class
+                HttpMethod.GET,
+                null,
+                typeRef
             );
 
-            if (pythonResponse.getStatusCode() == HttpStatus.OK && pythonResponse.getBody() != null) {
-                Map<String, Object> body = pythonResponse.getBody();
+            Map<String, Object> body = pythonResponse.getBody();
+            if (pythonResponse.getStatusCode() == HttpStatus.OK && body != null) {
                 String retrievedSessionId = body.get("sessionId") != null ? body.get("sessionId").toString() : sessionId;
                 String status = body.get("status") != null ? body.get("status").toString() : "unknown";
                 String streamType = body.get("streamType") != null ? body.get("streamType").toString() : null;
@@ -162,9 +168,11 @@ public class StreamService {
 
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                throw new IllegalArgumentException("Stream session not found: " + sessionId);
+                throw new EntityNotFoundException("Stream session not found: " + sessionId);
             }
-            throw new RuntimeException("Python service error: " + e.getMessage());
+            throw new RuntimeException("Python service error: " + e.getMessage(), e);
+        } catch (RestClientException e) {
+            throw new RuntimeException("Python service error: " + e.getMessage(), e);
         }
     }
 }

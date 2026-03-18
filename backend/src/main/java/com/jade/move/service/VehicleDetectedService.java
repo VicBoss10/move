@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+
+import com.jade.move.exception.EntityNotFoundException;
 
 @Service
 public class VehicleDetectedService {
@@ -25,11 +26,12 @@ public class VehicleDetectedService {
         return vehicleDetectedRepository.findAll();
     }
 
-    public Optional<VehicleDetected> getVehicleDetectedById(Integer id) {
+    public VehicleDetected getVehicleDetectedById(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("Id cannot be null");
         }
-        return vehicleDetectedRepository.findById(id);
+        return vehicleDetectedRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Vehicle detection not found with id: " + id));
     }
 
     public List<VehicleDetected> getVehicleDetectedByVehicleType(VehicleType vehicleType) {

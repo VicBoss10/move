@@ -8,12 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +18,6 @@ import java.util.Map;
 @RequestMapping("/users")
 @Tag(name = "Usuarios", description = "Gestión de autenticación y usuarios / User and authentication management")
 public class UserController {
-
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final KeycloakAdminService keycloakAdminService;
 
@@ -40,12 +35,7 @@ public class UserController {
     })
     @GetMapping
     public ResponseEntity<List<UserRepresentation>> getAllUsers() {
-        try {
-            return ResponseEntity.ok(keycloakAdminService.getAllUsers());
-        } catch (Exception e) {
-            log.error("Error retrieving all users", e);
-            return ResponseEntity.status(500).build();
-        }
+        return ResponseEntity.ok(keycloakAdminService.getAllUsers());
     }
 
     @Operation(
@@ -58,17 +48,8 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable String id) {
-        try {
-            UserRepresentation user = keycloakAdminService.getUserById(id);
-            if (user != null) {
-                return ResponseEntity.ok(user);
-            }
-            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
-        } catch (Exception e) {
-            log.error("Error retrieving user with id: {}", id, e);
-            return ResponseEntity.status(500).body(Map.of("error", "An error occurred while retrieving the user"));
-        }
+    public ResponseEntity<UserRepresentation> getUserById(@PathVariable String id) {
+        return ResponseEntity.ok(keycloakAdminService.getUserById(id));
     }
 
     @Operation(
@@ -82,31 +63,20 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody UserRegistrationRequest registrationRequest) {
-        try {
-            var existingUser = keycloakAdminService.getUserByUsername(registrationRequest.getUsername());
-            if (existingUser != null) {
-                return ResponseEntity.status(409).body(Map.of("error", "User already exists"));
-            }
-
-            String keycloakUserId = keycloakAdminService.createUser(
-                    registrationRequest.getUsername(),
-                    registrationRequest.getPassword(),
-                    registrationRequest.getEmail(),
-                    registrationRequest.getFirstName(),
-                    registrationRequest.getLastName()
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "User created successfully");
-            response.put("userId", keycloakUserId);
-            response.put("username", registrationRequest.getUsername());
-            response.put("email", registrationRequest.getEmail());
-            return ResponseEntity.status(201).body(response);
-        } catch (Exception e) {
-            log.error("Error creating user: {}", registrationRequest.getUsername(), e);
-            return ResponseEntity.status(500).body(Map.of("error", "An error occurred while creating the user"));
-        }
+    public ResponseEntity<Map<String, String>> createUser(@Valid @RequestBody UserRegistrationRequest registrationRequest) {
+        String keycloakUserId = keycloakAdminService.createUser(
+                registrationRequest.getUsername(),
+                registrationRequest.getPassword(),
+                registrationRequest.getEmail(),
+                registrationRequest.getFirstName(),
+                registrationRequest.getLastName()
+        );
+        return ResponseEntity.status(201).body(Map.of(
+                "message", "User created successfully",
+                "userId", keycloakUserId,
+                "username", registrationRequest.getUsername(),
+                "email", registrationRequest.getEmail()
+        ));
     }
 
     @Operation(
@@ -119,19 +89,10 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody UserRegistrationRequest request) {
-        try {
-            UserRepresentation existing = keycloakAdminService.getUserById(id);
-            if (existing == null) {
-                return ResponseEntity.status(404).body(Map.of("error", "User not found"));
-            }
-
-            keycloakAdminService.updateUser(id, request.getEmail(), request.getFirstName(), request.getLastName());
-            return ResponseEntity.ok(Map.of("message", "User updated successfully"));
-        } catch (Exception e) {
-            log.error("Error updating user with id: {}", id, e);
-            return ResponseEntity.status(500).body(Map.of("error", "An error occurred while updating the user"));
-        }
+    public ResponseEntity<Map<String, String>> updateUser(@PathVariable String id, @RequestBody UserRegistrationRequest request) {
+        keycloakAdminService.getUserById(id);
+        keycloakAdminService.updateUser(id, request.getEmail(), request.getFirstName(), request.getLastName());
+        return ResponseEntity.ok(Map.of("message", "User updated successfully"));
     }
 
     @Operation(
@@ -144,19 +105,9 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable String id) {
-        try {
-            UserRepresentation existing = keycloakAdminService.getUserById(id);
-            if (existing == null) {
-                return ResponseEntity.status(404).body(Map.of("error", "User not found"));
-            }
-
-            keycloakAdminService.deleteUser(id);
-            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
-        } catch (Exception e) {
-            log.error("Error deleting user with id: {}", id, e);
-            return ResponseEntity.status(500).body(Map.of("error", "An error occurred while deleting the user"));
-        }
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable String id) {
+        keycloakAdminService.getUserById(id);
+        keycloakAdminService.deleteUser(id);
+        return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
     }
 }
-    

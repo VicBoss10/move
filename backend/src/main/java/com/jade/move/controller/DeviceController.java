@@ -1,7 +1,6 @@
 package com.jade.move.controller;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.jade.move.dto.DevicesSearchCriteria;
 import com.jade.move.dto.RegisterDeviceRequest;
@@ -54,13 +53,8 @@ public class DeviceController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> getDeviceById(@PathVariable Integer id) {
-        Optional<Device> device = deviceService.getDeviceById(id);
-        if (device.isPresent()) {
-            return ResponseEntity.ok(device.get());
-        } else {
-            return ResponseEntity.status(404).body("Device not found with id: " + id);
-        }
+    public ResponseEntity<Device> getDeviceById(@PathVariable Integer id) {
+        return ResponseEntity.ok(deviceService.getDeviceById(id));
     }
 
     @Operation(
@@ -74,13 +68,8 @@ public class DeviceController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/name/{name}")
-    public ResponseEntity<?> getDeviceByName(@PathVariable String name) {
-        Optional<Device> device = deviceService.getDeviceByName(name);
-        if (device.isPresent()) {
-            return ResponseEntity.ok(device.get());
-        } else {
-            return ResponseEntity.status(404).body("Device not found with name: " + name);
-        }
+    public ResponseEntity<Device> getDeviceByName(@PathVariable String name) {
+        return ResponseEntity.ok(deviceService.getDeviceByName(name));
     }
 
     @Operation(
@@ -135,15 +124,9 @@ public class DeviceController {
     })
     @PostMapping("/register")
     public ResponseEntity<?> registerDevice(@RequestBody RegisterDeviceRequest request) {
-        try {
-            Device registeredDevice = deviceService.registerDevice(request);
-            String typeName = registeredDevice.getType() == DeviceType.CAMERA ? "Camera" : "Sensor";
-            return ResponseEntity.ok("Device registered successfully. " + typeName + " ID: " + registeredDevice.getId());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Registration failed: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Internal error during registration: " + e.getMessage());
-        }
+        Device registeredDevice = deviceService.registerDevice(request);
+        String typeName = registeredDevice.getType() == DeviceType.CAMERA ? "Camera" : "Sensor";
+        return ResponseEntity.ok("Device registered successfully. " + typeName + " ID: " + registeredDevice.getId());
     }
 
     @Operation(

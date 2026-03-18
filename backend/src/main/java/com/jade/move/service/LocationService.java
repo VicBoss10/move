@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+import com.jade.move.exception.EntityNotFoundException;
+
 @Service
 public class LocationService {
 
@@ -23,11 +25,12 @@ public class LocationService {
         return locationRepository.findAll();
     }
 
-    public Optional<Location> getLocationById(Integer id) {
+    public Location getLocationById(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("Location id cannot be null");
         }
-        return locationRepository.findById(id);
+        return locationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + id));
     }
 
     public Optional<Location> getLocationByDescription(String description) {

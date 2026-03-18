@@ -1,7 +1,6 @@
 package com.jade.move.controller;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.jade.move.dto.LocationSearchCriteria;
 import com.jade.move.model.Location;
@@ -52,13 +51,8 @@ public class LocationController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> getLocationById(@PathVariable Integer id) {
-        Optional<Location> location = locationService.getLocationById(id);
-        if (location.isPresent()) {
-            return ResponseEntity.ok(location.get());
-        } else {
-            return ResponseEntity.status(404).body("Location not found with id: " + id);
-        }
+    public ResponseEntity<Location> getLocationById(@PathVariable Integer id) {
+        return ResponseEntity.ok(locationService.getLocationById(id));
     }
 
     @Operation(

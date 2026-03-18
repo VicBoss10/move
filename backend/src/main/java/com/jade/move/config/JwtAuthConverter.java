@@ -44,7 +44,6 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
 
         // Sino, intentar obtener de claims directos (para otras configuraciones)
         if (authorities.isEmpty()) {
-            @SuppressWarnings("unchecked")
             List<String> roles = jwt.getClaimAsStringList(ROLES_CLAIM);
             if (roles != null) {
                 authorities.addAll(roles.stream()

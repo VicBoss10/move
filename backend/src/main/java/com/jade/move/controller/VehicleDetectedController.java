@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/vehicles")
@@ -53,13 +52,8 @@ public class VehicleDetectedController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> getVehicleDetectedById(@PathVariable Integer id) {
-        Optional<VehicleDetected> vehicleDetected = vehicleDetectedService.getVehicleDetectedById(id);
-        if (vehicleDetected.isPresent()) {
-            return ResponseEntity.ok(vehicleDetected.get());
-        } else {
-            return ResponseEntity.status(404).body("VehicleDetected not found with id: " + id);
-        }
+    public ResponseEntity<VehicleDetected> getVehicleDetectedById(@PathVariable Integer id) {
+        return ResponseEntity.ok(vehicleDetectedService.getVehicleDetectedById(id));
     }
 
     @Operation(

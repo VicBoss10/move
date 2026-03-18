@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/sensordata")
@@ -52,13 +51,8 @@ public class SensorDataController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> getSensorDataById(@PathVariable Integer id) {
-        Optional<SensorData> sensorData = sensorDataService.getSensorDataById(id);
-        if (sensorData.isPresent()) {
-            return ResponseEntity.ok(sensorData.get());
-        } else {
-            return ResponseEntity.status(404).body("Sensor data not found with id: " + id);
-        }
+    public ResponseEntity<SensorData> getSensorDataById(@PathVariable Integer id) {
+        return ResponseEntity.ok(sensorDataService.getSensorDataById(id));
     }
 
     @Operation(

@@ -1,8 +1,8 @@
 package com.jade.move.service;
 
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
+import com.jade.move.exception.EntityNotFoundException;
 import com.jade.move.model.Camera;
 import com.jade.move.model.StreamType;
 import com.jade.move.repository.CameraRepository;
@@ -20,18 +20,20 @@ public class CameraService {
         return cameraRepository.findAll();
     }
 
-    public Optional<Camera> getCameraById(Integer id) {
+    public Camera getCameraById(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("Camera id cannot be null");
         }
-        return cameraRepository.findById(id);
+        return cameraRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Camera not found with id: " + id));
     }
 
-    public Optional<Camera> getCameraByDeviceId(Integer deviceId) {
+    public Camera getCameraByDeviceId(Integer deviceId) {
         if (deviceId == null) {
             throw new IllegalArgumentException("Device id cannot be null");
         }
-        return cameraRepository.findByDeviceId(deviceId);
+        return cameraRepository.findByDeviceId(deviceId)
+                .orElseThrow(() -> new EntityNotFoundException("Camera not found for device id: " + deviceId));
     }
 
     public List<Camera> getCamerasByStreamType(StreamType streamType) {

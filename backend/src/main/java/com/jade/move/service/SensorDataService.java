@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.jade.move.exception.EntityNotFoundException;
+
 @Service
 public class SensorDataService {
 
@@ -28,11 +30,12 @@ public class SensorDataService {
         return sensorDataRepository.findAll();
     }
 
-    public Optional<SensorData> getSensorDataById(Integer id) {
+    public SensorData getSensorDataById(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("SensorData id cannot be null");
         }
-        return sensorDataRepository.findById(id);
+        return sensorDataRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Sensor data not found with id: " + id));
     }
 
     public List<SensorData> getSensorDataByDeviceId(Integer deviceId) {

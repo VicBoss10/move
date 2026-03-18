@@ -1,7 +1,6 @@
 package com.jade.move.controller;
 
 import java.util.List;
-import java.util.Optional;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -48,13 +47,8 @@ public class CameraController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCameraById(@PathVariable Integer id) {
-        Optional<Camera> camera = cameraService.getCameraById(id);
-        if (camera.isPresent()) {
-            return ResponseEntity.ok(camera.get());
-        } else {
-            return ResponseEntity.status(404).body("Camera not found with id: " + id);
-        }
+    public ResponseEntity<Camera> getCameraById(@PathVariable Integer id) {
+        return ResponseEntity.ok(cameraService.getCameraById(id));
     }
 
     @Operation(
@@ -68,13 +62,8 @@ public class CameraController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @GetMapping("/device/{deviceId}")
-    public ResponseEntity<?> getCameraByDeviceId(@PathVariable Integer deviceId) {
-        Optional<Camera> camera = cameraService.getCameraByDeviceId(deviceId);
-        if (camera.isPresent()) {
-            return ResponseEntity.ok(camera.get());
-        } else {
-            return ResponseEntity.status(404).body("Camera not found for device id: " + deviceId);
-        }
+    public ResponseEntity<Camera> getCameraByDeviceId(@PathVariable Integer deviceId) {
+        return ResponseEntity.ok(cameraService.getCameraByDeviceId(deviceId));
     }
 
     @Operation(
