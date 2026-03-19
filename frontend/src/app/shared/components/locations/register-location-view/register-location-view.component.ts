@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { LocationService } from '../../../../core/services/location.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { Location } from '../../../../core/models/location.model';
 import { LocationMapPickerComponent, MapCoordinates } from '../location-map-picker/location-map-picker.component';
 
@@ -47,7 +48,8 @@ export class RegisterLocationViewComponent {
   constructor(
     private fb: FormBuilder,
     private locationService: LocationService,
-    private router: Router
+    private router: Router,
+    private toastService: ToastService
   ) {
     this.locationForm = this.fb.group({
       description: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
@@ -80,18 +82,19 @@ export class RegisterLocationViewComponent {
       finalize(() => this.isLoading$.next(false))
     ).subscribe({
       next: () => {
-        this.successMessage$.next(
-          `Ubicación "${formValue.description}" registrada correctamente`
+        this.successMessage$.next(null);
+        this.toastService.success(
+          `Ubicación "${formValue.description}" registrada correctamente`,
+          'Éxito'
         );
         setTimeout(() => {
           this.router.navigate(['/dashboard/locations/monitoring']);
-        }, 2000);
+        }, 1200);
       },
       error: (err) => {
         console.error('Error al registrar ubicación:', err);
-        this.errorMessage$.next(
-          'Error al registrar la ubicación. Por favor, inténtalo de nuevo.'
-        );
+        this.errorMessage$.next(null);
+        this.toastService.error('Error al registrar la ubicación. Por favor, inténtalo de nuevo.', 'Error');
       },
     });
   }

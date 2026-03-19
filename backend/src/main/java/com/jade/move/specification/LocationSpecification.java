@@ -36,7 +36,7 @@ public class LocationSpecification {
                 predicates.add(criteriaBuilder.equal(root.get("longitude"), criteria.getLongitude()));
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
         };
     }
 }

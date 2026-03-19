@@ -81,8 +81,7 @@ export class AppSidebarComponent implements OnDestroy {
       name: "Dispositivos",
       subItems: [
         { name: "Registrar Dispositivo", path: "/dashboard/devices/register-device" },
-        { name: "Dispositivos Conectados", path: "/dashboard/devices/connected-sensors" },
-        { name: "Estado", path: "/dashboard/devices/device-status" },
+        { name: "Dispositivos", path: "/dashboard/devices/device-status" },
         { name: "Logs del Dispositivo", path: "/dashboard/devices/device-logs" },
       ],
     },

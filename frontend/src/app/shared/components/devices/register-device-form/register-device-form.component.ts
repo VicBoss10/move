@@ -16,6 +16,7 @@ import { map, catchError, shareReplay, takeUntil } from 'rxjs/operators';
 import { LocationService } from '../../../../core/services/location.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { DeviceState, DeviceType, RegisterDeviceRequest } from '../../../../core/models/device.model';
+import { ToastService } from '../../../../core/services/toast.service';
 
 /**
  * RegisterDeviceFormComponent (Shared/Smart Component)
@@ -66,7 +67,8 @@ export class RegisterDeviceFormComponent implements OnDestroy {
     private fb: FormBuilder,
     private locationService: LocationService,
     private deviceService: DeviceService,
-    private router: Router
+    private router: Router,
+    private toastService: ToastService
   ) {
     this.deviceForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), this.trimmedTextValidator()]],
@@ -158,16 +160,18 @@ export class RegisterDeviceFormComponent implements OnDestroy {
       next: (response: string) => {
         this.isLoading$.next(false);
         const typeName = formValue.type === 'CAMERA' ? 'Cámara' : 'Sensor';
-        this.successMessage$.next(`${typeName} registrado(a) exitosamente`);
-        
+        this.successMessage$.next(null);
+        this.toastService.success(`${typeName} registrado(a) exitosamente`, 'Éxito');
+
         setTimeout(() => {
           this.router.navigate(['/dashboard/devices/device-status']);
-        }, 1500);
+        }, 1200);
       },
       error: (error: any) => {
         this.isLoading$.next(false);
         const errorMsg = error?.message || 'Error al registrar el dispositivo';
-        this.errorMessage$.next(errorMsg);
+        this.errorMessage$.next(null);
+        this.toastService.error(errorMsg, 'Error');
         console.error('Error registering device:', error);
       }
     });

@@ -31,7 +31,7 @@ export class UserMetaCardComponent implements OnInit {
     lastName: '',
     role: 'User',
     location: '',
-    avatar: '/images/user/owner.jpg',
+    avatar: '/images/user/user.png',
     social: {},
     email: '',
     phone: '',

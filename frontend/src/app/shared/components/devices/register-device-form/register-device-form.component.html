@@ -38,110 +38,114 @@
       </div>
 
       <!-- Step 2: Basic Device Information -->
-      <div *ngIf="(selectedType$ | async)" class="pb-6 border-b border-gray-200 dark:border-gray-700 space-y-4">
-        <!-- Nombre del Dispositivo -->
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Nombre del Dispositivo *
-          </label>
-          <input
-            id="name"
-            type="text"
-            formControlName="name"
-            placeholder="Ej: Cámara Entrada Principal"
-            class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
-          />
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Nombre descriptivo del dispositivo (3-255 caracteres)</p>
-          <div *ngIf="deviceForm.get('name')?.invalid && deviceForm.get('name')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-            <span *ngIf="deviceForm.get('name')?.hasError('required')">El nombre es requerido</span>
-            <span *ngIf="deviceForm.get('name')?.hasError('minlength')">Mínimo 3 caracteres</span>
+      <div *ngIf="(selectedType$ | async)" class="pb-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Nombre del Dispositivo -->
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Nombre del Dispositivo *
+            </label>
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              placeholder="Ej: Cámara Entrada Principal"
+              class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+            />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Nombre descriptivo del dispositivo (3-255 caracteres)</p>
+            <div *ngIf="deviceForm.get('name')?.invalid && deviceForm.get('name')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
+              <span *ngIf="deviceForm.get('name')?.hasError('required')">El nombre es requerido</span>
+              <span *ngIf="deviceForm.get('name')?.hasError('minlength')">Mínimo 3 caracteres</span>
+            </div>
           </div>
-        </div>
 
-        <!-- Ubicación -->
-        <div>
-          <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Ubicación *
-          </label>
-          <select
-            id="location"
-            formControlName="locationId"
-            class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
-          >
-            <option value="">-- Selecciona una ubicación --</option>
-            <option *ngFor="let location of locations$ | async" [value]="location.id">
-              {{ location.description || 'Ubicación ' + location.id }}
-            </option>
-          </select>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Asigna el dispositivo a una ubicación del sistema</p>
-          <div *ngIf="deviceForm.get('locationId')?.invalid && deviceForm.get('locationId')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-            La ubicación es requerida
+          <!-- Ubicación -->
+          <div>
+            <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Ubicación *
+            </label>
+            <select
+              id="location"
+              formControlName="locationId"
+              class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+            >
+              <option value="">-- Selecciona una ubicación --</option>
+              <option *ngFor="let location of locations$ | async" [value]="location.id">
+                {{ location.description || 'Ubicación ' + location.id }}
+              </option>
+            </select>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Asigna el dispositivo a una ubicación del sistema</p>
+            <div *ngIf="deviceForm.get('locationId')?.invalid && deviceForm.get('locationId')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
+              La ubicación es requerida
+            </div>
           </div>
-        </div>
 
-        <!-- Estado Inicial -->
-        <div>
-          <label for="state" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Estado Inicial *
-          </label>
-          <select
-            id="state"
-            formControlName="state"
-            class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
-          >
-            <option *ngFor="let state of states" [value]="state.id">
-              {{ state.label }}
-            </option>
-          </select>
+          <!-- Estado Inicial -->
+          <div>
+            <label for="state" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Estado Inicial *
+            </label>
+            <select
+              id="state"
+              formControlName="state"
+              class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+            >
+              <option *ngFor="let state of states" [value]="state.id">
+                {{ state.label }}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
 
       <!-- Step 3: Camera-Specific Configuration -->
-      <div *ngIf="(selectedType$ | async) === 'CAMERA'" class="pb-6 border-b border-gray-200 dark:border-gray-700 space-y-4">
+      <div *ngIf="(selectedType$ | async) === 'CAMERA'" class="pb-6 border-b border-gray-200 dark:border-gray-700">
         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
           <p class="text-blue-900 dark:text-blue-300 text-sm font-medium">Configuración de Cámara</p>
           <p class="text-blue-700 dark:text-blue-400 text-xs mt-1">Configure los parámetros de streaming para la cámara</p>
         </div>
 
-        <!-- Tipo de Streaming -->
-        <div>
-          <label for="streamType" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Tipo de Streaming *
-          </label>
-          <select
-            id="streamType"
-            formControlName="streamType"
-            class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
-          >
-            <option value="">-- Selecciona tipo de streaming --</option>
-            <option *ngFor="let st of streamTypes" [value]="st.id">
-              {{ st.label }}
-            </option>
-          </select>
-          <p *ngIf="deviceForm.get('streamType')?.value" class="mt-2 text-xs text-gray-600 dark:text-gray-400">
-            {{ getStreamTypeDescription(deviceForm.get('streamType')?.value) }}
-          </p>
-          <div *ngIf="deviceForm.get('streamType')?.invalid && deviceForm.get('streamType')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-            El tipo de streaming es requerido
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
+          <!-- Tipo de Streaming -->
+          <div>
+            <label for="streamType" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tipo de Streaming *
+            </label>
+            <select
+              id="streamType"
+              formControlName="streamType"
+              class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+            >
+              <option value="">-- Selecciona tipo de streaming --</option>
+              <option *ngFor="let st of streamTypes" [value]="st.id">
+                {{ st.label }}
+              </option>
+            </select>
+            <p *ngIf="deviceForm.get('streamType')?.value" class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+              {{ getStreamTypeDescription(deviceForm.get('streamType')?.value) }}
+            </p>
+            <div *ngIf="deviceForm.get('streamType')?.invalid && deviceForm.get('streamType')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
+              El tipo de streaming es requerido
+            </div>
           </div>
-        </div>
 
-        <!-- URL/Ruta del Stream -->
-        <div>
-          <label for="source" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            URL/Ruta del Stream *
-          </label>
-          <input
-            id="source"
-            type="text"
-            formControlName="source"
-            placeholder="Ej: rtsp://camera.local:554/stream"
-            class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition font-mono text-sm"
-          />
-          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Proporciona la URL completa del stream de tu cámara</p>
-          <div *ngIf="deviceForm.get('source')?.invalid && deviceForm.get('source')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-            <span *ngIf="deviceForm.get('source')?.hasError('required')">La URL del stream es requerida</span>
-            <span *ngIf="deviceForm.get('source')?.hasError('minlength')">La URL debe tener al menos 5 caracteres</span>
+          <!-- URL/Ruta del Stream -->
+          <div>
+            <label for="source" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              URL/Ruta del Stream *
+            </label>
+            <input
+              id="source"
+              type="text"
+              formControlName="source"
+              placeholder="Ej: rtsp://camera.local:554/stream"
+              class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition font-mono text-sm"
+            />
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Proporciona la URL completa del stream de tu cámara</p>
+            <div *ngIf="deviceForm.get('source')?.invalid && deviceForm.get('source')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
+              <span *ngIf="deviceForm.get('source')?.hasError('required')">La URL del stream es requerida</span>
+              <span *ngIf="deviceForm.get('source')?.hasError('minlength')">La URL debe tener al menos 5 caracteres</span>
+            </div>
           </div>
         </div>
       </div>
