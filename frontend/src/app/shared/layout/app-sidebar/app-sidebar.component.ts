@@ -11,6 +11,7 @@ import {
 import { SidebarService } from "../../services/sidebar.service";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { SafeHtmlPipe } from "../../pipe/safe-html.pipe";
+import { AuthService } from "../../../core/services/auth.service";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
@@ -24,6 +25,7 @@ type NavItem = {
 
 @Component({
   selector: "app-sidebar",
+  standalone: true,
   imports: [CommonModule, RouterModule, SafeHtmlPipe],
   templateUrl: "./app-sidebar.component.html",
 })
@@ -134,10 +136,16 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
+  get isAdmin(): boolean {
+    return this.authService.getUserInfo().roles
+      .some((r: string) => r.toLowerCase() === 'admin');
+  }
+
   constructor(
     public sidebarService: SidebarService,
     private router: Router,
     private cdr: ChangeDetectorRef,
+    private authService: AuthService,
   ) {
     this.isExpanded$ = this.sidebarService.isExpanded$;
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
