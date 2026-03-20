@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { Camera, StreamStartRequest, StreamResponse, StreamStopResponse, StreamType } from '../models/camera.model';
@@ -62,6 +62,33 @@ export class CameraService extends BaseDataService<Camera> {
       tap(() => this.clearServiceError()),
       catchError((error) => {
         this.setServiceError(error, 'Error al consultar estado del stream');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  override update(data: Camera): Observable<Camera> {
+    return this.apiService.putText(`/${this.endpoint}`, data).pipe(
+      map(() => data),
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al actualizar cámara');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  override delete(id: number): Observable<string> {
+    return this.apiService.deleteText(`/${this.endpoint}/${id}`).pipe(
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al eliminar cámara');
         return throwError(() => error);
       })
     );

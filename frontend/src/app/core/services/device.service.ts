@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { Device, DeviceSearchCriteria, DeviceStats, RegisterDeviceRequest } from '../models/device.model';
@@ -85,6 +85,33 @@ export class DeviceService extends BaseDataService<Device> {
       }),
       catchError((error) => {
         this.setServiceError(error, 'Error al registrar dispositivo');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  override update(data: Device): Observable<Device> {
+    return this.apiService.putText(`/${this.endpoint}`, data).pipe(
+      map(() => data),
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al actualizar dispositivo');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  override delete(id: number): Observable<string> {
+    return this.apiService.deleteText(`/${this.endpoint}/${id}`).pipe(
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al eliminar dispositivo');
         return throwError(() => error);
       })
     );

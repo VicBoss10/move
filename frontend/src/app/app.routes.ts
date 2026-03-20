@@ -37,6 +37,15 @@ import { RegisterDeviceComponent } from './pages/devices/register-device/registe
 import { ConnectedSensorsComponent } from './pages/devices/connected-sensors/connected-sensors.component';
 import { DeviceStatusComponent } from './pages/devices/device-status/device-status.component';
 import { DeviceLogsComponent } from './pages/devices/device-logs/device-logs.component';
+import { UsersComponent } from './pages/configuration/users/users.component';
+import { RolesComponent } from './pages/configuration/roles/roles.component';
+import { AlertThresholdsComponent } from './pages/configuration/alert-thresholds/alert-thresholds.component';
+import { SystemParamsComponent } from './pages/configuration/system-params/system-params.component';
+import { TimeSeriesPageComponent } from './pages/analysis/time-series/time-series-page.component';
+import { CorrelationPageComponent } from './pages/analysis/correlation/correlation-page.component';
+import { LagPageComponent } from './pages/analysis/lag/lag-page.component';
+import { LocationsAnalysisPageComponent } from './pages/analysis/locations/locations-analysis-page.component';
+import { DataExportPageComponent } from './pages/analysis/export-data/data-export-page.component';
 
 
 const DASHBOARD_ROUTES: Routes = [
@@ -132,6 +141,61 @@ const DASHBOARD_ROUTES: Routes = [
         path: 'device-logs',
         component: DeviceLogsComponent,
         title: 'Logs del Sistema'
+      }
+    ]
+  },
+  {
+    path: 'configuration',
+    children: [
+      {
+        path: 'users',
+        component: UsersComponent,
+        title: 'Usuarios'
+      },
+      {
+        path: 'roles',
+        component: RolesComponent,
+        title: 'Roles y Permisos'
+      },
+      {
+        path: 'alert-thresholds',
+        component: AlertThresholdsComponent,
+        title: 'Umbrales de Alerta'
+      },
+      {
+        path: 'system-params',
+        component: SystemParamsComponent,
+        title: 'Parámetros del Sistema'
+      }
+    ]
+  },
+  {
+    path: 'analysis',
+    children: [
+      {
+        path: 'time-series',
+        component: TimeSeriesPageComponent,
+        title: 'Series Temporales'
+      },
+      {
+        path: 'correlation',
+        component: CorrelationPageComponent,
+        title: 'Matriz de Correlación'
+      },
+      {
+        path: 'lag',
+        component: LagPageComponent,
+        title: 'Rezagos / Cross-correlation'
+      },
+      {
+        path: 'locations',
+        component: LocationsAnalysisPageComponent,
+        title: 'Análisis por Ubicación'
+      },
+      {
+        path: 'export-data',
+        component: DataExportPageComponent,
+        title: 'Exportar Datos'
       }
     ]
   },

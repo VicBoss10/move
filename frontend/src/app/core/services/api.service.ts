@@ -86,6 +86,16 @@ export class ApiService {
   }
 
   /**
+   * PUT que espera respuesta en texto plano (no JSON)
+   * Útil para endpoints del backend que retornan strings como "Updated successfully..."
+   */
+  putText(endpoint: string, body: any): Observable<string> {
+    return this.http.put(`${this.apiUrl}${endpoint}`, body, { responseType: 'text' }).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  /**
    * PUT genérico
    * @param endpoint - Ruta del endpoint
    * @param body - Datos a actualizar
@@ -104,6 +114,16 @@ export class ApiService {
    */
   delete<T>(endpoint: string): Observable<T> {
     return this.http.delete<T>(`${this.apiUrl}${endpoint}`).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  /**
+   * DELETE que espera respuesta en texto plano (no JSON)
+   * Útil para endpoints del backend que retornan strings como "Deleted successfully..."
+   */
+  deleteText(endpoint: string): Observable<string> {
+    return this.http.delete(`${this.apiUrl}${endpoint}`, { responseType: 'text' }).pipe(
       catchError(error => this.handleError(error))
     );
   }

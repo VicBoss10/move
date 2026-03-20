@@ -130,7 +130,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * @private
    * @returns {void}
    */
-  private loadLocations(): void {
+  loadLocations(): void {
     this.isLoading = true;
     this.errorMessage = null;
 

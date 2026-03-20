@@ -55,6 +55,41 @@ export class LocationService extends BaseDataService<Location> {
   }
 
   /**
+   * Elimina una ubicación por ID.
+   * Override porque el backend retorna texto plano en vez de JSON.
+   */
+  override delete(id: number): Observable<any> {
+    return this.apiService.deleteText(`/${this.endpoint}/${id}`).pipe(
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al eliminar ubicación');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Actualiza una ubicación existente.
+   * Override porque el backend retorna texto plano en vez de JSON.
+   */
+  override update(data: Location): Observable<Location> {
+    return this.apiService.putText(`/${this.endpoint}`, data).pipe(
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      map(() => data),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al actualizar ubicación');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Busca ubicaciones con criterios específicos
    * @param criteria - Criterios de búsqueda
    * @returns Observable<Location[]>

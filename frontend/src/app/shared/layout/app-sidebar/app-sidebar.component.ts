@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import {
   Component,
   ElementRef,
+  OnInit,
   QueryList,
   ViewChildren,
   ChangeDetectorRef,
@@ -10,8 +11,7 @@ import {
 import { SidebarService } from "../../services/sidebar.service";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { SafeHtmlPipe } from "../../pipe/safe-html.pipe";
-import { SidebarWidgetComponent } from "./app-sidebar-widget.component";
-import { combineLatest, Subject } from "rxjs";
+import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
 type NavItem = {
@@ -27,7 +27,7 @@ type NavItem = {
   imports: [CommonModule, RouterModule, SafeHtmlPipe],
   templateUrl: "./app-sidebar.component.html",
 })
-export class AppSidebarComponent implements OnDestroy {
+export class AppSidebarComponent implements OnInit, OnDestroy {
   // Main nav items - Core del Sistema
   navItems: NavItem[] = [
     {
@@ -89,19 +89,21 @@ export class AppSidebarComponent implements OnDestroy {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><polyline points="4 17 10 11 14 15 20 9" stroke="currentColor" stroke-width="2" fill="none"/></svg>`,
       name: "Análisis",
       subItems: [
-        { name: "Gráficas", path: "/line-chart" },
-        { name: "Comparaciones", path: "/bar-chart" },
-        { name: "Exportar Datos", path: "/line-chart" },
+        { name: "Series Temporales", path: "/dashboard/analysis/time-series" },
+        { name: "Matriz de Correlación", path: "/dashboard/analysis/correlation" },
+        { name: "Rezagos / Cross-correlation", path: "/dashboard/analysis/lag" },
+        { name: "Análisis por Ubicación", path: "/dashboard/analysis/locations" },
+        { name: "Exportar Datos", path: "/dashboard/analysis/export-data" },
       ],
     },
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2" fill="none"/></svg>`,
       name: "Configuración",
       subItems: [
-        { name: "Usuarios", path: "/alerts" },
-        { name: "Roles y Permisos", path: "/avatar" },
-        { name: "Umbrales de Alerta", path: "/alerts" },
-        { name: "Parámetros del Sistema", path: "/alerts" },
+        { name: "Usuarios", path: "/dashboard/configuration/users" },
+        { name: "Roles y Permisos", path: "/dashboard/configuration/roles" },
+        { name: "Umbrales de Alerta", path: "/dashboard/configuration/alert-thresholds" },
+        { name: "Parámetros del Sistema", path: "/dashboard/configuration/system-params" },
       ],
     },
     {
@@ -122,7 +124,7 @@ export class AppSidebarComponent implements OnDestroy {
     },
   ];
 
-  openSubmenu: string | null | number = null;
+  openSubmenu: string | null = null;
   subMenuHeights: { [key: string]: number } = {};
   @ViewChildren("subMenu") subMenuRefs!: QueryList<ElementRef>;
 
@@ -149,19 +151,6 @@ export class AppSidebarComponent implements OnDestroy {
       .subscribe((event) => {
         if (event instanceof NavigationEnd) {
           this.setActiveMenuFromRoute(this.router.url);
-        }
-      });
-
-    // Subscribe to combined observables to close submenus when all are false
-    combineLatest([
-      this.isExpanded$,
-      this.isMobileOpen$,
-      this.isHovered$,
-    ])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(([isExpanded, isMobileOpen, isHovered]) => {
-        if (!isExpanded && !isMobileOpen && !isHovered) {
-          this.cdr.detectChanges();
         }
       });
 
@@ -199,13 +188,9 @@ export class AppSidebarComponent implements OnDestroy {
   }
 
   onSidebarMouseEnter() {
-    this.isExpanded$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((expanded) => {
-        if (!expanded) {
-          this.sidebarService.setHovered(true);
-        }
-      });
+    if (!this.sidebarService.isExpandedSnapshot) {
+      this.sidebarService.setHovered(true);
+    }
   }
 
   private setActiveMenuFromRoute(currentUrl: string) {
@@ -237,12 +222,8 @@ export class AppSidebarComponent implements OnDestroy {
   }
 
   onSubmenuClick() {
-    this.isMobileOpen$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((isMobile) => {
-        if (isMobile) {
-          this.sidebarService.setMobileOpen(false);
-        }
-      });
+    if (this.sidebarService.isMobileOpenSnapshot) {
+      this.sidebarService.setMobileOpen(false);
+    }
   }
 }

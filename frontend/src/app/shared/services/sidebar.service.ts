@@ -32,4 +32,12 @@ export class SidebarService {
   setHovered(val: boolean) {
     this.isHoveredSubject.next(val);
   }
+
+  get isExpandedSnapshot(): boolean {
+    return this.isExpandedSubject.value;
+  }
+
+  get isMobileOpenSnapshot(): boolean {
+    return this.isMobileOpenSubject.value;
+  }
 }

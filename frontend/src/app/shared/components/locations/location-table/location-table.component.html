@@ -10,7 +10,7 @@
           Descripción
         </th>
         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Zona
+          Dispositivos
         </th>
         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">
           Coordenadas
@@ -63,11 +63,9 @@
           </div>
         </td>
 
-        <!-- Zona -->
-        <td class="px-6 py-4">
-          <span [ngClass]="getZoneColor(location.latitude)" class="inline-block rounded-full px-3 py-1 text-xs font-medium">
-            {{ getZoneName(location.latitude) }}
-          </span>
+        <!-- Dispositivo count -->
+        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+          {{ devicesCount[location.id] || 0 }}
         </td>
 
         <!-- Coordenadas -->
@@ -81,14 +79,16 @@
         <td class="px-6 py-4">
           <div class="flex gap-2">
             <button
-              class="rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
-            >
-              Ver
-            </button>
-            <button
+              (click)="openEdit(location)"
               class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               Editar
+            </button>
+            <button
+              (click)="openDelete(location)"
+              class="rounded bg-red-100 px-2 py-1 text-xs text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/70"
+            >
+              Eliminar
             </button>
           </div>
         </td>
@@ -96,3 +96,114 @@
     </tbody>
   </table>
 </div>
+
+<!-- ── Modal Editar ─────────────────────────────────────────── -->
+<app-modal
+  [isOpen]="editingLocation !== null"
+  [showCloseButton]="false"
+  (close)="closeEdit()"
+  className="max-w-lg mx-4"
+>
+  <div *ngIf="editingLocation" class="p-6">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Ubicación</h2>
+    <form [formGroup]="editForm" (ngSubmit)="saveEdit()" class="space-y-4">
+      <!-- Descripción -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Descripción *
+        </label>
+        <input
+          type="text"
+          formControlName="description"
+          class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+        />
+        <p *ngIf="editForm.get('description')?.invalid && editForm.get('description')?.touched"
+           class="text-red-600 dark:text-red-400 text-xs mt-1">
+          Descripción requerida (mínimo 3 caracteres)
+        </p>
+      </div>
+
+      <!-- Mapa -->
+      <div>
+        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Ajustar ubicación en el mapa (opcional)
+        </label>
+        <app-location-map-picker
+          [initialLatitude]="editingLocation.latitude"
+          [initialLongitude]="editingLocation.longitude"
+          mapHeight="260px"
+          (coordinatesSelected)="onEditMapCoords($event)"
+        />
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Haz clic en el mapa para mover el punto. Si no haces clic, se mantienen las coordenadas actuales.
+        </p>
+      </div>
+
+      <!-- Acciones -->
+      <div class="flex gap-3 justify-end pt-1">
+        <button
+          type="button"
+          (click)="closeEdit()"
+          class="px-4 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="editForm.invalid || editSaving"
+          [class.opacity-50]="editForm.invalid || editSaving"
+          class="px-4 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
+        >
+          {{ editSaving ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</app-modal>
+
+<!-- ── Modal Confirmar Eliminación ───────────────────────────── -->
+<app-modal
+  [isOpen]="deleteTarget !== null"
+  [showCloseButton]="false"
+  (close)="closeDelete()"
+  className="max-w-sm mx-4"
+>
+  <div *ngIf="deleteTarget" class="p-6">
+    <div class="flex items-start gap-3 mb-4">
+      <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40">
+        <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">Eliminar Ubicación</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          ¿Confirmas que deseas eliminar
+          <span class="font-medium text-gray-900 dark:text-white">
+            "{{ deleteTarget.description ?? '#' + deleteTarget.id }}"
+          </span>?
+          Esta acción no se puede deshacer.
+        </p>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end">
+      <button
+        type="button"
+        (click)="closeDelete()"
+        class="px-4 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="confirmDelete()"
+        [disabled]="deleteSaving"
+        [class.opacity-50]="deleteSaving"
+        class="px-4 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm font-medium"
+      >
+        {{ deleteSaving ? 'Eliminando...' : 'Sí, eliminar' }}
+      </button>
+    </div>
+  </div>
+</app-modal>
