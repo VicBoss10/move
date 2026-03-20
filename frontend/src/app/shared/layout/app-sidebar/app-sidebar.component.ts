@@ -119,8 +119,9 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M2 19V5a2 2 0 0 1 2-2h7v16H4a2 2 0 0 1-2-2Zm20 0V5a2 2 0 0 0-2-2h-7v16h7a2 2 0 0 0 2-2Z" stroke="currentColor" stroke-width="2" fill="none"/></svg>`,
       name: "Ayuda y Documentación",
       subItems: [
-        { name: "Cómo Funciona", path: "/blank" },
-        { name: "Arquitectura del Sistema", path: "/blank" },
+        { name: "Cómo Funciona", path: "/dashboard/help/how-it-works" },
+        { name: "Preguntas Frecuentes", path: "/dashboard/help/faq" },
+        { name: "Arquitectura del Sistema", path: "/dashboard/help/architecture" },
       ],
     },
   ];

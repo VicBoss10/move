@@ -1,0 +1,80 @@
+<div class="space-y-6">
+  <div class="flex flex-col gap-2">
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Preguntas frecuentes</h2>
+    <p class="text-gray-600 dark:text-gray-400">Haz click en cualquier pregunta para desplegar la respuesta. Las preguntas están agrupadas por secciones.</p>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-6 space-y-6">
+    <!-- Sección: Dispositivos -->
+    <section>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Dispositivos</h3>
+      <div class="space-y-2">
+        <details class="group bg-gray-50 dark:bg-gray-900/20 p-3 rounded-md border border-gray-100 dark:border-gray-700">
+          <summary class="cursor-pointer list-none font-medium text-gray-900 dark:text-white">¿Qué tipos de dispositivos puedo registrar?</summary>
+          <div class="mt-2 text-sm text-gray-700 dark:text-gray-300">Puedes registrar cámaras (streams RTSP/HTTP/MJPEG) y sensores ambientales (CO₂, PM2.5/PM10, temperatura, humedad). Asigna cada dispositivo a una `Ubicación` para facilitar análisis y filtrado.</div>
+        </details>
+
+        <details class="group bg-gray-50 dark:bg-gray-900/20 p-3 rounded-md border border-gray-100 dark:border-gray-700">
+          <summary class="cursor-pointer list-none font-medium text-gray-900 dark:text-white">¿Qué configuración recomiendan para cámaras?</summary>
+          <div class="mt-2 text-sm text-gray-700 dark:text-gray-300">Para detección, use resolución ≥720p y 15–20 FPS. RTSP ofrece mejor latencia para modelos en tiempo real. Ajusta bitrate y FPS según la capacidad de la red y CPU del detector.</div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Sección: Streams y Seguridad -->
+    <section>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Streams y seguridad</h3>
+      <div class="space-y-2">
+        <details class="group bg-gray-50 dark:bg-gray-900/20 p-3 rounded-md border border-gray-100 dark:border-gray-700">
+          <summary class="cursor-pointer list-none font-medium text-gray-900 dark:text-white">¿Cómo configuro un stream seguro?</summary>
+          <div class="mt-2 text-sm text-gray-700 dark:text-gray-300">No expongas credenciales en URLs públicas. Si usas credenciales en la URL (p. ej. RTSP), asegúrate de que la red sea privada o usa VPN/túneles. Cambia contraseñas por defecto y usa HTTPS/TLS donde sea posible.</div>
+        </details>
+
+        <details class="group bg-gray-50 dark:bg-gray-900/20 p-3 rounded-md border border-gray-100 dark:border-gray-700">
+          <summary class="cursor-pointer list-none font-medium text-gray-900 dark:text-white">¿Qué protocolos son compatibles?</summary>
+          <div class="mt-2 text-sm text-gray-700 dark:text-gray-300">Soportamos RTSP, HTTP(S) y MJPEG para cámaras. Para sensores, usamos HTTP/HTTPS o integraciones específicas del dispositivo.</div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Sección: Umbrales y alertas -->
+    <section>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Umbrales y alertas</h3>
+      <div class="space-y-2">
+        <details class="group bg-gray-50 dark:bg-gray-900/20 p-3 rounded-md border border-gray-100 dark:border-gray-700">
+          <summary class="cursor-pointer list-none font-medium text-gray-900 dark:text-white">¿Cómo funcionan los umbrales de alerta?</summary>
+          <div class="mt-2 text-sm text-gray-700 dark:text-gray-300">Define niveles (info/warning/critical) por métrica. El sistema compara lecturas y conteos contra esos límites y genera alertas que puedes revisar en la sección de notificaciones o exportar para auditoría.</div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Sección: Operación y troubleshooting -->
+    <section>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Operación y troubleshooting</h3>
+      <div class="space-y-2">
+        <details class="group bg-gray-50 dark:bg-gray-900/20 p-3 rounded-md border border-gray-100 dark:border-gray-700">
+          <summary class="cursor-pointer list-none font-medium text-gray-900 dark:text-white">Mi dispositivo no envía datos, ¿qué reviso?</summary>
+          <div class="mt-2 text-sm text-gray-700 dark:text-gray-300">
+            <ul class="list-disc ml-5">
+              <li>Verifica conectividad de red entre dispositivo y backend.</li>
+              <li>Revisa credenciales y rutas de stream (RTSP/HTTP).</li>
+              <li>Consulta logs del dispositivo y del backend (endpoint de ingestión).</li>
+              <li>Comprueba el estado en la tabla de dispositivos del panel.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Sección: Administración -->
+    <section>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Administración</h3>
+      <div class="space-y-2">
+        <details class="group bg-gray-50 dark:bg-gray-900/20 p-3 rounded-md border border-gray-100 dark:border-gray-700">
+          <summary class="cursor-pointer list-none font-medium text-gray-900 dark:text-white">¿Quién puede gestionar usuarios y configuraciones?</summary>
+          <div class="mt-2 text-sm text-gray-700 dark:text-gray-300">Operaciones sensibles están protegidas por roles en Keycloak. Solo usuarios con rol <code>admin</code> pueden acceder a la gestión de usuarios y parámetros del sistema.</div>
+        </details>
+      </div>
+    </section>
+  </div>
+</div>

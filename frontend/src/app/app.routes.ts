@@ -45,6 +45,9 @@ import { CorrelationPageComponent } from './pages/analysis/correlation/correlati
 import { LagPageComponent } from './pages/analysis/lag/lag-page.component';
 import { LocationsAnalysisPageComponent } from './pages/analysis/locations/locations-analysis-page.component';
 import { DataExportPageComponent } from './pages/analysis/export-data/data-export-page.component';
+import { HowItWorksPageComponent } from './pages/help/how-it-works/how-it-works.component';
+import { ArchitecturePageComponent } from './pages/help/architecture/architecture.component';
+import { FaqPageComponent } from './pages/help/faq/faq.component';
 
 
 const DASHBOARD_ROUTES: Routes = [
@@ -190,6 +193,26 @@ const DASHBOARD_ROUTES: Routes = [
         path: 'export-data',
         component: DataExportPageComponent,
         title: 'Exportar Datos'
+      }
+    ]
+  },
+  {
+    path: 'help',
+    children: [
+      {
+        path: 'how-it-works',
+        component: HowItWorksPageComponent,
+        title: 'Cómo Funciona'
+      },
+      {
+        path: 'faq',
+        component: FaqPageComponent,
+        title: 'Preguntas Frecuentes'
+      },
+      {
+        path: 'architecture',
+        component: ArchitecturePageComponent,
+        title: 'Arquitectura del Sistema'
       }
     ]
   },

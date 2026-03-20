@@ -1,0 +1,38 @@
+<div class="space-y-6 p-6">
+  <div class="flex flex-col gap-2">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Arquitectura del Sistema</h1>
+    <p class="text-gray-600 dark:text-gray-400">Visión general de los componentes, comunicación entre servicios y recomendaciones para despliegue y escalado.</p>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-6 space-y-4">
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Componentes principales</div>
+      <ul class="list-disc ml-5 mt-2 text-gray-600 dark:text-gray-400">
+        <li><strong>Frontend (Angular):</strong> Interfaz de usuario, dashboards, formularios de configuración.</li>
+        <li><strong>Backend (Spring Boot):</strong> API REST, seguridad (Keycloak), lógica de negocio y persistencia.</li>
+        <li><strong>Detector (Python):</strong> Servicio de detección que procesa streams y emite eventos.</li>
+        <li><strong>Base de datos:</strong> Almacenamiento de eventos, dispositivos, ubicaciones y usuarios.</li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Comunicación</div>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Los detectores pueden enviar eventos directamente al backend mediante HTTP o usar un broker (opcional) para desacoplar procesamiento y recibir picos de carga. El frontend consulta la API REST protegida por tokens JWT gestionados por Keycloak.</p>
+    </div>
+
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Despliegue y escalabilidad</div>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Para cargas mayores, escale horizontalmente los detectores y el backend. Use contenedores (Docker) y orquestadores (docker-compose/ Kubernetes) y reserve recursos para procesamiento de video. Considere almacenamiento en caché para consultas intensivas y particionado de datos por ubicación/fecha.</p>
+    </div>
+
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Seguridad y operación</div>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Proteja endpoints administrativos con roles Keycloak, audite accesos y mantenga certificados TLS en los puntos de exposición. Monitorice latencia, tasa de eventos y errores en los detectores para detectar degradación temprana.</p>
+    </div>
+
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Diagrama</div>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Inserte aquí un diagrama de despliegue (SVG/PNG). Recomendación: mostrar capas (Edge detectors → Backend → DB → Frontend) y flujos (streams, events, API).</p>
+    </div>
+  </div>
+</div>

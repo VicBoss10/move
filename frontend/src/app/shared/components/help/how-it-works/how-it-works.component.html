@@ -1,0 +1,38 @@
+<div class="space-y-6 p-6">
+  <div class="flex flex-col gap-2">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Cómo Funciona</h1>
+    <p class="text-gray-600 dark:text-gray-400">Resumen del flujo de datos, componentes involucrados y recomendaciones prácticas para operar el sistema.</p>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-6 space-y-4">
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Flujo de datos</div>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Los dispositivos (cámaras y sensores) envían datos al sistema. Las cámaras transmiten video por RTSP/HTTP; los sensores envían lecturas periódicas. Un servicio de detección procesa los streams y genera eventos que el backend almacena y enriquece con metadatos (ubicación, timestamp, confianza).</p>
+    </div>
+
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Detección de vehículos</div>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">El microservicio de detección (Python) extrae frames, ejecuta modelos ML y emite eventos que contienen clase, bounding box y score. El backend conserva eventos y dispara reglas de umbral/alerta según las políticas configuradas.</p>
+    </div>
+
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Backend y seguridad</div>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Spring Boot expone la API REST protegida por Keycloak. Solo roles autorizados pueden gestionar usuarios, dispositivos y configuraciones. Recomendamos revisar `SecurityConfig` para adaptar rutas protegidas y auditar roles en producción.</p>
+    </div>
+
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Visualización y análisis</div>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">El frontend Angular consume la API para mostrar datos en dashboards: series temporales, matrices de correlación y análisis por ubicación. Asigna dispositivos a ubicaciones para agrupar y filtrar correctamente los datos.</p>
+    </div>
+
+    <div>
+      <div class="font-medium text-gray-900 dark:text-white">Consejos rápidos</div>
+      <ul class="list-disc ml-5 mt-1 text-gray-600 dark:text-gray-400">
+        <li>Prefiera RTSP para baja latencia en detección en tiempo real.</li>
+        <li>Resolución ≥ 720p y 15–20 FPS suele ser suficiente para la mayoría de modelos.</li>
+        <li>Configure umbrales de alerta en la UI para recibir notificaciones tempranas.</li>
+        <li>Use ubicaciones para contextualizar eventos y mejorar los análisis.</li>
+      </ul>
+    </div>
+  </div>
+</div>
