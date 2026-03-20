@@ -107,23 +107,7 @@ public class DeviceController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PostMapping
-    public ResponseEntity<?> createDevice(@RequestBody Device device) {
-        Device createdDevice = deviceService.createDevice(device);
-        return ResponseEntity.ok("Device created successfully with id: " + createdDevice.getId());
-    }
-
-    @Operation(
-            summary = "Register a complete device (Device + Camera if applicable) / Registrar un dispositivo completo (Device + Camera si aplica)",
-            description = "Registers a new device with all its information. For cameras, creates both Device and Camera entities in a single transaction. For sensors, creates only the Device entity. / Registra un nuevo dispositivo con toda su información. Para cámaras, crea ambas entidades Device y Camera en una sola transacción. Para sensores, crea solo la entidad Device."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Device registered successfully / Dispositivo registrado exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Invalid device data, missing required fields, or location not found / Datos de dispositivo inválidos, faltan campos requeridos o ubicación no encontrada"),
-            @ApiResponse(responseCode = "409", description = "Device with same name already exists / Ya existe un dispositivo con el mismo nombre"),
-            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
-    })
-    @PostMapping("/register")
-    public ResponseEntity<?> registerDevice(@RequestBody RegisterDeviceRequest request) {
+    public ResponseEntity<?> createDevice(@RequestBody RegisterDeviceRequest request) {
         Device registeredDevice = deviceService.registerDevice(request);
         String typeName = registeredDevice.getType() == DeviceType.CAMERA ? "Camera" : "Sensor";
         return ResponseEntity.ok("Device registered successfully. " + typeName + " ID: " + registeredDevice.getId());

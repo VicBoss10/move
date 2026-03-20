@@ -28,8 +28,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // Solo aplicar OAuth2 a los endpoints que necesitan protección
         // POST /users está EXCLUIDO de aquí - es completamente público
-        http.securityMatcher("/users", "/users/**", "/devices/**", "/locations/**", "/vehicles/**", 
-                "/cameras/**", "/sensor-data/**", "/stream/**")
+        http.securityMatcher("/users", "/users/**", "/devices", "/devices/**", "/locations", "/locations/**",
+                "/vehicles", "/vehicles/**", "/cameras", "/cameras/**", "/sensor-data", "/sensor-data/**", "/stream/**")
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -51,35 +51,35 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/devices").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/devices/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/devices").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/devices").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/devices/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/devices/**").hasRole("ADMIN")
                         
                         // Endpoints Protegidos - Locations
                         .requestMatchers(HttpMethod.GET, "/locations").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/locations/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/locations").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/locations").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/locations/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/locations/**").hasRole("ADMIN")
                         
                         // Endpoints Protegidos - Vehicles
                         .requestMatchers(HttpMethod.GET, "/vehicles").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/vehicles/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/vehicles").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/vehicles").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/vehicles/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/vehicles/**").hasRole("ADMIN")
                         
                         // Endpoints Protegidos - Cameras
                         .requestMatchers(HttpMethod.GET, "/cameras").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/cameras/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/cameras").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/cameras").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/cameras/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/cameras/**").hasRole("ADMIN")
                         
                         // Endpoints Protegidos - Sensor Data
                         .requestMatchers(HttpMethod.GET, "/sensor-data").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/sensor-data/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/sensor-data").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/sensor-data").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/sensor-data/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/sensor-data/**").hasRole("ADMIN")
                         
                         // Endpoints Protegidos - Streaming
