@@ -93,7 +93,7 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
   // 1000–1500: aire viciado, ventilar
   // > 1500: inadecuado, riesgo de somnolencia/malestar
   co2: {
-    label: 'CO₂',
+    label: 'Dióxido de Carbono (CO₂)',
     unit: 'ppm',
     scaleMin: 0,
     scaleMax: 2000,
@@ -109,7 +109,7 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
   // Ref: OMS — Límite 8h exposición: 9 ppm
   // EPA AQI breakpoints: 0–4.4 bueno, 4.5–9.4 moderado, 9.5–12.4 Elevado, >12.5 peligroso
   co: {
-    label: 'CO',
+    label: 'Monóxido de Carbono (CO)',
     unit: 'ppm',
     scaleMin: 0,
     scaleMax: 50,
@@ -125,7 +125,7 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
   // Ref: EPA AQI breakpoints en ppb
   // 0–53 bueno, 54–100 moderado, 101–360 Elevado, >360 peligroso
   no2: {
-    label: 'NO₂',
+    label: 'Dióxido de Nitrógeno (NO₂)',
     unit: 'ppb',
     scaleMin: 0,
     scaleMax: 200,
@@ -141,7 +141,7 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
   // Ref: OSHA PEL 50 ppm (8h TWA), NIOSH REL 25 ppm (10h TWA)
   // Adaptado a ppb para sensores ambientales de baja concentración
   nh3: {
-    label: 'NH₃',
+    label: 'Amoníaco (NH₃)',
     unit: 'ppb',
     scaleMin: 0,
     scaleMax: 100,
@@ -157,7 +157,7 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
   // Ref: OMS Guías 2021: media anual 5 µg/m³, 24h 15 µg/m³
   // EPA AQI: 0–12 bueno, 12.1–35.4 moderado, 35.5–55.4 Elevado, >55.5 peligroso
   pm25: {
-    label: 'PM 2.5',
+    label: 'Partículas PM₂.₅ (PM2.5)',
     unit: 'µg/m³',
     scaleMin: 0,
     scaleMax: 150,
@@ -173,7 +173,7 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
   // Ref: OMS Guías 2021: media anual 15 µg/m³, 24h 45 µg/m³
   // EPA AQI: 0–54 bueno, 55–154 moderado, 155–254 Elevado, >255 peligroso
   pm10: {
-    label: 'PM 10',
+    label: 'Partículas PM₁₀ (PM10)',
     unit: 'µg/m³',
     scaleMin: 0,
     scaleMax: 300,
@@ -189,7 +189,7 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
   // Ref: ISO 7730 / ASHRAE 55 (confort térmico en interiores)
   // 18–24°C zona de confort, <15 frío, >30 calor excesivo
   temperature: {
-    label: 'Temperatura',
+    label: 'Temperatura (°C)',
     unit: '°C',
     scaleMin: -10,
     scaleMax: 50,
@@ -205,7 +205,7 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
   // Ref: ASHRAE 55 (30-60% zona de confort)
   // <30% seco (irritación), 30-60% óptimo, 60-80% húmedo (moho), >80% muy húmedo
   humidity: {
-    label: 'Humedad',
+    label: 'Humedad (%)',
     unit: '%',
     scaleMin: 0,
     scaleMax: 100,

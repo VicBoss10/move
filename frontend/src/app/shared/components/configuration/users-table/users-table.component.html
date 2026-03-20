@@ -1,16 +1,93 @@
-<div class="space-y-6">
-  <!-- Encabezado -->
-  <div class="flex flex-col gap-2">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Usuarios</h1>
-    <p class="text-gray-600 dark:text-gray-400">Gestión de usuarios del sistema</p>
-  </div>
-
-  <!-- Placeholder -->
-  <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-12 flex flex-col items-center justify-center gap-3 text-center">
-    <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-    <p class="text-gray-500 dark:text-gray-400 text-sm">Módulo en desarrollo</p>
-  </div>
+<div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+  <table class="min-w-full">
+    <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+      <tr>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">ID</th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Username</th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Email</th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Nombre</th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Apellido</th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Rol</th>
+        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+      <tr *ngFor="let user of users" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">#{{ user.id }}</td>
+        <td class="px-6 py-4"><span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ user.username }}</span></td>
+        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ user.email || '-' }}</td>
+        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ user.firstName || '-' }}</td>
+        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ user.lastName || '-' }}</td>
+        <td class="px-6 py-4">
+          <span *ngIf="user.realmRoles?.includes('admin')" class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">Admin</span>
+          <span *ngIf="!user.realmRoles?.includes('admin')" class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800 dark:bg-green-900/40 dark:text-green-300">User</span>
+        </td>
+        <td class="px-6 py-4">
+          <div class="flex gap-2">
+            <button (click)="openEdit(user)" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300">Editar</button>
+            <button (click)="openDelete(user)" class="rounded bg-red-100 px-2 py-1 text-xs text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-400">Eliminar</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </div>
+
+<!-- Edit modal -->
+<app-modal [isOpen]="editingUser !== null" [showCloseButton]="false" (close)="closeEdit()" className="max-w-lg mx-4">
+  <div *ngIf="editingUser" class="p-6">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Usuario</h2>
+    <form [formGroup]="editForm" (ngSubmit)="saveEdit()" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
+        <input type="email" formControlName="email" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white" />
+        <p *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched" class="text-red-600 text-xs mt-1">Email inválido</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+          <input type="text" formControlName="firstName" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apellido</label>
+          <input type="text" formControlName="lastName" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rol</label>
+        <select formControlName="role" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="flex gap-3 justify-end pt-1">
+        <button type="button" (click)="closeEdit()" class="px-4 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">Cancelar</button>
+        <button type="submit" [disabled]="editForm.invalid || editSaving" [class.opacity-50]="editForm.invalid || editSaving" class="px-4 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">{{ editSaving ? 'Guardando...' : 'Guardar cambios' }}</button>
+      </div>
+    </form>
+  </div>
+</app-modal>
+
+<!-- Delete modal -->
+<app-modal [isOpen]="deleteTarget !== null" [showCloseButton]="false" (close)="closeDelete()" className="max-w-sm mx-4">
+  <div *ngIf="deleteTarget" class="p-6">
+    <div class="flex items-start gap-3 mb-4">
+      <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40">
+        <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">Eliminar Usuario</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">¿Confirmas que deseas eliminar <span class="font-medium">"{{ deleteTarget.username || deleteTarget.email }}"</span>?</p>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end">
+      <button type="button" (click)="closeDelete()" class="px-4 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">Cancelar</button>
+      <button type="button" (click)="confirmDelete()" [disabled]="deleteSaving" [class.opacity-50]="deleteSaving" class="px-4 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm font-medium">{{ deleteSaving ? 'Eliminando...' : 'Sí, eliminar' }}</button>
+    </div>
+  </div>
+</app-modal>

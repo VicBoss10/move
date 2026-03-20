@@ -4,13 +4,36 @@
     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Umbrales de Alerta</h1>
     <p class="text-gray-600 dark:text-gray-400">Configuración de umbrales para las alertas del sistema</p>
   </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="col-span-1 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-4">
+      <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Métricas</h3>
+      <ul class="space-y-2">
+        <li *ngFor="let m of metrics">
+          <button (click)="selectMetric(m)" [class.font-semibold]="m===selected" class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/40 text-gray-900 dark:text-gray-100">{{ envThresholds[m].label }}</button>
+        </li>
+      </ul>
+    </div>
 
-  <!-- Placeholder -->
-  <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-12 flex flex-col items-center justify-center gap-3 text-center">
-    <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
-    <p class="text-gray-500 dark:text-gray-400 text-sm">Módulo en desarrollo</p>
+    <div class="col-span-2 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-4">
+      <form [formGroup]="form">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">Editar: {{ selected }}</h3>
+          <div class="flex gap-2">
+            <button type="button" (click)="reset()" class="px-3 py-1 text-sm rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">Restaurar</button>
+            <button type="button" (click)="save()" class="px-3 py-1 text-sm rounded bg-blue-600 text-white">Guardar</button>
+          </div>
+        </div>
+
+        <div class="space-y-3" formArrayName="levels">
+          <div *ngFor="let lvl of levels.controls; let i = index" [formGroupName]="i" class="grid grid-cols-4 gap-3 items-center">
+            <div class="col-span-1 text-sm text-gray-700 dark:text-gray-300">{{ levels.controls[i].get('label')?.value }}</div>
+            <div class="col-span-2">
+              <input type="number" formControlName="max" class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600" />
+            </div>
+            <div class="col-span-1 text-sm text-red-600 dark:text-red-400" *ngIf="levels.controls[i].get('max')?.invalid && levels.controls[i].get('max')?.touched">Valor inválido</div>
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
 </div>

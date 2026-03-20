@@ -1,10 +1,20 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ThresholdsService } from '../../../../core/services/thresholds.service';
+import { ENV_THRESHOLDS, EnvironmentMetricKey, MetricThresholdConfig, ThresholdLevel } from '../../../../core/config/environment-thresholds.config';
+import { ToastService } from '../../../../core/services/toast.service';
 
 /**
- * AlertThresholdsFormComponent (Shared/Smart Component)
+ * AlertThresholdsFormComponent
  *
- * Gestión de umbrales de alerta del sistema.
+ * Componente encargado de mostrar y editar los umbrales de alerta
+ * para las métricas ambientales (CO₂, PM2.5, temperatura, etc.).
+ * Permite seleccionar una métrica, editar sus niveles (max) y
+ * persistir overrides en `localStorage` a través de `ThresholdsService`.
+ *
+ * - Valida que los umbrales estén en orden creciente (nivel n > nivel n-1)
+ * - Guarda/Restablece los valores y notifica con `ToastService`
  *
  * @selector app-alert-thresholds-form
  * @standalone true
@@ -12,8 +22,107 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-alert-thresholds-form',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './alert-thresholds-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AlertThresholdsFormComponent {}
+export class AlertThresholdsFormComponent implements OnInit {
+  metrics: EnvironmentMetricKey[] = Object.keys(ENV_THRESHOLDS) as EnvironmentMetricKey[];
+  selected: EnvironmentMetricKey = 'co2';
+  form!: FormGroup;
+  public envThresholds = ENV_THRESHOLDS;
+
+  constructor(
+    private fb: FormBuilder,
+    private thresholds: ThresholdsService,
+    private toast: ToastService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.buildFormFor(this.selected);
+  }
+
+  /**
+   * Construye el formulario para la métrica seleccionada usando los
+   * umbrales actualmente cargados desde `ThresholdsService`.
+   * @param metric - Clave de la métrica (co2, pm25, temperature, ...)
+   */
+  buildFormFor(metric: EnvironmentMetricKey) {
+    const cfg = this.thresholds.getMetric(metric) as MetricThresholdConfig;
+    this.form = this.fb.group({
+      metric: [metric, Validators.required],
+      levels: this.fb.array(cfg.levels.map((l: any) => this.levelGroup(l)))
+    });
+    this.selected = metric;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Crea un FormGroup para un nivel de umbral individual.
+   * @param level - Configuración del nivel (max, key, label)
+   */
+  levelGroup(level: ThresholdLevel) {
+    return this.fb.group({
+      max: [level.max === Infinity ? null : level.max, [Validators.required, Validators.min(0)]],
+      key: [level.key],
+      label: [level.label]
+    });
+  }
+
+  get levels(): FormArray {
+    return this.form.get('levels') as FormArray;
+  }
+
+  /** Selecciona una métrica diferente y reconstruye el formulario. */
+  selectMetric(metric: EnvironmentMetricKey) {
+    this.buildFormFor(metric);
+  }
+
+  /**
+   * Valida que los valores `max` de los niveles sean estrictamente crecientes.
+   * Devuelve null si es válido o un mensaje de error en caso contrario.
+   */
+  validateOrder(): string | null {
+    const values = this.levels.controls.map(c => Number(c.get('max')?.value));
+    for (let i = 1; i < values.length; i++) {
+      if (isNaN(values[i]) || isNaN(values[i - 1])) return 'Todos los umbrales deben ser números válidos';
+      if (values[i] <= values[i - 1]) {
+        return `El nivel ${i} debe ser mayor que el nivel ${i - 1}`;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Persiste los cambios validados en `ThresholdsService`.
+   * Mapea los controles del formulario a la estructura `ThresholdLevel`.
+   */
+  save() {
+    const err = this.validateOrder();
+    if (err) {
+      this.toast.error(err, 'Validación');
+      return;
+    }
+    const cfg = this.thresholds.getMetric(this.selected);
+    cfg.levels = this.levels.controls.map(c => ({
+      key: c.get('key')?.value,
+      label: c.get('label')?.value,
+      max: c.get('max')?.value === null ? Infinity : Number(c.get('max')?.value),
+      color: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.color || '#999',
+      textClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.textClass || '',
+      bgClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.bgClass || '',
+      gaugeGradient: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.gaugeGradient || ''
+    } as ThresholdLevel));
+
+    this.thresholds.updateMetric(this.selected, cfg);
+    this.toast.success('Umbrales actualizados', 'Éxito');
+    this.cdr.markForCheck();
+  }
+
+  reset() {
+    this.thresholds.reset();
+    this.buildFormFor(this.selected);
+    this.toast.success('Umbrales restaurados a valores predeterminados', 'Restaurado');
+  }
+}

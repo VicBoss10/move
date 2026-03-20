@@ -35,7 +35,9 @@ public class UserController {
     })
     @GetMapping
     public ResponseEntity<List<UserRepresentation>> getAllUsers() {
-        return ResponseEntity.ok(keycloakAdminService.getAllUsers());
+        List<UserRepresentation> users = keycloakAdminService.getAllUsers();
+        users.forEach(u -> u.setRealmRoles(keycloakAdminService.getUserRoles(u.getId())));
+        return ResponseEntity.ok(users);
     }
 
     @Operation(
@@ -92,6 +94,9 @@ public class UserController {
     public ResponseEntity<Map<String, String>> updateUser(@PathVariable String id, @RequestBody UserRegistrationRequest request) {
         keycloakAdminService.getUserById(id);
         keycloakAdminService.updateUser(id, request.getEmail(), request.getFirstName(), request.getLastName());
+        if (request.getRole() != null && !request.getRole().isBlank()) {
+            keycloakAdminService.setUserRole(id, request.getRole());
+        }
         return ResponseEntity.ok(Map.of("message", "User updated successfully"));
     }
 

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class KeycloakAdminService {
@@ -89,6 +90,38 @@ public class KeycloakAdminService {
         assignDefaultRole(userId);
 
         return userId;
+    }
+
+    /**
+     * Devuelve los nombres de los roles realm del usuario
+     */
+    public List<String> getUserRoles(String userId) {
+        return keycloakAdminClient.realm(realm).users().get(userId)
+                .roles().realmLevel().listEffective().stream()
+                .map(RoleRepresentation::getName)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Cambia el rol realm del usuario (quita user/admin actuales y asigna el nuevo)
+     */
+    @Transactional
+    public void setUserRole(String userId, String newRole) {
+        var realmResource = keycloakAdminClient.realm(realm);
+        var userRoles = realmResource.users().get(userId).roles().realmLevel();
+
+        // Quitar roles existentes user y admin
+        List<String> toRemoveNames = List.of("user", "admin");
+        List<RoleRepresentation> currentRoles = userRoles.listAll().stream()
+                .filter(r -> toRemoveNames.contains(r.getName()))
+                .collect(Collectors.toList());
+        if (!currentRoles.isEmpty()) {
+            userRoles.remove(currentRoles);
+        }
+
+        // Asignar el nuevo rol
+        RoleRepresentation role = realmResource.roles().get(newRole).toRepresentation();
+        userRoles.add(Collections.singletonList(role));
     }
 
     /**

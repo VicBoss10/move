@@ -38,7 +38,6 @@ import { ConnectedSensorsComponent } from './pages/devices/connected-sensors/con
 import { DeviceStatusComponent } from './pages/devices/device-status/device-status.component';
 import { DeviceLogsComponent } from './pages/devices/device-logs/device-logs.component';
 import { UsersComponent } from './pages/configuration/users/users.component';
-import { RolesComponent } from './pages/configuration/roles/roles.component';
 import { AlertThresholdsComponent } from './pages/configuration/alert-thresholds/alert-thresholds.component';
 import { SystemParamsComponent } from './pages/configuration/system-params/system-params.component';
 import { TimeSeriesPageComponent } from './pages/analysis/time-series/time-series-page.component';
@@ -151,11 +150,6 @@ const DASHBOARD_ROUTES: Routes = [
         path: 'users',
         component: UsersComponent,
         title: 'Usuarios'
-      },
-      {
-        path: 'roles',
-        component: RolesComponent,
-        title: 'Roles y Permisos'
       },
       {
         path: 'alert-thresholds',

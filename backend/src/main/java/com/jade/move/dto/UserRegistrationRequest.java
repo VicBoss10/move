@@ -34,4 +34,7 @@ public class UserRegistrationRequest {
     @Size(min = 1, max = 50, message = "Last name must be between 1 and 50 characters")
     private String lastName;
 
+    /** Optional: "admin" or "user". Only used in update requests. */
+    private String role;
+
 }
