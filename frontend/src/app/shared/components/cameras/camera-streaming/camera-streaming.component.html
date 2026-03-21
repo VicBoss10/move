@@ -8,7 +8,7 @@
     </div>
     <button
       [routerLink]="['/dashboard/devices/register-device']"
-      class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+      class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
     >
       <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -75,7 +75,7 @@
               (click)="selectCamera(camera)"
               [disabled]="isLoading || isStreaming"
               [ngClass]="{
-                'bg-blue-600 text-white dark:bg-blue-700': selectedCamera?.id === camera.id,
+                'bg-brand-500 text-white dark:bg-brand-600': selectedCamera?.id === camera.id,
                 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300': selectedCamera?.id !== camera.id,
                 'opacity-50 cursor-not-allowed': isStreaming
               }"
@@ -131,8 +131,8 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-                <svg class="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-900">
+                <svg class="h-4 w-4 text-brand-500 dark:text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
@@ -153,8 +153,8 @@
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400">CÁMARAS TOTALES</p>
             <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ cameras.length }}</p>
           </div>
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-            <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-900">
+            <svg class="h-5 w-5 text-brand-500 dark:text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.219A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
             </svg>
           </div>

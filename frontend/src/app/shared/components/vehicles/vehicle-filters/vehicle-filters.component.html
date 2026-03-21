@@ -13,7 +13,7 @@
       </label>
       <select
         [(ngModel)]="selectedType"
-        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-brand-300 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
       >
         <option value="">Todos los tipos</option>
         <option *ngFor="let type of vehicleTypes" [value]="type.value">
@@ -29,7 +29,7 @@
       </label>
       <select
         [(ngModel)]="selectedLocationId"
-        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-brand-300 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
       >
         <option [value]="null">Todas las ubicaciones</option>
         <option *ngFor="let location of locations$ | async" [value]="location.id">
@@ -46,7 +46,7 @@
       <input
         type="date"
         [(ngModel)]="startDate"
-        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-brand-300 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
       />
     </div>
 
@@ -58,7 +58,7 @@
       <input
         type="date"
         [(ngModel)]="endDate"
-        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm transition focus:border-brand-300 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
       />
     </div>
   </div>
@@ -73,7 +73,7 @@
     </button>
     <button
       (click)="applyFilters()"
-      class="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white transition hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+      class="rounded-lg bg-brand-500 px-6 py-2 font-medium text-white transition hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-500"
     >
       Aplicar Filtros
     </button>

@@ -12,7 +12,7 @@
 
   <!-- Loading -->
   <div *ngIf="isLoading" class="flex items-center justify-center py-8">
-    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
     <span class="ml-3 text-gray-600 dark:text-gray-400">Cargando ubicaciones...</span>
   </div>
 
@@ -59,7 +59,7 @@
               <div class="mt-2 text-xs text-gray-500">
                 <span>{{ infoWindowContent.latitude | number : '1.4-4' }}, {{ infoWindowContent.longitude | number : '1.4-4' }}</span>
               </div>
-              <div class="mt-2 text-xs font-medium text-purple-600">
+              <div class="mt-2 text-xs font-medium text-warning-600">
                 {{ infoWindowContent.vehiclesDetected }} vehículos detectados
               </div>
             </div>
@@ -182,7 +182,7 @@
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
             Vehículos Detectados Hoy
           </p>
-          <p class="mt-2 text-2xl font-bold text-purple-600 dark:text-purple-400">
+          <p class="mt-2 text-2xl font-bold text-warning-600 dark:text-warning-400">
             {{ selectedLocation.vehiclesDetected }}
           </p>
         </div>
@@ -190,7 +190,7 @@
         <!-- Acciones -->
         <div class="border-t border-gray-200 dark:border-gray-700 pt-3 grid grid-cols-2 gap-2">
           <button
-            class="px-3 py-2 text-xs font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            class="px-3 py-2 text-xs font-medium rounded-md bg-brand-500 text-white hover:bg-brand-600 transition-colors"
           >
             Ver Detalles
           </button>

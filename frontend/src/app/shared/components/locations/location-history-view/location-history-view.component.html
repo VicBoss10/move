@@ -14,24 +14,24 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <!-- Total de Detecciones -->
     <div
-      class="rounded-lg border-l-4 border-blue-500 bg-white p-4 dark:bg-gray-800"
+      class="rounded-lg border-l-4 border-brand-500 bg-white p-4 dark:bg-gray-800"
     >
       <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
         TOTAL DETECCIONES
       </p>
-      <p class="mt-2 text-2xl font-bold text-blue-600 dark:text-blue-400">
+      <p class="mt-2 text-2xl font-bold text-brand-600 dark:text-brand-400">
         {{ overallStats.totalDetections | number }}
       </p>
     </div>
 
     <!-- Detecciones de Vehículos -->
     <div
-      class="rounded-lg border-l-4 border-purple-500 bg-white p-4 dark:bg-gray-800"
+      class="rounded-lg border-l-4 border-warning-500 bg-white p-4 dark:bg-gray-800"
     >
       <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
         VEHÍCULOS DETECTADOS
       </p>
-      <p class="mt-2 text-2xl font-bold text-purple-600 dark:text-purple-400">
+      <p class="mt-2 text-2xl font-bold text-warning-600 dark:text-warning-400">
         {{ overallStats.totalVehicleDetections | number }}
       </p>
     </div>
@@ -76,7 +76,7 @@
             <td class="px-6 py-4 font-medium">{{ record.description }}</td>
             <td class="px-6 py-4 text-center">
               <span
-                class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-200"
+                class="inline-flex items-center rounded-full bg-warning-50 px-3 py-1 text-sm font-medium text-warning-800 dark:bg-warning-900/30 dark:text-warning-200"
               >
                 {{ record.vehicleDetections }}
               </span>

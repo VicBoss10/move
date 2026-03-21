@@ -65,7 +65,7 @@
 
       <div class="flex gap-3 justify-end pt-1">
         <button type="button" (click)="closeEdit()" class="px-4 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">Cancelar</button>
-        <button type="submit" [disabled]="editForm.invalid || editSaving" [class.opacity-50]="editForm.invalid || editSaving" class="px-4 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">{{ editSaving ? 'Guardando...' : 'Guardar cambios' }}</button>
+        <button type="submit" [disabled]="editForm.invalid || editSaving" [class.opacity-50]="editForm.invalid || editSaving" class="px-4 py-1.5 rounded-md bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium">{{ editSaving ? 'Guardando...' : 'Guardar cambios' }}</button>
       </div>
     </form>
   </div>

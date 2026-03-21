@@ -27,7 +27,7 @@
           type="text"
           formControlName="description"
           placeholder="Ej: Carrera 7 con Calle 10"
-          class="w-full md:w-1/2 px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition"
+          class="w-full md:w-1/2 px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-500/30 transition"
         />
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Nombre o descripción de la ubicación (3-255 caracteres)</p>
         <div *ngIf="locationForm.get('description')?.invalid && locationForm.get('description')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
@@ -76,7 +76,7 @@
           type="submit"
           [disabled]="!isFormValid() || (isLoading$ | async)"
           [class.opacity-50]="!isFormValid() || (isLoading$ | async)"
-          class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:cursor-not-allowed"
+          class="px-6 py-2 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition disabled:cursor-not-allowed"
         >
           {{ (isLoading$ | async) ? 'Registrando...' : 'Registrar Ubicación' }}
         </button>

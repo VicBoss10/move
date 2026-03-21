@@ -75,8 +75,8 @@ export class VehicleStatsCardsComponent {
       {
         label: 'Autos',
         value: this.stats.carCount,
-        borderColor: 'blue',
-        textColor: 'text-blue-600 dark:text-blue-400',
+        borderColor: 'yellow',
+        textColor: 'text-yellow-600 dark:text-yellow-400',
       },
       {
         label: 'Motos',
@@ -93,8 +93,8 @@ export class VehicleStatsCardsComponent {
       {
         label: 'Camiones',
         value: this.stats.truckCount,
-        borderColor: 'indigo',
-        textColor: 'text-indigo-600 dark:text-indigo-400',
+        borderColor: 'yellow',
+        textColor: 'text-yellow-600 dark:text-yellow-400',
       },
     ];
   }

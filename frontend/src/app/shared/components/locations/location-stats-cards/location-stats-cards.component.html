@@ -39,17 +39,17 @@
   </div>
 
   <!-- Vehículos Detectados -->
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-warning-500">
     <div class="flex justify-between items-start">
       <div>
         <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Vehículos Detectados</p>
-        <h3 class="text-4xl font-bold text-purple-600 dark:text-purple-400 mt-2">
+        <h3 class="text-4xl font-bold text-warning-600 dark:text-warning-400 mt-2">
           {{ stats.vehiclesDetected | number }}
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">En el período de tiempo</p>
       </div>
-      <div class="bg-purple-100 dark:bg-purple-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+      <div class="bg-warning-50 dark:bg-warning-900 rounded-full p-4">
+        <svg class="w-8 h-8 text-warning-600 dark:text-warning-400" fill="currentColor" viewBox="0 0 24 24">
           <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm11 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM5 11l1.5-4.5h11L19 11H5z"></path>
         </svg>
       </div>
@@ -57,17 +57,17 @@
   </div>
 
   <!-- Calidad Promedio -->
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-brand-500">
     <div class="flex justify-between items-start">
       <div>
         <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Calidad Promedio</p>
-        <h3 class="text-4xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+        <h3 class="text-4xl font-bold text-brand-600 dark:text-brand-400 mt-2">
           {{ stats.averageQuality | number : '1.0-1' }}%
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Calidad de datos captados</p>
       </div>
-      <div class="bg-blue-100 dark:bg-blue-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="bg-brand-50 dark:bg-brand-900 rounded-full p-4">
+        <svg class="w-8 h-8 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
         </svg>
       </div>
@@ -93,17 +93,17 @@
   </div>
 
   <!-- Disponibilidad -->
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-indigo-500">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-success-500">
     <div class="flex justify-between items-start">
       <div>
         <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Disponibilidad</p>
-        <h3 class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mt-2">
+        <h3 class="text-4xl font-bold text-success-600 dark:text-success-400 mt-2">
           {{ stats.uptime | number : '1.0-1' }}%
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Tiempo disponible del sistema</p>
       </div>
-      <div class="bg-indigo-100 dark:bg-indigo-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="bg-success-50 dark:bg-success-900 rounded-full p-4">
+        <svg class="w-8 h-8 text-success-600 dark:text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
       </div>
