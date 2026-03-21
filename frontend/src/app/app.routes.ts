@@ -17,6 +17,7 @@ import { ButtonsComponent } from './pages/ui-elements/buttons/buttons.component'
 import { ImagesComponent } from './pages/ui-elements/images/images.component';
 import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
+import { authRedirectGuard } from './core/guards/auth-redirect.guard';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { LandingComponent } from './pages/landing/landing.component';
@@ -337,6 +338,7 @@ export const routes: Routes = [
   {
     path: 'signin',
     component: SignInComponent,
+    canActivate: [authRedirectGuard],
     title: 'Iniciar Sesión'
   },
   {

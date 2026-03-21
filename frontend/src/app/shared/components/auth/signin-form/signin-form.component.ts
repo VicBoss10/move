@@ -10,7 +10,7 @@ import { ButtonComponent } from '../../ui/button/button.component';
 
 @Component({
   selector: 'app-signin-form',
-  imports: [RouterModule, CommonModule, FormsModule, LabelComponent, InputFieldComponent, CheckboxComponent, ButtonComponent],
+  imports: [RouterModule, CommonModule, FormsModule, LabelComponent, InputFieldComponent, ButtonComponent],
   templateUrl: './signin-form.component.html',
   styles: ``
 })
