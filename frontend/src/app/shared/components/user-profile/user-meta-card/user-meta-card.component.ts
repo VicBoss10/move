@@ -9,10 +9,7 @@ import { ButtonComponent } from '../../ui/button/button.component';
 @Component({
   selector: 'app-user-meta-card',
   imports: [
-    CommonModule,
-    ModalComponent,
-    InputFieldComponent,
-    ButtonComponent,
+    CommonModule
   ],
   templateUrl: './user-meta-card.component.html',
   styles: ``

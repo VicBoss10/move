@@ -18,7 +18,7 @@ import { AuthService } from '../../../core/services/auth.service';
     RouterModule,
     ReactiveFormsModule,
     ThemeToggleButtonComponent,
-    NotificationDropdownComponent,
+    //NotificationDropdownComponent,
     UserDropdownComponent,
   ],
   templateUrl: './app-header.component.html',
