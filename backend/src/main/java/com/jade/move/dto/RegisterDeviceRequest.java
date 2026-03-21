@@ -20,4 +20,12 @@ public class RegisterDeviceRequest {
     // Campos de Camera (opcionales, solo para type=CAMERA)
     private StreamType streamType;
     private String source;
+    
+    // Campos de Sensor (opcionales, solo para type=SENSOR)
+    private String macAddress;
+    private String firmwareVersion;
+
+    // WiFi credentials (transaccional - no se persisten)
+    private String wifiSsid;
+    private String wifiPassword;
 }

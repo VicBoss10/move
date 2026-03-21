@@ -1,0 +1,101 @@
+package com.jade.move.controller;
+
+import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.jade.move.model.Sensor;
+import com.jade.move.service.SensorService;
+
+@RestController
+@RequestMapping("/sensors")
+@Tag(name = "Sensores", description = "Gestión de los sensores en el sistema/Managing sensors in the system")
+public class SensorController {
+
+    private final SensorService sensorService;
+
+    public SensorController(SensorService sensorService) {
+        this.sensorService = sensorService;
+    }
+
+    @Operation(
+            summary = "Get all sensors / Obtener todos los sensores",
+            description = "Retrieves a list of all registered sensors in the system. / Obtiene una lista de todos los sensores registrados en el sistema."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sensors retrieved successfully or no sensors found / Sensores obtenidos correctamente o no se encontraron sensores"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+    @GetMapping
+    public ResponseEntity<List<Sensor>> getAllSensors() {
+        List<Sensor> sensors = sensorService.getAllSensors();
+        return ResponseEntity.ok(sensors);
+    }
+
+    @Operation(
+            summary = "Get a sensor by ID / Obtener un sensor por ID",
+            description = "Retrieves a specific sensor by its unique identifier. / Obtiene un sensor específico por su identificador único."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sensor found successfully / Sensor encontrado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Sensor not found / Sensor no encontrado"),
+            @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<Sensor> getSensorById(@PathVariable Integer id) {
+        return ResponseEntity.ok(sensorService.getSensorById(id));
+    }
+
+    @Operation(
+            summary = "Get a sensor by device ID / Obtener un sensor por ID de dispositivo",
+            description = "Retrieves a specific sensor associated with a device. / Obtiene un sensor específico asociado con un dispositivo."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sensor found successfully / Sensor encontrado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Sensor not found / Sensor no encontrado"),
+            @ApiResponse(responseCode = "400", description = "Invalid device ID format / Formato de ID de dispositivo inválido"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+    @GetMapping("/device/{deviceId}")
+    public ResponseEntity<Sensor> getSensorByDeviceId(@PathVariable Integer deviceId) {
+        return ResponseEntity.ok(sensorService.getSensorByDeviceId(deviceId));
+    }
+
+    // Creation of sensors is handled via POST /devices using RegisterDeviceRequest (DeviceService)
+
+    @Operation(
+            summary = "Update an existing sensor / Actualizar un sensor existente",
+            description = "Updates an existing sensor with new information. The sensor ID must be provided in the request body. / Actualiza un sensor existente con nueva información. El ID del sensor debe proporcionarse en el cuerpo de la petición."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sensor updated successfully / Sensor actualizado exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Invalid sensor data or missing required fields / Datos de sensor inválidos o faltan campos requeridos"),
+            @ApiResponse(responseCode = "404", description = "Sensor not found / Sensor no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+    @PutMapping
+    public ResponseEntity<?> updateSensor(@RequestBody Sensor sensor) {
+        Sensor updatedSensor = sensorService.updateSensor(sensor);
+        return ResponseEntity.ok("Sensor updated successfully with id: " + updatedSensor.getId());
+    }
+
+    @Operation(
+            summary = "Delete a sensor by ID / Eliminar un sensor por ID",
+            description = "Permanently deletes a sensor from the system using its unique identifier. This action cannot be undone. / Elimina permanentemente un sensor del sistema usando su identificador único."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sensor deleted successfully / Sensor eliminado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Sensor not found / Sensor no encontrado"),
+            @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteSensor(@PathVariable Integer id) {
+        sensorService.deleteSensor(id);
+        return ResponseEntity.ok("Sensor deleted successfully with id: " + id);
+    }
+}

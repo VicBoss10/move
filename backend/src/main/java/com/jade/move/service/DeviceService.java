@@ -1,6 +1,7 @@
 package com.jade.move.service;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 import com.jade.move.dto.DevicesSearchCriteria;
 import com.jade.move.dto.RegisterDeviceRequest;
@@ -11,6 +12,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.jade.move.repository.DeviceRepository;
 import org.springframework.transaction.annotation.Transactional;
+import com.jade.move.dto.KeycloakClientInfo;
+import com.jade.move.dto.RegisterDeviceResponse;
 
 @Service
 public class DeviceService {
@@ -18,13 +21,19 @@ public class DeviceService {
     private final DeviceRepository deviceRepository;
     private final LocationService locationService;
     private final CameraService cameraService;
+    private final SensorService sensorService;
+    private final KeycloakAdminService keycloakAdminService;
 
-    public DeviceService(DeviceRepository deviceRepository, 
+    public DeviceService(DeviceRepository deviceRepository,
                         LocationService locationService,
-                        CameraService cameraService) {
+                        CameraService cameraService,
+                        SensorService sensorService,
+                        KeycloakAdminService keycloakAdminService) {
         this.deviceRepository = deviceRepository;
         this.locationService = locationService;
         this.cameraService = cameraService;
+        this.sensorService = sensorService;
+        this.keycloakAdminService = keycloakAdminService;
     }
 
     public List<Device> getAllDevices() {
@@ -91,7 +100,7 @@ public class DeviceService {
      * @return Device creado con ID generado
      */
     @Transactional
-    public Device registerDevice(RegisterDeviceRequest request) {
+    public RegisterDeviceResponse registerDevice(RegisterDeviceRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("RegisterDeviceRequest cannot be null");
         }
@@ -135,7 +144,40 @@ public class DeviceService {
             
             cameraService.createCamera(camera);
         }
+
+        // Si es sensor, crear también la entidad Sensor (similar a Camera)
+        if (request.getType() == DeviceType.SENSOR) {
+            // Leer campos específicos desde el mismo DTO RegisterDeviceRequest
+            if (request.getMacAddress() == null || request.getMacAddress().trim().isEmpty()) {
+                throw new IllegalArgumentException("macAddress is required for sensors");
+            }
+            if (request.getFirmwareVersion() == null || request.getFirmwareVersion().trim().isEmpty()) {
+                throw new IllegalArgumentException("firmwareVersion is required for sensors");
+            }
+
+            Sensor sensor = new Sensor();
+            sensor.setDevice(savedDevice);
+            sensor.setMacAddress(request.getMacAddress());
+            sensor.setFirmwareVersion(request.getFirmwareVersion());
+            sensor.setRegisteredAt(LocalDateTime.now());
+
+            sensorService.createSensor(sensor);
+            // Para sensors: crear client en Keycloak y devolver credenciales en la respuesta (sin persistir)
+            try {
+                String baseClientName = "sensor-device-" + savedDevice.getId();
+                KeycloakClientInfo clientInfo = keycloakAdminService.createClientForDevice(baseClientName);
+
+                RegisterDeviceResponse resp = new RegisterDeviceResponse(savedDevice.getId(), "Device registered successfully");
+                resp.setKeycloakClientInfo(clientInfo);
+                return resp;
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create Keycloak client for sensor: " + e.getMessage(), e);
+            }
+            // Nota: request.getWifiPassword() / getWifiSsid() están disponibles pero no se persisten;
+            // se usan para provisioning transaccional desde frontend hacia ESP32 si corresponde.
+        }
         
-        return savedDevice;
+        RegisterDeviceResponse resp = new RegisterDeviceResponse(savedDevice.getId(), "Device registered successfully");
+        return resp;
     }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.jade.move.dto.DevicesSearchCriteria;
 import com.jade.move.dto.RegisterDeviceRequest;
+import com.jade.move.dto.RegisterDeviceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -106,12 +107,11 @@ public class DeviceController {
             @ApiResponse(responseCode = "409", description = "Device already exists / El dispositivo ya existe"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
-    @PostMapping
-    public ResponseEntity<?> createDevice(@RequestBody RegisterDeviceRequest request) {
-        Device registeredDevice = deviceService.registerDevice(request);
-        String typeName = registeredDevice.getType() == DeviceType.CAMERA ? "Camera" : "Sensor";
-        return ResponseEntity.ok("Device registered successfully. " + typeName + " ID: " + registeredDevice.getId());
-    }
+        @PostMapping
+        public ResponseEntity<?> createDevice(@RequestBody RegisterDeviceRequest request) {
+                RegisterDeviceResponse response = deviceService.registerDevice(request);
+                return ResponseEntity.ok(response);
+        }
 
     @Operation(
             summary = "Update an existing device / Actualizar un dispositivo existente",

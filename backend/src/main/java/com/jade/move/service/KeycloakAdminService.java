@@ -2,9 +2,16 @@ package com.jade.move.service;
 
 import com.jade.move.exception.ConflictException;
 import com.jade.move.exception.EntityNotFoundException;
+
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.ClientRepresentation;
+
+import jakarta.ws.rs.core.Response;
+
+import com.jade.move.dto.KeycloakClientInfo;
+
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
@@ -14,9 +21,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.ws.rs.NotFoundException;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import jakarta.ws.rs.WebApplicationException;
 
 @Service
 public class KeycloakAdminService {
@@ -177,5 +187,39 @@ public class KeycloakAdminService {
         credential.setValue(newPassword);
         credential.setTemporary(false);
         keycloakAdminClient.realm(realm).users().get(userId).resetPassword(credential);
+    }
+
+    /**
+     * Crea un client en Keycloak con service account activado para uso de dispositivos.
+     * Devuelve clientId y clientSecret.
+     */
+    @Transactional
+    public KeycloakClientInfo createClientForDevice(String baseClientName) {
+        try {
+            var realmResource = keycloakAdminClient.realm(realm);
+
+            ClientRepresentation client = new ClientRepresentation();
+            // clientId must be unique within realm, include timestamp to avoid collisions
+            String clientId = baseClientName + "-" + System.currentTimeMillis();
+            client.setClientId(clientId);
+            client.setName(baseClientName);
+            client.setServiceAccountsEnabled(true);
+            client.setPublicClient(false);
+            client.setStandardFlowEnabled(false);
+            client.setDirectAccessGrantsEnabled(false);
+
+            Response response = realmResource.clients().create(client);
+            String createdId = CreatedResponseUtil.getCreatedId(response);
+
+            ClientRepresentation created = realmResource.clients().get(createdId).toRepresentation();
+            // Obtener secreto del client
+            CredentialRepresentation secretRep = realmResource.clients().get(createdId).getSecret();
+            String secret = secretRep != null ? secretRep.getValue() : null;
+
+            return new KeycloakClientInfo(created.getClientId(), secret, createdId);
+        } catch (WebApplicationException e) {
+            log.error("Error creating Keycloak client for device {}: {}", baseClientName, e.getMessage());
+            throw e;
+        }
     }
 }
