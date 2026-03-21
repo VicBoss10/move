@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { CameraService } from '../../../../core/services/camera.service';
 import { Camera, StreamResponse } from '../../../../core/models/camera.model';
+import { DeviceState } from '../../../../core/models/device.model';
 
 /**
  * Interfaz para filtros de cámara
@@ -99,7 +100,16 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (cameras) => {
-          this.cameras = Array.isArray(cameras) ? cameras : [];
+          const all = Array.isArray(cameras) ? cameras : [];
+          // Mostrar por defecto solo cámaras con estado ACTIVE
+          this.cameras = all.filter(c => (c.device?.state || '').toString().toUpperCase() === DeviceState.ACTIVE);
+          // Si la cámara seleccionada ya no está en la lista (por estar inactiva), deseleccionarla
+          if (this.selectedCamera && !this.cameras.find(cc => cc.id === this.selectedCamera?.id)) {
+            this.selectedCamera = null;
+            this.streamUrl = null;
+            this.sessionId = null;
+            this.isStreaming = false;
+          }
           this.isLoading = false;
           this.changeDetectorRef.markForCheck();
         },

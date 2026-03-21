@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 import { DeviceService } from '../../../../core/services/device.service';
-import { Device } from '../../../../core/models/device.model';
+import { Device, DeviceType, DeviceState } from '../../../../core/models/device.model';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -106,31 +106,43 @@ export class SystemStatusComponent {
   private initializeStatusCards(): void {
     this.statusCards$ = this.deviceService.getAll().pipe(
       map((devices: Device[]) => {
-        const activeDevices = (devices || []).filter((d) => d.state === 'ACTIVE').length;
-        const totalDevices = (devices || []).length;
-        const totalCameras = (devices || []).filter((d) => d.type === 'CAMERA').length;
+        const allDevices = devices || [];
+        const sensors = allDevices.filter((d) => d.type === DeviceType.SENSOR);
+        const cameras = allDevices.filter((d) => d.type === DeviceType.CAMERA);
+
+        const sensorsActive = sensors.filter((d) => d.state === DeviceState.ACTIVE).length;
+        const sensorsTotal = sensors.length;
+
+        const camerasActive = cameras.filter((d) => d.state === DeviceState.ACTIVE).length;
+        const camerasTotal = cameras.length;
+
+        const backendAvailable = true; // we are in the success path, so backend responded
+
+        const activeDevicesTotal = sensorsActive + camerasActive;
 
         return [
           {
             label: 'Sistema',
             icon: this.icons.systemIcon,
-            status: (totalDevices > 0 ? 'online' : 'offline') as 'online' | 'offline',
-            primary: totalDevices > 0 ? '● ONLINE' : '● OFFLINE',
-            secondary: totalDevices > 0 ? 'Todos los servicios activos' : 'Sin dispositivos'
+            status: 'online' as 'online',
+            primary: '● ONLINE',
+            secondary: backendAvailable && allDevices.length === 0
+              ? 'Backend disponible — sin dispositivos registrados'
+              : `${activeDevicesTotal} dispositivos activos`
           },
           {
             label: 'Dispositivos',
             icon: this.icons.deviceIcon,
-            status: (activeDevices > 0 ? 'online' : 'offline') as 'online' | 'offline',
-            primary: `${activeDevices} / ${totalDevices}`,
-            secondary: 'Activos'
+            status: (sensorsActive > 0 ? 'online' : 'offline') as 'online' | 'offline',
+            primary: `${sensorsActive} / ${sensorsTotal}`,
+            secondary: 'Sensores activos / registrados'
           },
           {
             label: 'Cámaras',
             icon: this.icons.cameraIcon,
-            status: (totalCameras > 0 ? 'active' : 'inactive') as 'active' | 'inactive',
-            primary: `${totalCameras}`,
-            secondary: 'Conectadas'
+            status: (camerasActive > 0 ? 'active' : 'inactive') as 'active' | 'inactive',
+            primary: `${camerasActive} / ${camerasTotal}`,
+            secondary: 'Activas / Registradas'
           },
         ];
       }),
