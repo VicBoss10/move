@@ -76,8 +76,8 @@ export class DeviceService extends BaseDataService<Device> {
    * @param deviceData - Datos del dispositivo a registrar
    * @returns Observable<string> con mensaje de confirmación
    */
-  register(deviceData: RegisterDeviceRequest): Observable<string> {
-    return this.apiService.postText(`/${this.endpoint}`, deviceData).pipe(
+  register(deviceData: any): Observable<import('../models/device.model').RegisterDeviceResponse> {
+    return this.apiService.post<import('../models/device.model').RegisterDeviceResponse>(`/${this.endpoint}`, deviceData).pipe(
       tap(() => {
         // Invalidar caché para forzar recarga
         this.invalidateCache();

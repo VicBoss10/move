@@ -16,7 +16,8 @@ interface TokenResponse {
 })
 export class AuthService {
 
-  private readonly keycloakUrl = 'http://localhost:8081';
+  // Prefer runtime-injected value from /assets/config.json (set by main.ts before bootstrap)
+  private readonly keycloakUrl: string = (window as any).__AUTH_BASE_URL__ || 'http://localhost:8081';
   private readonly realm = 'move';
   private readonly clientId = 'move-frontend';
   // If your Keycloak client is confidential, set the secret here or

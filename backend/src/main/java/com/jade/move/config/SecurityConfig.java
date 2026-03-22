@@ -50,6 +50,8 @@ public class SecurityConfig {
                         // Endpoints Protegidos - Devices
                         .requestMatchers(HttpMethod.GET, "/devices").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/devices/**").hasAnyRole("ADMIN", "USER")
+                        // Allow device provisioning from devices (SoftAP) without OAuth2; controller validates X-Factory-Token
+                        .requestMatchers(HttpMethod.POST, "/devices/register-from-device").permitAll()
                         .requestMatchers(HttpMethod.POST, "/devices").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/devices/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/devices/**").hasRole("ADMIN")

@@ -38,7 +38,7 @@
       </div>
 
       <!-- Step 2: Basic Device Information -->
-      <div *ngIf="(selectedType$ | async)" class="pb-6 border-b border-gray-200 dark:border-gray-700">
+      <div *ngIf="(selectedType$ | async) && ((selectedType$ | async) !== 'SENSOR' || bleDeviceName)" class="pb-6 border-b border-gray-200 dark:border-gray-700">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- Nombre del Dispositivo -->
           <div>
@@ -153,8 +153,40 @@
       <!-- Step 4: Sensor-Specific Configuration -->
       <div *ngIf="(selectedType$ | async) === 'SENSOR'" class="pb-6 border-b border-gray-200 dark:border-gray-700">
         <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
-          <p class="text-purple-900 dark:text-purple-300 text-sm font-medium">Configuración de Sensor</p>
-          <p class="text-purple-700 dark:text-purple-400 text-xs mt-1">Los datos de mediciones se registran automáticamente cuando el sensor está activo</p>
+          <p class="text-purple-900 dark:text-purple-300 text-sm font-medium">Conecte el sensor a una fuente de energía</p>
+          <p class="text-purple-700 dark:text-purple-400 text-xs mt-1">Cuando el dispositivo esté encendido, proceda a buscarlo</p>
+        </div>
+        <!-- STEP A: Buscar dispositivo via BLE -->
+        <div class="mt-3">
+          <button type="button" (click)="findAndConnectDevice()" class="px-4 py-2 rounded-lg bg-brand-500 text-white">Buscar dispositivo</button>
+          <span *ngIf="isBleConnecting$ | async" class="ml-3 text-sm text-gray-600">Conectando...</span>
+        </div>
+
+        <div *ngIf="bleDeviceName" class="mt-3 p-3 border rounded-md bg-white dark:bg-gray-800">
+          <p class="text-sm font-medium">Dispositivo seleccionado: {{ bleDeviceName }}</p>
+          <button type="button" (click)="deselectBleDevice()" class="mt-2 text-sm text-red-600">Deseleccionar</button>
+        </div>
+
+        <div *ngIf="bleDeviceName" class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
+          <div>
+            <label for="wifiSsid" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Wi‑Fi SSID</label>
+            <input id="wifiSsid" type="text" formControlName="wifiSsid" placeholder="Nombre de la red" class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white" />
+          </div>
+
+          <div>
+            <label for="wifiPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Wi‑Fi Password</label>
+            <input id="wifiPassword" type="password" formControlName="wifiPassword" placeholder="Contraseña Wi‑Fi" class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white" />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">La contraseña no se guardará en el servidor; se envía solo para provisioning</p>
+          </div>
+        </div>
+        
+        <!-- Show Keycloak credentials if present (after registration) -->
+        <div *ngIf="successMessage$ | async as sMsg" class="mt-4">
+          <div *ngIf="sMsg && sMsg.includes('clientId')" class="p-4 border rounded-md bg-yellow-50 dark:bg-yellow-900/10">
+            <p class="font-medium text-sm">Credenciales Keycloak generadas:</p>
+            <pre class="mt-2 text-xs text-gray-700 dark:text-gray-300">{{ sMsg }}</pre>
+            <p class="text-xs text-gray-500 mt-2">Copia estas credenciales y envíalas por BLE al dispositivo durante el provisioning. No las compartas públicamente.</p>
+          </div>
         </div>
       </div>
 

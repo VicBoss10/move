@@ -9,7 +9,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import com.jade.move.model.Device;
@@ -24,6 +26,9 @@ import com.jade.move.service.DeviceService;
 public class DeviceController {
 
     private final DeviceService deviceService;
+
+        @Value("${provisioning.factory-token:}")
+        private String provisioningFactoryToken;
 
     public DeviceController(DeviceService deviceService) {
         this.deviceService = deviceService;
@@ -112,6 +117,39 @@ public class DeviceController {
                 RegisterDeviceResponse response = deviceService.registerDevice(request);
                 return ResponseEntity.ok(response);
         }
+
+            @Operation(
+                    summary = "Register device from device (provisioning) / Registrar dispositivo desde el dispositivo",
+                    description = "Endpoint usado por dispositivos en modo provisioning (SoftAP). Valida X-Factory-Token y registra el dispositivo en el sistema."
+            )
+            @ApiResponses({
+                    @ApiResponse(responseCode = "200", description = "Device registered successfully / Dispositivo registrado exitosamente"),
+                    @ApiResponse(responseCode = "401", description = "Invalid factory token / Token de fábrica inválido"),
+                    @ApiResponse(responseCode = "400", description = "Invalid device data / Datos inválidos"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+            })
+            @PostMapping("/register-from-device")
+            public ResponseEntity<?> registerFromDevice(
+                    @RequestHeader(value = "X-Factory-Token", required = false) String factoryToken,
+                    @RequestBody RegisterDeviceRequest request
+            ) {
+                // Basic validation of factory token
+                if (provisioningFactoryToken == null || provisioningFactoryToken.isBlank()) {
+                    // If no provisioning token configured, deny by default
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Provisioning not enabled");
+                }
+
+                if (factoryToken == null || !factoryToken.equals(provisioningFactoryToken)) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid factory token");
+                }
+
+                                // Mark request as provisional provisioning so service treats it accordingly
+                                request.setState(DeviceState.PROVISIONAL);
+
+                                // Reuse existing service logic to register the device
+                                RegisterDeviceResponse response = deviceService.registerDevice(request);
+                return ResponseEntity.ok(response);
+            }
 
     @Operation(
             summary = "Update an existing device / Actualizar un dispositivo existente",

@@ -11,5 +11,17 @@ else
   echo "WARNING: GOOGLE_MAPS_API_KEY not set. Google Maps will not be available."
 fi
 
+# Generar assets/config.json en runtime a partir de variables de entorno
+mkdir -p /usr/share/nginx/html/assets
+cat > /usr/share/nginx/html/assets/config.json <<EOF
+{
+  "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY:-}",
+  "apiBaseUrl": "${FRONTEND_API_BASE_URL:-https://api.moveiot.online}",
+  "authBaseUrl": "${FRONTEND_AUTH_BASE_URL:-https://auth.moveiot.online}"
+}
+EOF
+
+echo "Wrote /usr/share/nginx/html/assets/config.json"
+
 # Ejecutar el comando original (nginx)
 exec "$@"

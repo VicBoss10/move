@@ -222,4 +222,21 @@ public class KeycloakAdminService {
             throw e;
         }
     }
+
+    /**
+     * Elimina un client en Keycloak por su internal id
+     */
+    @Transactional
+    public void deleteClientByInternalId(String internalId) {
+        if (internalId == null) return;
+        try {
+            var realmResource = keycloakAdminClient.realm(realm);
+            realmResource.clients().get(internalId).remove();
+        } catch (NotFoundException e) {
+            log.warn("Keycloak client not found for internalId {}: {}", internalId, e.getMessage());
+        } catch (Exception e) {
+            log.error("Error deleting Keycloak client {}: {}", internalId, e.getMessage());
+            throw e;
+        }
+    }
 }

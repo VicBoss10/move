@@ -8,6 +8,8 @@ services:
       - "80:80"
     environment:
       - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY:-}
+      - FRONTEND_API_BASE_URL=${FRONTEND_API_BASE_URL:-https://api.moveiot.online}
+      - FRONTEND_AUTH_BASE_URL=${FRONTEND_AUTH_BASE_URL:-https://auth.moveiot.online}
     depends_on:
       - backend
     networks:
@@ -37,6 +39,7 @@ services:
       - KEYCLOAK_REALM=move
       - KEYCLOAK_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      - PROVISIONING_FACTORY_TOKEN=${PROVISIONING_FACTORY_TOKEN:-}
     depends_on:
       - move_db
       - keycloak
@@ -96,6 +99,9 @@ services:
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak123}
       KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME: https://${KEYCLOAK_PUBLIC_HOSTNAME:-auth.moveiot.online}
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY_HEADERS: xforwarded
     volumes:
       - ./keycloak/move-realm-import.json:/opt/keycloak/data/import/move-realm-import.json:ro
     depends_on:

@@ -21,6 +21,12 @@ async function main() {
   if (cfg && cfg.GOOGLE_MAPS_API_KEY) {
     (window as any).__GOOGLE_MAPS_API_KEY__ = cfg.GOOGLE_MAPS_API_KEY;
   }
+  if (cfg && cfg.apiBaseUrl) {
+    (window as any).__API_BASE_URL__ = cfg.apiBaseUrl;
+  }
+  if (cfg && cfg.authBaseUrl) {
+    (window as any).__AUTH_BASE_URL__ = cfg.authBaseUrl;
+  }
 
   bootstrapApplication(AppComponent, appConfig)
     .catch((err) => console.error(err));

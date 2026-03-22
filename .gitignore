@@ -2,6 +2,9 @@
 keycloak/*-full-export.json
 keycloak/*-import*.json
 
+#firmware
+firmware/*
+
 # Variables de entorno
 .env
 .env.*

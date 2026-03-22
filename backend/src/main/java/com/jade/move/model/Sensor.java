@@ -28,4 +28,8 @@ public class Sensor {
 
     @Column(nullable = false)
     private LocalDateTime registeredAt;
+
+    // Internal Keycloak client id used for revocation if provisioning fails
+    @Column(name = "keycloak_internal_id", length = 128)
+    private String keycloakInternalId;
 }

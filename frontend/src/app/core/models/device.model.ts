@@ -79,3 +79,36 @@ export type RegisterDeviceRequest =
       state: DeviceState;
       locationId: number;
     };
+
+/**
+ * Información del cliente Keycloak retornada por el backend durante provisioning
+ */
+export interface KeycloakClientInfo {
+  clientId: string | null;
+  clientSecret: string | null;
+  internalId?: string | null;
+}
+
+/**
+ * Respuesta del backend al registrar un dispositivo
+ */
+export interface RegisterDeviceResponse {
+  deviceId: number;
+  message: string;
+  keycloakClientInfo?: KeycloakClientInfo | null;
+}
+
+// Extiende el tipo RegisterDeviceRequest para incluir campos opcionales para sensores
+export type RegisterSensorRequest = {
+  name: string;
+  type: DeviceType.SENSOR;
+  state: DeviceState;
+  locationId: number;
+  macAddress: string;
+  firmwareVersion: string;
+  wifiSsid?: string | null;
+  wifiPassword?: string | null;
+};
+
+// Unión ampliada para usar en el front
+export type RegisterDevicePayload = RegisterDeviceRequest | RegisterSensorRequest;
