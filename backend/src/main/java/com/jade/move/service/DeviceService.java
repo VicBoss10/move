@@ -105,7 +105,15 @@ public class DeviceService {
         if (device == null) {
             throw new IllegalArgumentException("Device cannot be null");
         }
-        return deviceRepository.save(device);
+        // Load existing entity first so partial updates (e.g. location-only from firmware)
+        // do not overwrite other fields with null, which would violate NOT NULL constraints.
+        Device existing = deviceRepository.findById(device.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Device not found with id: " + device.getId()));
+        if (device.getName() != null) existing.setName(device.getName());
+        if (device.getType() != null) existing.setType(device.getType());
+        if (device.getState() != null) existing.setState(device.getState());
+        if (device.getLocation() != null) existing.setLocation(device.getLocation());
+        return deviceRepository.save(existing);
     }
 
     public void deleteDevice(Integer id) {

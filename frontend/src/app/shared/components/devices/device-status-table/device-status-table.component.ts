@@ -7,6 +7,7 @@ import { DeviceStatusService, DeviceStatusInfo } from '../../../../core/services
 import { DeviceService } from '../../../../core/services/device.service';
 import { LocationService } from '../../../../core/services/location.service';
 import { CameraService } from '../../../../core/services/camera.service';
+import { SensorService } from '../../../../core/services/sensor.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { Device, DeviceType, DeviceState } from '../../../../core/models/device.model';
 import { Camera, StreamType } from '../../../../core/models/camera.model';
@@ -60,6 +61,7 @@ export class DeviceStatusTableComponent {
     private deviceService: DeviceService,
     private locationService: LocationService,
     private cameraService: CameraService,
+    private sensorService: SensorService,
     private toastService: ToastService,
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef
@@ -214,7 +216,10 @@ export class DeviceStatusTableComponent {
           switchMap((camera) => this.cameraService.delete(camera.id)),
           switchMap(() => this.deviceService.delete(deviceId))
         )
-      : this.deviceService.delete(deviceId);
+      : this.sensorService.getSensorByDeviceId(deviceId).pipe(
+          switchMap((sensor) => this.sensorService.delete(sensor.id)),
+          switchMap(() => this.deviceService.delete(deviceId))
+        );
 
     deleteOp$.subscribe({
       next: () => {

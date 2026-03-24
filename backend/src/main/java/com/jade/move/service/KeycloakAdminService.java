@@ -216,6 +216,29 @@ public class KeycloakAdminService {
             CredentialRepresentation secretRep = realmResource.clients().get(createdId).getSecret();
             String secret = secretRep != null ? secretRep.getValue() : null;
 
+            // Assign 'device' realm role to the service-account user so client_credentials tokens have roles
+            try {
+                // Ensure role exists (create if missing)
+                try {
+                    realmResource.roles().get("device").toRepresentation();
+                } catch (Exception re) {
+                    RoleRepresentation newRole = new RoleRepresentation();
+                    newRole.setName("device");
+                    realmResource.roles().create(newRole);
+                }
+
+                // Get service account user for the client and assign the role
+                var saUser = realmResource.clients().get(createdId).getServiceAccountUser();
+                if (saUser != null && saUser.getId() != null) {
+                    RoleRepresentation deviceRole = realmResource.roles().get("device").toRepresentation();
+                    realmResource.users().get(saUser.getId()).roles().realmLevel().add(Collections.singletonList(deviceRole));
+                } else {
+                    log.warn("Service account user not found for client {}", created.getClientId());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to assign 'device' role to service account for client {}: {}", created.getClientId(), e.getMessage());
+            }
+
             return new KeycloakClientInfo(created.getClientId(), secret, createdId);
         } catch (WebApplicationException e) {
             log.error("Error creating Keycloak client for device {}: {}", baseClientName, e.getMessage());
