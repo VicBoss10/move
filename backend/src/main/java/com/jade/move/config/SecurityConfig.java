@@ -31,66 +31,66 @@ public class SecurityConfig {
         http.securityMatcher("/users", "/users/**", "/devices", "/devices/**", "/locations", "/locations/**",
                 "/vehicles", "/vehicles/**", "/cameras", "/cameras/**", "/sensor-data", "/sensor-data/**", "/stream/**")
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
+                .cors(cors -> {
+                })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter))
-                )
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
                 .authorizeHttpRequests(auth -> auth
-                        
+
                         // POST /users es PÚBLICO (registro)
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
-                        
+
                         // Endpoints Protegidos - Usuarios (solo ADMIN)
                         .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/users/{id}").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.PUT, "/users/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/users/{id}").hasRole("ADMIN")
-                        
+
                         // Endpoints Protegidos - Devices
                         .requestMatchers(HttpMethod.GET, "/devices").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/devices/**").hasAnyRole("ADMIN", "USER")
-                        // Allow device provisioning from devices (SoftAP) without OAuth2; controller validates X-Factory-Token
+                        // Allow device provisioning from devices (SoftAP) without OAuth2; controller
+                        // validates X-Factory-Token
                         .requestMatchers(HttpMethod.POST, "/devices/register-from-device").permitAll()
                         .requestMatchers(HttpMethod.POST, "/devices").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/devices/**").hasAnyRole("ADMIN", "DEVICE")
                         .requestMatchers(HttpMethod.DELETE, "/devices/**").hasRole("ADMIN")
-                        
-                                // Endpoints Protegidos - Locations
-                                .requestMatchers(HttpMethod.GET, "/locations").hasAnyRole("ADMIN", "USER", "DEVICE")
-                                .requestMatchers(HttpMethod.GET, "/locations/**").hasAnyRole("ADMIN", "USER", "DEVICE")
-                                .requestMatchers(HttpMethod.POST, "/locations").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/locations/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/locations/**").hasRole("ADMIN")
-                        
+
+                        // Endpoints Protegidos - Locations
+                        .requestMatchers(HttpMethod.GET, "/locations").hasAnyRole("ADMIN", "USER", "DEVICE")
+                        .requestMatchers(HttpMethod.GET, "/locations/**").hasAnyRole("ADMIN", "USER", "DEVICE")
+                        .requestMatchers(HttpMethod.POST, "/locations").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/locations/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/locations/**").hasRole("ADMIN")
+
                         // Endpoints Protegidos - Vehicles
                         .requestMatchers(HttpMethod.GET, "/vehicles").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/vehicles/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/vehicles").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/vehicles/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/vehicles/**").hasRole("ADMIN")
-                        
+
                         // Endpoints Protegidos - Cameras
                         .requestMatchers(HttpMethod.GET, "/cameras").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/cameras/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/cameras").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/cameras/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/cameras/**").hasRole("ADMIN")
-                        
-                                // Endpoints Protegidos - Sensor Data
-                                .requestMatchers(HttpMethod.GET, "/sensor-data").hasAnyRole("ADMIN", "USER")
-                                .requestMatchers(HttpMethod.GET, "/sensor-data/**").hasAnyRole("ADMIN", "USER")
-                                .requestMatchers(HttpMethod.POST, "/sensor-data").hasAnyRole("ADMIN", "DEVICE")
-                                .requestMatchers(HttpMethod.PUT, "/sensor-data/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/sensor-data/**").hasRole("ADMIN")
-                        
-                                // Endpoints Protegidos - Streaming
-                                .requestMatchers("/stream/**").hasAnyRole("ADMIN", "USER", "DEVICE")
-                        
+
+                        // Endpoints Protegidos - Sensor Data
+                        .requestMatchers(HttpMethod.GET, "/sensordata").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/sensordata/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.POST, "/sensordata").hasAnyRole("ADMIN", "DEVICE")
+                        .requestMatchers(HttpMethod.PUT, "/sensordata/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/sensordata/**").hasRole("ADMIN")
+
+                        // Endpoints Protegidos - Streaming
+                        .requestMatchers("/stream/**").hasAnyRole("ADMIN", "USER", "DEVICE")
+
                         // Todos los demás endpoints requieren autenticación
-                        .anyRequest().authenticated()
-                );
-        
+                        .anyRequest().authenticated());
+
         return http.build();
     }
 
