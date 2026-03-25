@@ -139,14 +139,7 @@ class BackendClient:
                 "client_id": self.client_id,
                 "client_secret": self.client_secret,
             }
-            # Allow forcing the Host header when requesting the token from
-            # inside Docker so Keycloak issues an `iss` that matches the
-            # backend's expected public issuer (e.g. localhost:8081).
-            headers = {}
-            token_host = os.getenv("KEYCLOAK_TOKEN_HOST")
-            if token_host:
-                headers["Host"] = token_host
-            resp = requests.post(self.kc_token_url, data=data, timeout=5, headers=headers)
+            resp = requests.post(self.kc_token_url, data=data, timeout=5)
             resp.raise_for_status()
             j = resp.json()
             access_token = j.get("access_token")

@@ -25,20 +25,25 @@ services:
     ports:
       - "8080:8080"
     environment:
+      # ── Base de datos ──────────────────────────────────────
       - SPRING_DATASOURCE_URL=jdbc:postgresql://move_db:5432/move_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # ── Servicios internos ─────────────────────────────────
       - PYTHON_SERVICE_URL=http://vehicle-detection:5000
-      # Keycloak - ISSUER_URI debe coincidir con el 'iss' del JWT (URL publica)
+      # ── Keycloak ───────────────────────────────────────────
+      # ISSUER_URI: URL pública, debe coincidir con el claim 'iss' del JWT
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI:-http://localhost:8081/realms/move}
-      # JWK_SET_URI usa la red interna Docker para obtener las claves publicas
+      # JWK_SET_URI y SERVER_URL usan la red interna Docker (no salen a internet)
       - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/move/protocol/openid-connect/certs
-      # Admin client usa la red interna Docker
       - KEYCLOAK_SERVER_URL=http://keycloak:8080
       - KEYCLOAK_REALM=move
       - KEYCLOAK_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      # ── CORS ───────────────────────────────────────────────
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost,http://localhost:80,https://moveiot.online}
+      # ── Provisioning ───────────────────────────────────────
       - PROVISIONING_FACTORY_TOKEN=${PROVISIONING_FACTORY_TOKEN:-}
     depends_on:
       - move_db
@@ -54,14 +59,12 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
-      # Keycloak token endpoint and service client credentials (for client_credentials)
-      - KEYCLOAK_TOKEN_URL=${KEYCLOAK_TOKEN_URL:-http://host.docker.internal:8081/realms/move/protocol/openid-connect/token}
+      # URLs internas Docker (no necesitan ser configurables desde .env)
+      - BACKEND_URL=http://backend:8080
+      - KEYCLOAK_TOKEN_URL=http://keycloak:8080/realms/move/protocol/openid-connect/token
+      # Credenciales del cliente confidencial (vienen de .env)
       - VEHICLE_CLIENT_ID=${VEHICLE_CLIENT_ID:-}
       - VEHICLE_CLIENT_SECRET=${VEHICLE_CLIENT_SECRET:-}
-      - KEYCLOAK_TOKEN_HOST=${KEYCLOAK_TOKEN_HOST:-}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - move-network
     profiles:

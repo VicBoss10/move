@@ -1,3 +1,5 @@
 {
-  "GOOGLE_MAPS_API_KEY": "YOUR_API_KEY_HERE"
+  "GOOGLE_MAPS_API_KEY": "YOUR_API_KEY_HERE",
+  "apiBaseUrl": "http://localhost:8080",
+  "authBaseUrl": "http://localhost:8081"
 }
