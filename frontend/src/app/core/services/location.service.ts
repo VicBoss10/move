@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { tap, map, catchError } from 'rxjs/operators';
+import { tap, map, catchError, shareReplay } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { Location, LocationSearchCriteria, LocationStats } from '../models/location.model';
@@ -31,6 +31,36 @@ export class LocationService extends BaseDataService<Location> {
     super(apiService);
     // Datos de ubicaciones son casi estáticos - TTL largo (1 hora)
     this.cacheDuration = 60 * 60 * 1000;
+  }
+
+  /**
+   * Obtiene todas las ubicaciones filtrando la provisional (id === 0)
+   * Actualiza la caché con los resultados filtrados.
+   */
+  override getAll(): Observable<Location[]> {
+    const now = Date.now();
+
+    if (this.cacheData.length > 0 && now - this.lastFetch < this.cacheDuration) {
+      return new Observable(observer => {
+        observer.next(this.cacheData as Location[]);
+        observer.complete();
+      });
+    }
+
+    return this.apiService.get<Location[]>(`/${this.endpoint}`).pipe(
+      map((data) => (data || []).filter((loc) => loc.id !== 0)),
+      tap((filtered) => {
+        this.cacheData = filtered as any;
+        this.lastFetch = now;
+        this.dataSubject.next(this.cacheData);
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, `Error al obtener datos de ${this.endpoint}`);
+        return throwError(() => error);
+      }),
+      shareReplay(1)
+    );
   }
 
   /**
@@ -104,8 +134,9 @@ export class LocationService extends BaseDataService<Location> {
       .build();
 
     return this.apiService.get<Location[]>(`/${this.endpoint}/search`, queryParams).pipe(
-      tap(data => {
-        this.dataSubject.next(data);
+      map((data) => (data || []).filter((loc) => loc.id !== 0)),
+      tap((filtered) => {
+        this.dataSubject.next(filtered);
         this.clearServiceError();
       }),
       catchError((error) => {
@@ -120,7 +151,7 @@ export class LocationService extends BaseDataService<Location> {
    * Incluye conteo de detecciones de vehículos desde VehicleDetectedService
    */
   getStats(): LocationStats {
-    const locations = this.getCachedData();
+    const locations = this.getCachedData().filter((l) => (l as any).id !== 0);
     const vehicleStats = this.vehicleService.getStats();
     
     return {
