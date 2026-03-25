@@ -6,7 +6,8 @@ import { GoogleMapsModule, MapInfoWindow, MapMarker } from '@angular/google-maps
 import { LocationTableComponent } from '../location-table/location-table.component';
 import { LocationFiltersComponent, LocationSearchCriteria } from '../location-filters/location-filters.component';
 import { LocationService } from '../../../../core/services/location.service';
-import { Location } from '../../../../core/models/location.model';
+import { DeviceService } from '../../../../core/services/device.service';
+import { Location as AppLocation } from '../../../../core/models/location.model';
 import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
 import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
 
@@ -46,7 +47,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   /**
    * Array de ubicaciones para binding en el template
    */
-  locations: Location[] = [];
+  locations: AppLocation[] = [];
 
   /**
    * Información general del sistema (calculada dinámicamente)
@@ -80,7 +81,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   isApiLoaded = false;
 
   /** Ubicación seleccionada en el info window */
-  selectedInfoLocation: Location | null = null;
+  selectedInfoLocation: AppLocation | null = null;
 
   /**
    * Constructor e inyección de dependencias
@@ -88,6 +89,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   constructor(
     private locationService: LocationService,
     private mapsLoader: GoogleMapsLoaderService,
+    private deviceService: DeviceService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -114,15 +116,8 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
         }
       });
     });
-    this.loadLocations();
-  }
 
-  /**
-   * Hook del ciclo de vida: Limpia las suscripciones
-   */
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.loadLocations();
   }
 
   /**
@@ -206,36 +201,93 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * @param marker - Referencia al MapAdvancedMarker
    * @param location - Datos de la ubicación
    */
-  onMarkerClick(marker: MapMarker | any, location: Location): void {
+  onMarkerClick(marker: MapMarker | any, location: AppLocation): void {
+    // First set shallow location so info window can open quickly
     this.selectedInfoLocation = location;
-    if (this.infoWindow) {
-      this.infoWindow.open(marker);
-    }
+    if (this.infoWindow) this.infoWindow.open(marker);
     this.cdr.markForCheck();
+
+    // Load devices on the client side (avoid depending on search params on backend)
+    this.deviceService.getAll().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (devices) => {
+        const related = (devices || []).filter(d => (d as any).location?.id === location.id);
+        (this.selectedInfoLocation as any).devices = related;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.warn('Failed to load devices list', err);
+      }
+    });
   }
 
   /**
    * Genera un icono SVG como data-URL para usar como marcador
    * Color y estilo se calculan según actividad/estado de la ubicación
    */
-  getMarkerIcon(location: Location): string {
+  getMarkerIcon(location: AppLocation): string | google.maps.Icon {
     const lastActivity = (location as any).lastActivity ? new Date((location as any).lastActivity).getTime() : 0;
     const isRecent = lastActivity && (Date.now() - lastActivity) < 24 * 60 * 60 * 1000; // 24h
-    const color = isRecent ? '#10B981' : '#6B7280'; // green-500 or gray-500
+    const color = isRecent ? '#10B981' : '#2563EB'; // green or blue
 
-    const svg = `<?xml version='1.0' encoding='utf-8'?><svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'>
-      <circle cx='12' cy='10' r='6' fill='${color}' stroke='%23ffffff' stroke-width='1.5'/>
-      <path d='M12 22s6-4.5 6-9a6 6 0 10-12 0c0 4.5 6 9 6 9z' fill='none' stroke='${color}' stroke-width='0' />
-    </svg>`;
+    // Determine device count to adjust marker visual size
+    const deviceCount = ((location as any).deviceCount || ((location as any).devices || []).length) as number;
+    const baseSize = isRecent ? 36 : 48; // px
+    const size = baseSize + Math.min(24, (deviceCount || 0) * 6);
 
-    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    // Simple pin-shaped SVG marker encoded as data URL
+    const svg = `<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${Math.round(size * 1.3)}' viewBox='0 0 48 62'>
+  <path d='M24 2C15.16 2 8 9.16 8 18c0 12 16 28 16 28s16-16 16-28c0-8.84-7.16-16-16-16z' fill='${color}' stroke='#ffffff' stroke-width='2'/>
+  <circle cx='24' cy='18' r='6' fill='#ffffff'/>
+</svg>`;
+
+    const url = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    return url;
+  }
+
+  /**
+   * Return a small label object to show emoji indicators for camera/sensor
+   */
+  getMarkerLabel(location: AppLocation): google.maps.MarkerLabel | null {
+    const hasCamera = ((location as any).cameraCount && (location as any).cameraCount > 0)
+      || (((location as any).devices || []) as any[]).some(d => (d.type || '').toLowerCase().includes('camera'));
+    const hasSensor = ((location as any).sensorCount && (location as any).sensorCount > 0)
+      || (((location as any).devices || []) as any[]).some(d => (d.type || '').toLowerCase().includes('sensor'));
+
+    let text = '';
+    if (hasCamera && hasSensor) text = 'C/S';
+    else if (hasCamera) text = 'C';
+    else if (hasSensor) text = 'S';
+    else return null;
+
+    return { text, color: '#ffffff', fontSize: '12px' } as any;
+  }
+
+  /** helper used in info window */
+  getCameraCount(location: AppLocation | null): number {
+    if (!location) return 0;
+    if ((location as any).cameraCount != null) return (location as any).cameraCount;
+    const devices = (location as any).devices || [];
+    return devices.filter((d: any) => (d.type || '').toLowerCase().includes('camera')).length;
+  }
+
+  getSensorCount(location: AppLocation | null): number {
+    if (!location) return 0;
+    if ((location as any).sensorCount != null) return (location as any).sensorCount;
+    const devices = (location as any).devices || [];
+    return devices.filter((d: any) => (d.type || '').toLowerCase().includes('sensor')).length;
+  }
+
+  /** Devuelve el listado de dispositivos de la ubicación seleccionada (evita casts en plantilla) */
+  getSelectedDevices(): any[] {
+    return (this.selectedInfoLocation as any)?.devices || [];
   }
 
   /**
    * Centra el mapa en una ubicación específica
    * @param location - Ubicación a enfocar
    */
-  focusOnLocation(location: Location): void {
+  focusOnLocation(location: AppLocation): void {
     this.center = { lat: location.latitude, lng: location.longitude };
     this.zoom = 16;
     this.cdr.markForCheck();
@@ -269,5 +321,13 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     const avgLng = valid.reduce((sum, loc) => sum + loc.longitude, 0) / valid.length;
     this.center = { lat: avgLat, lng: avgLng };
     this.zoom = DEFAULT_MAP_CONFIG.zoom;
+  }
+
+  /**
+   * Hook del ciclo de vida: Limpia las suscripciones
+   */
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
