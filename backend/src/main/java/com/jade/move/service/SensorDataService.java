@@ -16,11 +16,21 @@ import java.util.List;
 import java.util.Optional;
 
 import com.jade.move.exception.EntityNotFoundException;
+import com.jade.move.exception.BadRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class SensorDataService {
 
     private final SensorDataRepository sensorDataRepository;
+    private final Logger log = LoggerFactory.getLogger(SensorDataService.class);
+
+    // tracks consecutive rejected sensor posts per deviceId
+    private final Map<Integer, Integer> consecutiveRejectedByDevice = new ConcurrentHashMap<>();
 
     public SensorDataService(SensorDataRepository sensorDataRepository) {
         this.sensorDataRepository = sensorDataRepository;
@@ -62,6 +72,18 @@ public class SensorDataService {
         if (sensorData == null) {
             throw new IllegalArgumentException("SensorData cannot be null");
         }
+        Integer deviceId = sensorData.getDevice() != null ? sensorData.getDevice().getId() : null;
+        if (containsInvalidSentinel(sensorData)) {
+            int count = incrementRejectedCount(deviceId);
+            log.warn("Rejected sensor data for device {}. consecutive rejects={}", deviceId, count);
+            if (count >= 3) {
+                log.error("Device {} has {} consecutive rejected sensor data entries — possible sensor failure", deviceId, count);
+                // TODO: add alerting / mark device degraded
+            }
+            throw new BadRequestException("Sensor data contains invalid sentinel value -1 and will not be accepted");
+        }
+        // accepted -> reset consecutive rejected counter
+        resetRejectedCount(deviceId);
         return sensorDataRepository.save(sensorData);
     }
 
@@ -69,7 +91,40 @@ public class SensorDataService {
         if (sensorData == null) {
             throw new IllegalArgumentException("SensorData cannot be null");
         }
+        Integer deviceId = sensorData.getDevice() != null ? sensorData.getDevice().getId() : null;
+        if (containsInvalidSentinel(sensorData)) {
+            int count = incrementRejectedCount(deviceId);
+            log.warn("Rejected sensor data update for device {}. consecutive rejects={}", deviceId, count);
+            if (count >= 3) {
+                log.error("Device {} has {} consecutive rejected sensor data updates — possible sensor failure", deviceId, count);
+                // TODO: add alerting / mark device degraded
+            }
+            throw new BadRequestException("Sensor data contains invalid sentinel value -1 and will not be accepted");
+        }
+        resetRejectedCount(deviceId);
         return sensorDataRepository.save(sensorData);
+    }
+
+    private boolean containsInvalidSentinel(SensorData s) {
+        if (s == null) return false;
+        return (s.getTemperature() != null && Double.compare(s.getTemperature(), -1.0) == 0)
+                || (s.getHumidity() != null && Double.compare(s.getHumidity(), -1.0) == 0)
+                || (s.getCo2() != null && Double.compare(s.getCo2(), -1.0) == 0)
+                || (s.getPm25() != null && Double.compare(s.getPm25(), -1.0) == 0)
+                || (s.getPm10() != null && Double.compare(s.getPm10(), -1.0) == 0)
+                || (s.getCo() != null && Double.compare(s.getCo(), -1.0) == 0)
+                || (s.getNo2() != null && Double.compare(s.getNo2(), -1.0) == 0)
+                || (s.getNh3() != null && Double.compare(s.getNh3(), -1.0) == 0);
+    }
+
+    private int incrementRejectedCount(Integer deviceId) {
+        if (deviceId == null) return 0;
+        return consecutiveRejectedByDevice.merge(deviceId, 1, Integer::sum);
+    }
+
+    private void resetRejectedCount(Integer deviceId) {
+        if (deviceId == null) return;
+        consecutiveRejectedByDevice.remove(deviceId);
     }
 
     public void deleteSensorData(Integer id) {
