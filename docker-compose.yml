@@ -32,6 +32,10 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       # ── Servicios internos ─────────────────────────────────
       - PYTHON_SERVICE_URL=http://vehicle-detection:5000
+      # URL pública que recibirán los clientes para acceder al stream.
+      # Si se deja vacía, el backend devolverá rutas relativas (/stream/...) que
+      # el `frontend` sirve/proxyará vía nginx (recomendado cuando nginx proxy_pass está configurado).
+      - PYTHON_SERVICE_PUBLIC_URL=${PYTHON_SERVICE_PUBLIC_URL:-}
       # ── Keycloak ───────────────────────────────────────────
       # ISSUER_URI: URL pública, debe coincidir con el claim 'iss' del JWT
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI:-http://localhost:8081/realms/move}

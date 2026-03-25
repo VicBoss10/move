@@ -6,8 +6,8 @@ import logging
 import threading
 import time
 import uuid
-from dataclasses import dataclass, asdict
-from typing import Dict, Optional, Generator
+from dataclasses import dataclass, asdict, field
+from typing import Dict, Optional, Generator, List, Tuple
 from datetime import datetime
 from flask import Flask, Response, request, jsonify
 from flask_cors import CORS
@@ -38,6 +38,13 @@ class StreamSession:
     video_source: Optional[object] = None
     detector: Optional[VehicleDetector] = None
     is_running: bool = False
+    last_frame_bytes: Optional[bytes] = None
+    last_frame_lock: threading.Lock = field(default_factory=threading.Lock, compare=False, repr=False)
+    # Últimas detecciones (lista de tuples (xyxy, label, conf, cx, cy))
+    last_detections: Optional[List[Tuple]] = None
+    # Dimensiones originales del frame (antes de redimensionar)
+    frame_width: int = 0
+    frame_height: int = 0
 
 
 class StreamManager:
@@ -112,7 +119,16 @@ class StreamManager:
             
             with self.lock:
                 self.sessions[session_id] = session
-            
+
+            # Iniciar hilo grabber dedicado (único acceso a VideoCapture)
+            grabber = threading.Thread(
+                target=self._run_frame_grabber,
+                args=(session_id,),
+                daemon=True,
+                name=f"grabber-{session_id[:8]}"
+            )
+            grabber.start()
+
             self.logger.info(f"Stream creado: {session_id} ({stream_type}: {source})")
             return {
                 "sessionId": session_id,
@@ -190,107 +206,224 @@ class StreamManager:
             "detectionCount": session.detector.get_count() if session.detector else 0
         }
     
-    def generate_frames(self, session_id: str) -> Generator[bytes, None, None]:
+    def _run_frame_grabber(self, session_id: str):
         """
-        Generador de frames MJPEG para streaming.
-        
-        Args:
-            session_id: ID de la sesión
-            
-        Yields:
-            Frames JPEG en formato multipart
+        Hilo dedicado de captura. Es el ÚNICO consumidor de VideoCapture;
+        lee, procesa y almacena cada frame en session.last_frame_bytes.
         """
         session = self.get_stream(session_id)
         if not session or not session.video_source:
-            self.logger.error(f"Sesión no encontrada: {session_id}")
             return
-        
+
         cap = session.video_source.get_capture()
         if not cap:
-            self.logger.error(f"No se pudo obtener VideoCapture para sesión: {session_id}")
+            self.logger.error(f"Grabber: no se pudo obtener VideoCapture para {session_id}")
             return
-        
+
         try:
-            ret, frame = cap.read()
-            if ret:
-                height, width = frame.shape[:2]
-                line_y = height // 2
-            else:
-                self.logger.error(f"No se pudo leer frame inicial: {session_id}")
+            ret, first_frame = cap.read()
+            if not ret:
+                self.logger.error(f"Grabber: no se pudo leer frame inicial para {session_id}")
                 return
+            height, width = first_frame.shape[:2]
+            line_y = height // 2
+            # Guardar dimensiones originales en la sesión
+            session.frame_width = width
+            session.frame_height = height
         except Exception as e:
-            self.logger.error(f"Error al leer frame inicial: {e}")
+            self.logger.error(f"Grabber: error al leer frame inicial: {e}")
             return
-        
-        # Obtener FPS del video para controlar velocidad de reproducción
+
         try:
             fps = session.video_source.get_fps()
             frame_delay = 1.0 / fps if fps > 0 else 1.0 / 30
-            self.logger.info(f"Stream {session_id}: FPS={fps:.1f}, delay={frame_delay:.3f}s")
-        except Exception as e:
-            self.logger.warning(f"No se pudo obtener FPS, usando 30 FPS por defecto: {e}")
+            self.logger.info(f"Grabber {session_id[:8]}: FPS={fps:.1f}")
+        except Exception:
             frame_delay = 1.0 / 30
-        
+
+        # Codificar y cachear primer frame ya disponible
+        try:
+            ret_enc, buf = cv2.imencode('.jpg', first_frame,
+                                        [cv2.IMWRITE_JPEG_QUALITY, config.STREAM_JPEG_QUALITY])
+            if ret_enc:
+                with session.last_frame_lock:
+                    session.last_frame_bytes = buf.tobytes()
+        except Exception as e:
+            self.logger.warning(f"Grabber: error al codificar primer frame: {e}")
+
+        # Control de tasa de encoding (no queremos codificar cada frame si la fuente va rápido)
+        encode_interval = 1.0 / getattr(config, 'STREAM_MAX_FPS', 15)
+        last_encode_time = time.time()
+
+        frame = first_frame
+        frame_counter = 0
+        detect_every = getattr(config, 'DETECTION_SKIP_FRAMES', 1)
+        max_width = getattr(config, 'STREAM_MAX_WIDTH', 0)
+        metrics_interval = getattr(config, 'METRICS_LOG_INTERVAL', 10)
+        frames_read = 0
+        frames_encoded = 0
+        last_metrics = time.time()
+
         while session.is_running:
             try:
-                frame_start_time = time.time()
-                
+                frame_start = time.time()
+
                 ret, frame = cap.read()
                 if not ret:
-                    self.logger.warning(f"No se pudo leer frame, terminando stream: {session_id}")
+                    self.logger.warning(f"Grabber: fin de stream {session_id}")
                     break
-                
-                session.detector.clean_old_detections()
-                results = session.detector.detect(frame)
-                detections = session.detector.get_vehicle_detections(results)
-                
-                vehicle_frame = frame.copy()
-                cv2.line(vehicle_frame, (0, line_y), (width, line_y),
-                        config.LINE_COLOR, config.LINE_THICKNESS)
-                
-                for (xyxy, label, conf, center_x, center_y) in detections:
-                    cv2.rectangle(vehicle_frame, (xyxy[0], xyxy[1]), (xyxy[2], xyxy[3]),
-                                config.BBOX_COLOR, config.BBOX_THICKNESS)
-                    cv2.putText(vehicle_frame, f"{label} {conf:.2f}", (xyxy[0], xyxy[1] - 10),
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-                    cv2.circle(vehicle_frame, (center_x, center_y), 4, (255, 0, 0), -1)
-                    
-                    # Actualizar contador y enviar al backend si cruza la línea
-                    if session.detector.update_count(center_x, center_y, line_y):
-                        if self.backend_client and label in YOLO_TO_VEHICLE_TYPE:
-                            try:
-                                event = VehicleDetectedEvent(
-                                    vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
-                                    timestamp=datetime.now(),
-                                    location_id=config.LOCATION_ID
-                                )
-                                success = self.backend_client.send_detection(event)
-                                if success:
-                                    self.logger.info(f"✓ {label.upper()} detectado y guardado en BD | Total: {session.detector.get_count()}")
-                                else:
-                                    self.logger.warning(f"✗ {label.upper()} detectado pero falló guardar en BD")
-                            except Exception as e:
-                                self.logger.error(f"Error al enviar detección al backend: {e}")
-                
-                ret, buffer = cv2.imencode('.jpg', vehicle_frame, 
-                                          [cv2.IMWRITE_JPEG_QUALITY, config.STREAM_JPEG_QUALITY])
-                if not ret:
-                    continue
-                
-                frame_bytes = buffer.tobytes()
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-                
-                # Control de velocidad: respetar FPS original del video
-                elapsed_time = time.time() - frame_start_time
-                sleep_time = max(0, frame_delay - elapsed_time)
+
+                frames_read += 1
+                frame_counter += 1
+
+                vehicle_frame = frame
+                # Ejecutar detección solo cada N frames para ahorrar CPU
+                if detect_every <= 1 or (frame_counter % detect_every) == 0:
+                    try:
+                        session.detector.clean_old_detections()
+                        results = session.detector.detect(frame)
+                        detections = session.detector.get_vehicle_detections(results)
+
+                        # Guardar detecciones para dibujarlas en frames intermedios
+                        session.last_detections = detections
+
+                        vehicle_frame = frame.copy()
+                        cv2.line(vehicle_frame, (0, line_y), (width, line_y),
+                                 config.LINE_COLOR, config.LINE_THICKNESS)
+
+                        for (xyxy, label, conf, center_x, center_y) in detections:
+                            cv2.rectangle(vehicle_frame, (xyxy[0], xyxy[1]), (xyxy[2], xyxy[3]),
+                                          config.BBOX_COLOR, config.BBOX_THICKNESS)
+                            cv2.putText(vehicle_frame, f"{label} {conf:.2f}", (xyxy[0], xyxy[1] - 10),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                            cv2.circle(vehicle_frame, (center_x, center_y), 4, (255, 0, 0), -1)
+
+                            if session.detector.update_count(center_x, center_y, line_y):
+                                if self.backend_client and label in YOLO_TO_VEHICLE_TYPE:
+                                    try:
+                                        event = VehicleDetectedEvent(
+                                            vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
+                                            timestamp=datetime.now(),
+                                            location_id=config.LOCATION_ID
+                                        )
+                                        success = self.backend_client.send_detection(event)
+                                        if success:
+                                            self.logger.info(f"✓ {label.upper()} | Total: {session.detector.get_count()}")
+                                        else:
+                                            self.logger.warning(f"✗ {label.upper()} no guardado")
+                                    except Exception as e:
+                                        self.logger.error(f"Error enviando detección: {e}")
+                    except Exception as e:
+                        self.logger.debug(f"Grabber: error en detección: {e}")
+
+                # Dibujar overlay usando últimas detecciones si existen (persistir overlays)
+                try:
+                    with session.last_frame_lock:
+                        local_dets = session.last_detections
+                except Exception:
+                    local_dets = None
+
+                try:
+                    if local_dets:
+                        # Escalar coordenadas si vehicle_frame será redimensionado más adelante
+                        h_cur, w_cur = vehicle_frame.shape[:2]
+                        orig_w = session.frame_width if session.frame_width else w_cur
+                        scale = float(w_cur) / float(orig_w) if orig_w else 1.0
+
+                        line_y_scaled = int((session.frame_height // 2) * scale) if session.frame_height else None
+                        if line_y_scaled:
+                            cv2.line(vehicle_frame, (0, line_y_scaled), (w_cur, line_y_scaled),
+                                     config.LINE_COLOR, config.LINE_THICKNESS)
+
+                        for (xyxy, label, conf, center_x, center_y) in local_dets:
+                            x1 = int(xyxy[0] * scale)
+                            y1 = int(xyxy[1] * scale)
+                            x2 = int(xyxy[2] * scale)
+                            y2 = int(xyxy[3] * scale)
+                            cx = int(center_x * scale)
+                            cy = int(center_y * scale)
+                            cv2.rectangle(vehicle_frame, (x1, y1), (x2, y2), config.BBOX_COLOR, config.BBOX_THICKNESS)
+                            cv2.putText(vehicle_frame, f"{label} {conf:.2f}", (x1, max(y1 - 10, 0)),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                            cv2.circle(vehicle_frame, (cx, cy), 4, (255, 0, 0), -1)
+                except Exception:
+                    # no bloquear el procesamiento si dibujado falla
+                    pass
+
+                # Redimensionar para encoding si es necesario
+                try:
+                    if max_width and vehicle_frame is not None:
+                        h, w = vehicle_frame.shape[:2]
+                        if w > max_width:
+                            scale = max_width / float(w)
+                            vehicle_frame = cv2.resize(vehicle_frame, (int(w * scale), int(h * scale)))
+                except Exception:
+                    pass
+
+                # Encode only at most at STREAM_MAX_FPS to reduce CPU/network
+                now_encode = time.time()
+                if now_encode - last_encode_time >= encode_interval:
+                    try:
+                        ret_enc, buf = cv2.imencode('.jpg', vehicle_frame,
+                                                   [cv2.IMWRITE_JPEG_QUALITY, config.STREAM_JPEG_QUALITY])
+                        if ret_enc:
+                            with session.last_frame_lock:
+                                session.last_frame_bytes = buf.tobytes()
+                            frames_encoded += 1
+                            last_encode_time = now_encode
+                    except Exception:
+                        pass
+
+                # Log métricas periódicas
+                now = time.time()
+                if now - last_metrics >= metrics_interval:
+                    self.logger.info(f"Grabber {session_id[:8]} metrics - read/s={frames_read/ (now - last_metrics):.1f}, encoded/s={frames_encoded/ (now - last_metrics):.1f}, total_frames={frames_read}")
+                    frames_read = 0
+                    frames_encoded = 0
+                    last_metrics = now
+
+                elapsed = time.time() - frame_start
+                sleep_time = max(0, frame_delay - elapsed)
                 if sleep_time > 0:
                     time.sleep(sleep_time)
-                
+
             except Exception as e:
-                self.logger.error(f"Error en generación de frame: {e}")
+                self.logger.error(f"Grabber: error en frame loop: {e}")
                 break
-        
+
+        self.logger.info(f"Grabber terminado para sesión: {session_id}")
+
+    def generate_frames(self, session_id: str) -> Generator[bytes, None, None]:
+        """
+        Generador MJPEG. Lee frames del cache producido por _run_frame_grabber.
+        No accede a VideoCapture directamente (thread-safe).
+        """
+        session = self.get_stream(session_id)
+        if not session:
+            self.logger.error(f"generate_frames: sesión no encontrada: {session_id}")
+            return
+
+        # Esperar primer frame (máx 5 s)
+        deadline = time.time() + 5.0
+        while not session.last_frame_bytes and session.is_running and time.time() < deadline:
+            time.sleep(0.05)
+
+        try:
+            fps = session.video_source.get_fps() if session.video_source else 30.0
+            frame_delay = 1.0 / fps if fps > 0 else 1.0 / 30
+        except Exception:
+            frame_delay = 1.0 / 30
+
+        while session.is_running:
+            with session.last_frame_lock:
+                frame_bytes = session.last_frame_bytes
+
+            if frame_bytes:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+            time.sleep(frame_delay)
+
         self.logger.info(f"Generador de frames terminado para sesión: {session_id}")
 
 
@@ -358,6 +491,41 @@ def stream_feed(session_id):
         stream_manager.generate_frames(session_id),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
+
+
+@app.route('/stream/snapshot/<session_id>')
+def stream_snapshot(session_id):
+    """
+    Retorna un único frame JPEG del stream activo.
+    Usado como fallback para navegadores que no soportan MJPEG (Safari/iOS).
+
+    Args:
+        session_id: ID de la sesión
+
+    Returns:
+        Frame JPEG con cabeceras no-cache
+    """
+    session = stream_manager.get_stream(session_id)
+    if not session:
+        return jsonify({"error": "Session not found"}), 404
+
+    # Esperar brevemente si el grabber aún no produjo el primer frame
+    if not session.last_frame_bytes:
+        deadline = time.time() + 3.0
+        while not session.last_frame_bytes and session.is_running and time.time() < deadline:
+            time.sleep(0.05)
+
+    with session.last_frame_lock:
+        frame_bytes = session.last_frame_bytes
+
+    if not frame_bytes:
+        return jsonify({"error": "No frame available yet"}), 503
+
+    response = Response(frame_bytes, mimetype='image/jpeg')
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 
 @app.route('/stream/stop/<session_id>', methods=['POST'])

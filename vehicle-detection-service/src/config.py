@@ -53,5 +53,22 @@ FLASK_HOST = os.environ.get("FLASK_HOST", "0.0.0.0")
 FLASK_PORT = int(os.environ.get("FLASK_PORT", "5000"))
 FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
 
+# Cap stream FPS to lower CPU; set to 15 for smoother, lower-cost encoding
 STREAM_MAX_FPS = 30
-STREAM_JPEG_QUALITY = 85
+# JPEG quality for encoded snapshots/frames (lower -> smaller bytes, less CPU)
+# Reduce further to help low-end mobile devices
+STREAM_JPEG_QUALITY = 70
+# Número de frames a saltarse entre ejecuciones de detección (1 = cada frame)
+# Aumentar este valor reduce CPU a costa de menor frecuencia de detección.
+
+# Número de frames a saltarse entre ejecuciones de detección (1 = cada frame)
+# Incrementar reduce uso de CPU; subir a 10 para bajar carga en tiempo real
+DETECTION_SKIP_FRAMES = 3
+
+# Redimensionar ancho máximo antes de codificar JPEG (0 = sin redimensionar)
+# Reduce cost of encoding and model input size
+# Lower width to help mobile clients (smaller JPEGs)
+STREAM_MAX_WIDTH = 720
+
+# Intervalo (segundos) para loguear métricas simples (fps, frames procesados)
+METRICS_LOG_INTERVAL = 10

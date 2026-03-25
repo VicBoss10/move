@@ -71,6 +71,16 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   /** Mensaje de error actual */
   errorMessage: string | null = null;
 
+  /** Modo snapshot para navegadores sin soporte MJPEG (Safari/iOS) */
+  isSnapshotMode: boolean = false;
+
+  /** URL del snapshot actual con cache-busting */
+  snapshotUrl: string | null = null;
+
+  /** Intervalo de polling para snapshots */
+  private snapshotIntervalRef: ReturnType<typeof setInterval> | null = null;
+  private pendingPreloadImg: HTMLImageElement | null = null;
+
   /** Filtros aplicados a la tabla */
   appliedFilters: CameraFilters = {
     state: '',
@@ -90,6 +100,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     if (this.sessionId) {
       this.stopStream();
     }
+    this.stopSnapshotPolling();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -152,6 +163,10 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
           this.streamUrl = response.streamUrl;
           this.isStreaming = true;
           this.isLoading = false;
+          if (this.isSafariOrIos()) {
+            this.isSnapshotMode = true;
+            this.startSnapshotPolling(response.streamUrl);
+          }
           this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
@@ -175,6 +190,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
           this.sessionId = null;
           this.streamUrl = null;
           this.isStreaming = false;
+          this.stopSnapshotPolling();
           this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
@@ -182,6 +198,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
           this.sessionId = null;
           this.streamUrl = null;
           this.isStreaming = false;
+          this.stopSnapshotPolling();
           this.changeDetectorRef.markForCheck();
         }
       });
@@ -193,6 +210,68 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
   getSelectedCameraState(): string {
     return this.selectedCamera?.device.state || 'N/A';
+  }
+
+  onStreamError(): void {
+    if (this.isStreaming && this.streamUrl && !this.isSnapshotMode) {
+      this.isSnapshotMode = true;
+      this.startSnapshotPolling(this.streamUrl);
+      this.changeDetectorRef.markForCheck();
+    }
+  }
+
+  private isSafariOrIos(): boolean {
+    const ua = navigator.userAgent;
+    return /iPad|iPhone|iPod/.test(ua) ||
+      (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/.test(ua));
+  }
+
+  private startSnapshotPolling(mjpegUrl: string): void {
+    const snapshotBase = mjpegUrl.replace('/stream/feed/', '/stream/snapshot/');
+    // Primer snapshot inmediato
+    this.snapshotUrl = `${snapshotBase}?t=${Date.now()}`;
+
+    // Preload pattern: create Image, wait load, then assign to avoid partial/cancelled renders.
+    // Si es Safari/iOS, usar un polling más lento para evitar sobrecargar la red y el render
+    const intervalMs = this.isSafariOrIos() ? 1500 : 500; // ms
+
+    this.snapshotIntervalRef = setInterval(() => {
+      // cancelar preload anterior si existe
+      if (this.pendingPreloadImg) {
+        this.pendingPreloadImg.onload = null;
+        this.pendingPreloadImg.onerror = null;
+        // let browser garbage collect
+        this.pendingPreloadImg = null;
+      }
+
+      const img = new Image();
+      this.pendingPreloadImg = img;
+      img.onload = () => {
+        // asignar sólo cuando la nueva imagen esté completamente cargada
+        this.snapshotUrl = img.src;
+        this.changeDetectorRef.markForCheck();
+        this.pendingPreloadImg = null;
+      };
+      img.onerror = () => {
+        // si falla la carga, no tocar snapshotUrl (mantener último frame)
+        this.pendingPreloadImg = null;
+      };
+      img.src = `${snapshotBase}?t=${Date.now()}`;
+    }, intervalMs);
+  }
+
+  private stopSnapshotPolling(): void {
+    if (this.snapshotIntervalRef !== null) {
+      clearInterval(this.snapshotIntervalRef);
+      this.snapshotIntervalRef = null;
+    }
+    this.isSnapshotMode = false;
+    this.snapshotUrl = null;
+    if (this.pendingPreloadImg) {
+      this.pendingPreloadImg.onload = null;
+      this.pendingPreloadImg.onerror = null;
+      this.pendingPreloadImg = null;
+    }
   }
 
   onFiltersChanged(filters: CameraFilters): void {

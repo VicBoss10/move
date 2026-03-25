@@ -21,8 +21,13 @@
     <div class="lg:col-span-2 space-y-4">
       <div class="rounded-lg border border-gray-200 bg-black p-4 dark:border-gray-700">
         <div class="aspect-video rounded-lg bg-gray-900 flex items-center justify-center overflow-hidden">
-          @if (isStreaming && streamUrl) {
-            <img [src]="streamUrl" alt="Stream en vivo" class="w-full h-full object-contain" />
+          @if (isStreaming && (streamUrl || snapshotUrl)) {
+            <img
+              [src]="isSnapshotMode ? snapshotUrl : streamUrl"
+              (error)="onStreamError()"
+              alt="Stream en vivo"
+              class="w-full h-full object-contain"
+            />
           } @else {
             <div class="flex flex-col items-center gap-4">
               <svg
