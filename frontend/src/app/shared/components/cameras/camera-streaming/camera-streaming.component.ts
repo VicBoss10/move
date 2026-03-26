@@ -163,10 +163,13 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
           this.streamUrl = response.streamUrl;
           this.isStreaming = true;
           this.isLoading = false;
-          if (this.isSafariOrIos()) {
-            this.isSnapshotMode = true;
-            this.startSnapshotPolling(response.streamUrl);
-          }
+          
+          // SOLUCIÓN: Usar snapshot mode para TODOS (no acumula buffers como MJPEG)
+          // Safari/iOS: 1500ms (red lenta)
+          // Chrome/Firefox: 500ms (más responsivo)
+          this.isSnapshotMode = true;
+          this.startSnapshotPolling(response.streamUrl);
+          
           this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
@@ -232,8 +235,10 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     this.snapshotUrl = `${snapshotBase}?t=${Date.now()}`;
 
     // Preload pattern: create Image, wait load, then assign to avoid partial/cancelled renders.
-    // Si es Safari/iOS, usar un polling más lento para evitar sobrecargar la red y el render
-    const intervalMs = this.isSafariOrIos() ? 1500 : 500; // ms
+    // Sincronizar con STREAM_MAX_FPS (20 fps) del servidor para evitar lag acumulativo
+    // Safari/iOS: 1000ms (red lenta, no overload)
+    // Chrome/Firefox: 250ms (~4 fps, synced con servidor 20 fps, 5 frames gap)
+    const intervalMs = this.isSafariOrIos() ? 1000 : 250; // ms
 
     this.snapshotIntervalRef = setInterval(() => {
       // cancelar preload anterior si existe

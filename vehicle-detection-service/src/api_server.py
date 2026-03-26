@@ -277,28 +277,40 @@ class StreamManager:
                 frames_read += 1
                 frame_counter += 1
 
-                vehicle_frame = frame
+                # OPTIMIZACIÓN: Redimensionar ANTES de detección para reducir cálculo YOLO
+                # Este es el cuello de botella - reducir tamaño == detección más rápida
+                process_frame = frame
+                resize_scale = 1.0
+                if max_width and frame.shape[1] > max_width:
+                    resize_scale = max_width / float(frame.shape[1])
+                    process_frame = cv2.resize(frame, (int(frame.shape[1] * resize_scale), int(frame.shape[0] * resize_scale)))
+
+                vehicle_frame = frame  # Guardar frame original para codificar sin overlay
+                frame_copy_needed = False
+                detections_to_draw = session.last_detections  # Usar detecciones previas por defecto
+                
                 # Ejecutar detección solo cada N frames para ahorrar CPU
                 if detect_every <= 1 or (frame_counter % detect_every) == 0:
                     try:
                         session.detector.clean_old_detections()
-                        results = session.detector.detect(frame)
+                        results = session.detector.detect(process_frame)
                         detections = session.detector.get_vehicle_detections(results)
 
-                        # Guardar detecciones para dibujarlas en frames intermedios
+                        # Escalar coordenadas de detecciones si se redimensionó
+                        if resize_scale != 1.0:
+                            detections = [(
+                                (int(x1/resize_scale), int(y1/resize_scale), int(x2/resize_scale), int(y2/resize_scale)),
+                                label, conf,
+                                int(cx/resize_scale), int(cy/resize_scale)
+                            ) for (x1, y1, x2, y2), label, conf, cx, cy in detections]
+
+                        # Actualizar detecciones guardadas
                         session.last_detections = detections
-
-                        vehicle_frame = frame.copy()
-                        cv2.line(vehicle_frame, (0, line_y), (width, line_y),
-                                 config.LINE_COLOR, config.LINE_THICKNESS)
-
+                        detections_to_draw = detections
+                        frame_copy_needed = len(detections) > 0
+                        
+                        # Procesar conteos de vehículos
                         for (xyxy, label, conf, center_x, center_y) in detections:
-                            cv2.rectangle(vehicle_frame, (xyxy[0], xyxy[1]), (xyxy[2], xyxy[3]),
-                                          config.BBOX_COLOR, config.BBOX_THICKNESS)
-                            cv2.putText(vehicle_frame, f"{label} {conf:.2f}", (xyxy[0], xyxy[1] - 10),
-                                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-                            cv2.circle(vehicle_frame, (center_x, center_y), 4, (255, 0, 0), -1)
-
                             if session.detector.update_count(center_x, center_y, line_y):
                                 if self.backend_client and label in YOLO_TO_VEHICLE_TYPE:
                                     try:
@@ -316,48 +328,36 @@ class StreamManager:
                                         self.logger.error(f"Error enviando detección: {e}")
                     except Exception as e:
                         self.logger.debug(f"Grabber: error en detección: {e}")
+                        session.last_detections = []
+                        detections_to_draw = []
+                        frame_copy_needed = False
+                else:
+                    # En frames sin detección, usar detecciones guardadas
+                    frame_copy_needed = detections_to_draw and len(detections_to_draw) > 0
 
-                # Dibujar overlay usando últimas detecciones si existen (persistir overlays)
+                # Dibujar overlay UNA SOLA VEZ en vehicle_frame si hay detecciones
+                # IMPORTANTE: NO dibujar en frame a codificar si fue resizeado (pérdida de datos)
+                if frame_copy_needed and detections_to_draw:
+                    vehicle_frame = frame.copy()
+                    
+                    cv2.line(vehicle_frame, (0, line_y), (width, line_y),
+                             config.LINE_COLOR, config.LINE_THICKNESS)
+
+                    for (xyxy, label, conf, center_x, center_y) in detections_to_draw:
+                        cv2.rectangle(vehicle_frame, (xyxy[0], xyxy[1]), (xyxy[2], xyxy[3]),
+                                      config.BBOX_COLOR, config.BBOX_THICKNESS)
+                        cv2.putText(vehicle_frame, f"{label} {conf:.2f}", (xyxy[0], xyxy[1] - 10),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                        cv2.circle(vehicle_frame, (center_x, center_y), 4, (255, 0, 0), -1)
+
+                # Redimensionar para encoding SOLO si no se redimensionó antes
+                encode_frame = vehicle_frame
                 try:
-                    with session.last_frame_lock:
-                        local_dets = session.last_detections
-                except Exception:
-                    local_dets = None
-
-                try:
-                    if local_dets:
-                        # Escalar coordenadas si vehicle_frame será redimensionado más adelante
-                        h_cur, w_cur = vehicle_frame.shape[:2]
-                        orig_w = session.frame_width if session.frame_width else w_cur
-                        scale = float(w_cur) / float(orig_w) if orig_w else 1.0
-
-                        line_y_scaled = int((session.frame_height // 2) * scale) if session.frame_height else None
-                        if line_y_scaled:
-                            cv2.line(vehicle_frame, (0, line_y_scaled), (w_cur, line_y_scaled),
-                                     config.LINE_COLOR, config.LINE_THICKNESS)
-
-                        for (xyxy, label, conf, center_x, center_y) in local_dets:
-                            x1 = int(xyxy[0] * scale)
-                            y1 = int(xyxy[1] * scale)
-                            x2 = int(xyxy[2] * scale)
-                            y2 = int(xyxy[3] * scale)
-                            cx = int(center_x * scale)
-                            cy = int(center_y * scale)
-                            cv2.rectangle(vehicle_frame, (x1, y1), (x2, y2), config.BBOX_COLOR, config.BBOX_THICKNESS)
-                            cv2.putText(vehicle_frame, f"{label} {conf:.2f}", (x1, max(y1 - 10, 0)),
-                                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-                            cv2.circle(vehicle_frame, (cx, cy), 4, (255, 0, 0), -1)
-                except Exception:
-                    # no bloquear el procesamiento si dibujado falla
-                    pass
-
-                # Redimensionar para encoding si es necesario
-                try:
-                    if max_width and vehicle_frame is not None:
-                        h, w = vehicle_frame.shape[:2]
+                    if max_width and resize_scale == 1.0:
+                        h, w = encode_frame.shape[:2]
                         if w > max_width:
                             scale = max_width / float(w)
-                            vehicle_frame = cv2.resize(vehicle_frame, (int(w * scale), int(h * scale)))
+                            encode_frame = cv2.resize(encode_frame, (int(w * scale), int(h * scale)))
                 except Exception:
                     pass
 
@@ -365,7 +365,7 @@ class StreamManager:
                 now_encode = time.time()
                 if now_encode - last_encode_time >= encode_interval:
                     try:
-                        ret_enc, buf = cv2.imencode('.jpg', vehicle_frame,
+                        ret_enc, buf = cv2.imencode('.jpg', encode_frame,
                                                    [cv2.IMWRITE_JPEG_QUALITY, config.STREAM_JPEG_QUALITY])
                         if ret_enc:
                             with session.last_frame_lock:
@@ -398,6 +398,9 @@ class StreamManager:
         """
         Generador MJPEG. Lee frames del cache producido por _run_frame_grabber.
         No accede a VideoCapture directamente (thread-safe).
+        
+        Estrategia: Enviar TODO frame disponible sin esperar (drenar buffer).
+        Si hay lag, es mejor mostrar video desfasado que acumularlo.
         """
         session = self.get_stream(session_id)
         if not session:
@@ -409,21 +412,24 @@ class StreamManager:
         while not session.last_frame_bytes and session.is_running and time.time() < deadline:
             time.sleep(0.05)
 
-        try:
-            fps = session.video_source.get_fps() if session.video_source else 30.0
-            frame_delay = 1.0 / fps if fps > 0 else 1.0 / 30
-        except Exception:
-            frame_delay = 1.0 / 30
-
+        # Delay mínimo para no sobrecargar CPU en el yield (pero muy bajo)
+        # Propósito: drenar buffer sin acumular
+        min_frame_delay = 0.01  # 10ms, suficiente para sock write
+        
+        last_frame_id = None
         while session.is_running:
             with session.last_frame_lock:
                 frame_bytes = session.last_frame_bytes
+                frame_id = id(frame_bytes)  # ID de objeto, no contenido
 
-            if frame_bytes:
+            # Enviar frame SIEMPRE si es diferente (por referencia)
+            if frame_bytes and frame_id != last_frame_id:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                last_frame_id = frame_id
 
-            time.sleep(frame_delay)
+            # Delay mínimo para evitar busy-loop (no sincronizar con FPS)
+            time.sleep(min_frame_delay)
 
         self.logger.info(f"Generador de frames terminado para sesión: {session_id}")
 

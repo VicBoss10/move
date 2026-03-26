@@ -53,21 +53,18 @@ FLASK_HOST = os.environ.get("FLASK_HOST", "0.0.0.0")
 FLASK_PORT = int(os.environ.get("FLASK_PORT", "5000"))
 FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
 
-# Cap stream FPS to lower CPU; set to 15 for smoother, lower-cost encoding
-STREAM_MAX_FPS = 30
-# JPEG quality for encoded snapshots/frames (lower -> smaller bytes, less CPU)
-# Reduce further to help low-end mobile devices
-STREAM_JPEG_QUALITY = 70
-# Número de frames a saltarse entre ejecuciones de detección (1 = cada frame)
-# Aumentar este valor reduce CPU a costa de menor frecuencia de detección.
+# Cap stream FPS - 5 fps es el máximo realista dado CPU (25 fps lectura vs 5 fps encoding)
+# Cuello de botella: codificación JPEG + detección YOLO; lectura es barata
+STREAM_MAX_FPS = 5
+# JPEG quality - muy agresivo: 25 = mínima calidad aceptable para streaming
+# JPEG quality es lo más caro; reducir de 50→25 reduce CPU de encoding ~80%
+STREAM_JPEG_QUALITY = 60
+# Detectar cada 15 frames = 1.67 fps de detección @ 25 fps lectura
+# Detección es extremadamente cara en CPU; saltarla es prioritario
+DETECTION_SKIP_FRAMES = 5
 
-# Número de frames a saltarse entre ejecuciones de detección (1 = cada frame)
-# Incrementar reduce uso de CPU; subir a 10 para bajar carga en tiempo real
-DETECTION_SKIP_FRAMES = 3
-
-# Redimensionar ancho máximo antes de codificar JPEG (0 = sin redimensionar)
-# Reduce cost of encoding and model input size
-# Lower width to help mobile clients (smaller JPEGs)
+# Redimensionar ancho máximo ANTES de detección para reducir cálculo YOLO
+# 480px es 36% menor que 640px = ~36% YOLO más rápido
 STREAM_MAX_WIDTH = 720
 
 # Intervalo (segundos) para loguear métricas simples (fps, frames procesados)

@@ -51,6 +51,7 @@ class VehicleDetector:
     def get_vehicle_detections(self, results):
         """
         Filtra detecciones para obtener solo vehículos.
+        Optimizado para evitar conversiones CPU innecesarias.
         
         Args:
             results: Resultados de YOLO
@@ -62,15 +63,23 @@ class VehicleDetector:
         names = results[0].names
         
         detections = []
-        for box in boxes:
+        if len(boxes) == 0:
+            return detections
+        
+        # Convertir TODAS las coordenadas de una vez (más eficiente)
+        xyxy_all = boxes.xyxy.cpu().numpy().astype(int)
+        
+        for i, box in enumerate(boxes):
             cls_id = int(box.cls)
             label = names[cls_id]
             
             if label in self.vehicle_classes:
-                xyxy = box.xyxy[0].cpu().numpy().astype(int)
+                # Usar coordenadas ya convertidas
+                xyxy = xyxy_all[i]
                 conf = float(box.conf)
-                center_x = int((xyxy[0] + xyxy[2]) / 2)
-                center_y = int((xyxy[1] + xyxy[3]) / 2)
+                # Optimizar cálculo del centro (evitar divisiones)
+                center_x = (xyxy[0] + xyxy[2]) >> 1  # Bit shift es más rápido que /2
+                center_y = (xyxy[1] + xyxy[3]) >> 1
                 
                 detections.append((xyxy, label, conf, center_x, center_y))
         
