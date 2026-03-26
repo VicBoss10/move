@@ -85,9 +85,10 @@ class BackendClient:
             if token:
                 headers["Authorization"] = f"Bearer {token}"
 
+            payload = event.to_dict()
             response = requests.post(
                 endpoint,
-                json=event.to_dict(),
+                json=payload,
                 headers=headers,
                 timeout=self.timeout,
             )

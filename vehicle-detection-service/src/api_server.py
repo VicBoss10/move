@@ -9,6 +9,7 @@ import uuid
 from dataclasses import dataclass, asdict, field
 from typing import Dict, Optional, Generator, List, Tuple
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from flask import Flask, Response, request, jsonify
 from flask_cors import CORS
 
@@ -111,7 +112,7 @@ class StreamManager:
                 stream_type=stream_type,
                 source=source,
                 status="active",
-                created_at=datetime.now(),
+                created_at=datetime.now(ZoneInfo("America/Bogota")),
                 video_source=video_source,
                 detector=detector,
                 is_running=True
@@ -303,7 +304,7 @@ class StreamManager:
                                     try:
                                         event = VehicleDetectedEvent(
                                             vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
-                                            timestamp=datetime.now(),
+                                            timestamp=datetime.now(ZoneInfo("America/Bogota")),
                                             location_id=config.LOCATION_ID
                                         )
                                         success = self.backend_client.send_detection(event)

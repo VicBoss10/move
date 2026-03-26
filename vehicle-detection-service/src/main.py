@@ -31,11 +31,12 @@ import sys
 import os
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import config
 from detectors import VehicleDetector
 from video import CameraSource, StreamSource
 from api import BackendClient, VehicleDetectedEvent, YOLO_TO_VEHICLE_TYPE
+from zoneinfo import ZoneInfo
 
 logging.basicConfig(
     level=logging.INFO,
@@ -276,9 +277,10 @@ while True:
             if detector.update_count(center_x, center_y, line_y):
                 if backend_client and label in YOLO_TO_VEHICLE_TYPE:
                     try:
+                        # Use Colombia timezone explicitly (America/Bogota) so timestamps match local time
                         event = VehicleDetectedEvent(
                             vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
-                            timestamp=datetime.now(),
+                            timestamp=datetime.now(ZoneInfo("America/Bogota")),
                             location_id=config.LOCATION_ID
                         )
                         success = backend_client.send_detection(event)

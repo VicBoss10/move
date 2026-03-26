@@ -227,7 +227,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   getMarkerIcon(location: AppLocation): string | google.maps.Icon {
     const lastActivity = (location as any).lastActivity ? new Date((location as any).lastActivity).getTime() : 0;
     const isRecent = lastActivity && (Date.now() - lastActivity) < 24 * 60 * 60 * 1000; // 24h
-    const color = isRecent ? '#10B981' : '#2563EB'; // green or blue
+    const color = isRecent ? '#10B981' : '#14d83f'; // green or blue
 
     // Determine device count to adjust marker visual size
     const deviceCount = ((location as any).deviceCount || ((location as any).devices || []).length) as number;
