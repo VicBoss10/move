@@ -1,22 +1,23 @@
-services:
-  frontend:
-    container_name: move-frontend
-    build:
-      context: ./frontend
-      dockerfile: dockerfile
-    ports:
-      - "80:80"
-    environment:
-      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY:-}
-      - FRONTEND_API_BASE_URL=${FRONTEND_API_BASE_URL:-https://api.moveiot.online}
-      - FRONTEND_AUTH_BASE_URL=${FRONTEND_AUTH_BASE_URL:-https://auth.moveiot.online}
-    depends_on:
-      - backend
-    networks:
-      - move-network
-    profiles:
-      - full
+# ============================================================
+# MOVE — Docker Compose
+# ============================================================
+# Perfiles disponibles:
+#   (sin perfil)  → core: backend + keycloak + bases de datos
+#   tunnel        → cloudflare-tunnel (acceso público)
+#   detection     → vehicle-detection (streaming/YOLO)
+#   frontend      → frontend nginx
+#   tools         → pgadmin
+#
+# Ejemplos:
+#   docker compose up -d                                     # solo core
+#   docker compose --profile tunnel up -d                    # core + túnel
+#   docker compose --profile tunnel --profile detection up -d
+#   docker compose --profile frontend --profile tools up -d  # todo local
+# ============================================================
 
+services:
+
+  # ── Core: Backend ────────────────────────────────────────────
   backend:
     container_name: move-backend
     build:
@@ -26,23 +27,21 @@ services:
       - "8080:8080"
     environment:
       # ── Base de datos ──────────────────────────────────────
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://move_db:5432/move_db
-      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:postgresql://move_db:5432/move_db}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       # ── Servicios internos ─────────────────────────────────
-      - PYTHON_SERVICE_URL=http://vehicle-detection:5000
-      # URL pública que recibirán los clientes para acceder al stream.
-      # Si se deja vacía, el backend devolverá rutas relativas (/stream/...) que
-      # el `frontend` sirve/proxyará vía nginx (recomendado cuando nginx proxy_pass está configurado).
+      - PYTHON_SERVICE_URL=${PYTHON_SERVICE_URL:-http://vehicle-detection:5000}
       - PYTHON_SERVICE_PUBLIC_URL=${PYTHON_SERVICE_PUBLIC_URL:-}
       # ── Keycloak ───────────────────────────────────────────
       # ISSUER_URI: URL pública, debe coincidir con el claim 'iss' del JWT
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI:-http://localhost:8081/realms/move}
-      # JWK_SET_URI y SERVER_URL usan la red interna Docker (no salen a internet)
-      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/move/protocol/openid-connect/certs
-      - KEYCLOAK_SERVER_URL=http://keycloak:8080
-      - KEYCLOAK_REALM=move
+      # JWK_SET_URI y SERVER_URL: red interna Docker por defecto.
+      # Cambiar en .env si keycloak está en otro servidor.
+      - KEYCLOAK_JWK_SET_URI=${KEYCLOAK_JWK_SET_URI:-http://keycloak:8080/realms/move/protocol/openid-connect/certs}
+      - KEYCLOAK_SERVER_URL=${KEYCLOAK_SERVER_URL:-http://keycloak:8080}
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM:-move}
       - KEYCLOAK_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin123}
       # ── CORS ───────────────────────────────────────────────
@@ -55,25 +54,22 @@ services:
     networks:
       - move-network
 
-  vehicle-detection:
-    container_name: move-vehicle-detection
-    build:
-      context: ./vehicle-detection-service
-      dockerfile: dockerfile
+  # ── Core: Base de datos principal ────────────────────────────
+  move_db:
+    container_name: move_db
+    image: postgres:17
     ports:
-      - "5000:5000"
+      - "5432:5432"
     environment:
-      # URLs internas Docker (no necesitan ser configurables desde .env)
-      - BACKEND_URL=http://backend:8080
-      - KEYCLOAK_TOKEN_URL=http://keycloak:8080/realms/move/protocol/openid-connect/token
-      # Credenciales del cliente confidencial (vienen de .env)
-      - VEHICLE_CLIENT_ID=${VEHICLE_CLIENT_ID:-}
-      - VEHICLE_CLIENT_SECRET=${VEHICLE_CLIENT_SECRET:-}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: move_db
+    volumes:
+      - move_db_data:/var/lib/postgresql/data
     networks:
       - move-network
-    profiles:
-      - full
 
+  # ── Core: Keycloak DB ───────────────────────────────────────
   keycloak_db:
     container_name: keycloak_db
     image: postgres:17
@@ -93,6 +89,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── Core: Keycloak ──────────────────────────────────────────
   keycloak:
     container_name: move-keycloak
     image: keycloak/keycloak:latest
@@ -118,20 +115,56 @@ services:
       - move-network
     command: start-dev --import-realm
 
-  move_db:
-    container_name: move_db
-    image: postgres:17
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: move_db
+  # ── Perfil: tunnel ──────────────────────────────────────────
+  cloudflare-tunnel:
+    container_name: cloudflare-tunnel
+    image: cloudflare/cloudflared:latest
+    command: tunnel --config /home/nonroot/.cloudflared/config.yml run
     volumes:
-      - move_db_data:/var/lib/postgresql/data
+      - ~/cloudflared:/home/nonroot/.cloudflared
+    restart: unless-stopped
+    network_mode: host
+    profiles:
+      - tunnel
+
+  # ── Perfil: detection ───────────────────────────────────────
+  vehicle-detection:
+    container_name: move-vehicle-detection
+    build:
+      context: ./vehicle-detection-service
+      dockerfile: dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
+      - KEYCLOAK_TOKEN_URL=${KEYCLOAK_TOKEN_URL:-http://keycloak:8080/realms/move/protocol/openid-connect/token}
+      - VEHICLE_CLIENT_ID=${VEHICLE_CLIENT_ID:-}
+      - VEHICLE_CLIENT_SECRET=${VEHICLE_CLIENT_SECRET:-}
     networks:
       - move-network
+    profiles:
+      - detection
 
+  # ── Perfil: frontend ────────────────────────────────────────
+  frontend:
+    container_name: move-frontend
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY:-}
+      - FRONTEND_API_BASE_URL=${FRONTEND_API_BASE_URL:-https://api.moveiot.online}
+      - FRONTEND_AUTH_BASE_URL=${FRONTEND_AUTH_BASE_URL:-https://auth.moveiot.online}
+    depends_on:
+      - backend
+    networks:
+      - move-network
+    profiles:
+      - frontend
+
+  # ── Perfil: tools ───────────────────────────────────────────
   pgadmin:
     container_name: move-pgadmin
     image: dpage/pgadmin4:latest
@@ -146,20 +179,7 @@ services:
       - move-network
     restart: unless-stopped
     profiles:
-      - full
-
-  cloudflare-tunnel:
-    container_name: cloudflare-tunnel
-    image: cloudflare/cloudflared:latest
-    command: tunnel --config /home/nonroot/.cloudflared/config.yml run
-    volumes:
-      - ~/cloudflared:/home/nonroot/.cloudflared
-    depends_on:
-      - backend
-    restart: unless-stopped
-    network_mode: host
-    profiles:
-      - full
+      - tools
 
 volumes:
   move_db_data:
