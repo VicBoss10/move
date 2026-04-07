@@ -36,7 +36,7 @@ class BackendClient:
         # Keycloak client-credentials configuration (read from env)
         self.kc_token_url = os.getenv(
             "KEYCLOAK_TOKEN_URL",
-            "http://keycloak:8080/realms/move/protocol/openid-connect/token",
+            "https://auth.moveiot.online/realms/move/protocol/openid-connect/token",
         )
         self.client_id = os.getenv("VEHICLE_CLIENT_ID")
         self.client_secret = os.getenv("VEHICLE_CLIENT_SECRET")

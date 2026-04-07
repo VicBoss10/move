@@ -88,11 +88,11 @@ class VehicleDetector:
     def _is_duplicate(self, center_x: int, center_y: int) -> bool:
         """
         Verifica si un centro ya fue contado recientemente.
-        
+
         Args:
             center_x: Coordenada X del centro
             center_y: Coordenada Y del centro
-            
+
         Returns:
             True si es un duplicado, False si es nuevo
         """

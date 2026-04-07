@@ -51,6 +51,8 @@ services:
     depends_on:
       - move_db
       - keycloak
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - move-network
 
@@ -128,22 +130,22 @@ services:
       - tunnel
 
   # ── Perfil: detection ───────────────────────────────────────
-  vehicle-detection:
-    container_name: move-vehicle-detection
-    build:
-      context: ./vehicle-detection-service
-      dockerfile: dockerfile
-    ports:
-      - "5000:5000"
-    environment:
-      - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
-      - KEYCLOAK_TOKEN_URL=${KEYCLOAK_TOKEN_URL:-http://keycloak:8080/realms/move/protocol/openid-connect/token}
-      - VEHICLE_CLIENT_ID=${VEHICLE_CLIENT_ID:-}
-      - VEHICLE_CLIENT_SECRET=${VEHICLE_CLIENT_SECRET:-}
-    networks:
-      - move-network
-    profiles:
-      - detection
+  # vehicle-detection:
+  #   container_name: move-vehicle-detection
+  #   build:
+  #     context: ./vehicle-detection-service
+  #     dockerfile: dockerfile
+  #   ports:
+  #     - "5000:5000"
+  #   environment:
+  #     - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
+  #     - KEYCLOAK_TOKEN_URL=${KEYCLOAK_TOKEN_URL:-http://keycloak:8080/realms/move/protocol/openid-connect/token}
+  #     - VEHICLE_CLIENT_ID=${VEHICLE_CLIENT_ID:-}
+  #     - VEHICLE_CLIENT_SECRET=${VEHICLE_CLIENT_SECRET:-}
+  #   networks:
+  #     - move-network
+  #   profiles:
+  #     - detection
 
   # ── Perfil: frontend ────────────────────────────────────────
   frontend:
@@ -159,6 +161,8 @@ services:
       - FRONTEND_AUTH_BASE_URL=${FRONTEND_AUTH_BASE_URL:-https://auth.moveiot.online}
     depends_on:
       - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - move-network
     profiles:

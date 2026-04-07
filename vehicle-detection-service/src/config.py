@@ -1,8 +1,18 @@
 """Configuración centralizada para el servicio de detección de vehículos"""
 import os
 from pathlib import Path
+import torch
 
 BASE_DIR = Path(__file__).parent.parent
+
+# Cargar variables de entorno desde .env automáticamente (si existe)
+try:
+    from dotenv import load_dotenv
+    _env_file = BASE_DIR.parent / ".env"
+    if _env_file.exists():
+        load_dotenv(dotenv_path=_env_file, override=False)
+except ImportError:
+    pass  # python-dotenv no instalado, continuar con env del sistema
 
 YOLO_MODEL_PATH = BASE_DIR / "models" / "yolo11n.pt"
 
@@ -44,7 +54,7 @@ LINE_THICKNESS = 2
 BBOX_COLOR = (0, 255, 0)
 BBOX_THICKNESS = 2
 
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8080")
+BACKEND_URL = os.environ.get("BACKEND_URL", "https://api.moveiot.online")
 LOCATION_ID = 1
 BACKEND_TIMEOUT = 5
 SEND_DETECTIONS_ENABLED = True
@@ -53,19 +63,18 @@ FLASK_HOST = os.environ.get("FLASK_HOST", "0.0.0.0")
 FLASK_PORT = int(os.environ.get("FLASK_PORT", "5000"))
 FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
 
-# Cap stream FPS - 5 fps es el máximo realista dado CPU (25 fps lectura vs 5 fps encoding)
-# Cuello de botella: codificación JPEG + detección YOLO; lectura es barata
-STREAM_MAX_FPS = 5
-# JPEG quality - muy agresivo: 25 = mínima calidad aceptable para streaming
-# JPEG quality es lo más caro; reducir de 50→25 reduce CPU de encoding ~80%
-STREAM_JPEG_QUALITY = 60
-# Detectar cada 15 frames = 1.67 fps de detección @ 25 fps lectura
-# Detección es extremadamente cara en CPU; saltarla es prioritario
-DETECTION_SKIP_FRAMES = 5
+# Stream encoding a 20 fps
+STREAM_MAX_FPS = 20
+# JPEG quality - 70 da buena calidad visual para 720p
+STREAM_JPEG_QUALITY = 70
+# Detectar cada 8 frames = ~2.5 detecciones/s, libera CPU para encoding
+DETECTION_SKIP_FRAMES = 3
 
-# Redimensionar ancho máximo ANTES de detección para reducir cálculo YOLO
-# 480px es 36% menor que 640px = ~36% YOLO más rápido
-STREAM_MAX_WIDTH = 720
+# Redimensionar ancho máximo para encoding (1280 = 720p, buena calidad)
+STREAM_MAX_WIDTH = 1280
 
 # Intervalo (segundos) para loguear métricas simples (fps, frames procesados)
-METRICS_LOG_INTERVAL = 10
+METRICS_LOG_INTERVAL = 20
+
+# Dispositivo para inferencia YOLO: 'cuda' si hay GPU disponible, sino 'cpu'
+YOLO_DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'

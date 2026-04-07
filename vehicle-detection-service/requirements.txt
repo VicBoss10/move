@@ -1,15 +1,22 @@
-# Core dependencies - NumPy 1.x compatible con PyTorch 2.2
-numpy>=1.24.0,<2.0.0
+# ── Deep Learning ─────────────────────────────────────────
+torch
+torchvision
+ultralytics
 
-# PyTorch CPU-only (mucho más ligero, ~200MB vs ~2GB con CUDA)
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.2.0+cpu
-torchvision==0.17.0+cpu
+# ── Computer Vision ──────────────────────────────────────
+opencv-python-headless
 
-# Dependencias principales
-ultralytics>=8.0.0
-opencv-python-headless>=4.8.0
-yt-dlp>=2023.12.0
-requests>=2.31.0
-flask>=3.0.0
-flask-cors>=4.0.0
+# ── Web / API ────────────────────────────────────────────
+flask
+flask-cors
+gunicorn
+requests
+
+# ── Video / Streaming ───────────────────────────────────
+yt-dlp
+
+# ── Compat ──────────────────────────────────────────────
+numpy<2
+
+# ── Config ──────────────────────────────────────────────
+python-dotenv

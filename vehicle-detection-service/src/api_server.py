@@ -41,8 +41,13 @@ class StreamSession:
     is_running: bool = False
     last_frame_bytes: Optional[bytes] = None
     last_frame_lock: threading.Lock = field(default_factory=threading.Lock, compare=False, repr=False)
-    # Últimas detecciones (lista de tuples (xyxy, label, conf, cx, cy))
+    frame_event: threading.Event = field(default_factory=threading.Event, compare=False, repr=False)
+    # Frame más reciente del reader thread (compartido con processor)
+    _current_frame: Optional[object] = None
+    _current_frame_lock: threading.Lock = field(default_factory=threading.Lock, compare=False, repr=False)
+    # Últimas detecciones (lista de tuples (xyxy, label, conf, cx, cy)) — escritas por yolo thread
     last_detections: Optional[List[Tuple]] = None
+    _detections_lock: threading.Lock = field(default_factory=threading.Lock, compare=False, repr=False)
     # Dimensiones originales del frame (antes de redimensionar)
     frame_width: int = 0
     frame_height: int = 0
@@ -106,6 +111,7 @@ class StreamManager:
                 time_threshold=config.TIME_THRESHOLD,
                 line_tolerance=config.LINE_TOLERANCE
             )
+            detector.model.to(config.YOLO_DEVICE)
             
             session = StreamSession(
                 session_id=session_id,
@@ -121,14 +127,32 @@ class StreamManager:
             with self.lock:
                 self.sessions[session_id] = session
 
-            # Iniciar hilo grabber dedicado (único acceso a VideoCapture)
-            grabber = threading.Thread(
-                target=self._run_frame_grabber,
+            # Iniciar thread lector (solo cap.read en loop)
+            reader = threading.Thread(
+                target=self._frame_reader,
                 args=(session_id,),
                 daemon=True,
-                name=f"grabber-{session_id[:8]}"
+                name=f"reader-{session_id[:8]}"
             )
-            grabber.start()
+            reader.start()
+
+            # Iniciar thread YOLO (detección asíncrona — no bloquea el encoder)
+            yolo = threading.Thread(
+                target=self._yolo_detector,
+                args=(session_id,),
+                daemon=True,
+                name=f"yolo-{session_id[:8]}"
+            )
+            yolo.start()
+
+            # Iniciar thread encoder (solo encoding JPEG, nunca bloqueado por YOLO)
+            processor = threading.Thread(
+                target=self._frame_processor,
+                args=(session_id,),
+                daemon=True,
+                name=f"processor-{session_id[:8]}"
+            )
+            processor.start()
 
             self.logger.info(f"Stream creado: {session_id} ({stream_type}: {source})")
             return {
@@ -160,6 +184,8 @@ class StreamManager:
     def stop_stream(self, session_id: str) -> bool:
         """
         Detiene y elimina una sesión de streaming.
+        Espera a que los threads terminen antes de liberar VideoCapture
+        para evitar SIGSEGV.
         
         Args:
             session_id: ID de la sesión a detener
@@ -172,18 +198,23 @@ class StreamManager:
             if not session:
                 return False
             
+            # Señalar a los threads que paren
             session.is_running = False
             session.status = "stopped"
-            
-            if session.video_source:
-                try:
-                    session.video_source.release()
-                except Exception as e:
-                    self.logger.warning(f"Error al liberar video source: {e}")
-            
             del self.sessions[session_id]
-            self.logger.info(f"Stream detenido: {session_id}")
-            return True
+
+        # Esperar fuera del lock a que los threads terminen (máx 3s)
+        time.sleep(0.5)
+
+        # Ahora es seguro liberar VideoCapture
+        if session.video_source:
+            try:
+                session.video_source.release()
+            except Exception as e:
+                self.logger.warning(f"Error al liberar video source: {e}")
+        
+        self.logger.info(f"Stream detenido: {session_id}")
+        return True
     
     def get_status(self, session_id: str) -> Dict:
         """
@@ -207,10 +238,13 @@ class StreamManager:
             "detectionCount": session.detector.get_count() if session.detector else 0
         }
     
-    def _run_frame_grabber(self, session_id: str):
+    def _frame_reader(self, session_id: str):
         """
-        Hilo dedicado de captura. Es el ÚNICO consumidor de VideoCapture;
-        lee, procesa y almacena cada frame en session.last_frame_bytes.
+        Thread dedicado SOLO a leer frames de VideoCapture.
+        Siempre guarda el frame más reciente para que el processor nunca
+        trabaje con frames atrasados (drena el buffer de red/cámara).
+        Para fuentes HTTP/YouTube, throttlea la lectura al FPS de la fuente
+        para no consumir el video instantáneamente.
         """
         session = self.get_stream(session_id)
         if not session or not session.video_source:
@@ -218,131 +252,201 @@ class StreamManager:
 
         cap = session.video_source.get_capture()
         if not cap:
-            self.logger.error(f"Grabber: no se pudo obtener VideoCapture para {session_id}")
+            self.logger.error(f"Reader: no se pudo obtener VideoCapture para {session_id}")
             return
 
+        # Calcular delay entre lecturas basado en FPS de la fuente
         try:
-            ret, first_frame = cap.read()
-            if not ret:
-                self.logger.error(f"Grabber: no se pudo leer frame inicial para {session_id}")
-                return
-            height, width = first_frame.shape[:2]
-            line_y = height // 2
-            # Guardar dimensiones originales en la sesión
-            session.frame_width = width
-            session.frame_height = height
-        except Exception as e:
-            self.logger.error(f"Grabber: error al leer frame inicial: {e}")
+            fps = session.video_source.get_fps()
+            frame_interval = 1.0 / fps if fps > 0 else 1.0 / 30
+        except Exception:
+            frame_interval = 1.0 / 30
+
+        while session.is_running:
+            try:
+                read_start = time.time()
+                ret, frame = cap.read()
+                if not ret:
+                    self.logger.warning(f"Reader: fin de stream {session_id}")
+                    session.is_running = False
+                    break
+                with session._current_frame_lock:
+                    session._current_frame = frame
+
+                # Throttle: si cap.read() fue muy rápido (fuente HTTP/buffered),
+                # dormir para respetar el FPS original del video.
+                # Para RTSP/cámaras, cap.read() ya tarda ~frame_interval así que
+                # el sleep será ~0 y no afecta.
+                elapsed = time.time() - read_start
+                sleep_time = frame_interval - elapsed
+                if sleep_time > 0.001:
+                    time.sleep(sleep_time)
+            except Exception as e:
+                if not session.is_running:
+                    break
+                self.logger.error(f"Reader: error leyendo frame: {e}")
+                session.is_running = False
+                break
+
+        self.logger.info(f"Reader terminado para sesión: {session_id}")
+
+    def _yolo_detector(self, session_id: str):
+        """
+        Thread dedicado a inferencia YOLO.
+        Corre tan rápido como el CPU permite, actualizando last_detections.
+        El encoder lee last_detections de forma asíncrona — nunca es bloqueado.
+        """
+        session = self.get_stream(session_id)
+        if not session:
             return
+
+        # Esperar primer frame
+        deadline = time.time() + 10.0
+        while session._current_frame is None and session.is_running and time.time() < deadline:
+            time.sleep(0.01)
+
+        max_width = getattr(config, 'STREAM_MAX_WIDTH', 0)
+
+        while session.is_running:
+            try:
+                with session._current_frame_lock:
+                    frame = session._current_frame
+                if frame is None:
+                    time.sleep(0.01)
+                    continue
+
+                frame = frame.copy()
+
+                # Redimensionar para YOLO (reduce carga de inferencia)
+                process_frame = frame
+                resize_scale = 1.0
+                if max_width and frame.shape[1] > max_width:
+                    resize_scale = max_width / float(frame.shape[1])
+                    process_frame = cv2.resize(
+                        frame,
+                        (int(frame.shape[1] * resize_scale), int(frame.shape[0] * resize_scale))
+                    )
+
+                session.detector.clean_old_detections()
+                results = session.detector.detect(process_frame)
+                detections = session.detector.get_vehicle_detections(results)
+
+                # Escalar coordenadas al tamaño original si se redimensionó
+                if resize_scale != 1.0:
+                    detections = [
+                        (
+                            (int(x1/resize_scale), int(y1/resize_scale),
+                             int(x2/resize_scale), int(y2/resize_scale)),
+                            label, conf,
+                            int(cx/resize_scale), int(cy/resize_scale)
+                        )
+                        for (x1, y1, x2, y2), label, conf, cx, cy in detections
+                    ]
+
+                # Calcular line_y usando dimensiones de la sesión
+                line_y = (session.frame_height // 2) if session.frame_height > 0 else (frame.shape[0] // 2)
+
+                # Procesar conteos (thread-safe: detector tiene su propio estado)
+                for (xyxy, label, conf, center_x, center_y) in detections:
+                    if session.detector.update_count(center_x, center_y, line_y):
+                        if self.backend_client and label in YOLO_TO_VEHICLE_TYPE:
+                            try:
+                                event = VehicleDetectedEvent(
+                                    vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
+                                    timestamp=datetime.now(ZoneInfo("America/Bogota")),
+                                    location_id=config.LOCATION_ID
+                                )
+                                success = self.backend_client.send_detection(event)
+                                if success:
+                                    self.logger.info(f"✓ {label.upper()} | Total: {session.detector.get_count()}")
+                                else:
+                                    self.logger.warning(f"✗ {label.upper()} no guardado")
+                            except Exception as e:
+                                self.logger.error(f"Error enviando detección: {e}")
+
+                # Publicar detecciones para el encoder
+                with session._detections_lock:
+                    session.last_detections = detections
+
+            except Exception as e:
+                if not session.is_running:
+                    break
+                self.logger.debug(f"YOLO: error en detección: {e}")
+
+        self.logger.info(f"YOLO detector terminado para sesión: {session_id}")
+
+    def _frame_processor(self, session_id: str):
+        """
+        Thread dedicado SOLO a encoding JPEG.
+        Nunca corre YOLO — toma detecciones del yolo thread y codifica a STREAM_MAX_FPS.
+        """
+        session = self.get_stream(session_id)
+        if not session or not session.video_source:
+            return
+
+        # Esperar primer frame
+        deadline = time.time() + 10.0
+        while session._current_frame is None and session.is_running and time.time() < deadline:
+            time.sleep(0.01)
+
+        if session._current_frame is None:
+            self.logger.error(f"Processor: no se recibió frame inicial para {session_id}")
+            return
+
+        with session._current_frame_lock:
+            first_frame = session._current_frame.copy()
+
+        height, width = first_frame.shape[:2]
+        line_y = height // 2
+        session.frame_width = width
+        session.frame_height = height
 
         try:
             fps = session.video_source.get_fps()
-            frame_delay = 1.0 / fps if fps > 0 else 1.0 / 30
-            self.logger.info(f"Grabber {session_id[:8]}: FPS={fps:.1f}")
+            self.logger.info(f"Processor {session_id[:8]}: source FPS={fps:.1f}")
         except Exception:
-            frame_delay = 1.0 / 30
+            pass
 
-        # Codificar y cachear primer frame ya disponible
+        # Codificar primer frame inmediatamente
         try:
             ret_enc, buf = cv2.imencode('.jpg', first_frame,
                                         [cv2.IMWRITE_JPEG_QUALITY, config.STREAM_JPEG_QUALITY])
             if ret_enc:
                 with session.last_frame_lock:
                     session.last_frame_bytes = buf.tobytes()
+                session.frame_event.set()
         except Exception as e:
-            self.logger.warning(f"Grabber: error al codificar primer frame: {e}")
+            self.logger.warning(f"Processor: error al codificar primer frame: {e}")
 
-        # Control de tasa de encoding (no queremos codificar cada frame si la fuente va rápido)
-        encode_interval = 1.0 / getattr(config, 'STREAM_MAX_FPS', 15)
+        encode_interval = 1.0 / getattr(config, 'STREAM_MAX_FPS', 20)
         last_encode_time = time.time()
-
-        frame = first_frame
-        frame_counter = 0
-        detect_every = getattr(config, 'DETECTION_SKIP_FRAMES', 1)
         max_width = getattr(config, 'STREAM_MAX_WIDTH', 0)
-        metrics_interval = getattr(config, 'METRICS_LOG_INTERVAL', 10)
-        frames_read = 0
+        metrics_interval = getattr(config, 'METRICS_LOG_INTERVAL', 20)
         frames_encoded = 0
         last_metrics = time.time()
 
         while session.is_running:
             try:
-                frame_start = time.time()
+                loop_start = time.time()
 
-                ret, frame = cap.read()
-                if not ret:
-                    self.logger.warning(f"Grabber: fin de stream {session_id}")
-                    break
+                # Tomar el frame más reciente
+                with session._current_frame_lock:
+                    frame = session._current_frame
+                if frame is None:
+                    time.sleep(0.005)
+                    continue
+                frame = frame.copy()
 
-                frames_read += 1
-                frame_counter += 1
+                # Tomar las últimas detecciones del yolo thread
+                with session._detections_lock:
+                    detections_to_draw = session.last_detections
 
-                # OPTIMIZACIÓN: Redimensionar ANTES de detección para reducir cálculo YOLO
-                # Este es el cuello de botella - reducir tamaño == detección más rápida
-                process_frame = frame
-                resize_scale = 1.0
-                if max_width and frame.shape[1] > max_width:
-                    resize_scale = max_width / float(frame.shape[1])
-                    process_frame = cv2.resize(frame, (int(frame.shape[1] * resize_scale), int(frame.shape[0] * resize_scale)))
-
-                vehicle_frame = frame  # Guardar frame original para codificar sin overlay
-                frame_copy_needed = False
-                detections_to_draw = session.last_detections  # Usar detecciones previas por defecto
-                
-                # Ejecutar detección solo cada N frames para ahorrar CPU
-                if detect_every <= 1 or (frame_counter % detect_every) == 0:
-                    try:
-                        session.detector.clean_old_detections()
-                        results = session.detector.detect(process_frame)
-                        detections = session.detector.get_vehicle_detections(results)
-
-                        # Escalar coordenadas de detecciones si se redimensionó
-                        if resize_scale != 1.0:
-                            detections = [(
-                                (int(x1/resize_scale), int(y1/resize_scale), int(x2/resize_scale), int(y2/resize_scale)),
-                                label, conf,
-                                int(cx/resize_scale), int(cy/resize_scale)
-                            ) for (x1, y1, x2, y2), label, conf, cx, cy in detections]
-
-                        # Actualizar detecciones guardadas
-                        session.last_detections = detections
-                        detections_to_draw = detections
-                        frame_copy_needed = len(detections) > 0
-                        
-                        # Procesar conteos de vehículos
-                        for (xyxy, label, conf, center_x, center_y) in detections:
-                            if session.detector.update_count(center_x, center_y, line_y):
-                                if self.backend_client and label in YOLO_TO_VEHICLE_TYPE:
-                                    try:
-                                        event = VehicleDetectedEvent(
-                                            vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
-                                            timestamp=datetime.now(ZoneInfo("America/Bogota")),
-                                            location_id=config.LOCATION_ID
-                                        )
-                                        success = self.backend_client.send_detection(event)
-                                        if success:
-                                            self.logger.info(f"✓ {label.upper()} | Total: {session.detector.get_count()}")
-                                        else:
-                                            self.logger.warning(f"✗ {label.upper()} no guardado")
-                                    except Exception as e:
-                                        self.logger.error(f"Error enviando detección: {e}")
-                    except Exception as e:
-                        self.logger.debug(f"Grabber: error en detección: {e}")
-                        session.last_detections = []
-                        detections_to_draw = []
-                        frame_copy_needed = False
-                else:
-                    # En frames sin detección, usar detecciones guardadas
-                    frame_copy_needed = detections_to_draw and len(detections_to_draw) > 0
-
-                # Dibujar overlay UNA SOLA VEZ en vehicle_frame si hay detecciones
-                # IMPORTANTE: NO dibujar en frame a codificar si fue resizeado (pérdida de datos)
-                if frame_copy_needed and detections_to_draw:
+                # Dibujar overlay con las detecciones disponibles
+                vehicle_frame = frame
+                if detections_to_draw:
                     vehicle_frame = frame.copy()
-                    
                     cv2.line(vehicle_frame, (0, line_y), (width, line_y),
                              config.LINE_COLOR, config.LINE_THICKNESS)
-
                     for (xyxy, label, conf, center_x, center_y) in detections_to_draw:
                         cv2.rectangle(vehicle_frame, (xyxy[0], xyxy[1]), (xyxy[2], xyxy[3]),
                                       config.BBOX_COLOR, config.BBOX_THICKNESS)
@@ -350,10 +454,10 @@ class StreamManager:
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
                         cv2.circle(vehicle_frame, (center_x, center_y), 4, (255, 0, 0), -1)
 
-                # Redimensionar para encoding SOLO si no se redimensionó antes
+                # Redimensionar para encoding
                 encode_frame = vehicle_frame
                 try:
-                    if max_width and resize_scale == 1.0:
+                    if max_width:
                         h, w = encode_frame.shape[:2]
                         if w > max_width:
                             scale = max_width / float(w)
@@ -361,7 +465,7 @@ class StreamManager:
                 except Exception:
                     pass
 
-                # Encode only at most at STREAM_MAX_FPS to reduce CPU/network
+                # Codificar a JPEG respetando STREAM_MAX_FPS
                 now_encode = time.time()
                 if now_encode - last_encode_time >= encode_interval:
                     try:
@@ -370,37 +474,37 @@ class StreamManager:
                         if ret_enc:
                             with session.last_frame_lock:
                                 session.last_frame_bytes = buf.tobytes()
+                            session.frame_event.set()
                             frames_encoded += 1
                             last_encode_time = now_encode
                     except Exception:
                         pass
 
-                # Log métricas periódicas
+                # Métricas periódicas
                 now = time.time()
                 if now - last_metrics >= metrics_interval:
-                    self.logger.info(f"Grabber {session_id[:8]} metrics - read/s={frames_read/ (now - last_metrics):.1f}, encoded/s={frames_encoded/ (now - last_metrics):.1f}, total_frames={frames_read}")
-                    frames_read = 0
+                    self.logger.info(
+                        f"Encoder {session_id[:8]}: encoded/s={frames_encoded / (now - last_metrics):.1f}"
+                    )
                     frames_encoded = 0
                     last_metrics = now
 
-                elapsed = time.time() - frame_start
-                sleep_time = max(0, frame_delay - elapsed)
+                # Dormir lo necesario para mantener STREAM_MAX_FPS
+                elapsed = time.time() - loop_start
+                sleep_time = max(0, encode_interval - elapsed)
                 if sleep_time > 0:
                     time.sleep(sleep_time)
 
             except Exception as e:
-                self.logger.error(f"Grabber: error en frame loop: {e}")
+                self.logger.error(f"Processor: error en loop: {e}")
                 break
 
-        self.logger.info(f"Grabber terminado para sesión: {session_id}")
+        self.logger.info(f"Processor terminado para sesión: {session_id}")
 
     def generate_frames(self, session_id: str) -> Generator[bytes, None, None]:
         """
-        Generador MJPEG. Lee frames del cache producido por _run_frame_grabber.
+        Generador MJPEG. Espera notificación del grabber para enviar frames.
         No accede a VideoCapture directamente (thread-safe).
-        
-        Estrategia: Enviar TODO frame disponible sin esperar (drenar buffer).
-        Si hay lag, es mejor mostrar video desfasado que acumularlo.
         """
         session = self.get_stream(session_id)
         if not session:
@@ -408,28 +512,19 @@ class StreamManager:
             return
 
         # Esperar primer frame (máx 5 s)
-        deadline = time.time() + 5.0
-        while not session.last_frame_bytes and session.is_running and time.time() < deadline:
-            time.sleep(0.05)
+        session.frame_event.wait(timeout=5.0)
 
-        # Delay mínimo para no sobrecargar CPU en el yield (pero muy bajo)
-        # Propósito: drenar buffer sin acumular
-        min_frame_delay = 0.01  # 10ms, suficiente para sock write
-        
-        last_frame_id = None
         while session.is_running:
+            # Esperar a que el grabber notifique un nuevo frame
+            session.frame_event.wait(timeout=1.0)
+            session.frame_event.clear()
+
             with session.last_frame_lock:
                 frame_bytes = session.last_frame_bytes
-                frame_id = id(frame_bytes)  # ID de objeto, no contenido
 
-            # Enviar frame SIEMPRE si es diferente (por referencia)
-            if frame_bytes and frame_id != last_frame_id:
+            if frame_bytes:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-                last_frame_id = frame_id
-
-            # Delay mínimo para evitar busy-loop (no sincronizar con FPS)
-            time.sleep(min_frame_delay)
 
         self.logger.info(f"Generador de frames terminado para sesión: {session_id}")
 
@@ -494,10 +589,14 @@ def stream_feed(session_id):
     if not session:
         return jsonify({"error": "Session not found"}), 404
     
-    return Response(
+    response = Response(
         stream_manager.generate_frames(session_id),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['X-Accel-Buffering'] = 'no'
+    response.headers['Connection'] = 'keep-alive'
+    return response
 
 
 @app.route('/stream/snapshot/<session_id>')
@@ -505,6 +604,10 @@ def stream_snapshot(session_id):
     """
     Retorna un único frame JPEG del stream activo.
     Usado como fallback para navegadores que no soportan MJPEG (Safari/iOS).
+
+    Parámetros query opcionales:
+        w: ancho máximo en px (ej. 640). Si el frame es más ancho, se redimensiona.
+        q: calidad JPEG 1-100 (default: calidad original del stream).
 
     Args:
         session_id: ID de la sesión
@@ -527,6 +630,22 @@ def stream_snapshot(session_id):
 
     if not frame_bytes:
         return jsonify({"error": "No frame available yet"}), 503
+
+    # Re-encode si el cliente pide ancho o calidad diferentes
+    req_width = request.args.get('w', type=int)
+    req_quality = request.args.get('q', type=int)
+    if req_width or req_quality:
+        import numpy as np
+        arr = np.frombuffer(frame_bytes, dtype=np.uint8)
+        img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        if img is not None:
+            if req_width and img.shape[1] > req_width:
+                scale = req_width / float(img.shape[1])
+                img = cv2.resize(img, (req_width, int(img.shape[0] * scale)))
+            quality = max(10, min(100, req_quality)) if req_quality else config.STREAM_JPEG_QUALITY
+            ret, buf = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, quality])
+            if ret:
+                frame_bytes = buf.tobytes()
 
     response = Response(frame_bytes, mimetype='image/jpeg')
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'

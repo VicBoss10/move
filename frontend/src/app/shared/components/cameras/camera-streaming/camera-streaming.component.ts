@@ -71,6 +71,9 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   /** Mensaje de error actual */
   errorMessage: string | null = null;
 
+  /** URL original del feed (para fallback a snapshot) */
+  private feedUrl: string | null = null;
+
   /** Modo snapshot para navegadores sin soporte MJPEG (Safari/iOS) */
   isSnapshotMode: boolean = false;
 
@@ -160,15 +163,22 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response: StreamResponse) => {
           this.sessionId = response.sessionId;
-          this.streamUrl = response.streamUrl;
           this.isStreaming = true;
           this.isLoading = false;
           
-          // SOLUCIÓN: Usar snapshot mode para TODOS (no acumula buffers como MJPEG)
-          // Safari/iOS: 1500ms (red lenta)
-          // Chrome/Firefox: 500ms (más responsivo)
-          this.isSnapshotMode = true;
-          this.startSnapshotPolling(response.streamUrl);
+          // MJPEG directo para todos excepto Safari/iOS (que tiene problemas con multipart).
+          // En móvil Android/Chrome MJPEG funciona igual que en escritorio.
+          // Si MJPEG falla, onStreamError() cae automáticamente a snapshot polling.
+          if (this.isSafariOrIos()) {
+            this.isSnapshotMode = true;
+            this.feedUrl = response.streamUrl;
+            this.streamUrl = null;
+            this.startSnapshotPolling(response.streamUrl);
+          } else {
+            this.isSnapshotMode = false;
+            this.feedUrl = response.streamUrl;
+            this.streamUrl = response.streamUrl;
+          }
           
           this.changeDetectorRef.markForCheck();
         },
@@ -216,10 +226,11 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   }
 
   onStreamError(): void {
-    if (this.isStreaming && this.streamUrl && !this.isSnapshotMode) {
+    if (this.isStreaming && this.feedUrl && !this.isSnapshotMode) {
       this.isSnapshotMode = true;
-      this.startSnapshotPolling(this.streamUrl);
-      this.changeDetectorRef.markForCheck();
+      this.streamUrl = null;
+      this.startSnapshotPolling(this.feedUrl);
+      this.changeDetectorRef.detectChanges();
     }
   }
 
@@ -229,45 +240,49 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/.test(ua));
   }
 
+  private isMobile(): boolean {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
   private startSnapshotPolling(mjpegUrl: string): void {
     const snapshotBase = mjpegUrl.replace('/stream/feed/', '/stream/snapshot/');
-    // Primer snapshot inmediato
-    this.snapshotUrl = `${snapshotBase}?t=${Date.now()}`;
+    // En móvil: pedir frame más pequeño (640px, quality 50) para transferir rápido
+    const mobile = this.isMobile();
+    const suffix = mobile ? '&w=640&q=50' : '';
 
-    // Preload pattern: create Image, wait load, then assign to avoid partial/cancelled renders.
-    // Sincronizar con STREAM_MAX_FPS (20 fps) del servidor para evitar lag acumulativo
-    // Safari/iOS: 1000ms (red lenta, no overload)
-    // Chrome/Firefox: 250ms (~4 fps, synced con servidor 20 fps, 5 frames gap)
-    const intervalMs = this.isSafariOrIos() ? 1000 : 250; // ms
-
-    this.snapshotIntervalRef = setInterval(() => {
-      // cancelar preload anterior si existe
-      if (this.pendingPreloadImg) {
-        this.pendingPreloadImg.onload = null;
-        this.pendingPreloadImg.onerror = null;
-        // let browser garbage collect
-        this.pendingPreloadImg = null;
-      }
+    // Ciclo secuencial: el siguiente request arranca inmediatamente al completar el anterior.
+    const scheduleNext = () => {
+      if (this.snapshotIntervalRef === null) return;
 
       const img = new Image();
       this.pendingPreloadImg = img;
+
       img.onload = () => {
-        // asignar sólo cuando la nueva imagen esté completamente cargada
+        this.pendingPreloadImg = null;
+        if (this.snapshotIntervalRef === null) return;
         this.snapshotUrl = img.src;
-        this.changeDetectorRef.markForCheck();
-        this.pendingPreloadImg = null;
+        this.changeDetectorRef.detectChanges();
+        // Sin delay: encadenar inmediatamente el siguiente frame
+        this.snapshotIntervalRef = setTimeout(scheduleNext, 0) as unknown as ReturnType<typeof setInterval>;
       };
+
       img.onerror = () => {
-        // si falla la carga, no tocar snapshotUrl (mantener último frame)
         this.pendingPreloadImg = null;
+        if (this.snapshotIntervalRef === null) return;
+        this.snapshotIntervalRef = setTimeout(scheduleNext, 300) as unknown as ReturnType<typeof setInterval>;
       };
-      img.src = `${snapshotBase}?t=${Date.now()}`;
-    }, intervalMs);
+
+      img.src = `${snapshotBase}?t=${Date.now()}${suffix}`;
+    };
+
+    // Primer snapshot inmediato
+    this.snapshotUrl = `${snapshotBase}?t=${Date.now()}${suffix}`;
+    this.snapshotIntervalRef = setTimeout(scheduleNext, 0) as unknown as ReturnType<typeof setInterval>;
   }
 
   private stopSnapshotPolling(): void {
     if (this.snapshotIntervalRef !== null) {
-      clearInterval(this.snapshotIntervalRef);
+      clearTimeout(this.snapshotIntervalRef as unknown as ReturnType<typeof setTimeout>);
       this.snapshotIntervalRef = null;
     }
     this.isSnapshotMode = false;
