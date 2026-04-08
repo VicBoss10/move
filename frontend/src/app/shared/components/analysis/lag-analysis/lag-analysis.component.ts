@@ -88,11 +88,20 @@ const MAX_LAG = 12;
  * en el contaminante k horas después.
  * Un lag positivo (k > 0) significa que el contaminante sube antes que el tráfico.
  *
- * Visualización: gráfico de barras (correlación vs. lag) + tabla de valores
- * + card interpretativa del lag óptimo.
+ * Características:
+ * - Gráfico de barras: correlación vs. rezago temporal
+ * - Tabla detallada de resultados por lag
+ * - Card interpretativa del lag óptimo
+ * - Filtros: período (3d/7d/30d) + métrica seleccionable
+ * - Dark mode support
  *
  * @selector app-lag-analysis
  * @standalone true
+ * @imports CommonModule, FormsModule, BaseChartDirective
+ * @returns Gráfico de análisis de rezagos con interpretación
+ *
+ * @example
+ * <app-lag-analysis />
  */
 @Component({
   selector: 'app-lag-analysis',

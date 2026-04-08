@@ -95,12 +95,20 @@ const PERIODS: { key: PeriodKey; label: string }[] = [
  * superpuesto con el conteo de vehículos detectados en el mismo período.
  * Permite identificar correlaciones entre tráfico y calidad del aire.
  *
- * Datos: SensorDataService + VehicleDetectedService
- * Gráfico: Chart.js dual-eje (contaminante izq. / vehículos der.)
- * Filtros: período (24h/7d/30d) + métrica seleccionable
+ * Características:
+ * - Gráfico de líneas dual-eje (contaminante izq. / vehículos der.)
+ * - Filtros: período (24h/7d/30d) + métrica seleccionable
+ * - Estadísticas: min/avg/max del contaminante + total de vehículos
+ * - Agregación horaria/4h/diaria según el período
+ * - Dark mode support
  *
  * @selector app-time-series
  * @standalone true
+ * @imports CommonModule, FormsModule, BaseChartDirective
+ * @returns Gráfico de series de tiempo con filtros
+ *
+ * @example
+ * <app-time-series />
  */
 @Component({
   selector: 'app-time-series',

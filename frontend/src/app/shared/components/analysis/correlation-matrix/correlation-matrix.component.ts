@@ -69,8 +69,20 @@ const SLOT_MS: Record<PeriodKey, number> = {
  * Los datos se agregan en slots temporales para parear mediciones de
  * sensores con conteos de vehículos en el mismo intervalo.
  *
+ * Características:
+ * - Matriz interactiva con tonos de color (correlación fuerte/moderada/nula)
+ * - Selección de período (24h/7d/30d)
+ * - Cálculo de Pearson con detalle de muestra
+ * - Leyenda interpretativa
+ * - Dark mode support
+ *
  * @selector app-correlation-matrix
  * @standalone true
+ * @imports CommonModule
+ * @returns Matriz de correlación interactiva
+ *
+ * @example
+ * <app-correlation-matrix />
  */
 @Component({
   selector: 'app-correlation-matrix',

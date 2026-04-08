@@ -83,8 +83,29 @@ const PERIODS: { key: PeriodKey; label: string; hours: number }[] = [
 
 const VEHICLE_COLOR = '#6366f1';
 
-// ── Componente ────────────────────────────────────────────────────────────────
-
+/**
+ * DataExportComponent (Smart Component)
+ *
+ * Herramienta interactiva para exportar reportes de análisis en formato PDF.
+ * Carga datos completos (sensor + vehículos + ubicaciones) y genera reportes
+ * con gráficos y estadísticas compiladas.
+ *
+ * Características:
+ * - Selección de métricas y períodos (24h/7d/30d)
+ * - Vista previa de datos antes de exportar
+ * - Generación de PDF con márgenes y estilos profesionales
+ * - Gráficos embebidos (series de tiempo, rezagos, ubicaciones)
+ * - Estadísticas resumidas por métrica
+ * - Dark mode support
+ *
+ * @selector app-data-export
+ * @standalone true
+ * @imports CommonModule, FormsModule
+ * @returns Panel de exportación con previsualizacion
+ *
+ * @example
+ * <app-data-export />
+ */
 @Component({
   selector: 'app-data-export',
   standalone: true,

@@ -81,16 +81,20 @@ const VEHICLE_COLOR = 'rgba(99,102,241,0.7)';
  * detectados por cada ubicación registrada en el sistema, para el período
  * de tiempo seleccionado.
  *
- * Visualización:
- *  1. Gráfico de barras agrupadas: contaminante + vehículos por ubicación.
- *  2. Tabla ranking con min/avg/max del contaminante y conteo de vehículos.
- *  3. Cards de ubicación destacada (mayor contaminación / más tráfico).
- *
- * Datos: LocationService (lista de ubicaciones) + SensorDataService
- *        (filtrado por locationId) + VehicleDetectedService (filtrado por locationId).
+ * Características:
+ * - Gráfico de barras agrupadas: contaminante + vehículos por ubicación
+ * - Tabla ranking: min/avg/max del contaminante + conteos vehiculares
+ * - Cards comparativas: ubicación más contaminada vs. más tráfico
+ * - Filtros: período (24h/7d/30d) + métrica seleccionable
+ * - Dark mode support
  *
  * @selector app-location-analysis
  * @standalone true
+ * @imports CommonModule, FormsModule, BaseChartDirective
+ * @returns Gráfico de comparación por ubicación
+ *
+ * @example
+ * <app-location-analysis />
  */
 @Component({
   selector: 'app-location-analysis',
