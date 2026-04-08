@@ -134,6 +134,11 @@ public class SensorDataService {
         sensorDataRepository.deleteById(id);
     }
 
+    public void deleteSensorDataByDeviceId(Integer deviceId) {
+        if (deviceId == null) return;
+        sensorDataRepository.deleteByDeviceId(deviceId);
+    }
+
     public List<SensorData> searchSensorData(SensorDataSearchCriteria criteria) {
         Specification<SensorData> spec = SensorDataSpecification.buildSpecification(criteria);
         

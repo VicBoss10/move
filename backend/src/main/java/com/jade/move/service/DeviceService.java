@@ -116,10 +116,36 @@ public class DeviceService {
         return deviceRepository.save(existing);
     }
 
+    @Transactional
     public void deleteDevice(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("Device id cannot be null");
         }
+
+        // Delete dependent Camera first if exists
+        try {
+            Camera camera = cameraService.getCameraByDeviceId(id);
+            if (camera != null) {
+                cameraService.deleteCamera(camera.getId());
+            }
+        } catch (Exception ignored) {
+            // Camera may not exist for this device
+        }
+
+        // Delete dependent Sensor first if exists
+        try {
+            Sensor sensor = sensorService.getSensorByDeviceId(id);
+            if (sensor != null) {
+                sensorService.deleteSensor(sensor.getId());
+            }
+        } catch (Exception ignored) {
+            // Sensor may not exist for this device
+        }
+
+        // Delete sensor data for this device
+        sensorDataService.deleteSensorDataByDeviceId(id);
+
+        // Finally delete the device
         deviceRepository.deleteById(id);
     }
 
@@ -237,22 +263,22 @@ public class DeviceService {
         log.info("Scheduling provisioning rollback for device {} in {} seconds", deviceId, provisioningTtlSeconds);
         scheduler.schedule(() -> {
             try {
+                log.info("Provisioning validation: Checking if ANY sensor data arrived for device {}", deviceId);
                 Optional<SensorData> latestOpt = sensorDataService.getLatestSensorDataByDeviceId(deviceId);
-                boolean hasRecent = latestOpt.isPresent() && latestOpt.get().getTimestamp().isAfter(registeredAt);
-
-                if (!hasRecent) {
-                    log.info("No sensor data received for device {} within TTL, performing rollback", deviceId);
-                    performProvisioningRollback(deviceId, sensorId, keycloakInternalId);
-                } else {
-                    log.info("Sensor data received for device {}; marking ACTIVE", deviceId);
+                
+                if (latestOpt.isPresent()) {
+                    log.info("✓ Sensor data found for device {}, marking ACTIVE", deviceId);
                     Device d = deviceRepository.findById(deviceId).orElse(null);
                     if (d != null) {
                         d.setState(DeviceState.ACTIVE);
                         deviceRepository.save(d);
                     }
+                } else {
+                    log.warn("✗ No sensor data for device {} after TTL, performing rollback", deviceId);
+                    performProvisioningRollback(deviceId, sensorId, keycloakInternalId);
                 }
             } catch (Exception e) {
-                log.error("Error during provisioning rollback check for device {}: {}", deviceId, e.getMessage());
+                log.error("Error during provisioning validation for device {}: {}", deviceId, e.getMessage(), e);
             }
         }, provisioningTtlSeconds, TimeUnit.SECONDS);
     }
@@ -260,13 +286,6 @@ public class DeviceService {
     @Transactional
     protected void performProvisioningRollback(Integer deviceId, Integer sensorId, String keycloakInternalId) {
         try {
-            // attempt to delete sensor first
-            try {
-                sensorService.deleteSensor(sensorId);
-            } catch (Exception e) {
-                log.warn("Failed to delete sensor {} during rollback: {}", sensorId, e.getMessage());
-            }
-
             // revoke keycloak client if available
             try {
                 keycloakAdminService.deleteClientByInternalId(keycloakInternalId);
@@ -274,9 +293,16 @@ public class DeviceService {
                 log.warn("Failed to delete Keycloak client {} during rollback: {}", keycloakInternalId, e.getMessage());
             }
 
-            // finally delete device record
+            // Ensure sensor data for this device is removed first to avoid FK violations
             try {
-                deviceRepository.deleteById(deviceId);
+                sensorDataService.deleteSensorDataByDeviceId(deviceId);
+            } catch (Exception e) {
+                log.warn("Failed to delete sensor_data for device {} during rollback: {}", deviceId, e.getMessage());
+            }
+
+            // Delete device using deleteDevice() which handles sensor/camera dependencies properly
+            try {
+                deleteDevice(deviceId);
             } catch (Exception e) {
                 log.warn("Failed to delete device {} during rollback: {}", deviceId, e.getMessage());
             }
