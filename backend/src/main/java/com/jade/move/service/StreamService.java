@@ -55,14 +55,19 @@ public class StreamService {
             throw new IllegalStateException("Device is not active. Current state: " + device.getState());
         }
 
-        Map<String, String> pythonRequest = new HashMap<>();
+        Map<String, Object> pythonRequest = new HashMap<>();
         pythonRequest.put("streamType", camera.getStreamType().name());
         pythonRequest.put("source", camera.getSource());
+        if (camera.getDevice() != null && camera.getDevice().getLocation() != null) {
+            Map<String, Object> loc = new HashMap<>();
+            loc.put("id", camera.getDevice().getLocation().getId());
+            pythonRequest.put("location", loc);
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(pythonRequest, headers);
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(pythonRequest, headers);
 
         try {
             ParameterizedTypeReference<Map<String, Object>> typeRef = new ParameterizedTypeReference<>() {};

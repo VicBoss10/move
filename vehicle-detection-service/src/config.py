@@ -54,6 +54,11 @@ LINE_THICKNESS = 2
 BBOX_COLOR = (0, 255, 0)
 BBOX_THICKNESS = 2
 
+# Píxeles desde la línea de conteo para dibujar bbox+texto completo.
+# Vehículos fuera de esta zona sólo muestran un punto pequeño.
+# Reduce llamadas a cv2.putText cuando hay muchos vehículos en pantalla.
+DRAW_PROXIMITY_PX = 100
+
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://api.moveiot.online")
 LOCATION_ID = 1
 BACKEND_TIMEOUT = 5
@@ -64,17 +69,17 @@ FLASK_PORT = int(os.environ.get("FLASK_PORT", "5000"))
 FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
 
 # Stream encoding a 20 fps
-STREAM_MAX_FPS = 20
+STREAM_MAX_FPS = 15
 # JPEG quality - 70 da buena calidad visual para 720p
-STREAM_JPEG_QUALITY = 70
+STREAM_JPEG_QUALITY = 60
 # Detectar cada 8 frames = ~2.5 detecciones/s, libera CPU para encoding
-DETECTION_SKIP_FRAMES = 3
+DETECTION_SKIP_FRAMES = 2
 
 # Redimensionar ancho máximo para encoding (1280 = 720p, buena calidad)
-STREAM_MAX_WIDTH = 1280
+STREAM_MAX_WIDTH = 640
 
 # Intervalo (segundos) para loguear métricas simples (fps, frames procesados)
-METRICS_LOG_INTERVAL = 20
+METRICS_LOG_INTERVAL = 120
 
 # Dispositivo para inferencia YOLO: 'cuda' si hay GPU disponible, sino 'cpu'
 YOLO_DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'

@@ -6,6 +6,7 @@ import logging
 import threading
 import time
 import uuid
+import queue
 from dataclasses import dataclass, asdict, field
 from typing import Dict, Optional, Generator, List, Tuple
 from datetime import datetime
@@ -48,9 +49,17 @@ class StreamSession:
     # Últimas detecciones (lista de tuples (xyxy, label, conf, cx, cy)) — escritas por yolo thread
     last_detections: Optional[List[Tuple]] = None
     _detections_lock: threading.Lock = field(default_factory=threading.Lock, compare=False, repr=False)
+    # Detecciones del frame anterior (para drawing deferido — evita lag en drawing)
+    prev_detections: Optional[List[Tuple]] = None
+    # Cola de eventos de detección para envío asíncrono al backend
+    detection_event_queue: queue.Queue = field(default_factory=queue.Queue, compare=False, repr=False)
+    # Contador de frames leídos — YOLO sólo procesa cuando cambia (evita trabajo redundante)
+    _frame_id: int = 0
     # Dimensiones originales del frame (antes de redimensionar)
     frame_width: int = 0
     frame_height: int = 0
+    # ID de la ubicación/cámara (si se proporcionó al iniciar la sesión)
+    location_id: Optional[int] = None
 
 
 class StreamManager:
@@ -63,7 +72,7 @@ class StreamManager:
         self.sessions: Dict[str, StreamSession] = {}
         self.lock = threading.Lock()
         self.logger = logging.getLogger(__name__)
-        
+            
         # Inicializar cliente backend para guardar detecciones
         self.backend_client = None
         if config.SEND_DETECTIONS_ENABLED:
@@ -76,7 +85,7 @@ class StreamManager:
             except Exception as e:
                 self.logger.warning(f"No se pudo inicializar backend client: {e}")
     
-    def create_stream(self, stream_type: str, source: str) -> Dict:
+    def create_stream(self, stream_type: str, source: str, location_id: Optional[int] = None) -> Dict:
         """
         Crea una nueva sesión de streaming.
         
@@ -121,7 +130,8 @@ class StreamManager:
                 created_at=datetime.now(ZoneInfo("America/Bogota")),
                 video_source=video_source,
                 detector=detector,
-                is_running=True
+                is_running=True,
+                location_id=location_id
             )
             
             with self.lock:
@@ -153,6 +163,16 @@ class StreamManager:
                 name=f"processor-{session_id[:8]}"
             )
             processor.start()
+
+            # Iniciar worker thread para envío de detecciones al backend (no bloquea YOLO thread)
+            if self.backend_client:
+                backend_worker = threading.Thread(
+                    target=self._backend_worker,
+                    args=(session_id,),
+                    daemon=True,
+                    name=f"backend-{session_id[:8]}"
+                )
+                backend_worker.start()
 
             self.logger.info(f"Stream creado: {session_id} ({stream_type}: {source})")
             return {
@@ -272,6 +292,7 @@ class StreamManager:
                     break
                 with session._current_frame_lock:
                     session._current_frame = frame
+                    session._frame_id += 1  # señal al YOLO: frame nuevo disponible
 
                 # Throttle: si cap.read() fue muy rápido (fuente HTTP/buffered),
                 # dormir para respetar el FPS original del video.
@@ -306,16 +327,22 @@ class StreamManager:
             time.sleep(0.01)
 
         max_width = getattr(config, 'STREAM_MAX_WIDTH', 0)
+        last_frame_id = -1  # ID del último frame procesado por YOLO
 
         while session.is_running:
             try:
                 with session._current_frame_lock:
+                    current_frame_id = session._frame_id
                     frame = session._current_frame
-                if frame is None:
-                    time.sleep(0.01)
+
+                # OPTIMIZACIÓN: sólo procesar si llegó un frame nuevo
+                # Evita que YOLO consuma CPU en el mismo frame repetidamente
+                if frame is None or current_frame_id == last_frame_id:
+                    time.sleep(0.005)
                     continue
 
                 frame = frame.copy()
+                last_frame_id = current_frame_id
 
                 # Redimensionar para YOLO (reduce carga de inferencia)
                 process_frame = frame
@@ -350,19 +377,18 @@ class StreamManager:
                 for (xyxy, label, conf, center_x, center_y) in detections:
                     if session.detector.update_count(center_x, center_y, line_y):
                         if self.backend_client and label in YOLO_TO_VEHICLE_TYPE:
+                            # Use session-specific location_id if available, otherwise fallback to config
+                            loc_id = session.location_id if getattr(session, 'location_id', None) else config.LOCATION_ID
+                            event = VehicleDetectedEvent(
+                                vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
+                                timestamp=datetime.now(ZoneInfo("America/Bogota")),
+                                location_id=loc_id
+                            )
+                            # Encolar el evento para envío asíncrono (no bloquea YOLO thread)
                             try:
-                                event = VehicleDetectedEvent(
-                                    vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
-                                    timestamp=datetime.now(ZoneInfo("America/Bogota")),
-                                    location_id=config.LOCATION_ID
-                                )
-                                success = self.backend_client.send_detection(event)
-                                if success:
-                                    self.logger.info(f"✓ {label.upper()} | Total: {session.detector.get_count()}")
-                                else:
-                                    self.logger.warning(f"✗ {label.upper()} no guardado")
-                            except Exception as e:
-                                self.logger.error(f"Error enviando detección: {e}")
+                                session.detection_event_queue.put_nowait((label, event))
+                            except queue.Full:
+                                self.logger.warning(f"YOLO: cola de eventos llena, descartando evento {label}")
 
                 # Publicar detecciones para el encoder
                 with session._detections_lock:
@@ -437,22 +463,36 @@ class StreamManager:
                     continue
                 frame = frame.copy()
 
-                # Tomar las últimas detecciones del yolo thread
+                # OPTIMIZACIÓN: Dibujar detecciones del frame ANTERIOR (1 frame de delay)
+                # Esto desacopla la ejecución de drawing de la ejecución de YOLO,
+                # evitando picos de CPU cuando ambas ocurren simultáneamente
                 with session._detections_lock:
-                    detections_to_draw = session.last_detections
+                    current_detections = session.last_detections
 
-                # Dibujar overlay con las detecciones disponibles
+                # Actualizar buffer de detecciones anteriores para próximo frame
+                detections_to_draw = session.prev_detections or current_detections
+                session.prev_detections = current_detections
+
+                # OPTIMIZACIÓN: Siempre dibujar la línea de conteo (barato)
+                # bbox+texto sólo cuando el vehículo está cerca de line_y
+                # (zona ±DRAW_PROXIMITY_PX px alrededor de la línea)
+                draw_proximity = getattr(config, 'DRAW_PROXIMITY_PX', height // 4)
                 vehicle_frame = frame
                 if detections_to_draw:
                     vehicle_frame = frame.copy()
                     cv2.line(vehicle_frame, (0, line_y), (width, line_y),
                              config.LINE_COLOR, config.LINE_THICKNESS)
                     for (xyxy, label, conf, center_x, center_y) in detections_to_draw:
-                        cv2.rectangle(vehicle_frame, (xyxy[0], xyxy[1]), (xyxy[2], xyxy[3]),
-                                      config.BBOX_COLOR, config.BBOX_THICKNESS)
-                        cv2.putText(vehicle_frame, f"{label} {conf:.2f}", (xyxy[0], xyxy[1] - 10),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-                        cv2.circle(vehicle_frame, (center_x, center_y), 4, (255, 0, 0), -1)
+                        # Dibujar bbox + texto sólo si el centro está dentro de la zona de la línea
+                        if abs(center_y - line_y) <= draw_proximity:
+                            cv2.rectangle(vehicle_frame, (xyxy[0], xyxy[1]), (xyxy[2], xyxy[3]),
+                                          config.BBOX_COLOR, config.BBOX_THICKNESS)
+                            cv2.putText(vehicle_frame, f"{label} {conf:.2f}", (xyxy[0], xyxy[1] - 10),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                            cv2.circle(vehicle_frame, (center_x, center_y), 4, (255, 0, 0), -1)
+                        else:
+                            # Fuera de zona: sólo punto pequeño para indicar presencia
+                            cv2.circle(vehicle_frame, (center_x, center_y), 3, config.BBOX_COLOR, -1)
 
                 # Redimensionar para encoding
                 encode_frame = vehicle_frame
@@ -500,6 +540,45 @@ class StreamManager:
                 break
 
         self.logger.info(f"Processor terminado para sesión: {session_id}")
+
+    def _backend_worker(self, session_id: str):
+        """
+        Worker thread dedicado a procesar la cola de eventos de detección
+        y enviarlos al backend de forma asíncrona (no bloquea YOLO/processor threads).
+        
+        Esta separación es crítica: evita que HTTP I/O bloquee la detección o
+        el encoding JPEG, que son operaciones en tiempo real.
+        """
+        session = self.get_stream(session_id)
+        if not session:
+            return
+
+        while session.is_running:
+            try:
+                # Intentar obtener evento de la cola con timeout
+                # (si no hay evento, espera 100ms y vuelve a intentar)
+                try:
+                    label, event = session.detection_event_queue.get(timeout=0.1)
+                except queue.Empty:
+                    continue
+
+                # Enviar evento al backend (puede bloquearse, pero en un thread aparte)
+                if self.backend_client:
+                    try:
+                        success = self.backend_client.send_detection(event)
+                        if success:
+                            self.logger.info(f"✓ {label.upper()} | Total: {session.detector.get_count()}")
+                        else:
+                            self.logger.warning(f"✗ {label.upper()} no guardado")
+                    except Exception as e:
+                        self.logger.error(f"Backend worker: error enviando detección: {e}")
+
+            except Exception as e:
+                if not session.is_running:
+                    break
+                self.logger.debug(f"Backend worker: error procesando cola: {e}")
+
+        self.logger.info(f"Backend worker terminado para sesión: {session_id}")
 
     def generate_frames(self, session_id: str) -> Generator[bytes, None, None]:
         """
@@ -562,7 +641,20 @@ def start_stream():
         if stream_type not in valid_types:
             return jsonify({"error": f"Invalid streamType. Must be one of: {valid_types}"}), 400
         
-        result = stream_manager.create_stream(stream_type, source)
+        # Optional: allow caller to provide a location id for this camera/session
+        location_id = None
+        if isinstance(data.get('location'), dict):
+            try:
+                location_id = int(data['location'].get('id'))
+            except Exception:
+                location_id = None
+        else:
+            try:
+                location_id = int(data.get('location_id') or data.get('location') or 0) or None
+            except Exception:
+                location_id = None
+
+        result = stream_manager.create_stream(stream_type, source, location_id=location_id)
         
         if "error" in result:
             return jsonify(result), 400
