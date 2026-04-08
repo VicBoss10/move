@@ -29,7 +29,7 @@ public class SecurityConfig {
         // Solo aplicar OAuth2 a los endpoints que necesitan protección
         // POST /users está EXCLUIDO de aquí - es completamente público
         http.securityMatcher("/users", "/users/**", "/devices", "/devices/**", "/locations", "/locations/**",
-                "/vehicles", "/vehicles/**", "/cameras", "/cameras/**", "/sensor-data", "/sensor-data/**", "/stream/**")
+                "/vehicles", "/vehicles/**", "/cameras", "/cameras/**", "/sensordata", "/sensordata/**", "/stream/**")
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {
                 })
