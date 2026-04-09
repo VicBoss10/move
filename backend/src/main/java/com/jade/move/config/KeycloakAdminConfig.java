@@ -35,7 +35,6 @@ public class KeycloakAdminConfig {
         // Use admin client id from property (default 'admin-cli')
         Objects.requireNonNull(adminClientId, "keycloak.admin-client-id is required");
 
-        // Authenticate against the master realm using resource owner password credentials
         return KeycloakBuilder.builder()
             .serverUrl(serverUrl)
             .realm("master")
