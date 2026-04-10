@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { map, shareReplay, catchError } from 'rxjs/operators';
+import { map, shareReplay, catchError, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { HttpParams } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { SensorData, SensorDataSearchCriteria, SensorStats } from '../models/sensor-data.model';
@@ -128,6 +129,30 @@ export class SensorDataService extends BaseDataService<SensorData> {
       return cached[cached.length - 1];
     }
     return null;
+  }
+
+  deleteAll(): Observable<any> {
+    return this.apiService.deleteText(`/${this.endpoint}`).pipe(
+      tap(() => this.invalidateCache())
+    );
+  }
+
+  deleteByDateRange(start: Date, end: Date): Observable<any> {
+    const params = new HttpParams()
+      .set('start', start.toISOString())
+      .set('end', end.toISOString());
+    return this.apiService['http'].delete(
+      `${this.apiService['apiUrl']}/${this.endpoint}/range`,
+      { params, responseType: 'text' }
+    ).pipe(tap(() => this.invalidateCache()));
+  }
+
+  getFirstRecord(): Observable<SensorData> {
+    return this.apiService.get<SensorData>(`/${this.endpoint}/first`);
+  }
+
+  getLastRecord(): Observable<SensorData> {
+    return this.apiService.get<SensorData>(`/${this.endpoint}/last`);
   }
 
   /**

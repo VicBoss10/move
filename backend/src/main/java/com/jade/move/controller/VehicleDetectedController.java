@@ -129,4 +129,28 @@ public class VehicleDetectedController {
         vehicleDetectedService.deleteVehicleDetected(id);
         return ResponseEntity.ok("VehicleDetected deleted successfully with id: " + id);
     }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteAllVehicleDetected() {
+        vehicleDetectedService.deleteAllVehicleDetected();
+        return ResponseEntity.ok("All vehicle detections deleted successfully");
+    }
+
+    @DeleteMapping("/range")
+    public ResponseEntity<?> deleteVehicleDetectedByRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        vehicleDetectedService.deleteVehicleDetectedByDateRange(start, end);
+        return ResponseEntity.ok("Vehicle detections deleted for range " + start + " - " + end);
+    }
+
+    @GetMapping("/first")
+    public ResponseEntity<?> getFirstVehicleDetected() {
+        return ResponseEntity.ok(vehicleDetectedService.getFirstRecord());
+    }
+
+    @GetMapping("/last")
+    public ResponseEntity<?> getLastVehicleDetected() {
+        return ResponseEntity.ok(vehicleDetectedService.getLastRecord());
+    }
 }

@@ -179,4 +179,28 @@ public class SensorDataController {
         sensorDataService.deleteSensorData(id);
         return ResponseEntity.ok("Sensor data deleted successfully with id: " + id);
     }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteAllSensorData() {
+        sensorDataService.deleteAllSensorData();
+        return ResponseEntity.ok("All sensor data deleted successfully");
+    }
+
+    @DeleteMapping("/range")
+    public ResponseEntity<?> deleteSensorDataByRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        sensorDataService.deleteSensorDataByDateRange(start, end);
+        return ResponseEntity.ok("Sensor data deleted for range " + start + " - " + end);
+    }
+
+    @GetMapping("/first")
+    public ResponseEntity<?> getFirstSensorData() {
+        return ResponseEntity.ok(sensorDataService.getFirstRecord());
+    }
+
+    @GetMapping("/last")
+    public ResponseEntity<?> getLastSensorData() {
+        return ResponseEntity.ok(sensorDataService.getLastRecord());
+    }
 }

@@ -104,7 +104,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       subItems: [
         { name: "Usuarios", path: "/dashboard/configuration/users" },
         { name: "Umbrales de Alerta", path: "/dashboard/configuration/alert-thresholds" },
-        { name: "Parámetros del Sistema", path: "/dashboard/configuration/system-params" },
+        { name: "Eliminar Datos", path: "/dashboard/configuration/delete-data" },
       ],
     },
     {

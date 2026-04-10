@@ -139,6 +139,23 @@ public class SensorDataService {
         sensorDataRepository.deleteByDeviceId(deviceId);
     }
 
+    public void deleteAllSensorData() {
+        sensorDataRepository.deleteAll();
+    }
+
+    public void deleteSensorDataByDateRange(LocalDateTime start, LocalDateTime end) {
+        if (start == null || end == null) throw new IllegalArgumentException("start and end cannot be null");
+        sensorDataRepository.deleteByTimestampBetween(start, end);
+    }
+
+    public SensorData getFirstRecord() {
+        return sensorDataRepository.findFirstByOrderByTimestampAsc();
+    }
+
+    public SensorData getLastRecord() {
+        return sensorDataRepository.findFirstByOrderByTimestampDesc();
+    }
+
     public List<SensorData> searchSensorData(SensorDataSearchCriteria criteria) {
         Specification<SensorData> spec = SensorDataSpecification.buildSpecification(criteria);
         

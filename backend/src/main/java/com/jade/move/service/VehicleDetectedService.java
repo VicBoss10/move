@@ -79,4 +79,21 @@ public class VehicleDetectedService {
         Specification<VehicleDetected> spec = VehicleDetectedSpecification.buildSpecification(criteria);
         return vehicleDetectedRepository.findAll(spec);
     }
+
+    public void deleteAllVehicleDetected() {
+        vehicleDetectedRepository.deleteAll();
+    }
+
+    public void deleteVehicleDetectedByDateRange(LocalDateTime start, LocalDateTime end) {
+        if (start == null || end == null) throw new IllegalArgumentException("start and end cannot be null");
+        vehicleDetectedRepository.deleteByTimestampBetween(start, end);
+    }
+
+    public VehicleDetected getFirstRecord() {
+        return vehicleDetectedRepository.findFirstByOrderByTimestampAsc();
+    }
+
+    public VehicleDetected getLastRecord() {
+        return vehicleDetectedRepository.findFirstByOrderByTimestampDesc();
+    }
 }

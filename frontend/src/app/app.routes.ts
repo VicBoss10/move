@@ -40,7 +40,7 @@ import { DeviceStatusComponent } from './pages/devices/device-status/device-stat
 import { DeviceLogsComponent } from './pages/devices/device-logs/device-logs.component';
 import { UsersComponent } from './pages/configuration/users/users.component';
 import { AlertThresholdsComponent } from './pages/configuration/alert-thresholds/alert-thresholds.component';
-import { SystemParamsComponent } from './pages/configuration/system-params/system-params.component';
+import { DeleteDataComponent } from './pages/configuration/delete-data/delete-data.component';
 import { TimeSeriesPageComponent } from './pages/analysis/time-series/time-series-page.component';
 import { CorrelationPageComponent } from './pages/analysis/correlation/correlation-page.component';
 import { LagPageComponent } from './pages/analysis/lag/lag-page.component';
@@ -161,9 +161,9 @@ const DASHBOARD_ROUTES: Routes = [
         title: 'Umbrales de Alerta'
       },
       {
-        path: 'system-params',
-        component: SystemParamsComponent,
-        title: 'Parámetros del Sistema'
+        path: 'delete-data',
+        component: DeleteDataComponent,
+        title: 'Eliminar Datos'
       }
     ]
   },

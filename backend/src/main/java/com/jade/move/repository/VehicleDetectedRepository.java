@@ -16,4 +16,11 @@ public interface VehicleDetectedRepository extends JpaRepository<VehicleDetected
     List<VehicleDetected> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
     List<VehicleDetected> findByVehicleTypeAndTimestampBetween(VehicleType vehicleType, LocalDateTime start, LocalDateTime end);
     List<VehicleDetected> findByLocationIdAndTimestampBetween(Integer locationId, LocalDateTime start, LocalDateTime end);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByTimestampBetween(LocalDateTime start, LocalDateTime end);
+
+    VehicleDetected findFirstByOrderByTimestampAsc();
+    VehicleDetected findFirstByOrderByTimestampDesc();
 }
