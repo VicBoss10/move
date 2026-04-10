@@ -18,6 +18,7 @@ import { ImagesComponent } from './pages/ui-elements/images/images.component';
 import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { authRedirectGuard } from './core/guards/auth-redirect.guard';
+import { roleGuard } from './core/guards/role.guard';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { LandingComponent } from './pages/landing/landing.component';
@@ -128,22 +129,30 @@ const DASHBOARD_ROUTES: Routes = [
       {
         path: 'register-device',
         component: RegisterDeviceComponent,
-        title: 'Registrar Dispositivo'
+        title: 'Registrar Dispositivo',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'connected-sensors',
         component: ConnectedSensorsComponent,
-        title: 'Sensores Conectados'
+        title: 'Sensores Conectados',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'device-status',
         component: DeviceStatusComponent,
-        title: 'Estado de Dispositivos'
+        title: 'Estado de Dispositivos',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'device-logs',
         component: DeviceLogsComponent,
-        title: 'Logs del Sistema'
+        title: 'Logs del Sistema',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       }
     ]
   },
@@ -153,17 +162,23 @@ const DASHBOARD_ROUTES: Routes = [
       {
         path: 'users',
         component: UsersComponent,
-        title: 'Usuarios'
+        title: 'Usuarios',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'alert-thresholds',
         component: AlertThresholdsComponent,
-        title: 'Umbrales de Alerta'
+        title: 'Umbrales de Alerta',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'delete-data',
         component: DeleteDataComponent,
-        title: 'Eliminar Datos'
+        title: 'Eliminar Datos',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       }
     ]
   },
@@ -173,27 +188,37 @@ const DASHBOARD_ROUTES: Routes = [
       {
         path: 'time-series',
         component: TimeSeriesPageComponent,
-        title: 'Series Temporales'
+        title: 'Series Temporales',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'correlation',
         component: CorrelationPageComponent,
-        title: 'Matriz de Correlación'
+        title: 'Matriz de Correlación',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'lag',
         component: LagPageComponent,
-        title: 'Rezagos / Cross-correlation'
+        title: 'Rezagos / Cross-correlation',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'locations',
         component: LocationsAnalysisPageComponent,
-        title: 'Análisis por Ubicación'
+        title: 'Análisis por Ubicación',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'export-data',
         component: DataExportPageComponent,
-        title: 'Exportar Datos'
+        title: 'Exportar Datos',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       }
     ]
   },
@@ -203,17 +228,23 @@ const DASHBOARD_ROUTES: Routes = [
       {
         path: 'how-it-works',
         component: HowItWorksPageComponent,
-        title: 'Cómo Funciona'
+        title: 'Cómo Funciona',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'faq',
         component: FaqPageComponent,
-        title: 'Preguntas Frecuentes'
+        title: 'Preguntas Frecuentes',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'architecture',
         component: ArchitecturePageComponent,
-        title: 'Arquitectura del Sistema'
+        title: 'Arquitectura del Sistema',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       }
     ]
   },
@@ -223,17 +254,23 @@ const DASHBOARD_ROUTES: Routes = [
       {
         path: 'register-location',
         component: RegisterLocationComponent,
-        title: 'Registrar Ubicación'
+        title: 'Registrar Ubicación',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'monitoring',
         component: LocationMonitoringComponent,
-        title: 'Puntos de Monitoreo'
+        title: 'Puntos de Monitoreo',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       {
         path: 'history',
         component: LocationHistoryComponent,
-        title: 'Histórico de Ubicaciones'
+        title: 'Histórico de Ubicaciones',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       }
     ]
   },
