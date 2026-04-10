@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
-import { ENV_THRESHOLDS, getEnvironmentStatus, EnvironmentMetricKey } from '../../../../core/config/environment-thresholds.config';
+import { ENV_THRESHOLDS, getEnvironmentStatus, EnvironmentMetricKey, getMetricGaugePercentage } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -29,6 +29,7 @@ interface GasIndicator {
   statusBgClass: string;
   statusTextClass: string;
   color: string;
+  metricKey: EnvironmentMetricKey;
 }
 
 /**
@@ -118,6 +119,7 @@ export class GasIndicatorsComponent {
             statusBgClass: status.bgClass,
             statusTextClass: status.textClass,
             color: status.color,
+            metricKey: cfg.key,
           };
         });
 
@@ -137,7 +139,16 @@ export class GasIndicatorsComponent {
    * @returns {number} Porcentaje 0-100
    */
   getPercentage(gas: GasIndicator): number {
-    return ((gas.value - gas.min) / (gas.max - gas.min)) * 100;
+    // Use centralized helper that already clamps to 0-100 and respects metric scale
+    try {
+      return getMetricGaugePercentage(gas.metricKey, gas.value);
+    } catch (e) {
+      // Fallback: safe clamp
+      const range = gas.max - gas.min;
+      if (range === 0) return 0;
+      const pct = ((gas.value - gas.min) / range) * 100;
+      return Math.max(0, Math.min(100, pct));
+    }
   }
 
   /**
