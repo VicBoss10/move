@@ -89,6 +89,7 @@
             </select>
           </div>
         </div>
+        
       </div>
 
       <!-- Step 3: Camera-Specific Configuration -->
@@ -143,42 +144,92 @@
         </div>
       </div>
 
-      <!-- Step 4: Sensor-Specific Configuration -->
+      <!-- Step 4: Sensor-Specific Configuration (Informational) -->
       <div *ngIf="(selectedType$ | async) === 'SENSOR'" class="pb-6 border-b border-gray-200 dark:border-gray-700">
-        <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
-          <p class="text-purple-900 dark:text-purple-300 text-sm font-medium">Conecte el sensor a una fuente de energía</p>
-          <p class="text-purple-700 dark:text-purple-400 text-xs mt-1">Cuando el dispositivo esté encendido, proceda a buscarlo</p>
-        </div>
-        <!-- STEP A: Buscar dispositivo via BLE -->
-        <div class="mt-3">
-          <button type="button" (click)="findAndConnectDevice()" class="px-4 py-2 rounded-lg bg-brand-500 text-white">Buscar dispositivo</button>
-          <span *ngIf="isBleConnecting$ | async" class="ml-3 text-sm text-gray-600">Conectando...</span>
-        </div>
-
-        <div *ngIf="bleDeviceName" class="mt-3 p-3 border rounded-md bg-white dark:bg-gray-800">
-          <p class="text-sm font-medium">Dispositivo seleccionado: {{ bleDeviceName }}</p>
-          <button type="button" (click)="deselectBleDevice()" class="mt-2 text-sm text-red-600">Deseleccionar</button>
-        </div>
-
-        <div *ngIf="bleDeviceName" class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
-          <div>
-            <label for="wifiSsid" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Wi‑Fi SSID</label>
-            <input id="wifiSsid" type="text" formControlName="wifiSsid" placeholder="Nombre de la red" class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white" />
-          </div>
-
-          <div>
-            <label for="wifiPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Wi‑Fi Password</label>
-            <input id="wifiPassword" type="password" formControlName="wifiPassword" placeholder="Contraseña Wi‑Fi" class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white" />
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">La contraseña no se guardará en el servidor; se envía solo para provisioning</p>
+        <div class="bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            <div class="lg:col-span-1">
+              <p class="text-brand-900 dark:text-white text-base font-semibold">1) Conectar sensor a la fuente de energía</p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">
+                Conecta el sensor a una fuente de alimentación estable (5V/2A recomendados). Tras conectar, el LED rojo del dispositivo debe encenderse de forma fija.
+              </p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 font-medium">Si el LED no enciende, prueba lo siguiente:</p>
+              <ul class="list-inside list-disc text-gray-600 dark:text-gray-400 text-sm mt-1 space-y-1">
+                <li>Verifica que el cable USB esté en buen estado y correctamente conectado.</li>
+                <li>Usa otra fuente de alimentación (otro adaptador o puerto USB).</li>
+                <li>Prueba con otro cable compatible (datos/charging).</li>
+                <li>Si persiste, reinicia el sensor desconectando y volviendo a conectar la alimentación.</li>
+              </ul>
+              <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">Una vez el sensor esté alimentado y con el LED encendido, continúa con el paso de provisioning mediante el portal cautivo del dispositivo (ver pasos posteriores).</p>
+            </div>
+            <div class="flex items-center justify-center h-full">
+              <img src="/images/device-conection/Conectar.png" alt="Conexión dispositivo" class="w-56 h-auto rounded-md shadow-sm" />
+            </div>
           </div>
         </div>
-        
-        <!-- Show Keycloak credentials if present (after registration) -->
-        <div *ngIf="successMessage$ | async as sMsg" class="mt-4">
-          <div *ngIf="sMsg && sMsg.includes('clientId')" class="p-4 border rounded-md bg-yellow-50 dark:bg-yellow-900/10">
-            <p class="font-medium text-sm">Credenciales Keycloak generadas:</p>
-            <pre class="mt-2 text-xs text-gray-700 dark:text-gray-300">{{ sMsg }}</pre>
-            <p class="text-xs text-gray-500 mt-2">Copia estas credenciales y envíalas por BLE al dispositivo durante el provisioning. No las compartas públicamente.</p>
+        <!-- Step 2: Captive portal -->
+        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            <div class="lg:col-span-1">
+              <p class="text-brand-900 dark:text-white text-base font-semibold">2) Portal cautivo y LED indicador</p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Cuando el portal cautivo esté activo, el LED azul del dispositivo parpadeará — eso indica que la red cautiva está lista para conectarse desde tu teléfono u ordenador.</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 font-medium">Conectar al portal:</p>
+              <ol class="list-inside list-decimal text-gray-600 dark:text-gray-400 text-sm mt-1 space-y-1 pl-4">
+                <li>En tu teléfono busca la red Wi‑Fi del sensor (ej. MOVE-XXXX).</li>
+                <li>Conéctate a la red; abre el navegador y serás redirigido al portal cautivo.</li>
+                <li>Sigue las instrucciones del portal para configurar la red local y credenciales del sensor.</li>
+              </ol>
+              <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">Si el LED azul no parpadea: espera hasta 30s, verifica la alimentación y reinicia el sensor. Si persiste, contacta soporte.</p>
+            </div>
+            <div class="flex items-center justify-center h-full">
+              <img src="/images/device-conection/Portal.png" alt="Portal cautivo" class="w-56 h-auto rounded-md shadow-sm" />
+            </div>
+          </div>
+        </div>
+        <!-- Step 3: Validación de credenciales Wi-Fi -->
+        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            <div class="lg:col-span-1">
+              <p class="text-brand-900 dark:text-white text-base font-semibold">3) Validación de credenciales Wi‑Fi</p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Mientras el sensor valida las credenciales Wi‑Fi proporcionadas por el portal, ambos LEDs (rojo y azul) permanecerán encendidos de forma fija. Esto indica que el dispositivo está comprobando la conectividad con la red local.</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Tiempo estimado: 10–30 segundos. Si la validación tarda más de 60s, intenta los pasos de resolución de errores.</p>
+            </div>
+            <div class="flex items-center justify-center h-full">
+              <img src="/images/device-conection/Portal.png" alt="Validación Wi-Fi" class="w-56 h-auto rounded-md shadow-sm" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Registro exitoso -->
+        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            <div class="lg:col-span-1">
+              <p class="text-brand-900 dark:text-white text-base font-semibold">4) Registro completado</p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Si la validación es correcta, el sensor se conectará a la red y comenzará a enviar datos. En este estado los LEDs se estabilizarán (luz verde fija o ambos LEDs en estado estable) y el portal cautivo cerrará la sesión.</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Paso siguiente: verifica en la aplicación que el dispositivo aparece en la lista de ubicaciones y comprueba lecturas iniciales desde la pantalla de indicadores.</p>
+            </div>
+            <div class="flex items-center justify-center h-full">
+              <img src="/images/device-conection/Conectar.png" alt="Registro completado" class="w-56 h-auto rounded-md shadow-sm" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Error y resolución -->
+        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            <div class="lg:col-span-1">
+              <p class="text-brand-900 dark:text-white text-base font-semibold">5) Error de conexión y resolución</p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Si la validación falla, realiza los siguientes pasos:</p>
+              <ul class="list-inside list-disc text-gray-600 dark:text-gray-400 text-sm mt-2 space-y-1 pl-4">
+                <li>Revisa que el SSID y la contraseña ingresados en el portal sean correctos.</li>
+                <li>Asegúrate de que la señal Wi‑Fi sea suficientemente fuerte donde está el sensor.</li>
+                <li>Reinicia el sensor y repite el proceso desde el portal cautivo.</li>
+                <li>Si todo falla, contacta soporte con el ID del sensor y una foto del estado de los LEDs.</li>
+              </ul>
+            </div>
+            <div class="flex items-center justify-center h-full">
+              <img src="/images/device-conection/Conectar.png" alt="Error resolución" class="w-56 h-auto rounded-md shadow-sm" />
+            </div>
           </div>
         </div>
       </div>
