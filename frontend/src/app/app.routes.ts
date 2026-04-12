@@ -131,28 +131,28 @@ const DASHBOARD_ROUTES: Routes = [
         component: RegisterDeviceComponent,
         title: 'Registrar Dispositivo',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'connected-sensors',
         component: ConnectedSensorsComponent,
         title: 'Sensores Conectados',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'device-status',
         component: DeviceStatusComponent,
         title: 'Estado de Dispositivos',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'device-logs',
         component: DeviceLogsComponent,
         title: 'Logs del Sistema',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       }
     ]
   },
@@ -164,21 +164,21 @@ const DASHBOARD_ROUTES: Routes = [
         component: UsersComponent,
         title: 'Usuarios',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'alert-thresholds',
         component: AlertThresholdsComponent,
         title: 'Umbrales de Alerta',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'delete-data',
         component: DeleteDataComponent,
         title: 'Eliminar Datos',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       }
     ]
   },
@@ -190,35 +190,35 @@ const DASHBOARD_ROUTES: Routes = [
         component: TimeSeriesPageComponent,
         title: 'Series Temporales',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'correlation',
         component: CorrelationPageComponent,
         title: 'Matriz de Correlación',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'lag',
         component: LagPageComponent,
         title: 'Rezagos / Cross-correlation',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'locations',
         component: LocationsAnalysisPageComponent,
         title: 'Análisis por Ubicación',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'export-data',
         component: DataExportPageComponent,
         title: 'Exportar Datos',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       }
     ]
   },
@@ -230,21 +230,21 @@ const DASHBOARD_ROUTES: Routes = [
         component: HowItWorksPageComponent,
         title: 'Cómo Funciona',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'faq',
         component: FaqPageComponent,
         title: 'Preguntas Frecuentes',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'architecture',
         component: ArchitecturePageComponent,
         title: 'Arquitectura del Sistema',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       }
     ]
   },
@@ -256,24 +256,24 @@ const DASHBOARD_ROUTES: Routes = [
         component: RegisterLocationComponent,
         title: 'Registrar Ubicación',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'monitoring',
         component: LocationMonitoringComponent,
         title: 'Puntos de Monitoreo',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       },
       {
         path: 'history',
         component: LocationHistoryComponent,
         title: 'Histórico de Ubicaciones',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] }
+        data: { roles: ['admin'] }
       }
     ]
-  },
+  },  
   {
     path: 'calendar',
     component: CalenderComponent,
