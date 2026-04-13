@@ -29,7 +29,7 @@ public class SecurityConfig {
         // Solo aplicar OAuth2 a los endpoints que necesitan protección
         // POST /users está EXCLUIDO de aquí - es completamente público
         http.securityMatcher("/users", "/users/**", "/devices", "/devices/**", "/locations", "/locations/**",
-                "/vehicles", "/vehicles/**", "/cameras", "/cameras/**", "/sensordata", "/sensordata/**", "/stream/**")
+                "/vehicles", "/vehicles/**", "/cameras", "/cameras/**", "/sensors", "/sensors/**", "/sensordata", "/sensordata/**", "/stream/**")
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {
                 })
@@ -77,6 +77,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/cameras").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/cameras/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/cameras/**").hasRole("ADMIN")
+                        
+                        // Endpoints Protegidos - Sensors
+                        .requestMatchers(HttpMethod.GET, "/sensors").hasAnyRole("ADMIN", "USER", "DEVICE")
+                        .requestMatchers(HttpMethod.GET, "/sensors/**").hasAnyRole("ADMIN", "USER", "DEVICE")                        
+                        .requestMatchers(HttpMethod.POST, "/sensors").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/sensors").hasAnyRole("ADMIN", "DEVICE")
+                        .requestMatchers(HttpMethod.DELETE, "/sensors/**").hasRole("ADMIN")
 
                         // Endpoints Protegidos - Sensor Data
                         .requestMatchers(HttpMethod.GET, "/sensordata").hasAnyRole("ADMIN", "USER")
