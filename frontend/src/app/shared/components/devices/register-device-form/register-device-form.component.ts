@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -57,6 +57,10 @@ export class RegisterDeviceFormComponent implements OnDestroy {
   successMessage$ = new BehaviorSubject<string | null>(null);
   errorMessage$ = new BehaviorSubject<string | null>(null);
   selectedType$ = new BehaviorSubject<string>('');
+  // Captive portal LED simulation
+  captiveLedSrc = '/images/device-conection/LEDR.png';
+  private _captiveLedToggle = false;
+  private captiveLedInterval: any = null;
 
   locations$: Observable<any[]>;
 
@@ -85,6 +89,8 @@ export class RegisterDeviceFormComponent implements OnDestroy {
     private apiService: ApiService,
     private router: Router,
     private toastService: ToastService
+    ,
+    private cdr: ChangeDetectorRef
   ) {
     this.deviceForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), this.trimmedTextValidator()]],
@@ -114,7 +120,37 @@ export class RegisterDeviceFormComponent implements OnDestroy {
     ).subscribe((type) => {
       this.selectedType$.next(type);
       this.updateValidators(type);
+      // start/stop captive LED blinking when entering/exiting SENSOR type
+      if (type === 'SENSOR') {
+        this.startCaptiveLedBlink();
+      } else {
+        this.stopCaptiveLedBlink();
+      }
     });
+  }
+
+  private startCaptiveLedBlink(): void {
+    // Use two images to simulate blinking: LEDR.png and LEDRA2.png
+    this.stopCaptiveLedBlink();
+    this._captiveLedToggle = false;
+    this.captiveLedSrc = '/images/device-conection/LEDR.png';
+    this.captiveLedInterval = setInterval(() => {
+      this._captiveLedToggle = !this._captiveLedToggle;
+      this.captiveLedSrc = this._captiveLedToggle
+        ? '/images/device-conection/LEDRA2.png'
+        : '/images/device-conection/LEDRA.png';
+      this.cdr.markForCheck();
+    }, 500);
+  }
+
+  private stopCaptiveLedBlink(): void {
+    if (this.captiveLedInterval) {
+      clearInterval(this.captiveLedInterval);
+      this.captiveLedInterval = null;
+    }
+    // ensure default image
+    this.captiveLedSrc = '/images/device-conection/Conectar.png';
+    this.cdr.markForCheck();
   }
 
   deselectBleDevice(): void {
@@ -129,6 +165,7 @@ export class RegisterDeviceFormComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopCaptiveLedBlink();
     this.destroy$.next();
     this.destroy$.complete();
   }

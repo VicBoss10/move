@@ -88,7 +88,7 @@
               </option>
             </select>
           </div>
-        </div>
+        </div>        
         
       </div>
 
@@ -182,7 +182,7 @@
               <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">Si el LED azul no parpadea: espera hasta 30s, verifica la alimentación y reinicia el sensor. Si persiste, contacta soporte.</p>
             </div>
             <div class="flex items-center justify-center h-full">
-              <img src="/images/device-conection/Portal.png" alt="Portal cautivo" class="w-56 h-auto rounded-md shadow-sm" />
+              <img [src]="captiveLedSrc" alt="LED indicador (portal cautivo)" class="w-56 h-auto rounded-md shadow-sm" />
             </div>
           </div>
         </div>
@@ -192,46 +192,48 @@
             <div class="lg:col-span-1">
               <p class="text-brand-900 dark:text-white text-base font-semibold">3) Validación de credenciales Wi‑Fi</p>
               <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Mientras el sensor valida las credenciales Wi‑Fi proporcionadas por el portal, ambos LEDs (rojo y azul) permanecerán encendidos de forma fija. Esto indica que el dispositivo está comprobando la conectividad con la red local.</p>
-              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Tiempo estimado: 10–30 segundos. Si la validación tarda más de 60s, intenta los pasos de resolución de errores.</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Tiempo estimado: 10–30 segundos. Si la validación tarda más de 30s, revisa las credenciales o verifica la disponibilidad de la red Wi-Fi.</p>
             </div>
             <div class="flex items-center justify-center h-full">
-              <img src="/images/device-conection/Portal.png" alt="Validación Wi-Fi" class="w-56 h-auto rounded-md shadow-sm" />
+              <img src="/images/device-conection/LEDRA2.png" alt="Validación Wi-Fi" class="w-56 h-auto rounded-md shadow-sm" />
             </div>
           </div>
         </div>
 
-        <!-- Step 4: Registro exitoso -->
+        <!-- Step 4: ubicacion -->
         <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
             <div class="lg:col-span-1">
-              <p class="text-brand-900 dark:text-white text-base font-semibold">4) Registro completado</p>
-              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Si la validación es correcta, el sensor se conectará a la red y comenzará a enviar datos. En este estado los LEDs se estabilizarán (luz verde fija o ambos LEDs en estado estable) y el portal cautivo cerrará la sesión.</p>
-              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Paso siguiente: verifica en la aplicación que el dispositivo aparece en la lista de ubicaciones y comprueba lecturas iniciales desde la pantalla de indicadores.</p>
-            </div>
-            <div class="flex items-center justify-center h-full">
-              <img src="/images/device-conection/Conectar.png" alt="Registro completado" class="w-56 h-auto rounded-md shadow-sm" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 5: Error y resolución -->
-        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
-            <div class="lg:col-span-1">
-              <p class="text-brand-900 dark:text-white text-base font-semibold">5) Error de conexión y resolución</p>
-              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Si la validación falla, realiza los siguientes pasos:</p>
+              <p class="text-brand-900 dark:text-white text-base font-semibold">4) Seleccionar ubicación</p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Si la validación es correcta:</p>
               <ul class="list-inside list-disc text-gray-600 dark:text-gray-400 text-sm mt-2 space-y-1 pl-4">
-                <li>Revisa que el SSID y la contraseña ingresados en el portal sean correctos.</li>
-                <li>Asegúrate de que la señal Wi‑Fi sea suficientemente fuerte donde está el sensor.</li>
-                <li>Reinicia el sensor y repite el proceso desde el portal cautivo.</li>
-                <li>Si todo falla, contacta soporte con el ID del sensor y una foto del estado de los LEDs.</li>
-              </ul>
+                <li>El sensor se conectará a la red y hará un registro provisional en la base de datos.</li>
+                <li>Se solicitará seleccionar la ubicación del sensor en la aplicación.</li>
+                <li>Finaliza el registro para iniciar la validación de datos.</li>
+                <li>No desconectes el dispositivo durante el proceso de validación (aprox. 3 minutos).</li>
+              </ul>              
             </div>
             <div class="flex items-center justify-center h-full">
-              <img src="/images/device-conection/Conectar.png" alt="Error resolución" class="w-56 h-auto rounded-md shadow-sm" />
+              <img src="/images/device-conection/Ubicacion.jpg" alt="Registro completado" class="w-56 h-auto rounded-md shadow-sm" />
             </div>
           </div>
         </div>
+
+        <!-- Step 5: Registro exitoso -->
+        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            <div class="lg:col-span-1">
+              <p class="text-brand-900 dark:text-white text-base font-semibold">5) Registro exitoso</p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Si luego del proceso de validación todo funcionó correctamente, el dispositivo cambiará su estado a "Activo" y el proceso de registro quedará finalizado.</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Indicador LED: la luz azul parpadeará cada 30 segundos para indicar que el sensor está enviando datos periódicamente al servidor.</p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Verifica en la aplicación que el dispositivo aparece como activo y comprueba las lecturas iniciales en la pantalla de indicadores.</p>
+            </div>
+            <div class="flex items-center justify-center h-full">
+              <img src="/images/device-conection/RExitoso.jpg" alt="Registro exitoso" class="w-56 h-auto rounded-md shadow-sm" />
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Form Actions -->
