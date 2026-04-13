@@ -203,8 +203,9 @@ export class RegisterDeviceFormComponent implements OnDestroy {
       next: (response) => {
         this.isLoading$.next(false);
         const typeName = 'Cámara';
-        this.successMessage$.next(`${typeName} registrado(a) exitosamente`);
-        this.toastService.success(`${typeName} registrado(a) exitosamente`, 'Éxito');
+        const guidance = 'Para iniciar la detección dirígete a Cámara → Streaming.';
+        this.successMessage$.next(`${typeName} registrado(a) exitosamente. ${guidance}`);
+        this.toastService.success(`${typeName} registrado(a) exitosamente. ${guidance}`, 'Éxito');
 
         setTimeout(() => {
           this.router.navigate(['/dashboard/devices/device-status']);

@@ -5,7 +5,6 @@
     <p class="text-gray-600 dark:text-gray-400">Añade una nueva cámara o sensor al sistema</p>
   </div>
 
-  <!-- Mensajes de éxito/error removidos, solo toast -->
 
   <!-- Main Form Card -->
   <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 shadow-sm overflow-hidden">
@@ -30,8 +29,8 @@
         <input type="hidden" formControlName="type" />
       </div>
 
-      <!-- Step 2: Basic Device Information -->
-      <div *ngIf="(selectedType$ | async)" class="pb-6 border-b border-gray-200 dark:border-gray-700">
+      <!-- Step 2: Basic Device Information (Only for CAMERA) -->
+      <div *ngIf="(selectedType$ | async) === 'CAMERA'" class="pb-6 border-b border-gray-200 dark:border-gray-700">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- Nombre del Dispositivo -->
           <div>
@@ -236,8 +235,8 @@
 
       </div>
 
-      <!-- Form Actions -->
-      <div class="flex gap-4 justify-end">
+      <!-- Form Actions (Only for CAMERA) -->
+      <div *ngIf="(selectedType$ | async) === 'CAMERA'" class="flex gap-4 justify-end">
         <button
           type="button"
           (click)="resetForm()"
