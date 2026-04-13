@@ -235,8 +235,7 @@ public class DeviceService {
 
                 // If device was created as PROVISIONAL, schedule rollback check
                 if (savedDevice.getState() == DeviceState.PROVISIONAL) {
-                    LocalDateTime registeredAt = savedSensor.getRegisteredAt();
-                    scheduleProvisioningRollback(savedDevice.getId(), savedSensor.getId(), clientInfo != null ? clientInfo.getInternalId() : null, registeredAt);
+                    scheduleProvisioningRollback(savedDevice.getId(), savedSensor.getId(), clientInfo != null ? clientInfo.getInternalId() : null);
                 }
 
                 RegisterDeviceResponse resp = new RegisterDeviceResponse(savedDevice.getId(), "Device registered successfully");
@@ -258,7 +257,7 @@ public class DeviceService {
      * de sensor para el dispositivo provisionado. Si no llega, realiza rollback
      * (elimina sensor, dispositivo y revoca client en Keycloak).
      */
-    private void scheduleProvisioningRollback(Integer deviceId, Integer sensorId, String keycloakInternalId, LocalDateTime registeredAt) {
+    private void scheduleProvisioningRollback(Integer deviceId, Integer sensorId, String keycloakInternalId) {
         if (deviceId == null || sensorId == null) return;
         log.info("Scheduling provisioning rollback for device {} in {} seconds", deviceId, provisioningTtlSeconds);
         scheduler.schedule(() -> {
