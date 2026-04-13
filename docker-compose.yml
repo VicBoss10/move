@@ -4,14 +4,12 @@
 # Perfiles disponibles:
 #   (sin perfil)  → core: backend + keycloak + bases de datos
 #   tunnel        → cloudflare-tunnel (acceso público)
-#   detection     → vehicle-detection (streaming/YOLO)
 #   frontend      → frontend nginx
 #   tools         → pgadmin
 #
 # Ejemplos:
 #   docker compose up -d                                     # solo core
 #   docker compose --profile tunnel up -d                    # core + túnel
-#   docker compose --profile tunnel --profile detection up -d
 #   docker compose --profile frontend --profile tools up -d  # todo local
 # ============================================================
 
@@ -128,24 +126,6 @@ services:
     network_mode: host
     profiles:
       - tunnel
-
-  # ── Perfil: detection ───────────────────────────────────────
-  # vehicle-detection:
-  #   container_name: move-vehicle-detection
-  #   build:
-  #     context: ./vehicle-detection-service
-  #     dockerfile: dockerfile
-  #   ports:
-  #     - "5000:5000"
-  #   environment:
-  #     - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
-  #     - KEYCLOAK_TOKEN_URL=${KEYCLOAK_TOKEN_URL:-http://keycloak:8080/realms/move/protocol/openid-connect/token}
-  #     - VEHICLE_CLIENT_ID=${VEHICLE_CLIENT_ID:-}
-  #     - VEHICLE_CLIENT_SECRET=${VEHICLE_CLIENT_SECRET:-}
-  #   networks:
-  #     - move-network
-  #   profiles:
-  #     - detection
 
   # ── Perfil: frontend ────────────────────────────────────────
   frontend:

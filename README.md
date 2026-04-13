@@ -1,6 +1,8 @@
-# move
-Mobile Observatory of Vehicular Emissions (Observatorio Móvil de Emisiones Vehiculares)
-Sistema para un prototipo de monitoreo ambiental móvil con IoT. Mide contaminantes vehiculares (CO₂, partículas, etc.) y su correlación con el tráfico.
+# MOVE — Mobile Observatory of Vehicular Emissions
+
+> Observatorio Móvil de Emisiones Vehiculares
+
+Sistema de monitoreo ambiental móvil basado en IoT. Mide contaminantes vehiculares (CO₂, partículas, etc.) y analiza su correlación con el tráfico en tiempo real.
 
 ---
 
@@ -10,30 +12,38 @@ Sistema para un prototipo de monitoreo ambiental móvil con IoT. Mide contaminan
 | :------ | :--------------------------------------- |
 | **Frontend** | Angular, TypeScript, Tailwind CSS        |
 | **Backend**  | Java 21, Spring Boot, Maven              |
-| **Base de Datos** | PostgreSQL                               |
+| **Base de Datos** | PostgreSQL (Main & Keycloak)             |
+| **Autenticación** | Keycloak (OAuth2 / OIDC)                 |
+| **IA / Detección** | Python, YOLO v11, PyTorch, OpenCV        |
 | **Contenerización** | Docker, Docker Compose                   |
+| **Despliegue** | Cloudflare Tunnel                        |
 
-#
+---
+
 ## Estructura del Proyecto
 
 ```
 .
-├── backend/         # Contiene la API de Spring Boot
-├── frontend/        # Contiene la aplicación de Angular
-├── docker-compose.yml # Orquesta todos los servicios
-└── README.md        # Esta documentación
+├── backend/            # API de Spring Boot (Java 21 + Maven)
+├── frontend/           # Aplicación web (Angular + Nginx)
+├── firmware/           # Código fuente (C++) para dispositivos IoT (Arduino/ESP32)
+├── keycloak/           # Configuración de identidad (Realms & Client Import)
+├── vehicle-detection-service/ # Microservicio de IA (Python, YOLO v11, OpenCV)
+├── docker-compose.yml  # Orquestador con perfiles (core, frontend, tools, tunnel)
+└── README.md           # Documentación principal
 ```
 
 ---
 
 ## Cómo Empezar
 
-Este proyecto utiliza Docker para orquestar todos los servicios necesarios (frontend, backend y base de datos). Sigue estos pasos para levantar la aplicación en tu entorno local.
+Este proyecto combina servicios Docker (backend, frontend, Keycloak y bases de datos) con un microservicio de detección de vehículos que se ejecuta de forma nativa. Sigue estos pasos para levantar el sistema completo en tu entorno local.
 
 ### Requisitos
 
 - [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/) (generalmente incluido con Docker Desktop)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Python 3.10+](https://www.python.org/downloads/) (para el microservicio de detección)
 - Git
 
 ### Instalación y Ejecución
@@ -44,41 +54,90 @@ Este proyecto utiliza Docker para orquestar todos los servicios necesarios (fron
     cd move
     ```
 
-2.  **Levanta los servicios con Docker Compose:**
-    Este comando construirá las imágenes de `frontend` y `backend` y luego iniciará todos los contenedores en el orden correcto.
-
+2.  **Configura el entorno:**
+    Copia el archivo de ejemplo y ajusta los valores necesarios (tokens, claves API y secretos):
     ```bash
-    docker-compose up --build
+    cp .env.example .env
     ```
-    - La opción `--build` es importante la primera vez para construir las imágenes a partir de los Dockerfiles.
-    - Si quieres ejecutar los contenedores en segundo plano, usa la opción `-d`:
+
+3.  **Inicia el Servicio de Detección (Local):**
+    Por razones de eficiencia y rendimiento (uso de CPU/GPU), este servicio se ejecuta de forma nativa. 
+    
+    1. Navega al directorio del servicio:
+
+        ```bash
+        cd vehicle-detection-service
+        ```
+    
+    2. Crea y activa el entorno virtual:
+        ```bash
+        python -m venv .venv
+        source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+        ```
+    
+    3. Instala las dependencias necesarias:
+        ```bash
+        pip install -r requirements.txt
+        ```
+    
+    4. Inicia el servidor de inferencia con Gunicorn:
+        ```bash
+        gunicorn --worker-class gthread --workers 1 --threads 12 --bind 0.0.0.0:5000 --chdir src api_server:app
+        ```
+
+4.  **Levanta los servicios con Docker Compose (en otra terminal):**
+    Regresa a la raíz de `move/` y usa perfiles para modularizar la ejecución:
+
+    - **Solo Core (Backend + Keycloak + DBs):**
       ```bash
-      docker-compose up --build -d
+      docker compose up --build -d
+      ```
+    - **Full Stack (Core + Frontend + Tools):**
+      ```bash
+      docker compose --profile frontend --profile tools up --build -d
+      ```
+    - **Con túnel público (Cloudflare):**
+      ```bash
+      docker compose --profile tunnel up -d
       ```
 
-3.  **Accede a la aplicación:**
-    Una vez que todos los contenedores estén en funcionamiento, podrás acceder a los servicios:
-    - **Frontend (Aplicación web):** Abre tu navegador y ve a `http://localhost` o `http://localhost:80`
-    - **Backend (API):** La API estará disponible en `http://localhost:8080`
-    - **Base de Datos (PostgreSQL):** Puedes conectarte a la base de datos usando tus herramientas preferidas en `localhost:5432` con el usuario `postgres` y la contraseña `postgres`.
+5.  **Accede a la aplicación:**
+    - **Frontend:** [http://localhost](http://localhost) (requiere `--profile frontend`)
+    - **Backend API:** [http://localhost:8080](http://localhost:8080)
+    - **Keycloak:** [http://localhost:8081](http://localhost:8081)
+    - **pgAdmin:** [http://localhost:5050](http://localhost:5050)
 
-### Estructura de Servicios
 
-El archivo `docker-compose.yml` define los siguientes servicios:
+### Perfiles Disponibles
 
--   `frontend`: El contenedor con la aplicación de Angular.
--   `backend`: El contenedor con la API de Spring Boot.
--   `move_db`: El contenedor con la base de datos PostgreSQL. Los datos se guardan en un volumen de Docker (`move_db_data`) para persistencia.
+| Perfil | Descripción |
+| :--- | :--- |
+| `(ninguno)` | Lanza el núcleo: Backend, Keycloak y bases de datos PostgreSQL. |
+| `frontend` | Lanza el contenedor de Angular servido por Nginx. |
+| `tools` | Lanza pgAdmin para gestión visual de la base de datos. |
+| `tunnel` | Lanza el túnel de Cloudflare para acceso público. |
+
+---
+
+## Estructura de Servicios
+
+El archivo `docker-compose.yml` define los servicios orquestados:
+
+-   `frontend`: Aplicación Angular optimizada en Nginx.
+-   `backend`: API Java Spring Boot (conecta al microservicio de detección en `host.docker.internal:5000`).
+-   `keycloak`: Servidor de identidad y gestión de acceso.
+-   `move_db` & `keycloak_db`: Instancias de PostgreSQL (datos persistentes en volúmenes).
+-   `pgadmin`: Interfaz web para administración de BD.
 
 ### Detener la Aplicación
 
-Para detener todos los servicios, ejecuta el siguiente comando en la misma carpeta:
+Para detener todos los servicios, ejecuta el siguiente comando en la raíz del proyecto:
 ```bash
-docker-compose down
+docker compose down
 ```
-- Si quieres detener y eliminar también los volúmenes (¡cuidado, esto borrará los datos de la base de datos!), usa:
+- Para detener y eliminar también los volúmenes (⚠️ esto borrará todos los datos de las bases de datos):
   ```bash
-  docker-compose down -v
+  docker compose down -v
   ```
 
 ---
@@ -147,3 +206,17 @@ El frontend es una aplicación de Angular.
 
 4.  **Acceso:**
     La aplicación web estará disponible en `http://localhost:4200`.
+
+### Servicio de Detección Vehicular (IA - Python)
+
+Este servicio se ejecuta de forma nativa por razones de rendimiento. Consulta el paso 3 de la sección [Instalación y Ejecución](#instalación-y-ejecución).
+
+---
+
+## Contribuir
+
+Si deseas contribuir, sigue el flujo de trabajo GitFlow: crea ramas desde `develop` con el prefijo `feature/nombre-de-funcionalidad` y abre un Pull Request describiendo los cambios.
+
+## Licencia
+
+Desarrollado como Proyecto Final para optar por el título de Ingeniería de Sistemas. Todos los derechos reservados por el autor.
