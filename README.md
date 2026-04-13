@@ -61,7 +61,7 @@ Este proyecto combina servicios Docker (backend, frontend, Keycloak y bases de d
     ```
     > **Nota sobre Configuración:** El archivo `docker-compose.yml` utiliza valores predeterminados para facilitar el despliegue rápido, pero es **crítico** configurar correctamente el archivo `.env`. El sistema está diseñado para funcionar tanto en entornos **locales** como **expuesto a internet**. Mezclar configuraciones locales con URLs públicas (o viceversa) impedirá que los servicios se comuniquen correctamente. Para una guía detallada sobre cada variable, consulta los comentarios en [.env.example](.env.example).
 
-3.  **Inicia el Servicio de Detección (Local):**
+3.  **Inicia el Servicio de Detección Vehícular (Local):**
     Por razones de eficiencia y rendimiento (uso de CPU/GPU), este servicio se ejecuta de forma nativa. 
     
     1. Navega al directorio del servicio:
