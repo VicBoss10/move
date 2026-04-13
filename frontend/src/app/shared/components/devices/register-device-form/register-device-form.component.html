@@ -31,7 +31,7 @@
       </div>
 
       <!-- Step 2: Basic Device Information -->
-      <div *ngIf="(selectedType$ | async) && ((selectedType$ | async) !== 'SENSOR' || bleDeviceName)" class="pb-6 border-b border-gray-200 dark:border-gray-700">
+      <div *ngIf="(selectedType$ | async)" class="pb-6 border-b border-gray-200 dark:border-gray-700">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- Nombre del Dispositivo -->
           <div>
@@ -262,14 +262,4 @@
     </form>
   </div>
 
-  <!-- Help Section -->
-  <div class="rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/20 p-6">
-    <h3 class="text-gray-900 dark:text-white font-semibold mb-4">Información de Ayuda</h3>
-    <ul class="space-y-2 text-gray-600 dark:text-gray-400 text-sm">
-      <li><strong class="text-gray-900 dark:text-white">Cámaras:</strong> Proporciona la URL del stream (RTSP, HTTP, YouTube)</li>
-      <li><strong class="text-gray-900 dark:text-white">Sensores:</strong> Registra sensores ambientales que medirán temperatura, humedad, CO₂ y más</li>
-      <li><strong class="text-gray-900 dark:text-white">Estado:</strong> Define si el dispositivo está activo, inactivo o fallando al momento del registro</li>
-      <li><strong class="text-gray-900 dark:text-white">Ubicación:</strong> Asigna el dispositivo a una ubicación existente en el sistema</li>
-    </ul>
-  </div>
 </div>
