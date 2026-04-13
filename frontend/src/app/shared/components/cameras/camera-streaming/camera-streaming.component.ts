@@ -65,8 +65,11 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   /** Indicador de estado de carga */
   isLoading: boolean = false;
 
-  /** Indicador de streaming activo */
-  isStreaming: boolean = false;
+  /** True cuando la detección está activa en el backend para la cámara seleccionada */
+  detectionActive: boolean = false;
+
+  /** True cuando el usuario está visualizando el feed de video */
+  isViewing: boolean = false;
 
   /** Mensaje de error actual */
   errorMessage: string | null = null;
@@ -100,10 +103,10 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.sessionId) {
-      this.stopStream();
+    // Solo detener la visualización — la detección persiste en el backend hasta detenerse explícitamente
+    if (this.isViewing) {
+      this.stopViewing();
     }
-    this.stopSnapshotPolling();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -122,7 +125,8 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
             this.selectedCamera = null;
             this.streamUrl = null;
             this.sessionId = null;
-            this.isStreaming = false;
+            this.detectionActive = false;
+            this.isViewing = false;
           }
           this.isLoading = false;
           this.changeDetectorRef.markForCheck();
@@ -137,21 +141,50 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   }
 
   selectCamera(camera: Camera): void {
-    if (this.isStreaming && this.selectedCamera?.id === camera.id) {
+    if (this.selectedCamera?.id === camera.id) {
       return;
     }
 
-    if (this.isStreaming) {
-      this.stopStream();
+    // Detener visualización de la cámara actual sin detener la detección
+    if (this.isViewing) {
+      this.stopViewing();
     }
 
     this.selectedCamera = camera;
+    this.sessionId = null;
+    this.feedUrl = null;
+    this.detectionActive = false;
     this.errorMessage = null;
+
+    // Restaurar sesión desde localStorage si ya existe para esta cámara
+    const stored = this.loadSession(camera.id);
+    if (stored) {
+      this.cameraService.getStreamStatus(stored.sessionId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (status) => {
+            if (status.status === 'active') {
+              this.sessionId = stored.sessionId;
+              this.feedUrl = stored.streamUrl;
+              this.detectionActive = true;
+            } else {
+              this.clearSession(camera.id);
+            }
+            this.changeDetectorRef.markForCheck();
+          },
+          error: () => {
+            // La sesión ya no existe en el backend
+            this.clearSession(camera.id);
+            this.changeDetectorRef.markForCheck();
+          }
+        });
+    }
+
     this.changeDetectorRef.markForCheck();
   }
 
-  startStream(): void {
-    if (!this.selectedCamera || this.isStreaming) {
+  startDetection(): void {
+    if (!this.selectedCamera || this.detectionActive || this.isLoading) {
       return;
     }
 
@@ -163,58 +196,79 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response: StreamResponse) => {
           this.sessionId = response.sessionId;
-          this.isStreaming = true;
+          this.detectionActive = true;
+          this.feedUrl = response.streamUrl;
           this.isLoading = false;
-          
-          // MJPEG directo para todos excepto Safari/iOS (que tiene problemas con multipart).
-          // En móvil Android/Chrome MJPEG funciona igual que en escritorio.
-          // Si MJPEG falla, onStreamError() cae automáticamente a snapshot polling.
-          if (this.isSafariOrIos()) {
-            this.isSnapshotMode = true;
-            this.feedUrl = response.streamUrl;
-            this.streamUrl = null;
-            this.startSnapshotPolling(response.streamUrl);
-          } else {
-            this.isSnapshotMode = false;
-            this.feedUrl = response.streamUrl;
-            this.streamUrl = response.streamUrl;
-          }
-          
+          this.saveSession(this.selectedCamera!.id, response.sessionId, response.streamUrl);
           this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
-          console.error('Error starting stream:', error);
-          this.errorMessage = error.error?.message || 'Error al iniciar el streaming';
+          console.error('Error starting detection:', error);
+          this.errorMessage = error.error?.message || 'Error al iniciar la detección';
           this.isLoading = false;
           this.changeDetectorRef.markForCheck();
         }
       });
   }
 
-  stopStream(): void {
-    if (!this.sessionId || !this.isStreaming) {
+  stopDetection(): void {
+    if (!this.sessionId) {
       return;
     }
 
-    this.cameraService.stopStream(this.sessionId)
+    if (this.isViewing) {
+      this.stopViewing();
+    }
+
+    const sessionToStop = this.sessionId;
+    const cameraId = this.selectedCamera?.id;
+
+    this.cameraService.stopStream(sessionToStop)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
+          if (cameraId !== undefined) this.clearSession(cameraId);
           this.sessionId = null;
-          this.streamUrl = null;
-          this.isStreaming = false;
-          this.stopSnapshotPolling();
+          this.feedUrl = null;
+          this.detectionActive = false;
           this.changeDetectorRef.markForCheck();
         },
         error: (error) => {
-          console.error('Error stopping stream:', error);
+          console.error('Error stopping detection:', error);
+          // Limpiar estado local aunque falle la petición
+          if (cameraId !== undefined) this.clearSession(cameraId);
           this.sessionId = null;
-          this.streamUrl = null;
-          this.isStreaming = false;
-          this.stopSnapshotPolling();
+          this.feedUrl = null;
+          this.detectionActive = false;
           this.changeDetectorRef.markForCheck();
         }
       });
+  }
+
+  startViewing(): void {
+    if (!this.detectionActive || !this.feedUrl || this.isViewing) {
+      return;
+    }
+
+    this.isViewing = true;
+
+    if (this.isSafariOrIos()) {
+      this.isSnapshotMode = true;
+      this.streamUrl = null;
+      this.startSnapshotPolling(this.feedUrl);
+    } else {
+      this.isSnapshotMode = false;
+      this.streamUrl = this.feedUrl;
+    }
+
+    this.changeDetectorRef.markForCheck();
+  }
+
+  stopViewing(): void {
+    this.isViewing = false;
+    this.streamUrl = null;
+    this.stopSnapshotPolling();
+    this.changeDetectorRef.markForCheck();
   }
 
   getSelectedCameraName(): string {
@@ -226,7 +280,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   }
 
   onStreamError(): void {
-    if (this.isStreaming && this.feedUrl && !this.isSnapshotMode) {
+    if (this.isViewing && this.feedUrl && !this.isSnapshotMode) {
       this.isSnapshotMode = true;
       this.streamUrl = null;
       this.startSnapshotPolling(this.feedUrl);
@@ -292,6 +346,31 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       this.pendingPreloadImg.onerror = null;
       this.pendingPreloadImg = null;
     }
+  }
+
+  private getStorageKey(cameraId: number): string {
+    return `vds_session_${cameraId}`;
+  }
+
+  private saveSession(cameraId: number, sessionId: string, streamUrl: string): void {
+    try {
+      localStorage.setItem(this.getStorageKey(cameraId), JSON.stringify({ sessionId, streamUrl }));
+    } catch { /* Storage puede no estar disponible */ }
+  }
+
+  private loadSession(cameraId: number): { sessionId: string; streamUrl: string } | null {
+    try {
+      const raw = localStorage.getItem(this.getStorageKey(cameraId));
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private clearSession(cameraId: number): void {
+    try {
+      localStorage.removeItem(this.getStorageKey(cameraId));
+    } catch { /* ignorar */ }
   }
 
   onFiltersChanged(filters: CameraFilters): void {
