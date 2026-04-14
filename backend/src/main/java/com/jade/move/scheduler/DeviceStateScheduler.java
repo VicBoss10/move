@@ -66,6 +66,9 @@ public class DeviceStateScheduler {
     /**
      * Evaluates SENSOR devices based on sensor data activity.
      * Called by master scheduler or can be called independently.
+     * 
+     * IMPORTANTE: Solo marca como INACTIVE si no hay datos recientes.
+     * La transición INACTIVE -> ACTIVE ocurre SOLO cuando llega un dato nuevo (en SensorDataService).
      */
     @Transactional
     public void evaluateSensorDeviceStates() {
@@ -86,27 +89,25 @@ public class DeviceStateScheduler {
             boolean hasRecentData = latest != null
                     && latest.getTimestamp().isAfter(inactiveThreshold);
 
+            // Solo marcar como INACTIVE si no hay datos recientes
             if (!hasRecentData && device.getState() != DeviceState.INACTIVE) {
                 device.setState(DeviceState.INACTIVE);
                 deviceRepository.save(device);
                 log.info("Device {} ({}) marked INACTIVE — no sensor data since threshold ({}m)",
                         device.getId(), device.getName(), sensorInactiveThresholdMinutes);
-
-            } else if (hasRecentData && device.getState() == DeviceState.INACTIVE) {
-                // Edge case: data exists but reactive path missed the transition
-                device.setState(DeviceState.ACTIVE);
-                deviceRepository.save(device);
-                log.info("Device {} ({}) recovered INACTIVE -> ACTIVE (sensor scheduler reconciliation)",
-                        device.getId(), device.getName());
             }
-            // FAILING devices stay FAILING; recovery requires explicit admin action or
-            // the reject counter being reset by valid incoming data (handled in SensorDataService)
+            
+            // NO pasar de INACTIVE a ACTIVE aquí. Eso ocurre en SensorDataService cuando llega un dato nuevo.
+            // Esto evita que sensores INACTIVE se activen solo porque hay datos antiguos.
         }
     }
 
     /**
      * Evaluates CAMERA devices based on vehicle detection activity.
      * Runs same schedule as sensor evaluation.
+     * 
+     * IMPORTANTE: Solo marca como INACTIVE si no hay datos recientes.
+     * La transición INACTIVE -> ACTIVE ocurre SOLO cuando llega un dato nuevo (en VehicleDetectedService).
      */
     @Transactional
     public void evaluateCameraDeviceStates() {
@@ -127,19 +128,16 @@ public class DeviceStateScheduler {
             boolean hasRecentDetection = latest != null
                     && latest.getTimestamp().isAfter(inactiveThreshold);
 
+            // Solo marcar como INACTIVE si no hay datos recientes
             if (!hasRecentDetection && device.getState() != DeviceState.INACTIVE) {
                 device.setState(DeviceState.INACTIVE);
                 deviceRepository.save(device);
                 log.info("Device {} ({}) marked INACTIVE — no vehicle detections since threshold ({}m)",
                         device.getId(), device.getName(), cameraInactiveThresholdMinutes);
-
-            } else if (hasRecentDetection && device.getState() == DeviceState.INACTIVE) {
-                // Edge case: detections exist but reactive path missed the transition
-                device.setState(DeviceState.ACTIVE);
-                deviceRepository.save(device);
-                log.info("Device {} ({}) recovered INACTIVE -> ACTIVE (camera scheduler reconciliation)",
-                        device.getId(), device.getName());
             }
+            
+            // NO pasar de INACTIVE a ACTIVE aquí. Eso ocurre en VehicleDetectedService cuando llega un dato nuevo.
+            // Esto evita que cámaras INACTIVE se activen solo porque hay datos antiguos.
         }
     }
 }

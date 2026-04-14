@@ -145,7 +145,8 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Detener visualización de la cámara actual sin detener la detección
+    // Solo cambiar la selección; no hacer nada más
+    // El control de detección se maneja desde camera-filters-table
     if (this.isViewing) {
       this.stopViewing();
     }
@@ -181,68 +182,6 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }
 
     this.changeDetectorRef.markForCheck();
-  }
-
-  startDetection(): void {
-    if (!this.selectedCamera || this.detectionActive || this.isLoading) {
-      return;
-    }
-
-    this.isLoading = true;
-    this.errorMessage = null;
-
-    this.cameraService.startStream(this.selectedCamera.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: StreamResponse) => {
-          this.sessionId = response.sessionId;
-          this.detectionActive = true;
-          this.feedUrl = response.streamUrl;
-          this.isLoading = false;
-          this.saveSession(this.selectedCamera!.id, response.sessionId, response.streamUrl);
-          this.changeDetectorRef.markForCheck();
-        },
-        error: (error) => {
-          console.error('Error starting detection:', error);
-          this.errorMessage = error.error?.message || 'Error al iniciar la detección';
-          this.isLoading = false;
-          this.changeDetectorRef.markForCheck();
-        }
-      });
-  }
-
-  stopDetection(): void {
-    if (!this.sessionId) {
-      return;
-    }
-
-    if (this.isViewing) {
-      this.stopViewing();
-    }
-
-    const sessionToStop = this.sessionId;
-    const cameraId = this.selectedCamera?.id;
-
-    this.cameraService.stopStream(sessionToStop)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          if (cameraId !== undefined) this.clearSession(cameraId);
-          this.sessionId = null;
-          this.feedUrl = null;
-          this.detectionActive = false;
-          this.changeDetectorRef.markForCheck();
-        },
-        error: (error) => {
-          console.error('Error stopping detection:', error);
-          // Limpiar estado local aunque falle la petición
-          if (cameraId !== undefined) this.clearSession(cameraId);
-          this.sessionId = null;
-          this.feedUrl = null;
-          this.detectionActive = false;
-          this.changeDetectorRef.markForCheck();
-        }
-      });
   }
 
   startViewing(): void {
