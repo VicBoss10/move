@@ -13,13 +13,22 @@ export interface VehicleDetected {
   id: number;
   vehicleType: VehicleType;
   timestamp: Date;
-  location: {
+  device: {
     id: number;
-    latitude: number;
-    longitude: number;
-    /**
-     * Puede no existir o venir null dependiendo del endpoint.
-     */
+    name?: string;
+    type?: string;
+    location?: {
+      id: number;
+      latitude?: number;
+      longitude?: number;
+      description?: string | null;
+    };
+  };
+  // Para compatibilidad con templates que esperan location al nivel superior
+  location?: {
+    id: number;
+    latitude?: number;
+    longitude?: number;
     description?: string | null;
   };
 }
@@ -29,7 +38,7 @@ export interface VehicleDetected {
  */
 export interface VehicleSearchCriteria {
   type?: VehicleType;
-  locationId?: number;
+  deviceId?: number;
   start?: Date;
   end?: Date;
 }

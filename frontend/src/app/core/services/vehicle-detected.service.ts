@@ -38,7 +38,7 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
   search(criteria: VehicleSearchCriteria): Observable<VehicleDetected[]> {
     const queryParams = new QueryParamsBuilder()
       .addIfPresent('type', criteria.type)
-      .addIfPresent('locationId', criteria.locationId)
+      .addIfPresent('deviceId', criteria.deviceId)
       .addDateRange(criteria.start, criteria.end)
       .build();
 

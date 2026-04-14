@@ -51,16 +51,16 @@
           <!-- Ubicación -->
           <td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 sm:px-6">
             <div class="flex flex-col">
-              <span class="font-medium">{{ vehicle.location.description }}</span>
-              <span class="text-xs text-gray-500 dark:text-gray-400">Ubicación #{{ vehicle.location.id }}</span>
+              <span class="font-medium">{{ vehicle.device.location?.description || 'Sin ubicación' }}</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Ubicación #{{ vehicle.device.location?.id || 'N/A' }}</span>
             </div>
           </td>
 
           <!-- Coordenadas -->
           <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 sm:px-6">
             <div class="flex flex-col text-xs">
-              <span>Lat: {{ vehicle.location.latitude | number: '1.4-4' }}</span>
-              <span>Lng: {{ vehicle.location.longitude | number: '1.4-4' }}</span>
+              <span>Lat: {{ (vehicle.device.location?.latitude || 0) | number: '1.4-4' }}</span>
+              <span>Lng: {{ (vehicle.device.location?.longitude || 0) | number: '1.4-4' }}</span>
             </div>
           </td>
 

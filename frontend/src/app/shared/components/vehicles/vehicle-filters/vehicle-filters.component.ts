@@ -102,7 +102,7 @@ export class VehicleFiltersComponent {
       criteria.type = this.selectedType as any;
     }
     if (this.selectedLocationId) {
-      criteria.locationId = this.selectedLocationId;
+      criteria.deviceId = this.selectedLocationId;
     }
     if (this.startDate) {
       criteria.start = new Date(this.startDate);

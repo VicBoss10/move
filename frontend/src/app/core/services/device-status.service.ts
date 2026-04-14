@@ -90,8 +90,8 @@ export class DeviceStatusService {
         lastActivity = new Date(Math.max(...deviceSensorData.map(sd => new Date(sd.timestamp).getTime())));
       }
     } else if (device.type === DeviceType.CAMERA) {
-      // Para cámaras, obtener detecciones en la ubicación del dispositivo
-      deviceVehiclesDetected = allVehiclesDetected.filter(vd => vd.location.id === device.location.id);
+      // Para cámaras, obtener detecciones del dispositivo
+      deviceVehiclesDetected = allVehiclesDetected.filter(vd => vd.device?.id === device.id);
       if (deviceVehiclesDetected.length > 0) {
         // Usar la fecha más reciente de todos los datos disponibles
         lastActivity = new Date(Math.max(...deviceVehiclesDetected.map(vd => new Date(vd.timestamp).getTime())));
