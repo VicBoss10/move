@@ -1,7 +1,9 @@
 package com.jade.move.service;
 
 import com.jade.move.dto.SensorDataSearchCriteria;
+import com.jade.move.model.DeviceState;
 import com.jade.move.model.SensorData;
+import com.jade.move.repository.DeviceRepository;
 import com.jade.move.repository.SensorDataRepository;
 import com.jade.move.specification.SensorDataSpecification;
 import org.springframework.data.domain.Page;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,13 +30,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SensorDataService {
 
     private final SensorDataRepository sensorDataRepository;
+    private final DeviceRepository deviceRepository;
     private final Logger log = LoggerFactory.getLogger(SensorDataService.class);
 
-    // tracks consecutive rejected sensor posts per deviceId
+    // tracks consecutive rejected sensor posts per deviceId (in-memory only)
     private final Map<Integer, Integer> consecutiveRejectedByDevice = new ConcurrentHashMap<>();
 
-    public SensorDataService(SensorDataRepository sensorDataRepository) {
+    public SensorDataService(SensorDataRepository sensorDataRepository,
+                             DeviceRepository deviceRepository) {
         this.sensorDataRepository = sensorDataRepository;
+        this.deviceRepository = deviceRepository;
     }
 
     public List<SensorData> getAllSensorData() {
@@ -68,6 +74,7 @@ public class SensorDataService {
         return Optional.ofNullable(sensorDataRepository.findTopByDeviceIdOrderByTimestampDesc(deviceId));
     }
 
+    @Transactional
     public SensorData createSensorData(SensorData sensorData) {
         if (sensorData == null) {
             throw new IllegalArgumentException("SensorData cannot be null");
@@ -78,15 +85,17 @@ public class SensorDataService {
             log.warn("Rejected sensor data for device {}. consecutive rejects={}", deviceId, count);
             if (count >= 3) {
                 log.error("Device {} has {} consecutive rejected sensor data entries — possible sensor failure", deviceId, count);
-                // TODO: add alerting / mark device degraded
+                updateDeviceState(deviceId, DeviceState.FAILING);
             }
             throw new BadRequestException("Sensor data contains invalid sentinel value -1 and will not be accepted");
         }
-        // accepted -> reset consecutive rejected counter
+        // accepted -> reset consecutive rejected counter and ensure device is ACTIVE
         resetRejectedCount(deviceId);
+        updateDeviceStateIfInactive(deviceId);
         return sensorDataRepository.save(sensorData);
     }
 
+    @Transactional
     public SensorData updateSensorData(SensorData sensorData) {
         if (sensorData == null) {
             throw new IllegalArgumentException("SensorData cannot be null");
@@ -97,12 +106,40 @@ public class SensorDataService {
             log.warn("Rejected sensor data update for device {}. consecutive rejects={}", deviceId, count);
             if (count >= 3) {
                 log.error("Device {} has {} consecutive rejected sensor data updates — possible sensor failure", deviceId, count);
-                // TODO: add alerting / mark device degraded
+                updateDeviceState(deviceId, DeviceState.FAILING);
             }
             throw new BadRequestException("Sensor data contains invalid sentinel value -1 and will not be accepted");
         }
         resetRejectedCount(deviceId);
+        updateDeviceStateIfInactive(deviceId);
         return sensorDataRepository.save(sensorData);
+    }
+
+    // --- Device state helpers ---
+
+    /** Marks device as ACTIVE only when it is currently INACTIVE (avoids unnecessary writes). */
+    private void updateDeviceStateIfInactive(Integer deviceId) {
+        if (deviceId == null) return;
+        deviceRepository.findById(deviceId).ifPresent(device -> {
+            if (device.getState() == DeviceState.INACTIVE) {
+                device.setState(DeviceState.ACTIVE);
+                deviceRepository.save(device);
+                log.info("Device {} transitioned INACTIVE -> ACTIVE (data received)", deviceId);
+            }
+        });
+    }
+
+    /** Unconditionally sets the device state (used for FAILING). */
+    void updateDeviceState(Integer deviceId, DeviceState newState) {
+        if (deviceId == null) return;
+        deviceRepository.findById(deviceId).ifPresent(device -> {
+            if (device.getState() != newState) {
+                DeviceState previous = device.getState();
+                device.setState(newState);
+                deviceRepository.save(device);
+                log.warn("Device {} state changed {} -> {}", deviceId, previous, newState);
+            }
+        });
     }
 
     private boolean containsInvalidSentinel(SensorData s) {

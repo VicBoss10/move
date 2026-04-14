@@ -68,13 +68,13 @@ public class VehicleDetectedController {
     @GetMapping("/search")
     public ResponseEntity<?> searchVehicles(
             @RequestParam(required = false) VehicleType type,
-            @RequestParam(required = false) Integer locationId,
+            @RequestParam(required = false) Integer deviceId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
 
         VehicleSearchCriteria criteria = new VehicleSearchCriteria();
         criteria.setType(type);
-        criteria.setLocationId(locationId);
+        criteria.setDeviceId(deviceId);
         criteria.setStart(start);
         criteria.setEnd(end);
 

@@ -58,8 +58,8 @@ class StreamSession:
     # Dimensiones originales del frame (antes de redimensionar)
     frame_width: int = 0
     frame_height: int = 0
-    # ID de la ubicación/cámara (si se proporcionó al iniciar la sesión)
-    location_id: Optional[int] = None
+    # ID del dispositivo (cámara) — proporcionado al crear el stream
+    device_id: Optional[int] = None
 
 
 class StreamManager:
@@ -85,13 +85,14 @@ class StreamManager:
             except Exception as e:
                 self.logger.warning(f"No se pudo inicializar backend client: {e}")
     
-    def create_stream(self, stream_type: str, source: str, location_id: Optional[int] = None) -> Dict:
+    def create_stream(self, stream_type: str, source: str, device_id: Optional[int] = None) -> Dict:
         """
         Crea una nueva sesión de streaming.
         
         Args:
             stream_type: Tipo de stream (USB, URL, RTSP, YOUTUBE)
             source: Fuente del video (índice de cámara o URL)
+            device_id: ID del dispositivo (cámara) en la BD — usado para guardar detecciones
             
         Returns:
             Diccionario con sessionId y estado
@@ -131,7 +132,7 @@ class StreamManager:
                 video_source=video_source,
                 detector=detector,
                 is_running=True,
-                location_id=location_id
+                device_id=device_id
             )
             
             with self.lock:
@@ -377,12 +378,14 @@ class StreamManager:
                 for (xyxy, label, conf, center_x, center_y) in detections:
                     if session.detector.update_count(center_x, center_y, line_y):
                         if self.backend_client and label in YOLO_TO_VEHICLE_TYPE:
-                            # Use session-specific location_id if available, otherwise fallback to config
-                            loc_id = session.location_id if getattr(session, 'location_id', None) else config.LOCATION_ID
+                            # Use session-specific device_id (required to save detection properly)
+                            if not getattr(session, 'device_id', None):
+                                self.logger.warning(f"YOLO: device_id not set for session {session.session_id}, skipping event")
+                                continue
                             event = VehicleDetectedEvent(
                                 vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
                                 timestamp=datetime.now(ZoneInfo("America/Bogota")),
-                                location_id=loc_id
+                                device_id=session.device_id
                             )
                             # Encolar el evento para envío asíncrono (no bloquea YOLO thread)
                             try:
@@ -616,11 +619,12 @@ def start_stream():
     """
     Inicia una nueva sesión de streaming.
     
-    Request Body:
-        {
-            "streamType": "USB|URL|RTSP|YOUTUBE",
-            "source": "0" o URL completa
-        }
+    Request Body (requerido):
+    {
+        "streamType": "USB|URL|RTSP|YOUTUBE",
+        "source": "0" o URL completa,
+        "device_id": ID del dispositivo (cámara) en la BD - REQUERIDO
+    }
     
     Returns:
         JSON con sessionId y estado
@@ -633,28 +637,27 @@ def start_stream():
         
         stream_type = data.get('streamType')
         source = data.get('source')
+        device_id = data.get('device_id')
         
         if not stream_type or not source:
             return jsonify({"error": "streamType and source are required"}), 400
         
+        if device_id is None:
+            return jsonify({"error": "device_id is required (ID of the camera device in backend)"}), 400
+        
+        # Validate device_id is a positive integer
+        try:
+            device_id = int(device_id)
+            if device_id <= 0:
+                return jsonify({"error": "device_id must be a positive integer"}), 400
+        except (TypeError, ValueError):
+            return jsonify({"error": "device_id must be a valid integer"}), 400
+        
         valid_types = {"USB", "URL", "RTSP", "YOUTUBE"}
         if stream_type not in valid_types:
             return jsonify({"error": f"Invalid streamType. Must be one of: {valid_types}"}), 400
-        
-        # Optional: allow caller to provide a location id for this camera/session
-        location_id = None
-        if isinstance(data.get('location'), dict):
-            try:
-                location_id = int(data['location'].get('id'))
-            except Exception:
-                location_id = None
-        else:
-            try:
-                location_id = int(data.get('location_id') or data.get('location') or 0) or None
-            except Exception:
-                location_id = None
 
-        result = stream_manager.create_stream(stream_type, source, location_id=location_id)
+        result = stream_manager.create_stream(stream_type, source, device_id=device_id)
         
         if "error" in result:
             return jsonify(result), 400

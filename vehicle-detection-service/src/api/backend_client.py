@@ -96,7 +96,7 @@ class BackendClient:
             if response.status_code in [200, 201]:
                 self.logger.debug(
                     f"✓ Detección enviada: {event.vehicle_type.value} "
-                    f"a location {event.location_id}"
+                    f"a device {event.device_id}"
                 )
                 return True
             else:

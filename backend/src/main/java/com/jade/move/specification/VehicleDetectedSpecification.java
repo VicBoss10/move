@@ -18,8 +18,8 @@ public class VehicleDetectedSpecification {
                 predicates.add(criteriaBuilder.equal(root.get("vehicleType"), criteria.getType()));
             }
 
-            if (criteria.getLocationId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("location").get("id"), criteria.getLocationId()));
+            if (criteria.getDeviceId() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("device").get("id"), criteria.getDeviceId()));
             }
 
             if (criteria.getStart() != null) {

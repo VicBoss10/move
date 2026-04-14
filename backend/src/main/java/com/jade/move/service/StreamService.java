@@ -58,11 +58,7 @@ public class StreamService {
         Map<String, Object> pythonRequest = new HashMap<>();
         pythonRequest.put("streamType", camera.getStreamType().name());
         pythonRequest.put("source", camera.getSource());
-        if (camera.getDevice() != null && camera.getDevice().getLocation() != null) {
-            Map<String, Object> loc = new HashMap<>();
-            loc.put("id", camera.getDevice().getLocation().getId());
-            pythonRequest.put("location", loc);
-        }
+        pythonRequest.put("device_id", device.getId());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

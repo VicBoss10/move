@@ -24,6 +24,6 @@ public class VehicleDetected {
     private LocalDateTime timestamp;
 
     @ManyToOne
-    @JoinColumn(name = "location_id", nullable = false)
-    private Location location;
+    @JoinColumn(name = "device_id", nullable = false)
+    private Device device;
 }

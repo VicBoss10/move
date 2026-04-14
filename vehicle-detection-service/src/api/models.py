@@ -29,18 +29,18 @@ class VehicleDetectedEvent:
     Attributes:
         vehicle_type: Tipo de vehículo detectado
         timestamp: Fecha y hora de la detección
-        location_id: ID de la ubicación/cámara en la base de datos
+        device_id: ID del dispositivo (cámara) que detectó el vehículo
     """
     vehicle_type: VehicleType
     timestamp: datetime
-    location_id: int
+    device_id: int
     
     def to_dict(self) -> Dict:
         """
         Convierte el evento a formato JSON para el backend.
         
-        El backend Spring Boot espera un objeto location con id,
-        no un locationId simple.
+        El backend Spring Boot espera un objeto device con id,
+        no un deviceId simple.
         
         Returns:
             Diccionario con el formato esperado por el backend
@@ -61,8 +61,8 @@ class VehicleDetectedEvent:
         return {
             "vehicleType": self.vehicle_type.value,
             "timestamp": ts_local.isoformat(),
-            "location": {
-                "id": self.location_id
+            "device": {
+                "id": self.device_id
             }
         }
 

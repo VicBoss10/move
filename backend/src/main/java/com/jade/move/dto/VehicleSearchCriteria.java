@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class VehicleSearchCriteria {
     private VehicleType type;
-    private Integer locationId;
+    private Integer deviceId;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime start;

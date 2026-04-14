@@ -12,10 +12,11 @@ import java.util.List;
 @Repository
 public interface VehicleDetectedRepository extends JpaRepository<VehicleDetected, Integer>, JpaSpecificationExecutor<VehicleDetected> {
     List<VehicleDetected> findByVehicleType(VehicleType vehicleType);
-    List<VehicleDetected> findByLocationId(Integer locationId);
+    List<VehicleDetected> findByDeviceId(Integer deviceId);
     List<VehicleDetected> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
     List<VehicleDetected> findByVehicleTypeAndTimestampBetween(VehicleType vehicleType, LocalDateTime start, LocalDateTime end);
-    List<VehicleDetected> findByLocationIdAndTimestampBetween(Integer locationId, LocalDateTime start, LocalDateTime end);
+    List<VehicleDetected> findByDeviceIdAndTimestampBetween(Integer deviceId, LocalDateTime start, LocalDateTime end);
+    VehicleDetected findTopByDeviceIdOrderByTimestampDesc(Integer deviceId);
 
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional

@@ -1,25 +1,34 @@
 package com.jade.move.service;
 
 import com.jade.move.dto.VehicleSearchCriteria;
+import com.jade.move.model.DeviceState;
 import com.jade.move.model.VehicleDetected;
 import com.jade.move.model.VehicleType;
+import com.jade.move.repository.DeviceRepository;
 import com.jade.move.repository.VehicleDetectedRepository;
 import com.jade.move.specification.VehicleDetectedSpecification;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import com.jade.move.exception.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class VehicleDetectedService {
 
     private final VehicleDetectedRepository vehicleDetectedRepository;
+    private final DeviceRepository deviceRepository;
+    private final Logger log = LoggerFactory.getLogger(VehicleDetectedService.class);
 
-    public VehicleDetectedService(VehicleDetectedRepository vehicleDetectedRepository) {
+    public VehicleDetectedService(VehicleDetectedRepository vehicleDetectedRepository,
+                                  DeviceRepository deviceRepository) {
         this.vehicleDetectedRepository = vehicleDetectedRepository;
+        this.deviceRepository = deviceRepository;
     }
 
     public List<VehicleDetected> getAllVehicleDetected() {
@@ -38,8 +47,8 @@ public class VehicleDetectedService {
         return vehicleDetectedRepository.findByVehicleType(vehicleType);
     }
 
-    public List<VehicleDetected> getVehicleDetectedByLocationId(Integer locationId) {
-        return vehicleDetectedRepository.findByLocationId(locationId);
+    public List<VehicleDetected> getVehicleDetectedByDeviceId(Integer deviceId) {
+        return vehicleDetectedRepository.findByDeviceId(deviceId);
     }
 
     public List<VehicleDetected> getVehicleDetectedByTimestampBetween(LocalDateTime start, LocalDateTime end) {
@@ -50,15 +59,33 @@ public class VehicleDetectedService {
         return vehicleDetectedRepository.findByVehicleTypeAndTimestampBetween(vehicleType, start, end);
     }
 
-    public List<VehicleDetected> getVehicleDetectedByLocationIdAndTimestampBetween(Integer locationId, LocalDateTime start, LocalDateTime end) {
-        return vehicleDetectedRepository.findByLocationIdAndTimestampBetween(locationId, start, end);
+    public List<VehicleDetected> getVehicleDetectedByDeviceIdAndTimestampBetween(Integer deviceId, LocalDateTime start, LocalDateTime end) {
+        return vehicleDetectedRepository.findByDeviceIdAndTimestampBetween(deviceId, start, end);
     }
 
+    @Transactional
     public VehicleDetected createVehicleDetected(VehicleDetected vehicleDetected) {
         if (vehicleDetected == null) {
             throw new IllegalArgumentException("VehicleDetected cannot be null");
         }
-        return vehicleDetectedRepository.save(vehicleDetected);
+        VehicleDetected saved = vehicleDetectedRepository.save(vehicleDetected);
+        // Mark associated CAMERA device as ACTIVE
+        if (saved.getDevice() != null) {
+            updateDeviceStateIfInactive(saved.getDevice().getId());
+        }
+        return saved;
+    }
+
+    // Marks device as ACTIVE only when it is currently INACTIVE (avoids unnecessary writes).
+    private void updateDeviceStateIfInactive(Integer deviceId) {
+        if (deviceId == null) return;
+        deviceRepository.findById(deviceId).ifPresent(device -> {
+            if (device.getState() == DeviceState.INACTIVE) {
+                device.setState(DeviceState.ACTIVE);
+                deviceRepository.save(device);
+                log.info("Device {} transitioned INACTIVE -> ACTIVE (vehicle detected)", deviceId);
+            }
+        });
     }
 
     public VehicleDetected updateVehicleDetected(VehicleDetected vehicleDetected) {

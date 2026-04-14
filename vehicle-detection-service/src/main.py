@@ -68,9 +68,9 @@ except Exception as e:
 
 backend_client = None
 if config.SEND_DETECTIONS_ENABLED:
-    if not isinstance(config.LOCATION_ID, int) or config.LOCATION_ID <= 0:
-        print("✗ Error: LOCATION_ID debe ser un entero positivo")
-        print(f"  Valor actual en config.py: {config.LOCATION_ID}")
+    if not isinstance(config.DEVICE_ID, int) or config.DEVICE_ID <= 0:
+        print("✗ Error: DEVICE_ID debe ser un entero positivo")
+        print(f"  Valor actual en config.py: {config.DEVICE_ID}")
         sys.exit(1)
     
     if not config.BACKEND_URL or not isinstance(config.BACKEND_URL, str):
@@ -83,7 +83,7 @@ if config.SEND_DETECTIONS_ENABLED:
             timeout=config.BACKEND_TIMEOUT
         )
         print(f"\n✓ Cliente backend configurado: {config.BACKEND_URL}")
-        print(f"  Location ID: {config.LOCATION_ID}")
+        print(f"  Device ID (fallback): {config.DEVICE_ID}")
         print("  Las detecciones se enviarán automáticamente al backend\n")
     except Exception as e:
         print(f"✗ Error al inicializar cliente backend: {e}")
@@ -281,7 +281,7 @@ while True:
                         event = VehicleDetectedEvent(
                             vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
                             timestamp=datetime.now(ZoneInfo("America/Bogota")),
-                            location_id=config.LOCATION_ID
+                            device_id=config.DEVICE_ID
                         )
                         success = backend_client.send_detection(event)
                         status = "✓" if success else "✗"
