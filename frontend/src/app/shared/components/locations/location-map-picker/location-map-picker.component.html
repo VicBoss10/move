@@ -45,7 +45,7 @@
       </svg>
       <span *ngIf="gpsAccurate">GPS obtenido (~{{ gpsAccuracy }}m). Haz clic en el mapa para seleccionar el punto.</span>
       <span *ngIf="gpsObtained && !gpsAccurate">GPS impreciso (~{{ gpsAccuracy / 1000 | number:'1.0-0' }}km). Navega en el mapa y haz clic para seleccionar.</span>
-      <span *ngIf="!gpsObtained">Nsavega en el mapa y haz clic para seleccionar la ubicación del punto de monitoreo.</span>
+      <span *ngIf="!gpsObtained">Navega en el mapa y haz clic para seleccionar la ubicación del punto de monitoreo.</span>
     </div>
   </div>
 

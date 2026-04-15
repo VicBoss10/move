@@ -79,9 +79,13 @@ export class EnvironmentChartComponent {
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
-    interaction: {
-      mode: 'index',
-      intersect: false,
+    layout: {
+      padding: {
+        left: 20,
+        right: 20,
+        top: 0,
+        bottom: 0
+      }
     },
     plugins: {
       legend: {
