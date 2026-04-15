@@ -124,6 +124,12 @@ bool verifyDeviceExists(int deviceId) {
       return true;
     }
 
+    if (code == 401) {
+      Serial.println("[FW] Keycloak credentials not found on backend -> clearing credentials");
+      clearProvisionPrefsAndRestart();
+      return false; // restart
+    }
+
     if (code == 404) {
       Serial.println("[FW] Device not found on backend -> clearing credentials");
       clearProvisionPrefsAndRestart();
