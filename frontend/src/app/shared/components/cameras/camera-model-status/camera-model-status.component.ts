@@ -9,6 +9,15 @@ interface ModelInfo {
   lastUpdate: Date;
 }
 
+export interface CameraStats {
+  totalCameras: number;
+  activeCameras: number;
+  inactiveCameras: number;
+  failingCameras: number;
+  vehiclesDetected: number;
+  uptime: number;
+}
+
 /**
  * CameraModelStatusComponent (Shared/Presentational)
  *
@@ -34,6 +43,11 @@ export class CameraModelStatusComponent {
    * Información del modelo (recibida del contenedor)
    */
   @Input() modelInfo$!: Observable<ModelInfo>;
+
+  /**
+   * Estadísticas de cámaras (recibida del contenedor)
+   */
+  @Input() cameraStats$!: Observable<CameraStats>;
 
   /**
    * Indica si se está reiniciando

@@ -37,9 +37,9 @@
         </div>
 
         <div class="flex flex-col">
-          <span class="text-sm text-gray-600 dark:text-gray-400">Detecciones Activas</span>
+          <span class="text-sm text-gray-600 dark:text-gray-400">Cámaras Activas</span>
           <span class="mt-1 text-lg font-medium text-gray-900 dark:text-white">
-            <ng-container *ngIf="modelInfo$ | async as info">{{ info.detectionCount }}</ng-container>
+            <ng-container *ngIf="cameraStats$ | async as stats">{{ stats.activeCameras }}</ng-container>
           </span>
         </div>
 
