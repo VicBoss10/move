@@ -1,136 +1,82 @@
-import { Component, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { Location } from '../../../../core/models/location.model';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Observable, BehaviorSubject, Subject, combineLatest } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, switchMap, takeUntil, catchError, share, startWith } from 'rxjs/operators';
+import { LocationTableComponent } from '../location-table/location-table.component';
 import { LocationService } from '../../../../core/services/location.service';
-
-/**
- * Criterios de búsqueda para ubicaciones
- * Alineado con LocationSearchCriteria del backend
- * @interface LocationSearchCriteria
- * @property {string} description - Descripción o nombre de la ubicación
- * @property {string} keyword - Palabra clave para búsqueda
- * @property {number} latitude - Latitud para búsqueda geográfica
- * @property {number} longitude - Longitud para búsqueda geográfica
- * @property {number} radiusKm - Radio de búsqueda en kilómetros
- */
-export interface LocationSearchCriteria {
-  description?: string;
-  keyword?: string;
-  latitude?: number;
-  longitude?: number;
-  radiusKm?: number;
-}
+import { ApiService } from '../../../../core/services/api.service';
+import { Location } from '../../../../core/models/location.model';
 
 /**
  * LocationFiltersComponent
  *
- * Componente que proporciona filtros para búsqueda de ubicaciones.
- * Autocomplete de descripción de ubicaciones registradas + campos adicionales opcionales.
- *
- * Características:
- * - Autocomplete inteligente de descripción de ubicaciones
- * - Lista desplegable de ubicaciones registradas
- * - Filtro por palabra clave (opcional)
- * - Filtro por latitud/longitud (opcional)
- * - Debounce en búsqueda de autocomplete
- * - Botones para aplicar y limpiar filtros
- * - Dark mode support
+ * Contenedor que combina búsqueda de ubicaciones y tabla.
+ * Maneja el filtrado en tiempo real mientras escribes.
  *
  * @selector app-location-filters
  * @standalone true
- * @imports CommonModule, FormsModule
- * @returns Formulario de filtros
- *
- * @example
- * <app-location-filters (filtersChanged)="onFiltersChanged($event)" />
  */
 @Component({
   selector: 'app-location-filters',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LocationTableComponent],
   templateUrl: './location-filters.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationFiltersComponent implements OnInit, OnDestroy {
   /**
-   * Todas las ubicaciones registradas
+   * FormControl para búsqueda de ubicación
    */
-  allLocations: Location[] = [];
+  searchControl = new FormControl('');
 
   /**
-   * Ubicaciones filtradas para el autocomplete
+   * Observable de ubicaciones filtradas
    */
-  filteredLocations: Location[] = [];
+  locations$: Observable<Location[]>;
 
   /**
-   * Muestra/oculta el dropdown de autocomplete
+   * Subject para forzar refresco de datos
    */
-  showDropdown = false;
-
-  /**
-   * Criterios de filtro/búsqueda actuales
-   * @type {LocationSearchCriteria}
-   */
-  filters: LocationSearchCriteria = {
-    description: '',
-    keyword: '',
-    latitude: undefined,
-    longitude: undefined,
-  };
+  private refreshTrigger$ = new BehaviorSubject<void>(undefined);
 
   /**
    * Subject para cleanup de suscripciones
    */
   private destroy$ = new Subject<void>();
 
-  /**
-   * Subject para debounce en búsqueda de descripción
-   */
-  private descriptionSearch$ = new Subject<string>();
-
-  /**
-   * Evento que emite los criterios de búsqueda cuando el usuario aplica filtros
-   * @type {EventEmitter<LocationSearchCriteria>}
-   */
-  @Output() filtersChanged = new EventEmitter<LocationSearchCriteria>();
-
   constructor(
-    private locationService: LocationService,
+    private apiService: ApiService,
     private cdr: ChangeDetectorRef
-  ) {}
-
-  /**
-   * Hook del ciclo de vida: Carga ubicaciones y configura autocomplete
-   */
-  ngOnInit(): void {
-    // Cargar todas las ubicaciones disponibles
-    this.locationService.getAll()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(locations => {
-        this.allLocations = locations;
-        this.filteredLocations = locations;
-        this.cdr.markForCheck();
-      });
-
-    // Configurar debounce para búsqueda de descripción
-    this.descriptionSearch$
-      .pipe(
+  ) {
+    // Observable reactivo que filtra ubicaciones cuando el searchControl cambia
+    this.locations$ = combineLatest([
+      this.searchControl.valueChanges.pipe(
         debounceTime(300),
         distinctUntilChanged(),
-        takeUntil(this.destroy$)
-      )
-      .subscribe(searchTerm => {
-        this.filterLocations(searchTerm);
-        this.cdr.markForCheck();
-      });
+        startWith('')
+      ),
+      this.refreshTrigger$
+    ]).pipe(
+      switchMap(([searchTerm]) =>
+        this.apiService.get<Location[]>('/locations').pipe(
+          map((locations: Location[]) =>
+            this.filterLocations(locations, searchTerm || '')
+          ),
+          catchError(() => {
+            this.cdr.markForCheck();
+            return [[] as Location[]];
+          })
+        )
+      ),
+      share()
+    );
   }
 
-  /**
-   * Hook del ciclo de vida: Limpia suscripciones
-   */
+  ngOnInit(): void {
+    // Initialize
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -138,91 +84,23 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
 
   /**
    * Filtra ubicaciones según el término de búsqueda
-   * @param searchTerm - Término de búsqueda
    */
-  private filterLocations(searchTerm: string): void {
+  private filterLocations(locations: Location[], searchTerm: string): Location[] {
     if (!searchTerm.trim()) {
-      this.filteredLocations = this.allLocations;
-      return;
+      return locations;
     }
 
     const term = searchTerm.toLowerCase();
-    this.filteredLocations = this.allLocations.filter(loc =>
+    return locations.filter(loc =>
       (loc.description || '').toLowerCase().includes(term)
     );
   }
 
   /**
-   * Maneja cambios en el campo de descripción con debounce
-   * @param value - Valor del campo
+   * Recarga los datos de ubicaciones
    */
-  onDescriptionChange(value: string): void {
-    this.filters.description = value;
-    // Cerrar dropdown si el campo está vacío
-    if (!value.trim()) {
-      this.showDropdown = false;
-    } else {
-      this.showDropdown = true;
-    }
-    this.descriptionSearch$.next(value);
-  }
-
-  /**
-   * Cierra el dropdown cuando el input pierde el foco
-   */
-  onInputBlur(): void {
-    // Esperar un poco para permitir clicks en el dropdown
-    setTimeout(() => {
-      this.showDropdown = false;
-      this.cdr.markForCheck();
-    }, 200);
-  }
-
-  /**
-   * Selecciona una ubicación del dropdown
-   * @param location - Ubicación seleccionada
-   */
-  selectLocation(location: Location): void {
-    this.filters.description = location.description ?? '';
-    this.showDropdown = false;
-    this.filteredLocations = [location];
-    this.cdr.markForCheck();
-  }
-
-  /**
-   * Cierra el dropdown
-   */
-  closeDropdown(): void {
-    this.showDropdown = false;
-  }
-
-  /**
-   * Aplica los filtros actuales, emitiendo solo los campos que tienen valor
-   */
-  applyFilters(): void {
-    // Crear copia sin campos vacíos para el backend
-    const cleanedFilters: LocationSearchCriteria = {};
-    
-    if (this.filters.description?.trim()) cleanedFilters.description = this.filters.description;
-    if (this.filters.keyword?.trim()) cleanedFilters.keyword = this.filters.keyword;
-    if (this.filters.latitude !== undefined && this.filters.latitude !== null) cleanedFilters.latitude = this.filters.latitude;
-    if (this.filters.longitude !== undefined && this.filters.longitude !== null) cleanedFilters.longitude = this.filters.longitude;
-    
-    this.filtersChanged.emit(cleanedFilters);
-  }
-
-  /**
-   * Limpia todos los filtros a valores por defecto
-   */
-  clearFilters(): void {
-    this.filters = {
-      description: '',
-      keyword: '',
-      latitude: undefined,
-      longitude: undefined,
-    };
-    this.filteredLocations = this.allLocations;
-    this.showDropdown = false;
-    this.applyFilters();
+  onLocationChanged(): void {
+    this.refreshTrigger$.next();
   }
 }
+

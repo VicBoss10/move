@@ -1,124 +1,19 @@
-<div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-  <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Buscar Ubicaciones</h3>
+<!-- Sección Unificada: Búsqueda + Tabla -->
+<div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+  <div class="border-b border-gray-200 p-6 dark:border-gray-700">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Ubicaciones de Monitoreo</h3>
 
-  <form class="space-y-4">
-    <!-- Descripción con Autocomplete -->
-    <div class="relative">
-      <label for="description" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Ubicación
-      </label>
+    <form class="w-full max-w-md mt-4">
       <input
         type="text"
-        id="description"
-        [value]="filters.description"
-        (input)="onDescriptionChange($any($event.target).value)"
-        (focus)="showDropdown = true"
-        (blur)="onInputBlur()"
-        name="description"
-        placeholder="Buscar ubicación... (ej: Centro, Terminal)"
+        id="locationSearch"
+        [formControl]="searchControl"
+        placeholder="Buscar ubicación..."
         autocomplete="off"
         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-brand-300 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-brand-400"
       />
-
-      <!-- Dropdown de Ubicaciones -->
-      <div
-        *ngIf="showDropdown && filteredLocations.length > 0"
-        class="absolute top-full z-10 mt-1 w-full rounded-lg border border-gray-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700"
-      >
-        <ul class="max-h-60 overflow-y-auto">
-          <li *ngFor="let location of filteredLocations" class="border-b border-gray-200 last:border-b-0 dark:border-gray-600">
-            <button
-              type="button"
-              (click)="selectLocation(location)"
-              class="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-brand-50 dark:text-gray-100 dark:hover:bg-gray-600"
-            >
-              <div class="font-medium">{{ location.description }}</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">
-                Lat: {{ location.latitude.toFixed(4) }}, Long: {{ location.longitude.toFixed(4) }}
-              </div>
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Sin resultados -->
-      <div
-        *ngIf="showDropdown && filteredLocations.length === 0 && filters.description"
-        class="absolute top-full z-10 mt-1 w-full rounded-lg border border-gray-300 bg-white p-4 text-center text-sm text-gray-500 shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400"
-      >
-        No se encontraron ubicaciones
-      </div>
-    </div>
-
-    <!-- Campos Adicionales (Opcionales) -->
-    <details class="group">
-      <summary class="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300">
-        Más opciones
-      </summary>
-      <div class="mt-4 grid gap-4 md:grid-cols-2">
-        <!-- Palabra Clave -->
-        <div>
-          <label for="keyword" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Palabra Clave
-          </label>
-          <input
-            type="text"
-            id="keyword"
-            [(ngModel)]="filters.keyword"
-            name="keyword"
-            placeholder="Ej: monitoreo"
-            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-brand-300 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-brand-400"
-          />
-        </div>
-
-        <!-- Latitud -->
-        <div>
-          <label for="latitude" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Latitud
-          </label>
-          <input
-            type="number"
-            id="latitude"
-            [(ngModel)]="filters.latitude"
-            name="latitude"
-            step="0.0001"
-            placeholder="Ej: 6.2437"
-            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-brand-300 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-brand-400"
-          />
-        </div>
-
-        <!-- Longitud -->
-        <div>
-          <label for="longitude" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Longitud
-          </label>
-          <input
-            type="number"
-            id="longitude"
-            [(ngModel)]="filters.longitude"
-            name="longitude"
-            step="0.0001"
-            placeholder="Ej: -75.5632"
-            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-brand-300 focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-brand-400"
-          />
-        </div>
-      </div>
-    </details>
-  </form>
-
-  <!-- Botones -->
-  <div class="mt-6 flex gap-3">
-    <button
-      (click)="applyFilters()"
-      class="flex-1 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-    >
-      Buscar
-    </button>
-    <button
-      (click)="clearFilters()"
-      class="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800"
-    >
-      Limpiar
-    </button>
+    </form>
   </div>
+
+  <app-location-table [locations]="(locations$ | async) || []" (locationChanged)="onLocationChanged()" />
 </div>

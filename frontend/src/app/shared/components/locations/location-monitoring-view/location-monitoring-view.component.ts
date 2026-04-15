@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { GoogleMapsModule, MapInfoWindow, MapMarker } from '@angular/google-maps';
-import { LocationTableComponent } from '../location-table/location-table.component';
-import { LocationFiltersComponent, LocationSearchCriteria } from '../location-filters/location-filters.component';
+import { LocationFiltersComponent } from '../location-filters/location-filters.component';
 import { LocationService } from '../../../../core/services/location.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { Location as AppLocation } from '../../../../core/models/location.model';
@@ -31,7 +30,7 @@ import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-l
 @Component({
   selector: 'app-location-monitoring-view',
   standalone: true,
-  imports: [CommonModule, GoogleMapsModule, LocationTableComponent, LocationFiltersComponent],
+  imports: [CommonModule, GoogleMapsModule, LocationFiltersComponent],
   templateUrl: './location-monitoring-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -162,38 +161,10 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja cambios en los filtros y busca ubicaciones según criterios
-   * @param {LocationSearchCriteria} criteria - Criterios de búsqueda desde location-filters
+   * Maneja cambios en las ubicaciones desde location-filters
    */
-  onFiltersChanged(criteria: LocationSearchCriteria): void {
-    if (!criteria || Object.keys(criteria).length === 0) {
-      // Si filtros vacíos, recargar todas las ubicaciones
-      this.loadLocations();
-      return;
-    }
-
-    this.isLoading = true;
-    this.errorMessage = null;
-
-    this.locationService.search(criteria)
-      .pipe(
-        finalize(() => {
-          this.isLoading = false;
-          this.cdr.markForCheck();
-        }),
-        catchError((error) => {
-          console.error('Error searching locations:', error);
-          this.errorMessage = 'Error en la búsqueda de ubicaciones';
-          return of([]);
-        }),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((locations) => {
-        this.locations = locations;
-        this.updateSystemInfo();
-        this.fitMapToLocations();
-        this.cdr.markForCheck();
-      });
+  onLocationChanged(): void {
+    this.loadLocations();
   }
 
   /**

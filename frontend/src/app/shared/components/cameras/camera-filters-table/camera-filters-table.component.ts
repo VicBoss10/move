@@ -6,7 +6,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Observable, of, BehaviorSubject, Subject, combineLatest } from 'rxjs';
 import {
   catchError,
@@ -15,61 +15,26 @@ import {
   map,
   takeUntil,
   share,
+  debounceTime,
+  distinctUntilChanged,
+  startWith,
 } from 'rxjs/operators';
 import { CameraService } from '../../../../core/services/camera.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { ApiService } from '../../../../core/services/api.service';
-import { LocationService } from '../../../../core/services/location.service';
 import { Camera } from '../../../../core/models/camera.model';
 import { Device, DeviceState } from '../../../../core/models/device.model';
 
 /**
- * Interfaz para filtros de cámara
- */
-export interface CameraFilters {
-  state: string;
-  location: number;
-}
-
-/**
- * Interfaz para ubicación de cámara
- */
-export interface Location {
-  id: number;
-  latitude: number;
-  longitude: number;
-  description: string;
-}
-
-/**
- * Interfaz para opciones de estado
- */
-export interface StateOption {
-  value: string;
-  label: string;
-}
-
-/**
- * Interfaz para opción de ubicación
- */
-export interface LocationOption {
-  id: number;
-  name: string;
-}
-
-/**
  * CameraFiltersTableComponent
  *
- * Componente unificado que combina filtros y tabla de dispositivos de cámara.
- * Maneja toda la lógica de filtrado internamente de forma reactiva.
- * También maneja el control de inicio/parada de detección para cada cámara.
+ * Componente que combina búsqueda de dispositivos y tabla de cámaras.
+ * Maneja la lógica de filtrado y control de detección.
  *
  * Características:
- * - Filtro por estado (ACTIVE, INACTIVE, FAILING)
- * - Filtro por ubicación (dinámico del servicio)
+ * - Búsqueda por nombre de dispositivo
  * - Tabla responsiva con indicadores de estado
  * - Botones de control de detección (Iniciar/Detener) en cada fila
- * - Reactividad interna con RxJS BehaviorSubject + switchMap
  * - Dark mode support
  * - OnPush change detection para mejor performance
  *
@@ -82,43 +47,20 @@ export interface LocationOption {
 @Component({
   selector: 'app-camera-filters-table',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './camera-filters-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   /**
-   * Modelo de filtros
+   * FormControl para búsqueda de dispositivo
    */
-  filters: CameraFilters = {
-    state: '',
-    location: 0,
-  };
-
-  /**
-   * Opciones de estados disponibles
-   */
-  states: StateOption[] = [
-    { value: '', label: 'Todos los estados' },
-    { value: 'ACTIVE', label: 'Activa' },
-    { value: 'INACTIVE', label: 'Inactiva' },
-    { value: 'FAILING', label: 'Fallando' },
-  ];
-
-  /**
-   * Observable de opciones de ubicaciones disponibles
-   */
-  locations$: Observable<LocationOption[]>;
+  searchControl = new FormControl('');
 
   /**
    * Observable de cámaras filtradas
    */
   cameras$: Observable<Camera[]>;
-
-  /**
-   * Subject para disparar cambios en filtros
-   */
-  private filters$ = new BehaviorSubject<CameraFilters>(this.filters);
 
   /**
    * Subject para forzar refresco de la tabla (cuando cambia el estado de las cámaras)
@@ -144,36 +86,22 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
     private cameraService: CameraService,
     private deviceService: DeviceService,
     private apiService: ApiService,
-    private locationService: LocationService,
     private changeDetectorRef: ChangeDetectorRef
   ) {
-    // Cargar ubicaciones
-    this.locations$ = this.locationService.getAll().pipe(
-      map((locations) => [
-        { id: 0, name: 'Todas las ubicaciones' },
-        ...locations.map((loc) => ({
-          id: loc.id,
-          name: loc.description || `Ubicación ${loc.id}`,
-        })),
-      ]),
-      catchError((error) => {
-        console.error('Error loading locations:', error);
-        this.changeDetectorRef.markForCheck();
-        return of([{ id: 0, name: 'Todas las ubicaciones' }]);
-      }),
-      shareReplay(1)
-    );
 
-    // Tabla reactiva que filtra cuando los filtros cambian o se dispara un refresh
+    // Tabla reactiva que filtra cuando el formControl cambia
     // Usar apiService directamente para evitar caché y permitir actualizaciones en tiempo real
-    this.cameras$ = combineLatest([this.filters$, this.refreshTrigger$]).pipe(
-      switchMap(([currentFilters]) =>
+    this.cameras$ = combineLatest([this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      startWith('')
+    ), this.refreshTrigger$]).pipe(
+      switchMap(([searchTerm]) =>
         this.apiService.get<Camera[]>('/cameras').pipe(
           map((cameras: Camera[]) =>
-            this.filterCameras(cameras, currentFilters)
+            this.filterCameras(cameras, searchTerm || '')
           ),
           catchError((error) => {
-            console.error('Error loading cameras:', error);
             this.changeDetectorRef.markForCheck();
             return of([] as Camera[]);
           })
@@ -184,10 +112,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Inicializar filtros al cargar
-    this.filters$.next(this.filters);
-
-    // Cargar sesiones activas del localStorage al inicializar
+    // Inicializar búsqueda al cargar
     this.loadActiveSessionsFromStorage();
   }
 
@@ -249,20 +174,15 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
    * Aplica los filtros actuales
    */
   applyFilters(): void {
-    this.filters$.next(this.filters);
-    this.changeDetectorRef.markForCheck();
+    // Ya no necesario, filtrado es automático con formControl
   }
 
   /**
    * Limpia todos los filtros a valores por defecto
    */
   clearFilters(): void {
-    this.filters = {
-      state: '',
-      location: 0,
-    };
+    this.searchControl.setValue('');
     this.changeDetectorRef.markForCheck();
-    this.applyFilters();
   }
 
   /**
@@ -270,19 +190,16 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
    */
   private filterCameras(
     cameras: Camera[],
-    filters: CameraFilters
+    searchTerm: string
   ): Camera[] {
     return cameras.filter((camera) => {
-      // Filtrar por estado
-      if (filters.state && camera.device.state !== filters.state) {
-        return false;
+      // Filtrar por nombre de dispositivo
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase();
+        if (!camera.device.name.toLowerCase().includes(term)) {
+          return false;
+        }
       }
-
-      // Filtrar por ubicación
-      if (filters.location && camera.device.location.id !== filters.location) {
-        return false;
-      }
-
       return true;
     });
   }

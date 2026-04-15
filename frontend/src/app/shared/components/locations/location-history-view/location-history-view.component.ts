@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { Observable, Subject, forkJoin, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
-import { LocationFiltersComponent, LocationSearchCriteria } from '../location-filters/location-filters.component';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { LocationService } from '../../../../core/services/location.service';
@@ -30,7 +29,6 @@ interface DetectionRecord {
   standalone: true,
   imports: [
     CommonModule,
-    LocationFiltersComponent,
   ],
   templateUrl: './location-history-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -198,12 +196,5 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
       this.overallStats.totalVehicleDetections + this.overallStats.totalSensorDetections;
   }
 
-  /**
-   * Maneja cambios en los filtros y recarga el historial
-   * @param {LocationSearchCriteria} criteria - Criterios de búsqueda desde location-filters
-   */
-  onFiltersChanged(criteria: LocationSearchCriteria): void {
-    // Recargar datos cuando los filtros cambian
-    this.loadHistoryData();
-  }
+
 }

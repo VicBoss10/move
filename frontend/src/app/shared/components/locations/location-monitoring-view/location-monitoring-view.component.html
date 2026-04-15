@@ -113,12 +113,6 @@
     </ng-template>
   </div>
 
-  <!-- Sección de Filtros -->
-  <app-location-filters (filtersChanged)="onFiltersChanged($event)" />
-
-  <!-- Tabla de Ubicaciones -->
-  <div class="space-y-4">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Ubicaciones de Monitoreo</h2>
-    <app-location-table [locations]="locations" (locationChanged)="loadLocations()" />
-  </div>
+  <!-- Filtros + Tabla (integrados en location-filters) -->
+  <app-location-filters />
 </div>
