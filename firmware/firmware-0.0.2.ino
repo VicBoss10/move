@@ -172,6 +172,12 @@ unsigned long lastReadingTime = 0;
 const unsigned long readingInterval = 10000;
 int readingCount = 0;
 int nvs_deviceId = -1;
+// === Sensor warmup / detection ===
+const unsigned long SCD30_DETECT_TIMEOUT_MS = 180000; // 3 minutes max to detect SCD30
+const unsigned long SCD30_STABILIZE_MS = 30000;      // 30s extra stabilize after detection
+const unsigned long PMS7003_WARMUP_MS = 30000;       // 30s warmup for PMS7003
+const unsigned long SENSOR_DETECT_RETRY_INTERVAL_MS = 5000; // 5s between detection attempts
+const int SENSOR_DETECT_MAX_ATTEMPTS = 12; // fallback attempts (total window controlled by timeouts)
 
 float readings_pm25[3]        = {-1, -1, -1};
 float readings_pm10[3]        = {-1, -1, -1};
@@ -838,25 +844,78 @@ void sendAveragedData() {
 void initSensors() {
   Serial.println("[FW] Initializing sensors...");
 
+  // Start PMS UART
   pmsSerial.begin(9600, SERIAL_8N1, PMS_RX, PMS_TX);
   pmsSerial.setTimeout(50);
-  Serial.println("[FW] PMS7003 UART ready");
+  Serial.println("[FW] PMS7003 UART ready (starting warm-up)");
 
+  // Start I2C for SCD30
   Wire.begin();
-  if (!airSensor.begin()) {
-    Serial.println("[FW] SCD30 not detected!");
-    while (1) {
-      digitalWrite(LED_FAIL, HIGH); delay(500);
-      digitalWrite(LED_FAIL, LOW);  delay(500);
+
+  // --- Attempt to detect SCD30 within a timeout window ---
+  unsigned long scdStart = millis();
+  bool scdDetected = false;
+  int scdAttempts = 0;
+
+  while ((millis() - scdStart) < SCD30_DETECT_TIMEOUT_MS) {
+    scdAttempts++;
+    Serial.printf("[FW] SCD30 detection attempt %d\n", scdAttempts);
+    if (airSensor.begin()) {
+      scdDetected = true;
+      Serial.println("[FW] SCD30 detected (begin returned true)");
+      break;
+    }
+
+    // Visual feedback while waiting
+    digitalWrite(LED_FAIL, HIGH);
+    delay(200);
+    digitalWrite(LED_FAIL, LOW);
+
+    // Wait before retrying (non-blocking-ish)
+    unsigned long waitUntil = millis() + SENSOR_DETECT_RETRY_INTERVAL_MS;
+    while (millis() < waitUntil) {
+      delay(50);
+    }
+
+    scdAttempts++;
+    if (scdAttempts >= SENSOR_DETECT_MAX_ATTEMPTS && (millis() - scdStart) < SCD30_DETECT_TIMEOUT_MS) {
+      // Keep looping until timeout but cap rapid-looping via attempts counter
+      scdAttempts = 0;
     }
   }
-  Serial.println("[FW] SCD30 ready");
 
+  if (!scdDetected) {
+    Serial.println("[FW] SCD30 not detected within timeout, continuing without CO2 readings (will retry periodically)");
+    // indicate failure briefly but DO NOT block forever; we'll continue and try later during runtime
+    for (int i = 0; i < 6; i++) { digitalWrite(LED_FAIL, HIGH); delay(200); digitalWrite(LED_FAIL, LOW); delay(200); }
+  } else {
+    // Give sensor some stabilization time before trusting readings
+    Serial.printf("[FW] Waiting %lu ms for SCD30 stabilization...\n", SCD30_STABILIZE_MS);
+    unsigned long stabUntil = millis() + SCD30_STABILIZE_MS;
+    while (millis() < stabUntil) { delay(200); }
+    Serial.println("[FW] SCD30 ready");
+  }
+
+  // --- PMS7003 warmup: allow sensor to spin and produce valid frames ---
+  Serial.printf("[FW] PMS7003 warmup: waiting %lu ms\n", PMS7003_WARMUP_MS);
+  unsigned long pmsUntil = millis() + PMS7003_WARMUP_MS;
+  while (millis() < pmsUntil) {
+    // if bytes appear that look like PMS frame, we can break early
+    if (pmsSerial.available() >= 32) break;
+    // blink to show warmup
+    digitalWrite(LED_OK, HIGH); delay(150);
+    digitalWrite(LED_OK, LOW);  delay(150);
+  }
+  Serial.println("[FW] PMS7003 warm-up phase complete (or early data detected)");
+
+  // Initialize reading buffers
   for (int i = 0; i < 3; i++) {
     readings_pm25[i] = readings_pm10[i] = -1;
     readings_temperature[i] = readings_humidity[i] = readings_co2[i] = -1;
     readings_co[i] = readings_no2[i] = readings_nh3[i] = -1;
   }
+
+  // Note: we don't block forever if SCD30 not present; runtime will attempt reads periodically
 }
 
 // =====================================================================
