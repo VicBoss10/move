@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 import { VehicleSearchCriteria } from '../../../../core/models/vehicle.model';
-import { LocationService } from '../../../../core/services/location.service';
-import { Location } from '../../../../core/models/location.model';
+import { DeviceService } from '../../../../core/services/device.service';
+import { Device } from '../../../../core/models/device.model';
 
 /**
  * VehicleFiltersComponent
@@ -40,7 +40,13 @@ export class VehicleFiltersComponent {
    * Observable stream de ubicaciones desde el backend
    * Cargado al inicializar el componente
    */
-  locations$!: Observable<Location[]>;
+  devices$!: Observable<Device[]>;
+  /**
+   * Observable con ubicaciones únicas derivadas de los dispositivos.
+   * Cada entrada contiene el `deviceId` asociado (primer dispositivo encontrado)
+   * y la `label` para mostrar en el select.
+   */
+  locations$!: Observable<{ deviceId: number; label: string }[]>;
 
   /**
    * Evento que emite cuando cambian los filtros
@@ -66,26 +72,41 @@ export class VehicleFiltersComponent {
    * Filtros actuales
    */
   selectedType: string = '';
-  selectedLocationId: number | null = null;
+  selectedDeviceId: number | null = null;
   startDate: string = '';
   endDate: string = '';
 
   /**
    * Constructor e inyección de dependencias
    */
-  constructor(private locationService: LocationService) {
-    this.initializeLocations();
+  constructor(private deviceService: DeviceService) {
+    this.initializeDevices();
   }
 
   /**
    * Inicializa las ubicaciones desde el backend
    * @private
    */
-  private initializeLocations(): void {
-    this.locations$ = this.locationService.getAll().pipe(
+  private initializeDevices(): void {
+    this.devices$ = this.deviceService.getAll().pipe(
       catchError((error) => {
-        console.error('Error loading locations:', error);
+        console.error('Error loading devices:', error);
         return of([]);
+      }),
+      shareReplay(1)
+    );
+    // Derivar lista de ubicaciones únicas por location.id
+    this.locations$ = this.devices$.pipe(
+      map((devices) => {
+        const map = new Map<number | string, { deviceId: number; label: string }>();
+        for (const d of devices) {
+          const locId = d.location?.id ?? `no_loc_${d.id}`;
+          if (!map.has(locId)) {
+            const label = d.location?.description || d.name || `Dispositivo ${d.id}`;
+            map.set(locId, { deviceId: d.id, label });
+          }
+        }
+        return Array.from(map.values());
       }),
       shareReplay(1)
     );
@@ -101,8 +122,8 @@ export class VehicleFiltersComponent {
     if (this.selectedType) {
       criteria.type = this.selectedType as any;
     }
-    if (this.selectedLocationId) {
-      criteria.deviceId = this.selectedLocationId;
+    if (this.selectedDeviceId) {
+      criteria.deviceId = this.selectedDeviceId;
     }
     if (this.startDate) {
       criteria.start = new Date(this.startDate);
@@ -122,7 +143,7 @@ export class VehicleFiltersComponent {
    */
   clearFilters(): void {
     this.selectedType = '';
-    this.selectedLocationId = null;
+    this.selectedDeviceId = null;
     this.startDate = '';
     this.endDate = '';
     this.filterChange.emit({});
