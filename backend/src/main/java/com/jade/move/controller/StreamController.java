@@ -12,6 +12,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/streams")
 @Tag(name = "Streaming", description = "Gestión de streaming de video con detección de vehículos / Managing video streaming with vehicle detection")
@@ -66,5 +69,23 @@ public class StreamController {
     @GetMapping("/status/{sessionId}")
     public ResponseEntity<StreamResponse> getStreamStatus(@PathVariable String sessionId) {
         return ResponseEntity.ok(streamService.getStreamStatus(sessionId));
+    }
+
+    @Operation(
+            summary = "Check detection service health / Verificar salud del servicio de detección",
+            description = "Checks if the Python vehicle detection service is running and available. Always returns 200 with status in JSON body. / Verifica si el servicio de detección de vehículos Python está corriendo. Siempre retorna 200 con el estado en el body."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Health check completed / Verificación completada")
+    })
+    @GetMapping("/health/detection-service")
+    public ResponseEntity<Map<String, String>> checkDetectionServiceHealth() {
+        boolean isHealthy = streamService.isDetectionServiceHealthy();
+        Map<String, String> response = new HashMap<>();
+        response.put("status", isHealthy ? "HEALTHY" : "UNAVAILABLE");
+        response.put("service", "vehicle-detection");
+        
+        // Siempre retornar 200 OK - el estado está en el JSON
+        return ResponseEntity.ok(response);
     }
 }

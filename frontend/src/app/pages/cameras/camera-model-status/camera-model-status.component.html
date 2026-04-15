@@ -1,9 +1,4 @@
 <div class="space-y-6">
-  <!-- Tarjetas de Estadísticas -->
-  <ng-container *ngIf="cameraStats$ | async as stats">
-    <app-camera-status-cards [stats]="stats" />
-  </ng-container>
-
   <!-- Información del Modelo y Acciones -->
   <app-camera-model-status-content
     [modelInfo$]="modelInfo$"

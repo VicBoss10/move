@@ -1,12 +1,13 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, of, BehaviorSubject, combineLatest } from 'rxjs';
-import { map, catchError, shareReplay, tap, switchMap } from 'rxjs/operators';
+import { map, catchError, shareReplay, tap, switchMap, timeout } from 'rxjs/operators';
 import { CameraModelStatusComponent as CameraModelStatusSharedComponent } from '../../../shared/components/cameras/camera-model-status/camera-model-status.component';
 import { CameraStatusCardsComponent, CameraStats } from '../../../shared/components/cameras/camera-status-cards/camera-status-cards.component';
 import { CameraFiltersTableComponent } from '../../../shared/components/cameras/camera-filters-table/camera-filters-table.component';
 import { CameraService } from '../../../core/services/camera.service';
 import { VehicleDetectedService } from '../../../core/services/vehicle-detected.service';
+import { ApiService } from '../../../core/services/api.service';
 
 interface ModelInfo {
   isRunning: boolean;
@@ -29,7 +30,7 @@ interface ModelInfo {
 @Component({
   selector: 'app-camera-model-status',
   standalone: true,
-  imports: [CommonModule, CameraModelStatusSharedComponent, CameraStatusCardsComponent, CameraFiltersTableComponent],
+  imports: [CommonModule, CameraModelStatusSharedComponent, CameraFiltersTableComponent],
   templateUrl: './camera-model-status.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -79,6 +80,7 @@ export class CameraModelStatusComponent implements OnInit {
   constructor(
     private cameraService: CameraService,
     private vehicleService: VehicleDetectedService,
+    private apiService: ApiService,
     private changeDetectorRef: ChangeDetectorRef
   ) {}
 
@@ -108,8 +110,7 @@ export class CameraModelStatusComponent implements OnInit {
             vehiclesDetected: vehicles.length,
             uptime: 98.5,
           })),
-          catchError((error) => {
-            console.error('Error loading camera stats:', error);
+          catchError(() => {
             this.changeDetectorRef.markForCheck();
             return of(this.defaultCameraStats);
           })
@@ -120,31 +121,37 @@ export class CameraModelStatusComponent implements OnInit {
   }
 
   /**
-   * Inicializa la información del modelo desde el backend
+   * Inicializa la información del modelo verificando si el servidor de detección está activo
+   * Usa el endpoint del backend Java que verifica Python
+   * El backend siempre retorna 200 OK con estado en el JSON body
    */
   private initializeModelInfo(): void {
     this.modelInfo$ = this.refreshTrigger$.pipe(
-      tap(() => this.changeDetectorRef.markForCheck()),
+      tap(() => {
+        this.changeDetectorRef.markForCheck();
+      }),
       switchMap(() =>
-        this.cameraService.getAll().pipe(
-          map((cameras) => {
-            const activeCameras = cameras.filter((c) => c.device.state === 'ACTIVE').length;
-            const totalCameras = cameras.length;
-
+        // Llamar al endpoint del backend - siempre retorna 200 OK
+        this.apiService.get<{ status: string; service: string }>('/streams/health/detection-service').pipe(
+          timeout(5000),
+          map((response) => {
+            const isRunning = response.status === 'HEALTHY';
             return {
-              isRunning: activeCameras > 0,
-              streamType:
-                activeCameras > 0
-                  ? `${activeCameras}/${totalCameras} cámaras activas`
-                  : 'Sin cámaras activas',
-              detectionCount: activeCameras,
+              isRunning,
+              streamType: isRunning
+                ? 'Vehicle Detection Service (Activo)'
+                : 'Vehicle Detection Service (Detenido)',
+              detectionCount: isRunning ? 1 : 0,
               lastUpdate: new Date(),
             };
           }),
-          catchError((error) => {
-            console.error('Error loading model info:', error);
-            this.changeDetectorRef.markForCheck();
-            return of(this.defaultModelInfo);
+          catchError(() => {
+            return of({
+              isRunning: false,
+              streamType: 'Vehicle Detection Service (Detenido)',
+              detectionCount: 0,
+              lastUpdate: new Date(),
+            });
           })
         )
       ),
@@ -152,14 +159,13 @@ export class CameraModelStatusComponent implements OnInit {
     );
   }
 
+
   /**
    * Maneja click en botón de reinicio
    */
   onRestartModel(): void {
     this.isRestarting = true;
     this.changeDetectorRef.markForCheck();
-
-    console.log('Reiniciando modelo y recargando datos...');
 
     // Simular un delay de reinicio
     setTimeout(() => {

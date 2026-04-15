@@ -20,7 +20,6 @@ import java.util.Map;
 
 @Service
 public class StreamService {
-
     private final CameraService cameraService;
     private final RestTemplate restTemplate;
 
@@ -174,6 +173,24 @@ public class StreamService {
             throw new RuntimeException("Python service error: " + e.getMessage(), e);
         } catch (RestClientException e) {
             throw new RuntimeException("Python service error: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Checks if the Python detection service is available and running
+     * @return true if service responds to health check with 200, false otherwise
+     */
+    public boolean isDetectionServiceHealthy() {
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(
+                pythonServiceUrl + "/health",
+                String.class
+            );
+            return response.getStatusCode() == HttpStatus.OK;
+        } catch (RestClientException e) {
+            return false;
+        } catch (Exception e) {
+            return false;
         }
     }
 }
