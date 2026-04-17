@@ -24,7 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
 
 @Service
 public class SensorDataService {
@@ -40,6 +43,44 @@ public class SensorDataService {
                              DeviceRepository deviceRepository) {
         this.sensorDataRepository = sensorDataRepository;
         this.deviceRepository = deviceRepository;
+    }
+
+    public List<SensorData> createBulkSensorData(List<SensorData> sensorDataList) {
+        if (sensorDataList == null || sensorDataList.isEmpty()) return new ArrayList<>();
+
+        // Step 1: Persist all records as received — no filtering
+        List<SensorData> saved = new ArrayList<>(sensorDataList.size());
+        for (SensorData s : sensorDataList) {
+            saved.add(sensorDataRepository.save(s));
+        }
+        log.info("[BULK] Received and persisted {} records", saved.size());
+
+        // Step 2: Post-process in order — delete invalids, track consecutive counters
+        int totalDeleted = 0;
+        Set<Integer> failingDevices = new LinkedHashSet<>();
+        for (SensorData s : saved) {
+            Integer deviceId = s.getDevice() != null ? s.getDevice().getId() : null;
+            if (containsInvalidSentinel(s)) {
+                log.warn("[BULK] Sentinel -1 in record id={} device={} — deleting", s.getId(), deviceId);
+                sensorDataRepository.deleteById(s.getId());
+                totalDeleted++;
+                int count = incrementRejectedCount(deviceId);
+                if (count >= 3) {
+                    log.error("[BULK] Device {} has {} consecutive sentinel records — marking FAILING", deviceId, count);
+                    updateDeviceState(deviceId, DeviceState.FAILING);
+                    if (deviceId != null) failingDevices.add(deviceId);
+                } else {
+                    log.warn("[BULK] Device {} consecutive sentinel count: {}", deviceId, count);
+                }
+            } else {
+                resetRejectedCount(deviceId);
+                updateDeviceStateIfInactive(deviceId);
+            }
+        }
+
+        log.info("[BULK] Post-processing done — received={} persisted={} deleted={} failingDevices={}",
+                saved.size(), saved.size() - totalDeleted, totalDeleted, failingDevices);
+        return saved;
     }
 
     public List<SensorData> getAllSensorData() {

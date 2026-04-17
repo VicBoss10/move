@@ -8,6 +8,7 @@
 #include <SparkFun_SCD30_Arduino_Library.h>
 #include <HardwareSerial.h>
 #include <time.h>
+#include <LittleFS.h>
 
 // === Network ===
 const IPAddress AP_IP(192, 168, 4, 1);
@@ -37,9 +38,15 @@ const char* KEY_MAC   = "mac";
 // === Backend ===
 const char* REG_URL            = "";
 const char* SENSOR_DATA_URL    = "";
-const char* FIRMWARE_VERSION   = "0.0.2";
+const char* DEVICES_URL        = "";
+const char* LOCATIONS_URL      = "";
+const char* FIRMWARE_VERSION   = "0.0.3";
 const char* FACTORY_TOKEN      = "";
 const char* KEYCLOAK_TOKEN_URL = "";
+
+// === Local queue limits ===
+const int MAX_LOCAL_RECORDS = 5760; // two days @ 1 record per minute-ish (configurable)
+const char* KEY_QUEUE_COUNT = "queue_count";
 
 // === OAuth cache ===
 String kcAccessToken = "";
@@ -93,7 +100,7 @@ bool verifyDeviceExists(int deviceId) {
     client->setInsecure();
     HTTPClient http;
 
-    String url = String("") + String(deviceId);
+    String url = String(DEVICES_URL) + String("/") + String(deviceId);
     if (!http.begin(*client, url)) {
       Serial.println("[FW] verifyDeviceExists: http.begin failed");
       delete client;
@@ -539,7 +546,7 @@ void handleProxyLocations() {
   client->setInsecure();
   HTTPClient http;
 
-  if (!http.begin(*client, "")) {
+  if (!http.begin(*client, LOCATIONS_URL)) {
     server.send(500, "application/json; charset=utf-8",
       "{\"status\":\"error\",\"message\":\"http begin failed\"}");
     delete client;
@@ -592,7 +599,7 @@ void handleSetLocation() {
   client->setInsecure();
   HTTPClient http;
 
-  if (!http.begin(*client, "")) {
+  if (!http.begin(*client, DEVICES_URL)) {
     server.send(500, "application/json", "{\"status\":\"error\",\"message\":\"http begin failed\"}");
     delete client;
     return;
@@ -783,7 +790,7 @@ void sendAveragedData() {
   }
 
   if (avg_co2 == -1 && avg_pm25 == -1 && avg_pm10 == -1) {
-    Serial.println("[FW] No valid sensor data to send");
+    Serial.println("[FW] No valid sensor data to send");    
     return;
   }
 
@@ -793,7 +800,7 @@ void sendAveragedData() {
 
   if (!http.begin(*client, SENSOR_DATA_URL)) {
     Serial.println("[FW] http.begin failed for sensordata");
-    delete client;
+    delete client;    
     return;
   }
 
@@ -821,13 +828,56 @@ void sendAveragedData() {
   int code = http.POST(payload);
   Serial.printf("[FW] POST sensordata -> %d\n", code);
 
-  if (code == 200) {
-    Serial.println("[FW] Data sent OK");
-    digitalWrite(LED_OK, HIGH); delay(2000); digitalWrite(LED_OK, LOW);
+  if (code >= 200 && code < 300) {
+    // 2xx: Success
+    Serial.println("[FW] Data sent OK (2xx)");
+    // Two short blinks to indicate success
+    digitalWrite(LED_OK, HIGH); delay(150); digitalWrite(LED_OK, LOW); delay(100);
+    digitalWrite(LED_OK, HIGH); delay(150); digitalWrite(LED_OK, LOW);
+    // On success, attempt to drain any queued payloads
+    if (LittleFS.begin()) {
+      drainQueueBulk();
+    }
+
+  } else if (code == 401) {
+    // 401: Unauthorized - Keycloak token may be expired or missing
+    Serial.println("[FW] Server returned 401 Unauthorized - restarting to re-validate credentials");
+    http.end();
+    delete client;
+    delay(200);
+    ESP.restart();
+
+  } else if (code == 400 || code == 403 || code == 404 || code == 422) {
+    // 4xx client errors that are likely permanent for this payload
+    Serial.println("[FW] Permanent client error (4xx): " + String(code));
+    // TODO: decide whether to drop or mark payload as invalid
+
+  } else if (code > 0) {
+    // 5xx or other server-side responses
+    Serial.println("[FW] Server error or unexpected response: " + String(code));
+    Serial.println("[FW] Server: " + http.getString());
+    // Enqueue payload for later retry
+    if (!enqueuePayload(payload)) {
+      Serial.println("[FW] Failed to enqueue payload");
+    } else {
+      Serial.println("[FW] Payload enqueued for retry");
+      // Single quick blink to indicate queued
+      digitalWrite(LED_OK, HIGH); delay(150); digitalWrite(LED_OK, LOW);
+    }
+
   } else {
-    if (code > 0) Serial.println("[FW] Server: " + http.getString());
-    else          Serial.printf("[FW] POST error: %d\n", code);
+    // Network-level error (no HTTP response / connection failure)
+    Serial.printf("[FW] POST error: %d\n", code);
+    Serial.println("[FW] Network error - enqueue for retry");
+    if (!enqueuePayload(payload)) {
+      Serial.println("[FW] Failed to enqueue payload (network error)");
+    } else {
+      Serial.println("[FW] Payload enqueued due to network error");
+      // Single quick blink to indicate queued
+      digitalWrite(LED_OK, HIGH); delay(150); digitalWrite(LED_OK, LOW);
+    }
   }
+
   http.end();
   delete client;
 }
@@ -859,10 +909,7 @@ void initSensors() {
       scdDetected = true;
       Serial.println("[FW] SCD30 detected (begin returned true)");
       break;
-    }
-
-    // Visual feedback while waiting
-    delay(200);
+    }   
 
     // Wait before retrying (non-blocking-ish)
     unsigned long waitUntil = millis() + SENSOR_DETECT_RETRY_INTERVAL_MS;
@@ -878,8 +925,7 @@ void initSensors() {
   }
 
   if (!scdDetected) {
-    Serial.println("[FW] SCD30 not detected within timeout, continuing without CO2 readings (will retry periodically)");
-    // indicate failure briefly but DO NOT block forever; we'll continue and try later during runtime
+    Serial.println("[FW] SCD30 not detected within timeout, continuing without CO2 readings (will retry periodically)");    
   } else {
     // Give sensor some stabilization time before trusting readings
     Serial.printf("[FW] Waiting %lu ms for SCD30 stabilization...\n", SCD30_STABILIZE_MS);
@@ -908,6 +954,412 @@ void initSensors() {
   }
 
   // Note: we don't block forever if SCD30 not present; runtime will attempt reads periodically
+}
+
+// ================= Queue persistence (LittleFS) =====================
+// Helpers for persisted queue count stored in NVS (Preferences)
+int computeQueueCountFromFile() {
+  int cnt = 0;
+  if (!LittleFS.exists("/queue.log")) return 0;
+  File f = LittleFS.open("/queue.log", "r");
+  if (!f) return 0;
+  while (f.available()) {
+    String l = f.readStringUntil('\n');
+    l.trim();
+    if (l.length() == 0) continue;
+    if (l.indexOf('{') >= 0 && l.indexOf('}') >= 0) cnt++;
+  }
+  f.close();
+  return cnt;
+}
+
+int getQueueCount() {
+  prefs.begin(PREF_NS, true);
+  int c = prefs.getInt(KEY_QUEUE_COUNT, -1);
+  prefs.end();
+  if (c >= 0) return c;
+  // fallback: compute from file and persist
+  if (!LittleFS.begin()) return 0;
+  int computed = computeQueueCountFromFile();
+  prefs.begin(PREF_NS, false);
+  prefs.putInt(KEY_QUEUE_COUNT, computed);
+  prefs.end();
+  return computed;
+}
+
+void setQueueCount(int v) {
+  prefs.begin(PREF_NS, false);
+  prefs.putInt(KEY_QUEUE_COUNT, v);
+  prefs.end();
+}
+
+void incrementQueueCount() {
+  int c = getQueueCount();
+  c++;
+  setQueueCount(c);
+}
+
+void decrementQueueCountBy(int n) {
+  if (n <= 0) return;
+  int c = getQueueCount();
+  c -= n;
+  if (c < 0) c = 0;
+  setQueueCount(c);
+}
+
+bool enqueuePayload(const String &payload) {
+  // Basic validation: don't enqueue empty or obviously-broken payloads
+  String p = payload;
+  p.trim();
+  if (p.length() == 0) {
+    Serial.println("[FW] enqueuePayload: rejecting empty payload (not saved)");
+    return false;
+  }
+  // Expect a JSON object with at least braces
+  if (p.indexOf('{') < 0 || p.indexOf('}') < 0) {
+    Serial.println("[FW] enqueuePayload: rejecting non-json payload (not saved)");
+    return false;
+  }
+  if (!LittleFS.exists("/")) {
+    // LittleFS not mounted or unavailable
+    if (!LittleFS.begin()) return false;
+  }
+  // Check local queue capacity before appending
+  int qcount = getQueueCount();
+  if (qcount >= MAX_LOCAL_RECORDS) {
+    Serial.printf("[FW] enqueuePayload: queue at max capacity (%d) - skipping persist\n", qcount);
+    return false;
+  }
+
+  File f = LittleFS.open("/queue.log", FILE_APPEND);
+  if (!f) return false;
+  bool ok = f.println(payload);
+  f.close();
+  if (ok) {
+    incrementQueueCount();
+  }
+  return ok;
+}
+
+// Bulk drain parameters
+const int BULK_TARGET = 500;             // initial target records per batch
+const size_t BULK_MAX_BYTES = 60 * 1024; // max aggregated payload bytes (safety)
+const size_t BULK_MIN_HEAP = 100 * 1024; // minimum free heap required to attempt batch assemble
+const int BULK_MIN_BATCH = 10;           // minimum acceptable batch size
+
+// Drain queue in bulk: build a JSON array of up to 'target' records and POST to /sensordata/bulk
+void drainQueueBulk() {
+  if (!LittleFS.exists("/queue.log")) {
+    Serial.println("[FW][BULK] No /queue.log found, nothing to do");
+    return;
+  }
+
+  Serial.printf("[FW][BULK] Starting bulk drain, freeHeap=%u\n", ESP.getFreeHeap());
+
+  // Try decreasing batch sizes on failure (halve strategy)
+  int attemptTarget = BULK_TARGET;
+  while (attemptTarget >= BULK_MIN_BATCH) {
+    Serial.printf("[FW][BULK] Attempting batch with target=%d\n", attemptTarget);
+
+    File f = LittleFS.open("/queue.log", "r");
+    if (!f) {
+      Serial.println("[FW][BULK] Failed to open /queue.log for reading");
+      return;
+    }
+    
+    // Check if file is empty
+    if (f.size() == 0) {
+      Serial.println("[FW][BULK] Queue file is empty — exiting bulk drain");
+      f.close();
+      return;
+    }
+
+    // Build JSON array incrementally
+    String batch = "[";
+    size_t batchBytes = 1; // '['
+    int linesIncluded = 0;
+    unsigned long lineNo = 0;
+    int consumedLines = 0; // physical lines read from file during this build
+
+    while (f.available() && linesIncluded < attemptTarget) {
+      String line = f.readStringUntil('\n');
+      lineNo++;
+      consumedLines++;
+      String t = line;
+      t.trim();
+      if (t.length() == 0) {
+        Serial.printf("[FW][BULK] Skipping empty/corrupt entry at line %lu\n", lineNo);
+        continue;
+      }
+      if (t.indexOf('{') < 0 || t.indexOf('}') < 0) {
+        Serial.printf("[FW][BULK] Skipping non-json entry at line %lu\n", lineNo);
+        continue;
+      }
+
+      // If this isn't the first included, account for comma
+      size_t added = t.length() + (linesIncluded > 0 ? 1 : 0);
+
+      // Check byte limit
+      if (batchBytes + added > BULK_MAX_BYTES) {
+        Serial.printf("[FW][BULK] Reached BULK_MAX_BYTES after %d lines (bytes=%u)\n", linesIncluded, (unsigned)batchBytes);
+        break;
+      }
+
+      // Check heap safety while building
+      if (ESP.getFreeHeap() < BULK_MIN_HEAP) {
+        Serial.printf("[FW][BULK] Low heap while building batch: freeHeap=%u, stopping at %d lines\n", ESP.getFreeHeap(), linesIncluded);
+        break;
+      }
+
+      if (linesIncluded > 0) batch += ',';
+      batch += t;
+      batchBytes += added;
+      linesIncluded++;
+      if ((linesIncluded & 0x3F) == 0) {
+        // Occasionally log progress for large batches
+        Serial.printf("[FW][BULK] Building batch: lines=%d bytes=%u freeHeap=%u\n", linesIncluded, (unsigned)batchBytes, ESP.getFreeHeap());
+      }
+    }
+
+    f.close();
+
+    if (linesIncluded == 0) {
+      Serial.println("[FW][BULK] No valid lines to include in batch for this target");
+      // If nothing included at this target, halve and retry until min
+      attemptTarget = max(BULK_MIN_BATCH, attemptTarget / 2);
+      if (attemptTarget == BULK_MIN_BATCH) break;
+      continue;
+    }
+
+    batch += "]";
+
+    Serial.printf("[FW][BULK] Prepared batch lines=%d bytes=%u freeHeapBeforeSend=%u\n", linesIncluded, (unsigned)batch.length(), ESP.getFreeHeap());
+
+    // Attempt HTTP POST to bulk endpoint
+    String bulkUrl = String(SENSOR_DATA_URL) + "/bulk";
+    WiFiClientSecure client;
+    client.setInsecure();
+    HTTPClient httpb;
+
+    if (!httpb.begin(client, bulkUrl)) {
+      Serial.println("[FW][BULK] http.begin failed for bulk endpoint - will not remove items");
+      return; // keep queue intact
+    }
+    httpb.addHeader("Content-Type", "application/json");
+    if (ensureKcToken()) httpb.addHeader("Authorization", "Bearer " + kcAccessToken);
+    httpb.setTimeout(20000);
+
+    int code = httpb.POST(batch);
+    Serial.printf("[FW][BULK] Bulk POST -> %d\n", code);
+    String resp = "";
+    if (code > 0) resp = httpb.getString();
+    if (code >= 200 && code < 300) {
+      Serial.println("[FW][BULK] Bulk POST success — removing sent lines from queue");
+      httpb.end();
+
+      // Now remove the sent lines from /queue.log by writing the remaining to /queue.tmp
+      File src = LittleFS.open("/queue.log", "r");
+      if (!src) {
+        Serial.println("[FW][BULK] ERROR: could not reopen /queue.log to trim");
+        return;
+      }
+      File tmp = LittleFS.open("/queue.tmp", FILE_WRITE);
+      if (!tmp) {
+        Serial.println("[FW][BULK] ERROR: could not create /queue.tmp — abort trimming (queue left intact)");
+        src.close();
+        return;
+      }
+
+      int skipped = 0;
+      Serial.printf("[FW][BULK] Trimming: consumedLines=%d linesIncluded=%d\n", consumedLines, linesIncluded);
+      while (src.available()) {
+        String l = src.readStringUntil('\n');
+        if (skipped < consumedLines) {
+          skipped++;
+          continue;
+        }
+        tmp.println(l);
+      }
+      src.close();
+      tmp.close();
+
+      // Replace queue.log atomically
+      LittleFS.remove("/queue.log");
+      if (LittleFS.exists("/queue.tmp")) {
+        LittleFS.rename("/queue.tmp", "/queue.log");
+      }
+      
+      // Check if resulting queue.log is empty and clean it up
+      bool queueRemains = false;
+      if (LittleFS.exists("/queue.log")) {
+        File qcheck = LittleFS.open("/queue.log", "r");
+        if (qcheck) {
+          size_t sz = qcheck.size();
+          qcheck.close();
+          if (sz > 0) {
+            queueRemains = true;
+          } else {
+            Serial.println("[FW][BULK] Queue file exists but is empty — deleting it");
+            LittleFS.remove("/queue.log");
+          }
+        }
+      }
+      
+      Serial.printf("[FW][BULK] Trimmed queue: removed=%d remaining=%s\n", skipped, queueRemains ? "yes" : "no");
+      // Update persisted queue counter
+      if (skipped > 0) {
+        decrementQueueCountBy(skipped);
+      }
+      Serial.printf("[FW][BULK] freeHeapAfterTrim=%u\n", ESP.getFreeHeap());
+
+      // After successful send, attempt to send more if queue remains
+      if (queueRemains) {
+        Serial.println("[FW][BULK] More entries remain in queue — continuing bulk drain");
+        // keep same target (attemptTarget) for next round
+        continue;
+      } else {
+        Serial.println("[FW][BULK] Queue is now empty after bulk drain");
+        return;
+      }
+    } else {
+      Serial.printf("[FW][BULK] Bulk POST failed code=%d response='%s'\n", code, resp.c_str());
+      httpb.end();
+      // If server indicates payload too large (413) or similar client rejection, reduce target and retry
+      if (code == 413 || code == 400) {
+        int prev = attemptTarget;
+        attemptTarget = max(BULK_MIN_BATCH, attemptTarget / 2);
+        if (attemptTarget == prev) {
+          Serial.println("[FW][BULK] Already at min target, aborting bulk drain attempt");
+          return;
+        }
+        Serial.printf("[FW][BULK] Reducing target to %d and retrying\n", attemptTarget);
+        // loop will retry with smaller attemptTarget
+        continue;
+      }
+
+      // For 5xx or network errors, preserve queue and stop trying now
+      Serial.println("[FW][BULK] Server/network error — preserving queue and aborting bulk drain");
+      return;
+    }
+  }
+
+  Serial.println("[FW][BULK] Exiting bulk drain (no further action)");
+}
+
+// Drain queue: stream entries from disk, send line-by-line and compact incrementally.
+// This avoids loading the whole queue into RAM which can cause OOM during TLS operations.
+void drainQueue() {
+  if (!LittleFS.exists("/queue.log")) return;
+  File f = LittleFS.open("/queue.log", "r");
+  if (!f) return;
+
+  Serial.printf("[FW] drainQueue start, freeHeap=%u\n", ESP.getFreeHeap());
+
+  File out; // /queue.tmp when needed
+  bool outOpened = false;
+  unsigned long lineNo = 0;
+  int sentCount = 0; // number of lines successfully sent and thus removed from queue
+
+  while (f.available()) {
+    String line = f.readStringUntil('\n');
+    lineNo++;
+
+    String t = line;
+    t.trim();
+    if (t.length() == 0) {
+      Serial.printf("[FW] Drain skipping empty/corrupt entry at line %lu\n", lineNo);
+      continue; // drop empty entry
+    }
+    if (t.indexOf('{') < 0 || t.indexOf('}') < 0) {
+      Serial.printf("[FW] Drain skipping non-json entry at line %lu\n", lineNo);
+      int maxDump = min((int)t.length(), 64);
+      String hx = "";
+      for (int _k = 0; _k < maxDump; _k++) {
+        char c = t.charAt(_k);
+        char buf[4];
+        snprintf(buf, sizeof(buf), "%02X", (uint8_t)c);
+        hx += buf;
+        if ((_k & 0x0F) == 0x0F) hx += ' ';
+      }
+      Serial.println("[FW] Drain preview hex: " + hx);
+      continue; // drop invalid entry
+    }
+
+    Serial.printf("[FW] Drain sending line %lu len=%u freeHeap=%u\n", lineNo, (unsigned)t.length(), ESP.getFreeHeap());
+
+    WiFiClientSecure client;
+    client.setInsecure();
+    HTTPClient httpq;
+
+    if (!httpq.begin(client, SENSOR_DATA_URL)) {
+      Serial.println("[FW] Drain http.begin failed - preserving remaining entries");
+      // open tmp and preserve current + remaining
+      if (!outOpened) {
+        out = LittleFS.open("/queue.tmp", FILE_WRITE);
+        outOpened = (bool)out;
+      }
+      if (outOpened) out.println(line);
+      // copy rest of file as-is
+      while (f.available()) {
+        String rem = f.readStringUntil('\n');
+        if (outOpened) out.println(rem);
+      }
+      break;
+    }
+
+    httpq.addHeader("Content-Type", "application/json");
+    if (ensureKcToken()) httpq.addHeader("Authorization", "Bearer " + kcAccessToken);
+    httpq.setTimeout(10000);
+
+    int code = httpq.POST(line);
+    Serial.printf("[FW] Drain POST -> %d\n", code);
+    if (code >= 200 && code < 300) {
+      httpq.end();
+      // sent OK, continue to next line
+      sentCount++;
+      continue;
+    } else {
+      if (code > 0) {
+        String resp = httpq.getString();
+        Serial.println("[FW] Drain server response: " + resp);
+      } else {
+        Serial.printf("[FW] Drain POST error: %d\n", code);
+      }
+      httpq.end();
+      // on first failure, preserve this line and the rest to /queue.tmp
+      if (!outOpened) {
+        out = LittleFS.open("/queue.tmp", FILE_WRITE);
+        outOpened = (bool)out;
+      }
+      if (outOpened) out.println(line);
+      while (f.available()) {
+        String rem = f.readStringUntil('\n');
+        if (outOpened) out.println(rem);
+      }
+      break;
+    }
+  }
+
+  f.close();
+
+  if (outOpened) {
+    out.close();
+    // replace queue.log atomically with tmp
+    LittleFS.remove("/queue.log");
+    LittleFS.rename("/queue.tmp", "/queue.log");
+    Serial.println("[FW] drainQueue: remaining entries preserved to /queue.log");
+    if (sentCount > 0) decrementQueueCountBy(sentCount);
+  } else {
+    // no remaining entries, remove queue
+    if (LittleFS.exists("/queue.log")) {
+      LittleFS.remove("/queue.log");
+    }
+    Serial.println("[FW] drainQueue: all queued entries sent (queue cleared)");
+    // reset persisted counter
+    setQueueCount(0);
+  }
+
+  Serial.printf("[FW] drainQueue end, freeHeap=%u\n", ESP.getFreeHeap());
 }
 
 // =====================================================================
@@ -954,6 +1406,23 @@ void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   delay(500);
+  // Initialize LittleFS for local queue persistence
+  if (!LittleFS.begin()) {
+    Serial.println("[FW] LittleFS mount failed - attempting format (will erase existing files)");
+    // Attempt one-time format to recover from corruption
+    if (LittleFS.format()) {
+      Serial.println("[FW] LittleFS formatted, retrying mount...");
+      if (LittleFS.begin()) {
+        Serial.println("[FW] LittleFS mounted after format");
+      } else {
+        Serial.println("[FW] LittleFS mount failed even after format");
+      }
+    } else {
+      Serial.println("[FW] LittleFS format failed");
+    }
+  } else {
+    Serial.println("[FW] LittleFS mounted");
+  }
   Serial.println("========================================");
   Serial.printf("=== MOVE Sensor firmware v%s ===\n", FIRMWARE_VERSION);
   Serial.println("========================================\n");

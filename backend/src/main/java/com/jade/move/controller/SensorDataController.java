@@ -148,6 +148,23 @@ public class SensorDataController {
         return ResponseEntity.ok("Sensor data created successfully with id: " + created.getId());
     }
 
+        @Operation(
+                        summary = "Bulk create sensor data / Crear lote de datos de sensores",
+                        description = "Accepts a JSON array of SensorData objects and persists them in a single bulk operation. / Acepta un array JSON de objetos SensorData y los persiste en una única operación.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Sensor data bulk persisted successfully / Datos de sensores persistidos correctamente"),
+                        @ApiResponse(responseCode = "400", description = "Invalid request body / Cuerpo de petición inválido"),
+                        @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
+        @PostMapping("/bulk")
+        public ResponseEntity<?> createSensorDataBulk(@RequestBody List<SensorData> sensorDataList) {
+                if (sensorDataList == null || sensorDataList.isEmpty()) {
+                        return ResponseEntity.badRequest().body("Request must be a non-empty JSON array of SensorData");
+                }
+                List<SensorData> saved = sensorDataService.createBulkSensorData(sensorDataList);
+                return ResponseEntity.ok(saved);
+        }
+
     @Operation(
             summary = "Update existing sensor data / Actualizar datos de sensor existentes",
             description = "Updates an existing sensor data record with new measurements. The sensor data ID must be provided in the request body. / Actualiza un registro existente de datos de sensor con nuevas mediciones. El ID de los datos del sensor debe proporcionarse en el cuerpo de la petición."
