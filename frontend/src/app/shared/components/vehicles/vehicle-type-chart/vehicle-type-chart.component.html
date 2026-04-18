@@ -1,0 +1,62 @@
+<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+
+  <!-- Header -->
+  <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+      Distribución por Tipo
+    </h3>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      Proporción de vehículos detectados por categoría
+    </p>
+  </div>
+
+  <!-- Sin datos -->
+  <div
+    *ngIf="stats.totalDetected === 0"
+    class="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-6"
+  >
+    <svg class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+    <p class="text-gray-500 dark:text-gray-400">Sin detecciones disponibles</p>
+  </div>
+
+  <!-- Chart + summary -->
+  <div *ngIf="stats.totalDetected > 0" class="px-5 py-4 sm:px-6">
+    <!-- Donut chart centrado -->
+    <div class="mx-auto max-w-[260px]">
+      <canvas
+        baseChart
+        [data]="donutData"
+        [options]="donutOptions"
+        type="doughnut"
+      ></canvas>
+    </div>
+
+    <!-- Total en el centro (decorativo) -->
+    <p class="mt-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+      Total: <span class="text-gray-900 dark:text-white">{{ stats.totalDetected }}</span>
+    </p>
+
+    <!-- Tarjetas de resumen por tipo -->
+    <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="flex flex-col items-center rounded-xl bg-blue-50 px-3 py-3 dark:bg-blue-900/20">
+        <span class="text-xs font-medium text-blue-600 dark:text-blue-400"> Auto</span>
+        <span class="mt-1 text-2xl font-bold text-blue-700 dark:text-blue-300">{{ stats.carCount }}</span>
+      </div>
+      <div class="flex flex-col items-center rounded-xl bg-purple-50 px-3 py-3 dark:bg-purple-900/20">
+        <span class="text-xs font-medium text-purple-600 dark:text-purple-400"> Moto</span>
+        <span class="mt-1 text-2xl font-bold text-purple-700 dark:text-purple-300">{{ stats.motorcycleCount }}</span>
+      </div>
+      <div class="flex flex-col items-center rounded-xl bg-amber-50 px-3 py-3 dark:bg-amber-900/20">
+        <span class="text-xs font-medium text-amber-600 dark:text-amber-400"> Bus</span>
+        <span class="mt-1 text-2xl font-bold text-amber-700 dark:text-amber-300">{{ stats.busCount }}</span>
+      </div>
+      <div class="flex flex-col items-center rounded-xl bg-red-50 px-3 py-3 dark:bg-red-900/20">
+        <span class="text-xs font-medium text-red-600 dark:text-red-400"> Camión</span>
+        <span class="mt-1 text-2xl font-bold text-red-700 dark:text-red-300">{{ stats.truckCount }}</span>
+      </div>
+    </div>
+  </div>
+</div>

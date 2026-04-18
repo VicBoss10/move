@@ -22,7 +22,15 @@
         <app-vehicle-stats-cards [stats]="stats" />
       </div>
 
-      <!-- Gráficos -->
+      <!-- Distribución por tipo + Mapa de calor (misma fila en pantallas grandes) -->
+      <div class="col-span-12 lg:col-span-5">
+        <app-vehicle-type-chart [stats]="stats" />
+      </div>
+      <div class="col-span-12 lg:col-span-7">
+        <app-vehicle-heatmap />
+      </div>
+
+      <!-- Gráfico de línea temporal -->
       <div class="col-span-12">
         <app-vehicle-chart />
       </div>

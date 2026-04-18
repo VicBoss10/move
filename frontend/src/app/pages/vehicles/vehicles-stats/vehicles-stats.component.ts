@@ -4,6 +4,8 @@ import { Observable, Subject, of, interval, BehaviorSubject } from 'rxjs';
 import { catchError, map, shareReplay, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { VehicleStatsCardsComponent, VehicleStats } from '../../../shared/components/vehicles/vehicle-stats-cards/vehicle-stats-cards.component';
 import { VehicleChartComponent } from '../../../shared/components/vehicles/vehicle-chart/vehicle-chart.component';
+import { VehicleTypeChartComponent } from '../../../shared/components/vehicles/vehicle-type-chart/vehicle-type-chart.component';
+import { VehicleHeatmapComponent } from '../../../shared/components/vehicles/vehicle-heatmap/vehicle-heatmap.component';
 import { VehicleDetectedService } from '../../../core/services/vehicle-detected.service';
 
 /**
@@ -31,7 +33,7 @@ import { VehicleDetectedService } from '../../../core/services/vehicle-detected.
 @Component({
   selector: 'app-vehicles-stats',
   standalone: true,
-  imports: [CommonModule, VehicleStatsCardsComponent, VehicleChartComponent],
+  imports: [CommonModule, VehicleStatsCardsComponent, VehicleChartComponent, VehicleTypeChartComponent, VehicleHeatmapComponent],
   templateUrl: './vehicles-stats.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
