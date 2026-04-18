@@ -29,6 +29,8 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
    * Observable que emite los vehículos detectados (ordenados por fecha)
    */
   vehicles$!: Observable<VehicleDetected[]>;
+  /** Estadísticas por tipo derivadas de `vehicles$` */
+  stats$!: Observable<Array<{ type: string; count: number; percent: number; trend?: number[]; trendMax?: number }>>;
 
   /**
    * Flag de carga
@@ -85,6 +87,32 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         this.cdr.markForCheck();
         return of([]);
+      }),
+      shareReplay(1)
+    );
+
+    // Derivar estadísticas por tipo
+    this.stats$ = this.vehicles$.pipe(
+      map((vehicles) => {
+        const types = ['CAR', 'BUS', 'MOTORCYCLE', 'BICYCLE', 'TRUCK'];
+        const total = vehicles.length;
+        // Prepare 12-hour slots for trend (last 12 hours)
+        const now = new Date();
+        const slots: { start: Date; end: Date }[] = [];
+        for (let i = 11; i >= 0; i--) {
+          const start = new Date(now.getTime() - i * 3600000);
+          const end = new Date(start.getTime() + 3600000);
+          slots.push({ start, end });
+        }
+
+        return types.map((t) => {
+          const count = vehicles.filter(v => v.vehicleType === t).length;
+          // trend: counts per slot
+          const trend = slots.map(s => vehicles.filter(v => v.vehicleType === t && new Date(v.timestamp) >= s.start && new Date(v.timestamp) < s.end).length);
+          const trendMax = Math.max(...trend, 1);
+          const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+          return { type: t, count, percent, trend, trendMax };
+        }).filter(s => s.count > 0);
       }),
       shareReplay(1)
     );

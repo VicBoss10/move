@@ -32,10 +32,16 @@ import { VehicleDetected } from '../../../../core/models/vehicle.model';
 })
 export class VehicleTableComponent {
   /**
-   * Lista de vehículos a mostrar
-   * @type {VehicleDetected[]}
+   * Estadísticas por tipo que el componente mostrará en filas.
+   * Cada elemento contiene `type`, `count`, `percent` y `trend` (array numérico).
    */
-  @Input() vehicles: VehicleDetected[] = [];
+  @Input() stats: Array<{ type: string; count: number; percent: number; trend?: number[]; trendMax?: number }> = [];
+
+  /** Devuelve la altura (px) para una barra de tendencia */
+  barHeight(value: number, trendMax?: number): number {
+    const max = trendMax && trendMax > 0 ? trendMax : 1;
+    return Math.max(2, (value / max) * 28);
+  }
 
   /**
    * Obtiene el color por tipo de vehículo
