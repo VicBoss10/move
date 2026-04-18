@@ -78,7 +78,11 @@ export class VehicleChartComponent implements OnInit, OnDestroy {
       scales: {
         y: {
           beginAtZero: true,
-          max: 300,
+          // Eliminamos el 'max: 300' fijo para que Chart.js lo calcule automáticamente
+          title: {
+            display: true,
+            text: 'Detecciones'
+          }
         },
       },
     },

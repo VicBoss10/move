@@ -16,7 +16,7 @@
     </div>
 
     <!-- Contenido (Mostrar siempre si hay datos) -->
-    <div class="col-span-12" *ngIf="stats.totalDetected > 0 || !isLoading">
+    <div class="col-span-12 grid grid-cols-12 gap-4 md:gap-6" *ngIf="stats.totalDetected > 0 || !isLoading">
       <!-- Tarjetas de Estadísticas -->
       <div class="col-span-12">
         <app-vehicle-stats-cards [stats]="stats" />
