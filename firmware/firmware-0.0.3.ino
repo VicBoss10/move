@@ -1042,7 +1042,7 @@ bool enqueuePayload(const String &payload) {
 }
 
 // Bulk drain parameters
-const int BULK_TARGET = 500;             // initial target records per batch
+const int BULK_TARGET = 200;             // initial target records per batch
 const size_t BULK_MAX_BYTES = 60 * 1024; // max aggregated payload bytes (safety)
 const size_t BULK_MIN_HEAP = 100 * 1024; // minimum free heap required to attempt batch assemble
 const int BULK_MIN_BATCH = 10;           // minimum acceptable batch size

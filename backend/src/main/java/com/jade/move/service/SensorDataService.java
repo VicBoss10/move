@@ -65,7 +65,7 @@ public class SensorDataService {
                 sensorDataRepository.deleteById(s.getId());
                 totalDeleted++;
                 int count = incrementRejectedCount(deviceId);
-                if (count >= 3) {
+                if (count >= 6) {
                     log.error("[BULK] Device {} has {} consecutive sentinel records — marking FAILING", deviceId, count);
                     updateDeviceState(deviceId, DeviceState.FAILING);
                     if (deviceId != null) failingDevices.add(deviceId);
@@ -124,7 +124,7 @@ public class SensorDataService {
         if (containsInvalidSentinel(sensorData)) {
             int count = incrementRejectedCount(deviceId);
             log.warn("Rejected sensor data for device {}. consecutive rejects={}", deviceId, count);
-            if (count >= 3) {
+            if (count >= 6) {
                 log.error("Device {} has {} consecutive rejected sensor data entries — possible sensor failure", deviceId, count);
                 updateDeviceState(deviceId, DeviceState.FAILING);
             }
@@ -145,7 +145,7 @@ public class SensorDataService {
         if (containsInvalidSentinel(sensorData)) {
             int count = incrementRejectedCount(deviceId);
             log.warn("Rejected sensor data update for device {}. consecutive rejects={}", deviceId, count);
-            if (count >= 3) {
+            if (count >= 6) {
                 log.error("Device {} has {} consecutive rejected sensor data updates — possible sensor failure", deviceId, count);
                 updateDeviceState(deviceId, DeviceState.FAILING);
             }
