@@ -19,8 +19,8 @@
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-4">
-      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-        <div class="aspect-video rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+      <div class="group relative bg-white border border-gray-200 p-2 dark:border-gray-700 dark:bg-gray-800 transition-all hover:shadow-lg rounded-lg">
+        <div class="aspect-video relative bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden" #streamContainer>
           @if (isViewing && (streamUrl || snapshotUrl)) {
             <img
               [src]="isSnapshotMode ? snapshotUrl : streamUrl"
@@ -50,6 +50,70 @@
                 />
               </svg>
               <p class="text-gray-500 dark:text-gray-400">Selecciona una cámara e inicia la detección para ver el stream</p>
+            </div>
+          }
+
+          <!-- Overlay Translucido (Estilo YouTube) -->
+          @if (selectedCamera) {
+            <div 
+              class="absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300 sm:p-6"
+              [class.opacity-0]="isViewing"
+              [class.group-hover:opacity-100]="isViewing"
+              [class.opacity-100]="!isViewing"
+            >
+              <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="flex h-2 w-2 rounded-full" [ngClass]="getSelectedCameraState() === 'ACTIVE' ? 'bg-red-500 animate-pulse' : 'bg-gray-400'"></span>
+                    <h3 class="text-lg font-bold text-white drop-shadow-md truncate">
+                      {{ getSelectedCameraName() }}
+                    </h3>
+                  </div>
+                  <div class="flex items-center gap-3 text-xs text-gray-200">
+                    <span class="px-2 py-0.5 rounded bg-white/20 backdrop-blur-md border border-white/10">{{ selectedCamera.streamType }}</span>
+                    <span class="px-2 py-0.5 rounded bg-white/20 backdrop-blur-md border border-white/10 uppercase">{{ getSelectedCameraState() }}</span>
+                  </div>
+                </div>
+
+                <div class="flex gap-2">
+                  @if (detectionActive) {
+                    @if (!isViewing) {
+                      <button
+                        (click)="startViewing()"
+                        class="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-semibold shadow-lg transition-transform active:scale-95"
+                      >
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                        </svg>
+                        Ver Stream
+                      </button>
+                    } @else {
+                      <button
+                        (click)="stopViewing()"
+                        class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/20 rounded-lg text-sm font-semibold shadow-lg transition-transform active:scale-95"
+                      >
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        Ocultar Stream
+                      </button>
+                      <button
+                        (click)="toggleFullScreen(streamContainer)"
+                        class="flex items-center justify-center p-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/20 rounded-lg shadow-lg transition-transform active:scale-95"
+                        title="Pantalla Completa"
+                      >
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                      </button>
+                    }
+                  } @else {
+                    <div class="px-3 py-2 bg-black/40 backdrop-blur-md rounded-lg border border-white/10">
+                      <p class="text-[10px] text-gray-300 uppercase tracking-wider font-bold">Detección Inactiva</p>
+                    </div>
+                  }
+                </div>
+              </div>
             </div>
           }
         </div>
@@ -97,67 +161,6 @@
           }
         </div>
       </div>
-
-      @if (selectedCamera) {
-        <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ getSelectedCameraName() }}
-            </h3>
-            <div class="flex gap-2 flex-wrap">
-              @if (detectionActive) {
-                @if (!isViewing) {
-                  <button
-                    (click)="startViewing()"
-                    class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    ▶ Ver Stream
-                  </button>
-                } @else {
-                  <button
-                    (click)="stopViewing()"
-                    class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    ⏸ Ocultar Stream
-                  </button>
-                }
-              } @else {
-                <span class="text-sm text-gray-500 dark:text-gray-400">Inicia la detección desde Cámaras para ver el stream</span>
-              }
-            </div>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-3">
-            <div class="flex items-center gap-2">
-              <div [ngClass]="{
-                'bg-green-100 dark:bg-green-900': getSelectedCameraState() === 'ACTIVE',
-                'bg-gray-100 dark:bg-gray-700': getSelectedCameraState() !== 'ACTIVE'
-              }" class="flex h-8 w-8 items-center justify-center rounded-full">
-                <svg class="h-4 w-4" [ngClass]="{
-                  'text-green-600 dark:text-green-400': getSelectedCameraState() === 'ACTIVE',
-                  'text-gray-600 dark:text-gray-400': getSelectedCameraState() !== 'ACTIVE'
-                }" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Estado</p>
-                <p class="font-medium text-gray-900 dark:text-white">{{ getSelectedCameraState() }}</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-900">
-                <svg class="h-4 w-4 text-brand-500 dark:text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Tipo</p>
-                <p class="font-medium text-gray-900 dark:text-white">{{ selectedCamera.streamType }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
     </div>
 
     <div class="space-y-4">

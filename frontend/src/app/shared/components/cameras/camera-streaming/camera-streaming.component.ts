@@ -210,6 +210,18 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     this.changeDetectorRef.markForCheck();
   }
 
+  toggleFullScreen(element: HTMLElement): void {
+    if (!document.fullscreenElement) {
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }
+
   getSelectedCameraName(): string {
     return this.selectedCamera?.device.name || 'Ninguna cámara seleccionada';
   }
