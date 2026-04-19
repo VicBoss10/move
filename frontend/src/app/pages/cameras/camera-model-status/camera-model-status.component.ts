@@ -46,6 +46,11 @@ export class CameraModelStatusComponent implements OnInit {
   modelInfo$!: Observable<ModelInfo>;
 
   /**
+   * Observable que emite la fecha/hora de la última detección (desde VehicleDetectedService.getLastRecord)
+   */
+  lastVehicleDetection$!: Observable<Date | null>;
+
+  /**
    * Subject para forzar recarga de datos
    */
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
@@ -87,8 +92,27 @@ export class CameraModelStatusComponent implements OnInit {
   ngOnInit(): void {
     this.initializeCameraStats();
     this.initializeModelInfo();
+    this.initializeLastVehicleDetection();
     // Disparar carga inicial
     this.refreshTrigger$.next();
+  }
+
+  private initializeLastVehicleDetection(): void {
+    this.lastVehicleDetection$ = this.refreshTrigger$.pipe(
+      switchMap(() =>
+        this.vehicleService.getLastRecord().pipe(
+          map((v) => {
+            try {
+              return v && v.timestamp ? new Date(v.timestamp) : null;
+            } catch {
+              return null;
+            }
+          }),
+          catchError(() => of(null))
+        )
+      ),
+      shareReplay(1)
+    );
   }
 
   /**

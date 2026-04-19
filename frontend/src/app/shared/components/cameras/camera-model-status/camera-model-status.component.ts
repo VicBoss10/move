@@ -24,7 +24,7 @@ export interface CameraStats {
  * Componente presentacional que muestra:
  * - Tarjetas de estado de cámaras
  * - Información del modelo de detección
- * - Botón para reiniciar el modelo
+ * - Última detección de vehículo
  *
  * NO realiza llamadas a servicios, solo presenta datos recibidos.
  *
@@ -65,4 +65,10 @@ export class CameraModelStatusComponent {
   onRestartModel(): void {
     this.restartModelClicked.emit();
   }
+
+  /**
+   * Observable con la fecha/hora de la última detección proveniente del servicio de vehicles.
+   * Si no se provee, la plantilla usará `modelInfo$.lastUpdate` como fallback.
+   */
+  @Input() lastVehicleDetection$?: Observable<Date | null>;
 }
