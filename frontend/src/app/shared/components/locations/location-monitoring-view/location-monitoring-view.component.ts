@@ -1,11 +1,13 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, of } from 'rxjs';
-import { catchError, finalize, takeUntil } from 'rxjs/operators';
+import { Subject, of, combineLatest } from 'rxjs';
+import { catchError, finalize, takeUntil, map } from 'rxjs/operators';
 import { GoogleMapsModule, MapInfoWindow, MapMarker } from '@angular/google-maps';
 import { LocationFiltersComponent } from '../location-filters/location-filters.component';
 import { LocationService } from '../../../../core/services/location.service';
 import { DeviceService } from '../../../../core/services/device.service';
+import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { Location as AppLocation } from '../../../../core/models/location.model';
 import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
 import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
@@ -54,7 +56,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   systemInfo = {
     totalLocations: 0,
     activeLocations: 0,
-    lastUpdate: new Date().toLocaleString('es-ES'),
+    lastDetection: new Date(),
   };
 
   /**
@@ -89,6 +91,8 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     private locationService: LocationService,
     private mapsLoader: GoogleMapsLoaderService,
     private deviceService: DeviceService,
+    private vehicleService: VehicleDetectedService,
+    private sensorService: SensorDataService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -128,36 +132,78 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
-    this.locationService.getAll()
+    const locations$ = this.locationService.getAll().pipe(
+      catchError((err) => {
+        console.error('Error loading locations:', err);
+        return of([] as AppLocation[]);
+      })
+    );
+
+    const devices$ = this.deviceService.getAll().pipe(
+      catchError((err) => {
+        console.error('Error loading devices:', err);
+        return of([] as any[]);
+      })
+    );
+
+    const vehicleLast$ = this.vehicleService.getLastRecord().pipe(
+      map((v) => (v && v.timestamp ? new Date(v.timestamp) : null)),
+      catchError((err) => {
+        console.warn('Error fetching last vehicle detection:', err);
+        return of(null);
+      })
+    );
+
+    const sensorLast$ = this.sensorService.getLastRecord().pipe(
+      map((s) => (s && s.timestamp ? new Date(s.timestamp) : null)),
+      catchError((err) => {
+        console.warn('Error fetching last sensor data:', err);
+        return of(null);
+      })
+    );
+
+    const lastDetect$ = combineLatest([vehicleLast$, sensorLast$]).pipe(
+      map(([vDate, sDate]) => {
+        if (vDate && sDate) return vDate > sDate ? vDate : sDate;
+        return vDate || sDate || new Date();
+      })
+    );
+
+    combineLatest([locations$, devices$, lastDetect$])
       .pipe(
         finalize(() => {
           this.isLoading = false;
           this.cdr.markForCheck();
         }),
-        catchError((error) => {
-          console.error('Error loading locations:', error);
-          this.errorMessage = 'Error al cargar las ubicaciones. Usando datos offline.';
-          return of(this.locations);
-        }),
         takeUntil(this.destroy$)
       )
-      .subscribe((locations) => {
+      .subscribe((values) => {
+        const [locations, devices, lastDetection] = values as [AppLocation[], any[], Date];
         this.locations = locations;
-        this.updateSystemInfo();
+        this.updateSystemInfo(devices, lastDetection);
         this.fitMapToLocations();
         this.cdr.markForCheck();
       });
   }
 
   /**
-   * Actualiza la información del sistema basada en datos reales
+   * Actualiza la información del sistema basada en datos reales de dispositivos y detecciones
    * @private
+   * @param {any[]} devices - Listado de dispositivos del sistema
+   * @param {Date} lastDetection - Fecha de la última detección
    * @returns {void}
    */
-  private updateSystemInfo(): void {
+  private updateSystemInfo(devices: any[], lastDetection: Date): void {
     this.systemInfo.totalLocations = this.locations.length;
-    this.systemInfo.activeLocations = this.locations.length;
-    this.systemInfo.lastUpdate = new Date().toLocaleString('es-ES');
+    // Contar cuántas ubicaciones tienen al menos un dispositivo en estado ACTIVE
+    const activeLocationIds = new Set<number>();
+    (devices || []).forEach((d: any) => {
+      if (d && d.location && d.location.id != null && d.state === 'ACTIVE') {
+        activeLocationIds.add(d.location.id);
+      }
+    });
+    this.systemInfo.activeLocations = activeLocationIds.size;
+    this.systemInfo.lastDetection = lastDetection;
   }
 
   /**
