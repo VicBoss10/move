@@ -13,6 +13,7 @@ interface DetectionRecord {
   vehicleDetections: number;
   sensorDetections: number;
   lastUpdate: string;
+  lastTimestamp?: number | null;
 }
 
 /**
@@ -143,37 +144,80 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
     const locationMap = new Map<number, DetectionRecord>();
 
     // Inicializar mapa con todas las ubicaciones
+    const lastDateMap = new Map<number, Date | null>();
     locations.forEach((loc) => {
       locationMap.set(loc.id, {
         id: loc.id,
         description: loc.description || `Ubicación ${loc.id}`,
         vehicleDetections: 0,
         sensorDetections: 0,
-        lastUpdate: new Date().toLocaleString('es-ES'),
+        lastUpdate: '',
       });
+      lastDateMap.set(loc.id, null);
     });
 
-    // Contar detecciones de vehículos por ubicación
+    // Contar detecciones de vehículos por ubicación y actualizar último timestamp
     vehicles.forEach((vehicle) => {
-      const locationId = vehicle.location?.id;
-      if (locationId && locationMap.has(locationId)) {
+      // Try multiple paths where a vehicle's location can be stored
+      const locationId = vehicle.location?.id ?? vehicle.device?.location?.id ?? vehicle.device?.locationId ?? null;
+      if (locationId) {
+        if (!locationMap.has(locationId)) {
+          // create placeholder entry if vehicle references a location not in the locations list
+          locationMap.set(locationId, {
+            id: locationId,
+            description: `Ubicación ${locationId}`,
+            vehicleDetections: 0,
+            sensorDetections: 0,
+            lastUpdate: '',
+          });
+          lastDateMap.set(locationId, null);
+        }
         const record = locationMap.get(locationId)!;
         record.vehicleDetections++;
+        const ts = vehicle.timestamp ? new Date(vehicle.timestamp) : null;
+        if (ts) {
+          const prev = lastDateMap.get(locationId) || null;
+          if (!prev || ts > prev) lastDateMap.set(locationId, ts);
+        }
       }
     });
 
-    // Contar detecciones de sensores por ubicación
+    // Contar detecciones de sensores por ubicación y actualizar último timestamp
     sensors.forEach((sensor) => {
       const locationId = sensor.device?.location?.id;
-      if (locationId && locationMap.has(locationId)) {
+      if (locationId) {
+        if (!locationMap.has(locationId)) {
+          locationMap.set(locationId, {
+            id: locationId,
+            description: `Ubicación ${locationId}`,
+            vehicleDetections: 0,
+            sensorDetections: 0,
+            lastUpdate: '',
+          });
+          lastDateMap.set(locationId, null);
+        }
         const record = locationMap.get(locationId)!;
         record.sensorDetections++;
+        const ts = sensor.timestamp ? new Date(sensor.timestamp) : null;
+        if (ts) {
+          const prev = lastDateMap.get(locationId) || null;
+          if (!prev || ts > prev) lastDateMap.set(locationId, ts);
+        }
       }
     });
 
-    this.detectionHistory = Array.from(locationMap.values()).filter(
-      (record) => record.vehicleDetections > 0 || record.sensorDetections > 0
-    );
+    // Convertir último timestamp a cadena legible y mostrar todas las ubicaciones
+    this.detectionHistory = Array.from(locationMap.values()).map((r) => {
+      const d = lastDateMap.get(r.id);
+      return {
+        ...r,
+        lastUpdate: d ? d.toLocaleString('es-ES') : 'Sin datos',
+        lastTimestamp: d ? d.getTime() : 0,
+      } as DetectionRecord;
+    });
+
+    // Ordenar por última detección (más reciente primero, sin datos al final)
+    this.detectionHistory.sort((a, b) => (b.lastTimestamp || 0) - (a.lastTimestamp || 0));
 
     this.calculateStats();
   }
