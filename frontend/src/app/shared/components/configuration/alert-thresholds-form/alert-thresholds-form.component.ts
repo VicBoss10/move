@@ -46,6 +46,7 @@ export class AlertThresholdsFormComponent implements OnInit {
   /**
    * Construye el formulario para la métrica seleccionada usando los
    * umbrales actualmente cargados desde `ThresholdsService`.
+   * Incluye todos los niveles pero marcará el último como solo lectura en el HTML.
    * @param metric - Clave de la métrica (co2, pm25, temperature, ...)
    */
   buildFormFor(metric: EnvironmentMetricKey) {
@@ -59,12 +60,18 @@ export class AlertThresholdsFormComponent implements OnInit {
   }
 
   /**
-   * Crea un FormGroup para un nivel de umbral individual.
+   * Crea un FormGroup para un nivel de un umbral individual.
+   * Si es el nivel Crítico (marcado con max: Infinity), lo dejamos como null
+   * y sin validadores obligatorios ya que no se edita.
    * @param level - Configuración del nivel (max, key, label)
    */
   levelGroup(level: ThresholdLevel) {
+    const isInfinity = level.max === Infinity;
     return this.fb.group({
-      max: [level.max === Infinity ? null : level.max, [Validators.required, Validators.min(0)]],
+      max: [
+        isInfinity ? null : level.max, 
+        isInfinity ? [] : [Validators.required, Validators.min(0)]
+      ],
       key: [level.key],
       label: [level.label]
     });
@@ -80,11 +87,16 @@ export class AlertThresholdsFormComponent implements OnInit {
   }
 
   /**
-   * Valida que los valores `max` de los niveles sean estrictamente crecientes.
+   * Valida que los valores `max` de los niveles editables sean estrictamente crecientes.
    * Devuelve null si es válido o un mensaje de error en caso contrario.
    */
   validateOrder(): string | null {
-    const values = this.levels.controls.map(c => Number(c.get('max')?.value));
+    // Solo validamos hasta el penúltimo, ya que el último es Infinity (null en form)
+    const values = this.levels.controls
+      .map(c => c.get('max')?.value)
+      .filter(v => v !== null)
+      .map(v => Number(v));
+
     for (let i = 1; i < values.length; i++) {
       if (isNaN(values[i]) || isNaN(values[i - 1])) return 'Todos los umbrales deben ser números válidos';
       if (values[i] <= values[i - 1]) {
@@ -105,15 +117,19 @@ export class AlertThresholdsFormComponent implements OnInit {
       return;
     }
     const cfg = this.thresholds.getMetric(this.selected);
-    cfg.levels = this.levels.controls.map(c => ({
-      key: c.get('key')?.value,
-      label: c.get('label')?.value,
-      max: c.get('max')?.value === null ? Infinity : Number(c.get('max')?.value),
-      color: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.color || '#999',
-      textClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.textClass || '',
-      bgClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.bgClass || '',
-      gaugeGradient: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.gaugeGradient || ''
-    } as ThresholdLevel));
+
+    cfg.levels = this.levels.controls.map(c => {
+      const isLast = c.get('key')?.value === 'critical';
+      return {
+        key: c.get('key')?.value,
+        label: c.get('label')?.value,
+        max: isLast ? Infinity : Number(c.get('max')?.value),
+        color: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.color || '#999',
+        textClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.textClass || '',
+        bgClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.bgClass || '',
+        gaugeGradient: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.gaugeGradient || ''
+      } as ThresholdLevel;
+    });
 
     this.thresholds.updateMetric(this.selected, cfg);
     this.toast.success('Umbrales actualizados', 'Éxito');
@@ -124,5 +140,20 @@ export class AlertThresholdsFormComponent implements OnInit {
     this.thresholds.reset();
     this.buildFormFor(this.selected);
     this.toast.success('Umbrales restaurados a valores predeterminados', 'Restaurado');
+  }
+
+  /**
+   * Devuelve la clase CSS del color para el indicador de nivel
+   * basado en el índice del nivel en la lista.
+   * @param index - Índice del nivel (0=good, 1=moderate, 2=poor, etc.)
+   */
+  getLevelColorClass(index: number): string {
+    const colors = [
+      'bg-green-500',    // good
+      'bg-yellow-500',   // moderate
+      'bg-orange-500',   // poor
+      'bg-red-500'       // critical
+    ];
+    return colors[index] || 'bg-gray-500';
   }
 }

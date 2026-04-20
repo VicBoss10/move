@@ -2,35 +2,132 @@
   <!-- Encabezado -->
   <div class="flex flex-col gap-2">
     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Umbrales de Alerta</h1>
-    <p class="text-gray-600 dark:text-gray-400">Configuración de umbrales para las alertas del sistema</p>
+    <p class="text-gray-600 dark:text-gray-400">Configura los valores límite para las alertas del sistema. Los umbrales deben estar en orden creciente.</p>
   </div>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="col-span-1 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-4">
-      <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Métricas</h3>
-      <ul class="space-y-2">
-        <li *ngFor="let m of metrics">
-          <button (click)="selectMetric(m)" [class.font-semibold]="m===selected" class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/40 text-gray-900 dark:text-gray-100">{{ envThresholds[m].label }}</button>
-        </li>
-      </ul>
+
+  <!-- Selector de Métricas en Tabs -->
+  <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 overflow-hidden">
+    <div class="flex flex-wrap gap-2 p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+      <button
+        *ngFor="let m of metrics"
+        (click)="selectMetric(m)"
+        [class.bg-brand-500]="m === selected"
+        [class.text-white]="m === selected"
+        [class.bg-gray-200]="m !== selected"
+        [class.text-gray-700]="m !== selected"
+        [class.dark:bg-gray-700]="m !== selected"
+        [class.dark:text-gray-300]="m !== selected"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:shadow-md"
+      >
+        {{ envThresholds[m].label }}
+      </button>
     </div>
 
-    <div class="col-span-2 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-4">
-      <form [formGroup]="form">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">Editar: {{ selected }}</h3>
-          <div class="flex gap-2">
-            <button type="button" (click)="reset()" class="px-3 py-1 text-sm rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">Restaurar</button>
-            <button type="button" (click)="save()" class="px-3 py-1 text-sm rounded bg-brand-500 text-white hover:bg-brand-600">Guardar</button>
+    <!-- Formulario de edición -->
+    <div class="p-6">
+      <form [formGroup]="form" class="space-y-6">
+        <!-- Encabezado del formulario -->
+        <div class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ envThresholds[selected].label }}</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Edita los umbrales máximos para cada nivel de alerta</p>
+          </div>
+          <div class="flex gap-3">
+            <button
+              type="button"
+              (click)="reset()"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 text-sm font-medium transition-colors"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Restaurar
+            </button>
+            <button
+              type="button"
+              (click)="save()"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium transition-colors shadow-md hover:shadow-lg"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Guardar Cambios
+            </button>
           </div>
         </div>
 
-        <div class="space-y-3" formArrayName="levels">
-          <div *ngFor="let lvl of levels.controls; let i = index" [formGroupName]="i" class="grid grid-cols-4 gap-3 items-center">
-            <div class="col-span-1 text-sm text-gray-700 dark:text-gray-300">{{ levels.controls[i].get('label')?.value }}</div>
-            <div class="col-span-2">
-              <input type="number" formControlName="max" class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600" />
+        <!-- Niveles de umbral -->
+        <div class="space-y-4" formArrayName="levels">
+          <div
+            *ngFor="let lvl of levels.controls; let i = index"
+            [formGroupName]="i"
+            class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <!-- Etiqueta del nivel -->
+              <div class="md:col-span-1">
+                <div class="flex items-center gap-2">
+                  <div [ngClass]="getLevelColorClass(i)" class="h-3 w-3 rounded-full"></div>
+                  <div>
+                    <p class="text-xs font-medium text-gray-600 dark:text-gray-400">NIVEL</p>
+                    <p class="text-sm font-bold text-gray-900 dark:text-white">{{ levels.controls[i].get('label')?.value }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Input del valor máximo (Solo si NO es el último nivel de la lista actual) -->
+              <div class="md:col-span-2">
+                <ng-container *ngIf="i < levels.controls.length - 1; else infoSoloLabel">
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Valor Máximo</label>
+                  <input
+                    type="number"
+                    formControlName="max"
+                    placeholder="Ingresa el valor máximo"
+                    [class.border-red-500]="levels.controls[i].get('max')?.invalid && levels.controls[i].get('max')?.touched"
+                    class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  />
+                </ng-container>
+                <ng-template #infoSoloLabel>
+                  <div class="h-full flex flex-col justify-end pb-2">
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cualquier valor superior a {{ levels.controls[i-1].get('max')?.value }}</p>
+                    <div class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 italic text-sm border border-dashed border-gray-300 dark:border-gray-700">
+                      Calculado automáticamente
+                    </div>
+                  </div>
+                </ng-template>
+              </div>
+
+              <!-- Indicador de validación -->
+              <div class="md:col-span-1">
+                <ng-container *ngIf="i < levels.controls.length - 1">
+                  <div *ngIf="levels.controls[i].get('max')?.valid" class="flex items-center gap-1 text-green-600 dark:text-green-400 text-sm font-medium">
+                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    Válido
+                  </div>
+                  <div *ngIf="levels.controls[i].get('max')?.invalid && levels.controls[i].get('max')?.touched" class="flex items-center gap-1 text-red-600 dark:text-red-400 text-sm font-medium">
+                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    Inválido
+                  </div>
+                </ng-container>
+              </div>
             </div>
-            <div class="col-span-1 text-sm text-red-600 dark:text-red-400" *ngIf="levels.controls[i].get('max')?.invalid && levels.controls[i].get('max')?.touched">Valor inválido</div>
+          </div>
+        </div>
+
+        <!-- Mensaje de validación global -->
+        <div *ngIf="validateOrder()" class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+          <div class="flex items-center gap-3">
+            <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 5a1 1 0 00-1.447-.894L12 7.75V4a1 1 0 00-2 0v3.75L3.447 4.106A1 1 0 001 5v12a1 1 0 001.447.894L8 12.25V16a1 1 0 002 0v-3.75l4.553 2.644A1 1 0 0019 15V5z" clip-rule="evenodd" />
+            </svg>
+            <div>
+              <p class="font-medium text-red-800 dark:text-red-300">Error en los umbrales</p>
+              <p class="text-sm text-red-700 dark:text-red-400">{{ validateOrder() }}</p>
+            </div>
           </div>
         </div>
       </form>
