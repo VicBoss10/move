@@ -79,9 +79,22 @@ export class PollutionSummaryComponent {
    * @private
    */
   private initializePollutionData(): void {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    
     this.pollutionData$ = this.sensorDataService.getAll().pipe(
       map((data: SensorData[]) => {
         if (!data || data.length === 0) {
+          return this.defaultPollutionData;
+        }
+
+        // Filtrar solo datos de hoy para las métricas
+        const todayData = data.filter(d => {
+          const dDate = new Date(d.timestamp);
+          return dDate >= todayStart && dDate <= now;
+        });
+
+        if (todayData.length === 0) {
           return this.defaultPollutionData;
         }
 
@@ -96,7 +109,7 @@ export class PollutionSummaryComponent {
 
         return pollutantConfigs.map(cfg => {
           const config = ENV_THRESHOLDS[cfg.key];
-          const values = data.map((d: any) => d[cfg.field]).filter((v: any) => v != null);
+          const values = todayData.map((d: any) => d[cfg.field]).filter((v: any) => v != null);
           const current = values[values.length - 1] || 0;
           const average = values.length > 0 ? values.reduce((a: number, b: number) => a + b, 0) / values.length : 0;
           const min = values.length > 0 ? Math.min(...values) : 0;

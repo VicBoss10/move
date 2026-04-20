@@ -148,10 +148,24 @@ export class VehicleActivityComponent {
 
   /**
    * Inicializa el observable compartido de datos de vehículos
+   * Filtra en memoria solo los vehículos detectados hoy
    * @private
    */
   private initializeVehicleData(): void {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    
     this.vehicleData$ = this.vehicleService.getAll().pipe(
+      map((vehicles: VehicleDetected[]) => {
+        if (!vehicles || vehicles.length === 0) {
+          return [];
+        }
+        // Filtrar solo vehículos de hoy
+        return vehicles.filter(v => {
+          const vDate = new Date(v.timestamp);
+          return vDate >= todayStart && vDate <= now;
+        });
+      }),
       catchError((error) => {
         console.error('Error cargando datos de vehículos:', error);
         return of([]);

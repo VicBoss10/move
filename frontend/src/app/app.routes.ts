@@ -1,60 +1,12 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { DashboardComponent } from './pages/dashboard/move/dashboard.component';
-import { ProfileComponent } from './pages/profile/profile.component';
-import { FormElementsComponent } from './pages/forms/form-elements/form-elements.component';
-import { BasicTablesComponent } from './pages/tables/basic-tables/basic-tables.component';
-import { BlankComponent } from './pages/blank/blank.component';
-import { NotFoundComponent } from './pages/other-page/not-found/not-found.component';
-import { AppLayoutComponent } from './shared/layout/app-layout/app-layout.component';
-import { InvoicesComponent } from './pages/invoices/invoices.component';
-import { LineChartComponent } from './pages/charts/line-chart/line-chart.component';
-import { BarChartComponent } from './pages/charts/bar-chart/bar-chart.component';
-import { AlertsComponent } from './pages/ui-elements/alerts/alerts.component';
-import { AvatarElementComponent } from './pages/ui-elements/avatar-element/avatar-element.component';
-import { BadgesComponent } from './pages/ui-elements/badges/badges.component';
-import { ButtonsComponent } from './pages/ui-elements/buttons/buttons.component';
-import { ImagesComponent } from './pages/ui-elements/images/images.component';
-import { VideosComponent } from './pages/ui-elements/videos/videos.component';
-import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { authRedirectGuard } from './core/guards/auth-redirect.guard';
 import { roleGuard } from './core/guards/role.guard';
-import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
-import { CalenderComponent } from './pages/calender/calender.component';
-import { LandingComponent } from './pages/landing/landing.component';
-import { Co2DetailComponent } from './pages/environment/co2-detail/co2-detail.component';
-import { GasesDetailComponent } from './pages/environment/gases-detail/gases-detail.component';
-import { ParticlesDetailComponent } from './pages/environment/particles-detail/particles-detail.component';
-import { TemperatureDetailComponent } from './pages/environment/temperature-detail/temperature-detail.component';
-import { HumidityDetailComponent } from './pages/environment/humidity-detail/humidity-detail.component';
-import { EnvironmentalHistoryComponent } from './pages/environment/environmental-history/environmental-history.component';
-import { VehiclesDetectedComponent } from './pages/vehicles/vehicles-detected/vehicles-detected.component';
-import { VehiclesStatsComponent } from './pages/vehicles/vehicles-stats/vehicles-stats.component';
-import { CameraStreamingComponent } from './pages/cameras/camera-streaming/camera-streaming.component';
-import { CameraModelStatusComponent } from './pages/cameras/camera-model-status/camera-model-status.component';
-import { LocationMonitoringComponent } from './pages/locations/location-monitoring/location-monitoring.component';
-import { LocationHistoryComponent } from './pages/locations/location-history/location-history.component';
-import { RegisterLocationComponent } from './pages/locations/register-location/register-location.component';
-import { RegisterDeviceComponent } from './pages/devices/register-device/register-device.component';
-import { ConnectedSensorsComponent } from './pages/devices/connected-sensors/connected-sensors.component';
-import { DeviceStatusComponent } from './pages/devices/device-status/device-status.component';
-import { UsersComponent } from './pages/configuration/users/users.component';
-import { AlertThresholdsComponent } from './pages/configuration/alert-thresholds/alert-thresholds.component';
-import { DeleteDataComponent } from './pages/configuration/delete-data/delete-data.component';
-import { TimeSeriesPageComponent } from './pages/analysis/time-series/time-series-page.component';
-import { CorrelationPageComponent } from './pages/analysis/correlation/correlation-page.component';
-import { LagPageComponent } from './pages/analysis/lag/lag-page.component';
-import { LocationsAnalysisPageComponent } from './pages/analysis/locations/locations-analysis-page.component';
-import { DataExportPageComponent } from './pages/analysis/export-data/data-export-page.component';
-import { HowItWorksPageComponent } from './pages/help/how-it-works/how-it-works.component';
-import { ArchitecturePageComponent } from './pages/help/architecture/architecture.component';
-import { FaqPageComponent } from './pages/help/faq/faq.component';
-
 
 const DASHBOARD_ROUTES: Routes = [
   {
     path: 'dashboard',
-    component: DashboardComponent,
+    loadComponent: () => import('./pages/dashboard/move/dashboard.component').then(m => m.DashboardComponent),
     title: 'Inicio',
   },
   {
@@ -62,32 +14,32 @@ const DASHBOARD_ROUTES: Routes = [
     children: [
       {
         path: 'co2',
-        component: Co2DetailComponent,
+        loadComponent: () => import('./pages/environment/co2-detail/co2-detail.component').then(m => m.Co2DetailComponent),
         title: 'CO₂'
       },
       {
         path: 'gases',
-        component: GasesDetailComponent,
+        loadComponent: () => import('./pages/environment/gases-detail/gases-detail.component').then(m => m.GasesDetailComponent),
         title: 'Gases'
       },
       {
         path: 'particles',
-        component: ParticlesDetailComponent,
+        loadComponent: () => import('./pages/environment/particles-detail/particles-detail.component').then(m => m.ParticlesDetailComponent),
         title: 'Partículas'
       },
       {
         path: 'temperature',
-        component: TemperatureDetailComponent,
+        loadComponent: () => import('./pages/environment/temperature-detail/temperature-detail.component').then(m => m.TemperatureDetailComponent),
         title: 'Temperatura'
       },
       {
         path: 'humidity',
-        component: HumidityDetailComponent,
+        loadComponent: () => import('./pages/environment/humidity-detail/humidity-detail.component').then(m => m.HumidityDetailComponent),
         title: 'Humedad'
       },
       {
         path: 'history',
-        component: EnvironmentalHistoryComponent,
+        loadComponent: () => import('./pages/environment/environmental-history/environmental-history.component').then(m => m.EnvironmentalHistoryComponent),
         title: 'Histórico Ambiental'
       }
     ]
@@ -97,12 +49,12 @@ const DASHBOARD_ROUTES: Routes = [
     children: [
       {
         path: 'detected',
-        component: VehiclesDetectedComponent,
+        loadComponent: () => import('./pages/vehicles/vehicles-detected/vehicles-detected.component').then(m => m.VehiclesDetectedComponent),
         title: 'Vehículos Detectados'
       },
       {
         path: 'stats',
-        component: VehiclesStatsComponent,
+        loadComponent: () => import('./pages/vehicles/vehicles-stats/vehicles-stats.component').then(m => m.VehiclesStatsComponent),
         title: 'Estadísticas de Vehículos'
       }
     ]
@@ -112,12 +64,12 @@ const DASHBOARD_ROUTES: Routes = [
     children: [
       {
         path: 'streaming',
-        component: CameraStreamingComponent,
+        loadComponent: () => import('./pages/cameras/camera-streaming/camera-streaming.component').then(m => m.CameraStreamingComponent),
         title: 'Streaming de Cámaras'
       },
       {
         path: 'model-status',
-        component: CameraModelStatusComponent,
+        loadComponent: () => import('./pages/cameras/camera-model-status/camera-model-status.component').then(m => m.CameraModelStatusComponent),
         title: 'Estado del Modelo'
       }
     ]
@@ -127,21 +79,21 @@ const DASHBOARD_ROUTES: Routes = [
     children: [
       {
         path: 'register-device',
-        component: RegisterDeviceComponent,
+        loadComponent: () => import('./pages/devices/register-device/register-device.component').then(m => m.RegisterDeviceComponent),
         title: 'Registrar Dispositivo',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'connected-sensors',
-        component: ConnectedSensorsComponent,
+        loadComponent: () => import('./pages/devices/connected-sensors/connected-sensors.component').then(m => m.ConnectedSensorsComponent),
         title: 'Sensores Conectados',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'device-status',
-        component: DeviceStatusComponent,
+        loadComponent: () => import('./pages/devices/device-status/device-status.component').then(m => m.DeviceStatusComponent),
         title: 'Estado de Dispositivos',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
@@ -153,21 +105,21 @@ const DASHBOARD_ROUTES: Routes = [
     children: [
       {
         path: 'users',
-        component: UsersComponent,
+        loadComponent: () => import('./pages/configuration/users/users.component').then(m => m.UsersComponent),
         title: 'Usuarios',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'alert-thresholds',
-        component: AlertThresholdsComponent,
+        loadComponent: () => import('./pages/configuration/alert-thresholds/alert-thresholds.component').then(m => m.AlertThresholdsComponent),
         title: 'Umbrales de Alerta',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'delete-data',
-        component: DeleteDataComponent,
+        loadComponent: () => import('./pages/configuration/delete-data/delete-data.component').then(m => m.DeleteDataComponent),
         title: 'Eliminar Datos',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
@@ -179,35 +131,35 @@ const DASHBOARD_ROUTES: Routes = [
     children: [
       {
         path: 'time-series',
-        component: TimeSeriesPageComponent,
+        loadComponent: () => import('./pages/analysis/time-series/time-series-page.component').then(m => m.TimeSeriesPageComponent),
         title: 'Series Temporales',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'correlation',
-        component: CorrelationPageComponent,
+        loadComponent: () => import('./pages/analysis/correlation/correlation-page.component').then(m => m.CorrelationPageComponent),
         title: 'Matriz de Correlación',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'lag',
-        component: LagPageComponent,
+        loadComponent: () => import('./pages/analysis/lag/lag-page.component').then(m => m.LagPageComponent),
         title: 'Rezagos / Cross-correlation',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'locations',
-        component: LocationsAnalysisPageComponent,
+        loadComponent: () => import('./pages/analysis/locations/locations-analysis-page.component').then(m => m.LocationsAnalysisPageComponent),
         title: 'Análisis por Ubicación',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'export-data',
-        component: DataExportPageComponent,
+        loadComponent: () => import('./pages/analysis/export-data/data-export-page.component').then(m => m.DataExportPageComponent),
         title: 'Exportar Datos',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
@@ -219,21 +171,21 @@ const DASHBOARD_ROUTES: Routes = [
     children: [
       {
         path: 'how-it-works',
-        component: HowItWorksPageComponent,
+        loadComponent: () => import('./pages/help/how-it-works/how-it-works.component').then(m => m.HowItWorksPageComponent),
         title: 'Cómo Funciona',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'faq',
-        component: FaqPageComponent,
+        loadComponent: () => import('./pages/help/faq/faq.component').then(m => m.FaqPageComponent),
         title: 'Preguntas Frecuentes',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'architecture',
-        component: ArchitecturePageComponent,
+        loadComponent: () => import('./pages/help/architecture/architecture.component').then(m => m.ArchitecturePageComponent),
         title: 'Arquitectura del Sistema',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
@@ -245,95 +197,95 @@ const DASHBOARD_ROUTES: Routes = [
     children: [
       {
         path: 'register-location',
-        component: RegisterLocationComponent,
+        loadComponent: () => import('./pages/locations/register-location/register-location.component').then(m => m.RegisterLocationComponent),
         title: 'Registrar Ubicación',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'monitoring',
-        component: LocationMonitoringComponent,
+        loadComponent: () => import('./pages/locations/location-monitoring/location-monitoring.component').then(m => m.LocationMonitoringComponent),
         title: 'Puntos de Monitoreo',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       },
       {
         path: 'history',
-        component: LocationHistoryComponent,
+        loadComponent: () => import('./pages/locations/location-history/location-history.component').then(m => m.LocationHistoryComponent),
         title: 'Histórico de Ubicaciones',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       }
     ]
-  },  
+  },
   {
     path: 'calendar',
-    component: CalenderComponent,
+    loadComponent: () => import('./pages/calender/calender.component').then(m => m.CalenderComponent),
     title: 'Calendario'
   },
   {
     path: 'profile',
-    component: ProfileComponent,
+    loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
     title: 'Perfil'
   },
   {
     path: 'form-elements',
-    component: FormElementsComponent,
+    loadComponent: () => import('./pages/forms/form-elements/form-elements.component').then(m => m.FormElementsComponent),
     title: 'Elementos de Formulario'
   },
   {
     path: 'basic-tables',
-    component: BasicTablesComponent,
+    loadComponent: () => import('./pages/tables/basic-tables/basic-tables.component').then(m => m.BasicTablesComponent),
     title: 'Tablas Básicas'
   },
   {
     path: 'blank',
-    component: BlankComponent,
+    loadComponent: () => import('./pages/blank/blank.component').then(m => m.BlankComponent),
     title: 'Página en Blanco'
   },
   {
     path: 'invoice',
-    component: InvoicesComponent,
+    loadComponent: () => import('./pages/invoices/invoices.component').then(m => m.InvoicesComponent),
     title: 'Facturas'
   },
   {
     path: 'line-chart',
-    component: LineChartComponent,
+    loadComponent: () => import('./pages/charts/line-chart/line-chart.component').then(m => m.LineChartComponent),
     title: 'Gráfico de Líneas'
   },
   {
     path: 'bar-chart',
-    component: BarChartComponent,
+    loadComponent: () => import('./pages/charts/bar-chart/bar-chart.component').then(m => m.BarChartComponent),
     title: 'Gráfico de Barras'
   },
   {
     path: 'alerts',
-    component: AlertsComponent,
+    loadComponent: () => import('./pages/ui-elements/alerts/alerts.component').then(m => m.AlertsComponent),
     title: 'Alertas'
   },
   {
     path: 'avatars',
-    component: AvatarElementComponent,
+    loadComponent: () => import('./pages/ui-elements/avatar-element/avatar-element.component').then(m => m.AvatarElementComponent),
     title: 'Avatares'
   },
   {
     path: 'badge',
-    component: BadgesComponent,
+    loadComponent: () => import('./pages/ui-elements/badges/badges.component').then(m => m.BadgesComponent),
     title: 'Insignias'
   },
   {
     path: 'buttons',
-    component: ButtonsComponent,
+    loadComponent: () => import('./pages/ui-elements/buttons/buttons.component').then(m => m.ButtonsComponent),
     title: 'Botones'
   },
   {
     path: 'images',
-    component: ImagesComponent,
+    loadComponent: () => import('./pages/ui-elements/images/images.component').then(m => m.ImagesComponent),
     title: 'Imágenes'
   },
   {
     path: 'videos',
-    component: VideosComponent,
+    loadComponent: () => import('./pages/ui-elements/videos/videos.component').then(m => m.VideosComponent),
     title: 'Videos'
   },
 ];
@@ -348,12 +300,12 @@ const REDIRECT_ROUTES: Routes = DASHBOARD_ROUTES.map(route => ({
 export const routes: Routes = [
   {
     path: '',
-    component: LandingComponent,
+    loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent),
   },
   ...REDIRECT_ROUTES,
   {
     path: 'dashboard',
-    component: AppLayoutComponent,
+    loadComponent: () => import('./shared/layout/app-layout/app-layout.component').then(m => m.AppLayoutComponent),
     canActivate: [authGuard],
     children: [
       {
@@ -366,18 +318,19 @@ export const routes: Routes = [
   },
   {
     path: 'signin',
-    component: SignInComponent,
+    loadComponent: () => import('./pages/auth-pages/sign-in/sign-in.component').then(m => m.SignInComponent),
     canActivate: [authRedirectGuard],
     title: 'Iniciar Sesión'
   },
   {
     path: 'signup',
-    component: SignUpComponent,
+    loadComponent: () => import('./pages/auth-pages/sign-up/sign-up.component').then(m => m.SignUpComponent),
     title: 'Registrarse'
   },
   {
     path: '**',
-    component: NotFoundComponent,
+    loadComponent: () => import('./pages/other-page/not-found/not-found.component').then(m => m.NotFoundComponent),
     title: 'Página No Encontrada'
   },
 ];
+

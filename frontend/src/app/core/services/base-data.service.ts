@@ -52,6 +52,13 @@ export abstract class BaseDataService<T> {
   protected cacheDuration: number = 5 * 60 * 1000; // Default: 5 minutos
 
   /**
+   * Observable en vuelo para getAll() — evita N peticiones HTTP paralelas
+   * al mismo endpoint cuando múltiples componentes se suscriben simultáneamente.
+   * @private
+   */
+  private inFlightGetAll$: Observable<T[]> | null = null;
+
+  /**
    * Endpoint del API (sin slash inicial)
    * @protected
    * @abstract
@@ -70,14 +77,16 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Obtiene todos los datos con caché
-   * Verifica caché antes de hacer petición HTTP
+   * Obtiene todos los datos con caché e in-flight deduplication.
+   * - Si el caché es válido lo devuelve sin petición HTTP.
+   * - Si hay una petición ya en vuelo, reutiliza ese mismo Observable
+   *   en lugar de lanzar un segundo request idéntico al backend.
    * @returns Observable<T[]>
    */
   getAll(): Observable<T[]> {
     const now = Date.now();
 
-    // Si caché es válido, devolverlo sin petición HTTP
+    // Caché válido: devolver sin petición HTTP
     if (this.cacheData.length > 0 && now - this.lastFetch < this.cacheDuration) {
       return new Observable(observer => {
         observer.next(this.cacheData);
@@ -85,20 +94,29 @@ export abstract class BaseDataService<T> {
       });
     }
 
-    // Si no, hacer petición HTTP
-    return this.apiService.get<T[]>(`/${this.endpoint}`).pipe(
+    // Petición en vuelo: reutilizar para evitar duplicados
+    if (this.inFlightGetAll$) {
+      return this.inFlightGetAll$;
+    }
+
+    // Nueva petición HTTP
+    this.inFlightGetAll$ = this.apiService.get<T[]>(`/${this.endpoint}`).pipe(
       tap(data => {
         this.cacheData = data;
         this.lastFetch = now;
         this.dataSubject.next(this.cacheData);
         this.clearServiceError();
+        this.inFlightGetAll$ = null;
       }),
       catchError((error) => {
+        this.inFlightGetAll$ = null;
         this.setServiceError(error, `Error al obtener datos de ${this.endpoint}`);
         return throwError(() => error);
       }),
       shareReplay(1)
     );
+
+    return this.inFlightGetAll$;
   }
 
   /**
@@ -178,6 +196,7 @@ export abstract class BaseDataService<T> {
   protected invalidateCache(): void {
     this.cacheData = [];
     this.lastFetch = 0;
+    this.inFlightGetAll$ = null;
   }
 
   /**

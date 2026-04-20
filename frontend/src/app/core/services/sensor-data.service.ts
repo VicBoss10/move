@@ -84,20 +84,28 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   /**
-   * Obtiene el registro de sensor más reciente
-   * Útil para dashboards que solo necesitan datos actuales
+   * Obtiene únicamente el registro más reciente usando GET /sensordata/last.
+   * Es una llamada ligera: solo devuelve 1 fila sin descargar toda la tabla.
+   * @returns Observable<SensorData>
+   */
+  getLast(): Observable<SensorData> {
+    return this.apiService.get<SensorData>(`/${this.endpoint}/last`).pipe(
+      map(data => ({ ...data, timestamp: new Date((data as any).timestamp) })),
+      shareReplay(1),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al obtener el último registro de sensor');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene el registro de sensor más reciente.
+   * Delega en getLast() para evitar descargar todos los datos.
    * @returns Observable<SensorData>
    */
   getLatest(): Observable<SensorData> {
-    return this.getAll().pipe(
-      map(data => {
-        if (data && data.length > 0) {
-          return data[data.length - 1];
-        }
-        throw new Error('No sensor data available');
-      }),
-      shareReplay(1)
-    );
+    return this.getLast();
   }
 
   /**
