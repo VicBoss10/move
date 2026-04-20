@@ -5,11 +5,12 @@ import { AuthService } from '../services/auth.service';
 /**
  * Redirects users away from the signin page when already authenticated.
  */
-export const authRedirectGuard: CanActivateFn = (): boolean | UrlTree => {
+export const authRedirectGuard: CanActivateFn = async (): Promise<boolean | UrlTree> => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.isLoggedIn()) {
+  const token = await auth.getToken();
+  if (token) {
     return router.parseUrl('/dashboard');
   }
 

@@ -7,13 +7,14 @@ import { ToastService } from '../services/toast.service';
  * Guard que valida que el usuario tenga al menos uno de los roles requeridos
  * Se usa en rutas pasando `data: { roles: ['ADMIN'] }` o `data: { roles: ['ADMIN','USER'] }`
  */
-export const roleGuard: CanActivateFn = (route, state) => {
+export const roleGuard: CanActivateFn = async (route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const toast = inject(ToastService);
 
   // Si no está autenticado, redirigir al signin (aunque `authGuard` normalmente ya cubre esto)
-  if (!auth.isLoggedIn()) {
+  const token = await auth.getToken();
+  if (!token) {
     router.navigate(['/signin']);
     return false;
   }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap, map, catchError } from 'rxjs/operators';
+import { tap, map, catchError, finalize, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 interface TokenResponse {
@@ -24,9 +24,18 @@ export class AuthService {
   // provide it via a safer runtime mechanism. Leave empty for public clients.
   private readonly clientSecret: string = '';
 
+  /** Seconds before expiry to proactively refresh the access token in the background. */
+  private readonly REFRESH_THRESHOLD_SECONDS = 60;
+
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
   private tokenExpiry: number = 0;
+
+  /** Single-flight: shared observable so concurrent callers share one HTTP refresh request. */
+  private refresh$: Observable<string | null> | null = null;
+
+  /** Timer ID for the proactive silent background refresh. */
+  private refreshTimerId: ReturnType<typeof setTimeout> | null = null;
 
   private readonly _isLoggedIn$ = new BehaviorSubject<boolean>(false);
   readonly isLoggedIn$: Observable<boolean> = this._isLoggedIn$.asObservable();
@@ -48,7 +57,12 @@ export class AuthService {
     this.refreshToken = sessionStorage.getItem('kc_refresh_token');
     const expiry = sessionStorage.getItem('kc_token_expiry');
     this.tokenExpiry = expiry ? parseInt(expiry, 10) : 0;
-    this._isLoggedIn$.next(this.isLoggedIn());
+    const loggedIn = this.isLoggedIn();
+    this._isLoggedIn$.next(loggedIn);
+    // Resume background refresh if we have a valid session
+    if (loggedIn && this.refreshToken) {
+      this.scheduleSilentRefresh();
+    }
   }
 
   private storeTokens(response: TokenResponse): void {
@@ -60,16 +74,44 @@ export class AuthService {
     sessionStorage.setItem('kc_refresh_token', response.refresh_token);
     sessionStorage.setItem('kc_token_expiry', String(expiry));
     this._isLoggedIn$.next(true);
+    // Schedule next proactive refresh using the reported expires_in value
+    this.scheduleSilentRefresh(response.expires_in);
   }
 
   private clearTokens(): void {
     this.accessToken = null;
     this.refreshToken = null;
     this.tokenExpiry = 0;
+    this.refresh$ = null;
+    if (this.refreshTimerId !== null) {
+      clearTimeout(this.refreshTimerId);
+      this.refreshTimerId = null;
+    }
     sessionStorage.removeItem('kc_access_token');
     sessionStorage.removeItem('kc_refresh_token');
     sessionStorage.removeItem('kc_token_expiry');
     this._isLoggedIn$.next(false);
+  }
+
+  /**
+   * Schedules a proactive silent refresh REFRESH_THRESHOLD_SECONDS before the token expires.
+   * @param expiresIn seconds until token expiry (from Keycloak response). If omitted,
+   *                  calculates remaining time from the stored tokenExpiry timestamp.
+   */
+  private scheduleSilentRefresh(expiresIn?: number): void {
+    if (this.refreshTimerId !== null) {
+      clearTimeout(this.refreshTimerId);
+      this.refreshTimerId = null;
+    }
+    const msUntilExpiry = expiresIn !== undefined
+      ? expiresIn * 1000
+      : this.tokenExpiry - Date.now();
+    // Refresh REFRESH_THRESHOLD_SECONDS before expiry; minimum 1 s to avoid re-entrant calls
+    const delay = Math.max(msUntilExpiry - this.REFRESH_THRESHOLD_SECONDS * 1000, 1000);
+    this.refreshTimerId = setTimeout(() => {
+      this.refreshTimerId = null;
+      this.refreshAccessToken().subscribe();
+    }, delay);
   }
 
   login(username: string, password: string): Observable<void> {
@@ -104,17 +146,32 @@ export class AuthService {
     return !!this.accessToken && Date.now() < this.tokenExpiry;
   }
 
+  /**
+   * Returns the current access token, refreshing proactively if within the threshold window
+   * or if already expired. Multiple concurrent callers share a single refresh request.
+   */
   async getToken(): Promise<string | undefined> {
-    if (this.isLoggedIn()) {
-      return this.accessToken ?? undefined;
+    // Token is valid and not yet within the refresh threshold — return immediately
+    if (this.accessToken && Date.now() < this.tokenExpiry - this.REFRESH_THRESHOLD_SECONDS * 1000) {
+      return this.accessToken;
     }
+    // Token is expired or inside the threshold window — refresh (single-flight)
     if (this.refreshToken) {
-      return this.refreshAccessToken().toPromise().then(t => t ?? undefined);
+      const token = await this.refreshAccessToken().toPromise();
+      return token ?? undefined;
     }
     return undefined;
   }
 
-  private refreshAccessToken(): Observable<string | null> {
+  /**
+   * Performs a token refresh using the stored refresh token.
+   * Implements single-flight: concurrent calls share the same in-flight HTTP request.
+   * Used by the interceptor to retry 401 responses and by the background timer.
+   */
+  refreshAccessToken(): Observable<string | null> {
+    if (this.refresh$) {
+      return this.refresh$;
+    }
     if (!this.refreshToken) {
       this.clearTokens();
       return of(null);
@@ -126,14 +183,20 @@ export class AuthService {
     const finalBody = this.clientSecret ? body.set('client_secret', this.clientSecret) : body;
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
 
-    return this.http.post<TokenResponse>(this.tokenUrl, finalBody.toString(), { headers }).pipe(
+    this.refresh$ = this.http.post<TokenResponse>(this.tokenUrl, finalBody.toString(), { headers }).pipe(
       tap(response => this.storeTokens(response)),
       map(response => response.access_token),
       catchError(() => {
         this.clearTokens();
         return of(null);
-      })
+      }),
+      // Clear the shared observable once the source completes so future calls create a fresh request
+      finalize(() => { this.refresh$ = null; }),
+      // Replay the result to any callers that subscribe after the HTTP response arrives
+      shareReplay(1)
     );
+
+    return this.refresh$;
   }
 
   getUserInfo(): { username?: string; email?: string; firstName?: string; lastName?: string; roles: string[] } {
