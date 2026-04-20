@@ -84,7 +84,6 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       subItems: [
         { name: "Registrar Dispositivo", path: "/dashboard/devices/register-device" },
         { name: "Dispositivos", path: "/dashboard/devices/device-status" },
-        { name: "Logs del Dispositivo", path: "/dashboard/devices/device-logs" },
       ],
     },
     {

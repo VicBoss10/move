@@ -38,7 +38,6 @@ import { RegisterLocationComponent } from './pages/locations/register-location/r
 import { RegisterDeviceComponent } from './pages/devices/register-device/register-device.component';
 import { ConnectedSensorsComponent } from './pages/devices/connected-sensors/connected-sensors.component';
 import { DeviceStatusComponent } from './pages/devices/device-status/device-status.component';
-import { DeviceLogsComponent } from './pages/devices/device-logs/device-logs.component';
 import { UsersComponent } from './pages/configuration/users/users.component';
 import { AlertThresholdsComponent } from './pages/configuration/alert-thresholds/alert-thresholds.component';
 import { DeleteDataComponent } from './pages/configuration/delete-data/delete-data.component';
@@ -144,13 +143,6 @@ const DASHBOARD_ROUTES: Routes = [
         path: 'device-status',
         component: DeviceStatusComponent,
         title: 'Estado de Dispositivos',
-        canActivate: [roleGuard],
-        data: { roles: ['admin'] }
-      },
-      {
-        path: 'device-logs',
-        component: DeviceLogsComponent,
-        title: 'Logs del Sistema',
         canActivate: [roleGuard],
         data: { roles: ['admin'] }
       }
