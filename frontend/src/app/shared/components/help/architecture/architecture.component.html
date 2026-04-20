@@ -1,38 +1,114 @@
-<div class="space-y-6 p-6">
-  <div class="flex flex-col gap-2">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Arquitectura del Sistema</h1>
-    <p class="text-gray-600 dark:text-gray-400">Visión general de los componentes, comunicación entre servicios y recomendaciones para despliegue y escalado.</p>
+<div class="space-y-8 p-6">
+  <!-- Encabezado -->
+  <div class="flex flex-col gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-lg bg-brand-500/10 flex items-center justify-center">
+        <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.452a6 6 0 00-5.011 1.595m7.383 8.5h.001" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Arquitectura del Sistema</h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Componentes, comunicación y recomendaciones de despliegue</p>
+      </div>
+    </div>
   </div>
 
-  <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 p-6 space-y-4">
-    <div>
-      <div class="font-medium text-gray-900 dark:text-white">Componentes principales</div>
-      <ul class="list-disc ml-5 mt-2 text-gray-600 dark:text-gray-400">
-        <li><strong>Frontend (Angular):</strong> Interfaz de usuario, dashboards, formularios de configuración.</li>
-        <li><strong>Backend (Spring Boot):</strong> API REST, seguridad (Keycloak), lógica de negocio y persistencia.</li>
-        <li><strong>Detector (Python):</strong> Servicio de detección que procesa streams y emite eventos.</li>
-        <li><strong>Base de datos:</strong> Almacenamiento de eventos, dispositivos, ubicaciones y usuarios.</li>
+  <!-- Grid de tarjetas -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Tarjeta 1: Componentes principales -->
+    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 1112 2.944a11.954 11.954 0 018.618 3.04A12.02 12.02 0 0121 12z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Componentes Principales</h3>
+      </div>
+      <ul class="space-y-3">
+        <li class="flex gap-3">
+          <span class="text-blue-600 dark:text-blue-400 font-bold mt-1">•</span>
+          <div>
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">Frontend (Angular)</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Interfaz de usuario, dashboards y formularios</p>
+          </div>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-blue-600 dark:text-blue-400 font-bold mt-1">•</span>
+          <div>
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">Backend (Spring Boot)</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">API REST, seguridad y lógica de negocio</p>
+          </div>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-blue-600 dark:text-blue-400 font-bold mt-1">•</span>
+          <div>
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">Detector (Python)</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Procesamiento de streams y generación de eventos</p>
+          </div>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-blue-600 dark:text-blue-400 font-bold mt-1">•</span>
+          <div>
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">Base de Datos</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Eventos, dispositivos, ubicaciones y usuarios</p>
+          </div>
+        </li>
       </ul>
     </div>
 
-    <div>
-      <div class="font-medium text-gray-900 dark:text-white">Comunicación</div>
-      <p class="text-gray-600 dark:text-gray-400 mt-1">Los detectores pueden enviar eventos directamente al backend mediante HTTP o usar un broker (opcional) para desacoplar procesamiento y recibir picos de carga. El frontend consulta la API REST protegida por tokens JWT gestionados por Keycloak.</p>
+    <!-- Tarjeta 2: Comunicación -->
+    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+          <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Comunicación</h3>
+      </div>
+      <p class="text-gray-600 dark:text-gray-400 leading-relaxed text-sm mb-4">
+        Los detectores envían eventos al backend mediante <span class="font-semibold text-gray-900 dark:text-white">HTTP</span> o un <span class="font-semibold text-gray-900 dark:text-white">broker</span> (opcional) para desacoplar procesamiento.
+      </p>
+      <div class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+        <p class="text-sm text-blue-900 dark:text-blue-300">✓ Protección de API con JWT y Keycloak</p>
+      </div>
     </div>
 
-    <div>
-      <div class="font-medium text-gray-900 dark:text-white">Despliegue y escalabilidad</div>
-      <p class="text-gray-600 dark:text-gray-400 mt-1">Para cargas mayores, escale horizontalmente los detectores y el backend. Use contenedores (Docker) y orquestadores (docker-compose/ Kubernetes) y reserve recursos para procesamiento de video. Considere almacenamiento en caché para consultas intensivas y particionado de datos por ubicación/fecha.</p>
+    <!-- Tarjeta 3: Despliegue y Escalabilidad -->
+    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Despliegue & Escalabilidad</h3>
+      </div>
+      <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+        <li class="flex gap-2"><span class="text-green-600 dark:text-green-400">→</span> Escale horizontalmente detectores y backend</li>
+        <li class="flex gap-2"><span class="text-green-600 dark:text-green-400">→</span> Use Docker y Kubernetes/docker-compose</li>
+        <li class="flex gap-2"><span class="text-green-600 dark:text-green-400">→</span> Almacenamiento en caché para consultas intensivas</li>
+        <li class="flex gap-2"><span class="text-green-600 dark:text-green-400">→</span> Particionado de datos por ubicación/fecha</li>
+      </ul>
     </div>
 
-    <div>
-      <div class="font-medium text-gray-900 dark:text-white">Seguridad y operación</div>
-      <p class="text-gray-600 dark:text-gray-400 mt-1">Proteja endpoints administrativos con roles Keycloak, audite accesos y mantenga certificados TLS en los puntos de exposición. Monitorice latencia, tasa de eventos y errores en los detectores para detectar degradación temprana.</p>
-    </div>
-
-    <div>
-      <div class="font-medium text-gray-900 dark:text-white">Diagrama</div>
-      <p class="text-gray-600 dark:text-gray-400 mt-1">Inserte aquí un diagrama de despliegue (SVG/PNG). Recomendación: mostrar capas (Edge detectors → Backend → DB → Frontend) y flujos (streams, events, API).</p>
+    <!-- Tarjeta 4: Seguridad y Operación -->
+    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+          <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Seguridad & Operación</h3>
+      </div>
+      <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+        <li class="flex gap-2"><span class="text-red-600 dark:text-red-400">🔒</span> Proteja endpoints con roles Keycloak</li>
+        <li class="flex gap-2"><span class="text-red-600 dark:text-red-400">🔒</span> Audite accesos y mantenga certificados TLS</li>
+        <li class="flex gap-2"><span class="text-red-600 dark:text-red-400">🔒</span> Monitorice latencia y tasa de eventos</li>
+      </ul>
     </div>
   </div>
 </div>
