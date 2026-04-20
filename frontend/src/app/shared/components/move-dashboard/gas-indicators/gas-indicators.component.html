@@ -72,8 +72,10 @@
   <!-- Footer info -->
   <div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-800">
     <p class="text-xs text-gray-500 dark:text-gray-400">
-      <ng-container *ngFor="let item of statusLegend; let first = first">
-        <span class="inline-block w-3 h-3 rounded-full mr-2" [class.ml-3]="!first" [style.background-color]="item.color"></span>{{ item.label }}
+      <ng-container *ngIf="statusLegend$ | async as legend">
+        <ng-container *ngFor="let item of legend; let first = first">
+          <span class="inline-block w-3 h-3 rounded-full mr-2" [class.ml-3]="!first" [style.background-color]="item.color"></span>{{ item.label }}
+        </ng-container>
       </ng-container>
     </p>
   </div>

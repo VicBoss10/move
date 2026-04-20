@@ -1,5 +1,5 @@
 <ng-container *ngIf="gaugeData$ | async as data">
-  <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02] min-h-[480px] flex flex-col" [ngClass]="'bg-gradient-to-br ' + getGaugeBgColor(data.temperature)">
+  <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02] min-h-[480px] flex flex-col" [ngClass]="'bg-gradient-to-br ' + data.bgColor">
     <!-- Header -->
     <div class="px-5 pt-5 sm:px-6 sm:pt-6">
       <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
@@ -52,22 +52,12 @@
       <!-- Temperature Scale -->
       <div class="mt-8 w-full">
         <div class="flex items-center justify-between gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+          @for (level of data.scaleLevels; track level.label) {
           <div class="text-center">
-            <div class="h-2 w-2 rounded-full bg-blue-500 mx-auto mb-1"></div>
-            <span>&lt;15°C</span>
+            <div class="h-2 w-2 rounded-full mx-auto mb-1" [style.background-color]="level.color"></div>
+            <span>{{ level.label }}<br />{{ level.rangeLabel }}</span>
           </div>
-          <div class="text-center">
-            <div class="h-2 w-2 rounded-full bg-green-500 mx-auto mb-1"></div>
-            <span>15-25°C</span>
-          </div>
-          <div class="text-center">
-            <div class="h-2 w-2 rounded-full bg-orange-500 mx-auto mb-1"></div>
-            <span>25-35°C</span>
-          </div>
-          <div class="text-center">
-            <div class="h-2 w-2 rounded-full bg-red-500 mx-auto mb-1"></div>
-            <span>&gt;35°C</span>
-          </div>
+          }
         </div>
       </div>
     </div>

@@ -27,7 +27,7 @@
             r="65"
             fill="none"
             [attr.stroke-dasharray]="409.6"
-            [attr.stroke-dashoffset]="409.6 - (409.6 * getGaugePercentage(gas.value, 100)) / 100"
+            [attr.stroke-dashoffset]="409.6 - (409.6 * getGaugePercentage(gas.value, gas.maxValue)) / 100"
             stroke-width="8"
             stroke-linecap="round"
             [ngClass]="'origin-center -rotate-90 transition-all duration-500 ' + gas.color"

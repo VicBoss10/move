@@ -1,9 +1,10 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, of } from 'rxjs';
+import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
-import { getEnvironmentStatus, getMetricGaugePercentage } from '../../../../core/config/environment-thresholds.config';
+import { ThresholdsService } from '../../../../core/services/thresholds.service';
+import { getEnvironmentStatusFromConfig, getMetricGaugePercentageFromConfig } from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Co2GaugeComponent
@@ -32,50 +33,45 @@ export class Co2GaugeComponent {
     gaugeColor: string;
     status: string;
     bgColor: string;
+    scaleLevels: { color: string; label: string; rangeLabel: string }[];
   }>;
 
-  constructor(private sensorDataService: SensorDataService) {
+  constructor(private sensorDataService: SensorDataService, private thresholds: ThresholdsService) {
     this.initializeGaugeData();
   }
 
   /**
-   * Inicializa los datos del gauge desde el servicio
+   * Inicializa los datos del gauge desde el servicio, reaccionando a cambios de umbrales
    */
   private initializeGaugeData(): void {
-    this.gaugeData$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: any) => {
-        const co2Value = latestData?.co2 || 0;
-        return this.calculateGaugeData(co2Value);
+    this.gaugeData$ = combineLatest([
+      this.sensorDataService.getLatest(),
+      this.thresholds.getAll(),
+    ]).pipe(
+      map(([latestData, allThresholds]) => {
+        const co2Value = (latestData as any)?.co2 || 0;
+        const config = allThresholds['co2'];
+        const envStatus = getEnvironmentStatusFromConfig(config, co2Value, false);
+        return {
+          co2Value,
+          gaugePercentage: getMetricGaugePercentageFromConfig(config, co2Value),
+          gaugeColor: envStatus.textClass,
+          status: envStatus.label,
+          bgColor: envStatus.gaugeGradient,
+          scaleLevels: config.levels.map((l, i, arr) => ({
+            color: l.color,
+            label: l.label,
+            rangeLabel: (l.max === Infinity || l.max == null)
+              ? `>${arr[i - 1]?.max ?? 0}`
+              : (i === 0 ? `<${l.max}` : `${arr[i - 1].max}–${l.max}`),
+          })),
+        };
       }),
       catchError((error) => {
         console.error('Error cargando datos de CO₂:', error);
-        return of(this.calculateGaugeData(0));
+        return of({ co2Value: 0, gaugePercentage: 0, gaugeColor: 'text-gray-500 dark:text-gray-400', status: 'Sin datos', bgColor: 'from-gray-500/20 to-gray-600/20', scaleLevels: [] });
       }),
       shareReplay(1)
     );
-  }
-
-  /**
-   * Calcula todos los valores del gauge basado en el valor de CO₂
-   * @param co2Value - Valor de CO₂ en ppm
-   * @returns Objeto con datos del gauge
-   */
-  private calculateGaugeData(co2Value: number): {
-    co2Value: number;
-    gaugePercentage: number;
-    gaugeColor: string;
-    status: string;
-    bgColor: string;
-  } {
-    const gaugePercentage = getMetricGaugePercentage('co2', co2Value);
-    const envStatus = getEnvironmentStatus('co2', co2Value, false);
-
-    return {
-      co2Value,
-      gaugePercentage,
-      gaugeColor: envStatus.textClass,
-      status: envStatus.label,
-      bgColor: envStatus.gaugeGradient,
-    };
   }
 }

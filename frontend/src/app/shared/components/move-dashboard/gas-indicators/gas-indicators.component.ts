@@ -1,8 +1,9 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
-import { ENV_THRESHOLDS, getEnvironmentStatus, EnvironmentMetricKey, getMetricGaugePercentage } from '../../../../core/config/environment-thresholds.config';
-import { Observable, of } from 'rxjs';
+import { ThresholdsService } from '../../../../core/services/thresholds.service';
+import { getEnvironmentStatusFromConfig, getMetricGaugePercentageFromConfig, EnvironmentMetricKey } from '../../../../core/config/environment-thresholds.config';
+import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
 /**
@@ -30,6 +31,7 @@ interface GasIndicator {
   statusTextClass: string;
   color: string;
   metricKey: EnvironmentMetricKey;
+  gaugePercentage: number;
 }
 
 /**
@@ -63,13 +65,9 @@ interface GasIndicator {
 })
 export class GasIndicatorsComponent {
   /**
-   * Leyenda de estados derivada de la configuración centralizada.
-   * Toma los niveles de CO₂ como referencia (los niveles son los mismos para todos los gases).
+   * Leyenda de estados reactiva basada en los umbrales actuales del servicio.
    */
-  readonly statusLegend = ENV_THRESHOLDS.co2.levels.map(level => ({
-    color: level.color,
-    label: level.label,
-  }));
+  statusLegend$: Observable<{ color: string; label: string }[]>;
 
   /**
    * Observable que emite los indicadores de gases con datos reactivos
@@ -81,17 +79,24 @@ export class GasIndicatorsComponent {
    */
   private readonly defaultIndicators: GasIndicator[] = [];
 
-  constructor(private sensorDataService: SensorDataService) {
+  constructor(private sensorDataService: SensorDataService, private thresholds: ThresholdsService) {
+    this.statusLegend$ = this.thresholds.getAll().pipe(
+      map(all => all['co2'].levels.map(level => ({ color: level.color, label: level.label })))
+    );
     this.initializeGasIndicators();
   }
 
   /**
-   * Inicializa los indicadores de gases desde el servicio
+   * Inicializa los indicadores de gases desde el servicio,
+   * reaccionando a cambios de umbrales
    * @private
    */
   private initializeGasIndicators(): void {
-    this.gasIndicators$ = this.sensorDataService.getLatest().pipe(
-      map((latest) => {
+    this.gasIndicators$ = combineLatest([
+      this.sensorDataService.getLatest(),
+      this.thresholds.getAll(),
+    ]).pipe(
+      map(([latest, allThresholds]) => {
         const gasConfigs: { key: EnvironmentMetricKey; field: string; color: string }[] = [
           { key: 'co2', field: 'co2', color: '#10b981' },
           { key: 'co',  field: 'co',  color: '#f59e0b' },
@@ -100,9 +105,9 @@ export class GasIndicatorsComponent {
         ];
 
         const indicators: GasIndicator[] = gasConfigs.map(cfg => {
-          const config = ENV_THRESHOLDS[cfg.key];
+          const config = allThresholds[cfg.key];
           const value = (latest as any)?.[cfg.field] || 0;
-          const status = getEnvironmentStatus(cfg.key, value);
+          const status = getEnvironmentStatusFromConfig(config, value);
           return {
             label: config.label,
             value,
@@ -120,6 +125,7 @@ export class GasIndicatorsComponent {
             statusTextClass: status.textClass,
             color: status.color,
             metricKey: cfg.key,
+            gaugePercentage: getMetricGaugePercentageFromConfig(config, value),
           };
         });
 
@@ -134,21 +140,12 @@ export class GasIndicatorsComponent {
   }
 
   /**
-   * Calcula el porcentaje del valor actual dentro del rango min-max
+   * Devuelve el porcentaje de gauge precomputado desde el indicador
    * @param {GasIndicator} gas - Indicador de gas
    * @returns {number} Porcentaje 0-100
    */
   getPercentage(gas: GasIndicator): number {
-    // Use centralized helper that already clamps to 0-100 and respects metric scale
-    try {
-      return getMetricGaugePercentage(gas.metricKey, gas.value);
-    } catch (e) {
-      // Fallback: safe clamp
-      const range = gas.max - gas.min;
-      if (range === 0) return 0;
-      const pct = ((gas.value - gas.min) / range) * 100;
-      return Math.max(0, Math.min(100, pct));
-    }
+    return gas.gaugePercentage;
   }
 
   /**

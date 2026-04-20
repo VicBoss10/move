@@ -1,9 +1,10 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, of } from 'rxjs';
+import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
-import { getEnvironmentStatus, getMetricGaugePercentage } from '../../../../core/config/environment-thresholds.config';
+import { ThresholdsService } from '../../../../core/services/thresholds.service';
+import { getEnvironmentStatusFromConfig, getMetricGaugePercentageFromConfig } from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Interface para datos del gauge de temperatura
@@ -13,6 +14,8 @@ interface GaugeData {
   gaugePercentage: number;
   gaugeColor: string;
   status: string;
+  bgColor: string;
+  scaleLevels: { color: string; label: string; rangeLabel: string }[];
 }
 
 /**
@@ -47,26 +50,37 @@ export class TemperatureGaugeComponent {
     temperature: 0,
     gaugePercentage: 0,
     gaugeColor: 'text-gray-500',
-    status: 'Normal',
+    status: 'Sin datos',
+    bgColor: 'from-gray-500/20 to-gray-600/20',
+    scaleLevels: [],
   };
 
-  constructor(private sensorDataService: SensorDataService) {
+  constructor(private sensorDataService: SensorDataService, private thresholds: ThresholdsService) {
     this.initializeGaugeData();
   }
 
-  /**
-   * Inicializa los datos del gauge desde el servicio
-   */
   private initializeGaugeData(): void {
-    this.gaugeData$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: any) => {
-        const temperature = Math.round((latestData?.temperature || 0) * 10) / 10;
-        
+    this.gaugeData$ = combineLatest([
+      this.sensorDataService.getLatest(),
+      this.thresholds.getAll(),
+    ]).pipe(
+      map(([latestData, allThresholds]) => {
+        const temperature = Math.round(((latestData as any)?.temperature || 0) * 10) / 10;
+        const config = allThresholds['temperature'];
+        const envStatus = getEnvironmentStatusFromConfig(config, temperature, false);
         return {
           temperature,
-          gaugePercentage: this.calculateGaugePercentage(temperature),
-          gaugeColor: this.getGaugeColor(temperature),
-          status: this.getStatus(temperature),
+          gaugePercentage: getMetricGaugePercentageFromConfig(config, temperature),
+          gaugeColor: envStatus.textClass,
+          status: envStatus.label,
+          bgColor: envStatus.gaugeGradient,
+          scaleLevels: config.levels.map((l, i, arr) => ({
+            color: l.color,
+            label: l.label,
+            rangeLabel: (l.max === Infinity || l.max == null)
+              ? `>${arr[i - 1]?.max ?? 0}°C`
+              : (i === 0 ? `<${l.max}°C` : `${arr[i - 1].max}–${l.max}°C`),
+          })),
         };
       }),
       catchError((error) => {
@@ -75,33 +89,5 @@ export class TemperatureGaugeComponent {
       }),
       shareReplay(1)
     );
-  }
-
-  /**
-   * Calcula porcentaje de llenado del gauge
-   */
-  private calculateGaugePercentage(temperature: number): number {
-    return getMetricGaugePercentage('temperature', temperature);
-  }
-
-  /**
-   * Obtiene clase de color según temperatura
-   */
-  private getGaugeColor(temperature: number): string {
-    return getEnvironmentStatus('temperature', temperature, false).textClass;
-  }
-
-  /**
-   * Obtiene estado según temperatura
-   */
-  private getStatus(temperature: number): string {
-    return getEnvironmentStatus('temperature', temperature, false).label;
-  }
-
-  /**
-   * Obtiene color de fondo según temperatura
-   */
-  getGaugeBgColor(temperature: number): string {
-    return getEnvironmentStatus('temperature', temperature, false).gaugeGradient;
   }
 }

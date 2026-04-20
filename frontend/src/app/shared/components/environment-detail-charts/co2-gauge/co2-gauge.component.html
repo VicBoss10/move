@@ -52,22 +52,12 @@
       <!-- Quality Scale -->
       <div class="mt-8 w-full">
         <div class="flex items-center justify-between gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+          @for (level of data.scaleLevels; track level.label) {
           <div class="text-center">
-            <div class="h-2 w-2 rounded-full bg-green-500 mx-auto mb-1"></div>
-            <span>Óptimo<br />&lt;600</span>
+            <div class="h-2 w-2 rounded-full mx-auto mb-1" [style.background-color]="level.color"></div>
+            <span>{{ level.label }}<br />{{ level.rangeLabel }}</span>
           </div>
-          <div class="text-center">
-            <div class="h-2 w-2 rounded-full bg-blue-500 mx-auto mb-1"></div>
-            <span>Moderado<br />600-1000</span>
-          </div>
-          <div class="text-center">
-            <div class="h-2 w-2 rounded-full bg-orange-500 mx-auto mb-1"></div>
-            <span>Elevado<br />1000-1500</span>
-          </div>
-          <div class="text-center">
-            <div class="h-2 w-2 rounded-full bg-red-500 mx-auto mb-1"></div>
-            <span>Crítico<br />&gt;1500</span>
-          </div>
+          }
         </div>
       </div>
     </div>

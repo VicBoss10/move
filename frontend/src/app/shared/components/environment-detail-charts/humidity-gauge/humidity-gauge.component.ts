@@ -1,15 +1,18 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, of } from 'rxjs';
+import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
-import { getEnvironmentStatus } from '../../../../core/config/environment-thresholds.config';
+import { ThresholdsService } from '../../../../core/services/thresholds.service';
+import { getEnvironmentStatusFromConfig, getMetricGaugePercentageFromConfig } from '../../../../core/config/environment-thresholds.config';
 
 interface GaugeData {
   humidity: number;
   gaugePercentage: number;
   gaugeColor: string;
   status: string;
+  bgColor: string;
+  scaleLevels: { color: string; label: string; rangeLabel: string }[];
 }
 
 @Component({
@@ -27,22 +30,36 @@ export class HumidityGaugeComponent {
     gaugePercentage: 0,
     gaugeColor: 'text-gray-500',
     status: 'Sin datos',
+    bgColor: 'from-gray-500/20 to-gray-600/20',
+    scaleLevels: [],
   };
 
-  constructor(private sensorDataService: SensorDataService) {
+  constructor(private sensorDataService: SensorDataService, private thresholds: ThresholdsService) {
     this.initializeGaugeData();
   }
 
   private initializeGaugeData(): void {
-    this.gaugeData$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: any) => {
-        const humidity = Math.round((latestData?.humidity || 0) * 10) / 10;
-        const status = getEnvironmentStatus('humidity', humidity, false);
+    this.gaugeData$ = combineLatest([
+      this.sensorDataService.getLatest(),
+      this.thresholds.getAll(),
+    ]).pipe(
+      map(([latestData, allThresholds]) => {
+        const humidity = Math.round(((latestData as any)?.humidity || 0) * 10) / 10;
+        const config = allThresholds['humidity'];
+        const envStatus = getEnvironmentStatusFromConfig(config, humidity, false);
         return {
           humidity,
-          gaugePercentage: humidity,
-          gaugeColor: status.textClass,
-          status: status.label,
+          gaugePercentage: getMetricGaugePercentageFromConfig(config, humidity),
+          gaugeColor: envStatus.textClass,
+          status: envStatus.label,
+          bgColor: envStatus.gaugeGradient,
+          scaleLevels: config.levels.map((l, i, arr) => ({
+            color: l.color,
+            label: l.label,
+            rangeLabel: (l.max === Infinity || l.max == null)
+              ? `>${arr[i - 1]?.max ?? 0}%`
+              : (i === 0 ? `<${l.max}%` : `${arr[i - 1].max}–${l.max}%`),
+          })),
         };
       }),
       catchError((error) => {
@@ -51,12 +68,5 @@ export class HumidityGaugeComponent {
       }),
       shareReplay(1)
     );
-  }
-
-  getGaugeBgColor(humidity: number): string {
-    if (humidity < 30) return 'from-blue-500/10 to-blue-600/10';
-    if (humidity < 60) return 'from-green-500/10 to-green-600/10';
-    if (humidity < 80) return 'from-yellow-500/10 to-yellow-600/10';
-    return 'from-orange-500/10 to-orange-600/10';
   }
 }

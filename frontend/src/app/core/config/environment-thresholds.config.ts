@@ -325,3 +325,38 @@ export function getMetricGaugePercentage(metric: EnvironmentMetricKey, value: nu
   const pct = ((value - config.scaleMin) / range) * 100;
   return Math.max(0, Math.min(100, pct));
 }
+
+/**
+ * Variante de `getEnvironmentStatus` que acepta una configuración dinámica
+ * (obtenida desde ThresholdsService) en lugar de leer ENV_THRESHOLDS directamente.
+ * Usar este helper en componentes que quieran reaccionar a cambios de umbrales.
+ */
+export function getEnvironmentStatusFromConfig(
+  config: MetricThresholdConfig,
+  value: number | null | undefined,
+  treatZeroAsNoData: boolean = true
+): EnvironmentStatus {
+  if (value === null || value === undefined) {
+    return { key: 'no-data', label: 'Sin datos', color: '#9ca3af', textClass: 'text-gray-500 dark:text-gray-400', bgClass: 'bg-gray-100 dark:bg-gray-500/20', gaugeGradient: 'from-gray-500/20 to-gray-600/20' };
+  }
+  if (treatZeroAsNoData && value === 0) {
+    return { key: 'no-data', label: 'Sin datos', color: '#9ca3af', textClass: 'text-gray-500 dark:text-gray-400', bgClass: 'bg-gray-100 dark:bg-gray-500/20', gaugeGradient: 'from-gray-500/20 to-gray-600/20' };
+  }
+  for (const level of config.levels) {
+    if (value <= level.max) {
+      return { key: level.key, label: level.label, color: level.color, textClass: level.textClass, bgClass: level.bgClass, gaugeGradient: level.gaugeGradient };
+    }
+  }
+  const last = config.levels[config.levels.length - 1];
+  return { key: last.key, label: last.label, color: last.color, textClass: last.textClass, bgClass: last.bgClass, gaugeGradient: last.gaugeGradient };
+}
+
+/**
+ * Variante de `getMetricGaugePercentage` que acepta una configuración dinámica.
+ */
+export function getMetricGaugePercentageFromConfig(config: MetricThresholdConfig, value: number): number {
+  const range = config.scaleMax - config.scaleMin;
+  if (range === 0) return 0;
+  const pct = ((value - config.scaleMin) / range) * 100;
+  return Math.max(0, Math.min(100, pct));
+}
