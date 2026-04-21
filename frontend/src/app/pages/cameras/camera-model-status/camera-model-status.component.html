@@ -9,6 +9,8 @@
 
   <!-- Filtros y Tabla de Dispositivos -->
   <div class="mt-8 space-y-6">
-    <app-camera-filters-table></app-camera-filters-table>
+    <app-camera-filters-table
+      [isServiceHealthy$]="isServiceHealthy$"
+    ></app-camera-filters-table>
   </div>
 </div>

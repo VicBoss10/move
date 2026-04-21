@@ -6,34 +6,51 @@ import com.jade.move.exception.EntityNotFoundException;
 import com.jade.move.model.Camera;
 import com.jade.move.model.Device;
 import com.jade.move.model.DeviceState;
+import com.jade.move.model.StreamSession;
 import com.jade.move.model.DeviceType;
+import com.jade.move.repository.StreamSessionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class StreamService {
+    private static final String STATUS_ACTIVE = "active";
+    private static final String STATUS_STOPPED = "stopped";
+
     private final CameraService cameraService;
     private final RestTemplate restTemplate;
+    private final StreamSessionRepository streamSessionRepository;
 
     @Value("${python.service.url:http://localhost:5000}")
     private String pythonServiceUrl;
 
-    @Value("${python.service.public.url:http://localhost:5000}")
-    private String pythonServicePublicUrl;
-
-    public StreamService(CameraService cameraService, RestTemplate restTemplate) {
+    public StreamService(
+            CameraService cameraService,
+            RestTemplate restTemplate,
+            StreamSessionRepository streamSessionRepository
+    ) {
         this.cameraService = cameraService;
         this.restTemplate = restTemplate;
+        this.streamSessionRepository = streamSessionRepository;
     }
 
+    @Transactional
     public StreamResponse startStream(Integer cameraId) {
         if (cameraId == null) {
             throw new IllegalArgumentException("Camera ID cannot be null");
@@ -83,9 +100,24 @@ public class StreamService {
                     throw new RuntimeException("Python service did not return session ID");
                 }
 
-                String streamUrl = pythonServicePublicUrl + "/stream/feed/" + sessionId;
+                closeActiveSessionsForDevice(device.getId());
 
-                return new StreamResponse(sessionId, streamUrl, status, streamType, 0);
+                StreamSession streamSession = new StreamSession();
+                streamSession.setDevice(device);
+                streamSession.setSessionId(sessionId);
+                streamSession.setStreamUrl(buildProxyStreamUrl(sessionId));
+                streamSession.setStatus(status);
+                streamSession.setStreamType(streamType);
+                streamSession.setCreatedAt(LocalDateTime.now());
+
+                try {
+                    streamSessionRepository.save(streamSession);
+                } catch (RuntimeException persistenceError) {
+                    stopStreamInPython(sessionId);
+                    throw new RuntimeException("Failed to persist active stream session", persistenceError);
+                }
+
+                return toStreamResponse(streamSession, 0);
             } else {
                 throw new RuntimeException("Failed to start stream in Python service. Status: " + pythonResponse.getStatusCode());
             }
@@ -97,6 +129,7 @@ public class StreamService {
         }
     }
 
+    @Transactional
     public StreamStopResponse stopStream(String sessionId) {
         if (sessionId == null || sessionId.trim().isEmpty()) {
             throw new IllegalArgumentException("Session ID cannot be null or empty");
@@ -114,6 +147,7 @@ public class StreamService {
             Map<String, Object> body = pythonResponse.getBody();
             if (pythonResponse.getStatusCode() == HttpStatus.OK && body != null) {
                 String message = body.get("message") != null ? body.get("message").toString() : "Stream stopped";
+                markSessionStopped(sessionId);
                 return new StreamStopResponse(message, sessionId);
             } else {
                 throw new RuntimeException("Failed to stop stream in Python service");
@@ -121,6 +155,7 @@ public class StreamService {
 
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                markSessionStopped(sessionId);
                 throw new EntityNotFoundException("Stream session not found: " + sessionId);
             }
             throw new RuntimeException("Python service error: " + e.getMessage(), e);
@@ -153,11 +188,11 @@ public class StreamService {
                 Object detectionCountObj = body.get("detectionCount");
                 Integer detectionCount = detectionCountObj instanceof Integer ? (Integer) detectionCountObj : 0;
 
-                String streamUrl = pythonServicePublicUrl + "/stream/feed/" + retrievedSessionId;
+                syncPersistedSession(retrievedSessionId, isRunning ? status : STATUS_STOPPED, streamType);
 
                 return new StreamResponse(
                     retrievedSessionId,
-                    streamUrl,
+                    buildProxyStreamUrl(retrievedSessionId),
                     isRunning ? status : "stopped",
                     streamType,
                     detectionCount
@@ -168,12 +203,72 @@ public class StreamService {
 
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                markSessionStopped(sessionId);
                 throw new EntityNotFoundException("Stream session not found: " + sessionId);
             }
             throw new RuntimeException("Python service error: " + e.getMessage(), e);
         } catch (RestClientException e) {
             throw new RuntimeException("Python service error: " + e.getMessage(), e);
         }
+    }
+
+    @Transactional
+    public StreamResponse getActiveStreamByDevice(Integer deviceId) {
+        if (deviceId == null) {
+            throw new IllegalArgumentException("Device ID cannot be null");
+        }
+
+        return streamSessionRepository
+                .findFirstByDeviceIdAndStatusOrderByCreatedAtDesc(deviceId, STATUS_ACTIVE)
+                .map(session -> toStreamResponse(session, 0))
+                .orElseGet(() -> loadActiveStreamFromPython(deviceId));
+    }
+
+    public StreamingResponseBody proxyStreamFeed(String sessionId) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Session ID cannot be null or empty");
+        }
+
+        return outputStream -> restTemplate.execute(
+                pythonServiceUrl + "/stream/feed/" + sessionId,
+                HttpMethod.GET,
+                null,
+                response -> {
+                    try {
+                        StreamUtils.copy(response.getBody(), outputStream);
+                        outputStream.flush();
+                        return null;
+                    } catch (IOException ex) {
+                        throw new RuntimeException("Error proxying stream feed", ex);
+                    }
+                }
+        );
+    }
+
+    public byte[] proxySnapshot(String sessionId, Integer width, Integer quality) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Session ID cannot be null or empty");
+        }
+
+        String uri = UriComponentsBuilder
+                .fromHttpUrl(pythonServiceUrl + "/stream/snapshot/" + sessionId)
+                .queryParamIfPresent("w", java.util.Optional.ofNullable(width))
+                .queryParamIfPresent("q", java.util.Optional.ofNullable(quality))
+                .build(true)
+                .toUriString();
+
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                uri,
+                HttpMethod.GET,
+                null,
+                byte[].class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Failed to proxy stream snapshot from Python service");
+        }
+
+        return response.getBody();
     }
 
     /**
@@ -192,5 +287,113 @@ public class StreamService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private StreamResponse loadActiveStreamFromPython(Integer deviceId) {
+        try {
+            ParameterizedTypeReference<Map<String, Object>> typeRef = new ParameterizedTypeReference<>() {};
+            ResponseEntity<Map<String, Object>> pythonResponse = restTemplate.exchange(
+                    pythonServiceUrl + "/streams/active/device/" + deviceId,
+                    HttpMethod.GET,
+                    null,
+                    typeRef
+            );
+
+            Map<String, Object> body = pythonResponse.getBody();
+            if (!pythonResponse.getStatusCode().is2xxSuccessful() || body == null) {
+                throw new EntityNotFoundException("Active stream not found for device id: " + deviceId);
+            }
+
+            String sessionId = body.get("sessionId") != null ? body.get("sessionId").toString() : null;
+            String status = body.get("status") != null ? body.get("status").toString() : STATUS_ACTIVE;
+
+            if (sessionId == null) {
+                throw new EntityNotFoundException("Active stream not found for device id: " + deviceId);
+            }
+
+            Camera camera = cameraService.getCameraByDeviceId(deviceId);
+            StreamSession streamSession = persistRecoveredSession(camera.getDevice(), sessionId, status, camera.getStreamType().name());
+            return toStreamResponse(streamSession, 0);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                throw new EntityNotFoundException("Active stream not found for device id: " + deviceId);
+            }
+            throw new RuntimeException("Python service error: " + e.getMessage(), e);
+        } catch (RestClientException e) {
+            throw new RuntimeException("Python service error: " + e.getMessage(), e);
+        }
+    }
+
+    private StreamSession persistRecoveredSession(Device device, String sessionId, String status, String streamType) {
+        return streamSessionRepository.findBySessionId(sessionId).orElseGet(() -> {
+            StreamSession recovered = new StreamSession();
+            recovered.setDevice(device);
+            recovered.setSessionId(sessionId);
+            recovered.setStreamUrl(buildProxyStreamUrl(sessionId));
+            recovered.setStatus(status);
+            recovered.setStreamType(streamType);
+            recovered.setCreatedAt(LocalDateTime.now());
+            return streamSessionRepository.save(recovered);
+        });
+    }
+
+    private void syncPersistedSession(String sessionId, String status, String streamType) {
+        streamSessionRepository.findBySessionId(sessionId).ifPresent(session -> {
+            session.setStatus(status);
+            session.setStreamType(streamType);
+            if (STATUS_STOPPED.equalsIgnoreCase(status)) {
+                session.setStoppedAt(LocalDateTime.now());
+            }
+            streamSessionRepository.save(session);
+        });
+    }
+
+    private void closeActiveSessionsForDevice(Integer deviceId) {
+        List<StreamSession> activeSessions = new ArrayList<>(streamSessionRepository.findByDeviceIdAndStatus(deviceId, STATUS_ACTIVE));
+        if (activeSessions.isEmpty()) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        for (StreamSession session : activeSessions) {
+            session.setStatus(STATUS_STOPPED);
+            session.setStoppedAt(now);
+        }
+        streamSessionRepository.saveAll(activeSessions);
+    }
+
+    private void markSessionStopped(String sessionId) {
+        streamSessionRepository.findBySessionId(sessionId).ifPresent(session -> {
+            session.setStatus(STATUS_STOPPED);
+            session.setStoppedAt(LocalDateTime.now());
+            streamSessionRepository.save(session);
+        });
+    }
+
+    private void stopStreamInPython(String sessionId) {
+        try {
+            restTemplate.exchange(
+                    pythonServiceUrl + "/stream/stop/" + sessionId,
+                    HttpMethod.POST,
+                    null,
+                    Void.class
+            );
+        } catch (RestClientException ignored) {
+            // Evitar ocultar el error original de persistencia.
+        }
+    }
+
+    private StreamResponse toStreamResponse(StreamSession session, Integer detectionCount) {
+        return new StreamResponse(
+                session.getSessionId(),
+                session.getStreamUrl(),
+                session.getStatus(),
+                session.getStreamType(),
+                detectionCount
+        );
+    }
+
+    private String buildProxyStreamUrl(String sessionId) {
+        return "/streams/feed/" + sessionId;
     }
 }

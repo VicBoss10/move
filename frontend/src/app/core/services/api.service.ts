@@ -158,4 +158,24 @@ export class ApiService {
   getApiUrl(): string {
     return this.apiUrl;
   }
+
+  /**
+   * GET a una URL absoluta (no concatena `apiUrl`).
+   * Útil para servicios externos o microservicios con base distinta.
+   */
+  getAbsolute<T>(fullUrl: string, params?: HttpParams | { [key: string]: string | string[] }): Observable<T> {
+    return this.http.get<T>(fullUrl, { params }).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  /**
+   * POST a una URL absoluta (no concatena `apiUrl`).
+   * Útil para servicios externos o microservicios con base distinta.
+   */
+  postAbsolute<T>(fullUrl: string, body: any): Observable<T> {
+    return this.http.post<T>(fullUrl, body).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
 }

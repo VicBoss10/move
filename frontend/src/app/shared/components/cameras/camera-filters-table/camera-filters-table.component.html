@@ -117,11 +117,12 @@
           <!-- Acciones -->
           <td class="px-6 py-4">
             <div class="flex gap-2 flex-wrap">
-              @if (!isDetectionActive(camera.id)) {
+              @if (camera.device.state !== 'ACTIVE') {
                 <button
                   (click)="startDetectionForCamera(camera)"
-                  [disabled]="isLoading(camera.id)"
+                  [disabled]="isLoading(camera.id) || !isServiceHealthyLatest"
                   class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
+                  [title]="isServiceHealthyLatest ? 'Activar detección' : 'Servicio de detección no disponible'"
                 >
                   @if (isLoading(camera.id)) {
                     <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
@@ -135,7 +136,7 @@
                 </button>
               } @else {
                 <button
-                  (click)="stopDetectionForCamera(camera.id)"
+                  (click)="stopDetectionForCamera(camera)"
                   [disabled]="isLoading(camera.id)"
                   class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
                 >

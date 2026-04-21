@@ -20,7 +20,11 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-4">
       <div class="group relative bg-white border border-gray-200 p-2 dark:border-gray-700 dark:bg-gray-800 transition-all hover:shadow-lg rounded-lg">
-        <div class="aspect-video relative bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden" #streamContainer>
+        <div 
+          class="aspect-video relative bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden" 
+          #streamContainer
+          (touchstart)="onStreamTouched()"
+        >
           @if (isViewing && (streamUrl || snapshotUrl)) {
             <img
               [src]="isSnapshotMode ? snapshotUrl : streamUrl"
@@ -57,9 +61,9 @@
           @if (selectedCamera) {
             <div 
               class="absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300 sm:p-6"
-              [class.opacity-0]="isViewing"
-              [class.group-hover:opacity-100]="isViewing"
-              [class.opacity-100]="!isViewing"
+              [class.opacity-0]="isViewing && !showControlsOnTouch"
+              [class.group-hover:opacity-100]="isViewing && !showControlsOnTouch"
+              [class.opacity-100]="!isViewing || showControlsOnTouch"
             >
               <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div class="flex-1">
@@ -97,15 +101,17 @@
                         </svg>
                         Ocultar Stream
                       </button>
-                      <button
-                        (click)="toggleFullScreen(streamContainer)"
-                        class="flex items-center justify-center p-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/20 rounded-lg shadow-lg transition-transform active:scale-95"
-                        title="Pantalla Completa"
-                      >
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                        </svg>
-                      </button>
+                      @if (!isMobile()) {
+                        <button
+                          (click)="toggleFullScreen(streamContainer)"
+                          class="flex items-center justify-center p-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/20 rounded-lg shadow-lg transition-transform active:scale-95"
+                          title="Pantalla Completa"
+                        >
+                          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                          </svg>
+                        </button>
+                      }
                     }
                   } @else {
                     <div class="px-3 py-2 bg-black/40 backdrop-blur-md rounded-lg border border-white/10">

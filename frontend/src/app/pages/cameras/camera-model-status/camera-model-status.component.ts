@@ -46,6 +46,12 @@ export class CameraModelStatusComponent implements OnInit {
   modelInfo$!: Observable<ModelInfo>;
 
   /**
+   * Observable que emite si el servicio de detección está healthy
+   * (derivado de modelInfo$.isRunning)
+   */
+  isServiceHealthy$!: Observable<boolean>;
+
+  /**
    * Observable que emite la fecha/hora de la última detección (desde VehicleDetectedService.getLastRecord)
    */
   lastVehicleDetection$!: Observable<Date | null>;
@@ -93,8 +99,16 @@ export class CameraModelStatusComponent implements OnInit {
     this.initializeCameraStats();
     this.initializeModelInfo();
     this.initializeLastVehicleDetection();
+    this.initializeServiceHealthy();
     // Disparar carga inicial
     this.refreshTrigger$.next();
+  }
+
+  private initializeServiceHealthy(): void {
+    this.isServiceHealthy$ = this.modelInfo$.pipe(
+      map(info => info.isRunning),
+      shareReplay(1)
+    );
   }
 
   private initializeLastVehicleDetection(): void {

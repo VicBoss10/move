@@ -9,8 +9,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -69,6 +72,51 @@ public class StreamController {
     @GetMapping("/status/{sessionId}")
     public ResponseEntity<StreamResponse> getStreamStatus(@PathVariable String sessionId) {
         return ResponseEntity.ok(streamService.getStreamStatus(sessionId));
+    }
+
+    @Operation(
+            summary = "Get active stream by device / Obtener stream activo por dispositivo",
+            description = "Returns the persisted active stream session for a device. If the session exists in Python but not yet in DB, it is recovered and persisted. / Devuelve la sesión activa persistida para un dispositivo. Si existe en Python pero aún no en BD, se recupera y persiste."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Active stream found / Stream activo encontrado"),
+            @ApiResponse(responseCode = "404", description = "Active stream not found / Stream activo no encontrado")
+    })
+    @GetMapping("/active/device/{deviceId}")
+    public ResponseEntity<StreamResponse> getActiveStreamByDevice(@PathVariable Integer deviceId) {
+        return ResponseEntity.ok(streamService.getActiveStreamByDevice(deviceId));
+    }
+
+    @Operation(
+            summary = "Proxy stream feed / Proxyear feed del stream",
+            description = "Relays the MJPEG feed from the Python detection service through the main backend so clients do not access the internal service directly. / Reenvía el feed MJPEG desde el servicio Python a través del backend principal para que los clientes no accedan directamente al servicio interno."
+    )
+    @GetMapping(value = "/feed/{sessionId}", produces = "multipart/x-mixed-replace; boundary=frame")
+    public ResponseEntity<StreamingResponseBody> proxyStreamFeed(@PathVariable String sessionId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("multipart/x-mixed-replace; boundary=frame"));
+        headers.setCacheControl("no-store, no-cache, must-revalidate, max-age=0");
+        headers.add("X-Accel-Buffering", "no");
+        headers.add("Connection", "keep-alive");
+        return ResponseEntity.ok().headers(headers).body(streamService.proxyStreamFeed(sessionId));
+    }
+
+    @Operation(
+            summary = "Proxy stream snapshot / Proxyear snapshot del stream",
+            description = "Relays a single JPEG frame from the Python detection service. Used by Safari/iOS fallback mode. / Reenvía un frame JPEG del servicio Python. Usado por el fallback de Safari/iOS."
+    )
+    @GetMapping(value = "/snapshot/{sessionId}", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> proxyStreamSnapshot(
+            @PathVariable String sessionId,
+            @RequestParam(required = false, name = "w") Integer width,
+            @RequestParam(required = false, name = "q") Integer quality
+    ) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG);
+        headers.setCacheControl("no-store, no-cache, must-revalidate, max-age=0");
+        headers.add("Pragma", "no-cache");
+        headers.add("Expires", "0");
+        return ResponseEntity.ok().headers(headers).body(streamService.proxySnapshot(sessionId, width, quality));
     }
 
     @Operation(

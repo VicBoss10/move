@@ -93,6 +93,12 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     location: 0,
   };
 
+  /** Flag para mostrar controles en móvil cuando se toca el stream */
+  showControlsOnTouch: boolean = false;
+
+  /** Referencia al timeout de ocultamiento de controles */
+  private touchControlsTimeoutRef: ReturnType<typeof setTimeout> | null = null;
+
   constructor(
     private cameraService: CameraService,
     private changeDetectorRef: ChangeDetectorRef
@@ -100,12 +106,20 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCameras();
+    // React to camera list refreshes triggered elsewhere (start/stop detection)
+    this.cameraService.refresh$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.loadCameras();
+    });
   }
 
   ngOnDestroy(): void {
     // Solo detener la visualización — la detección persiste en el backend hasta detenerse explícitamente
     if (this.isViewing) {
       this.stopViewing();
+    }
+    // Limpiar timeout de controles
+    if (this.touchControlsTimeoutRef !== null) {
+      clearTimeout(this.touchControlsTimeoutRef);
     }
     this.destroy$.next();
     this.destroy$.complete();
@@ -146,7 +160,6 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }
 
     // Solo cambiar la selección; no hacer nada más
-    // El control de detección se maneja desde camera-filters-table
     if (this.isViewing) {
       this.stopViewing();
     }
@@ -157,25 +170,27 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     this.detectionActive = false;
     this.errorMessage = null;
 
-    // Restaurar sesión desde localStorage si ya existe para esta cámara
-    const stored = this.loadSession(camera.id);
-    if (stored) {
-      this.cameraService.getStreamStatus(stored.sessionId)
+    // Validar que la cámara esté activa en BD (device.state === ACTIVE)
+    if (camera.device.state === DeviceState.ACTIVE) {
+      // La detección está activa en el backend; solicitar la sesión activa asociada al device
+      this.detectionActive = true;
+      this.isLoading = true;
+      this.cameraService.getActiveStreamByDevice(camera.device.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          next: (status) => {
-            if (status.status === 'active') {
-              this.sessionId = stored.sessionId;
-              this.feedUrl = stored.streamUrl;
-              this.detectionActive = true;
-            } else {
-              this.clearSession(camera.id);
-            }
+          next: (res) => {
+            // El backend devuelve sessionId y streamUrl/snapshotUrl
+            this.sessionId = (res as any)?.sessionId || null;
+            this.feedUrl = this.toAbsoluteApiUrl((res as any)?.streamUrl || null);
+            this.isLoading = false;
             this.changeDetectorRef.markForCheck();
           },
-          error: () => {
-            // La sesión ya no existe en el backend
-            this.clearSession(camera.id);
+          error: (err) => {
+            // No hay sesión activa o error: mantener detectionActive true (BD) pero no hay feed
+            console.warn('No active stream for device or error:', err);
+            this.sessionId = null;
+            this.feedUrl = null;
+            this.isLoading = false;
             this.changeDetectorRef.markForCheck();
           }
         });
@@ -185,6 +200,13 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   }
 
   startViewing(): void {
+    // Fallback: Si feedUrl aún no está disponible pero tenemos sessionId,
+    // construirla localmente. Esto ocurre en iPhone cuando el usuario da click
+    // antes de que getActiveStreamByDevice() complete.
+    if (!this.feedUrl && this.sessionId && this.detectionActive) {
+      this.feedUrl = this.toAbsoluteApiUrl(`/streams/feed/${this.sessionId}`);
+    }
+
     if (!this.detectionActive || !this.feedUrl || this.isViewing) {
       return;
     }
@@ -206,20 +228,48 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   stopViewing(): void {
     this.isViewing = false;
     this.streamUrl = null;
+    this.showControlsOnTouch = false;
+    // Limpiar timeout de controles
+    if (this.touchControlsTimeoutRef !== null) {
+      clearTimeout(this.touchControlsTimeoutRef);
+      this.touchControlsTimeoutRef = null;
+    }
     this.stopSnapshotPolling();
     this.changeDetectorRef.markForCheck();
   }
 
   toggleFullScreen(element: HTMLElement): void {
-    if (!document.fullscreenElement) {
-      if (element.requestFullscreen) {
-        element.requestFullscreen();
-      }
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
+      element.requestFullscreen();
     }
+  }
+
+  /**
+   * Maneja el evento de toque en el stream para mostrar controles en móvil
+   * Los controles se ocultarán después de 4 segundos (similar a YouTube)
+   */
+  onStreamTouched(): void {
+    if (!this.isViewing) {
+      return;
+    }
+
+    // Mostrar controles
+    this.showControlsOnTouch = true;
+    this.changeDetectorRef.markForCheck();
+
+    // Limpiar timeout anterior si existe
+    if (this.touchControlsTimeoutRef !== null) {
+      clearTimeout(this.touchControlsTimeoutRef);
+    }
+
+    // Ocultar controles después de 4 segundos
+    this.touchControlsTimeoutRef = setTimeout(() => {
+      this.showControlsOnTouch = false;
+      this.touchControlsTimeoutRef = null;
+      this.changeDetectorRef.markForCheck();
+    }, 4000);
   }
 
   getSelectedCameraName(): string {
@@ -245,12 +295,14 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/.test(ua));
   }
 
-  private isMobile(): boolean {
+  isMobile(): boolean {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
   private startSnapshotPolling(mjpegUrl: string): void {
-    const snapshotBase = mjpegUrl.replace('/stream/feed/', '/stream/snapshot/');
+    const snapshotBase = mjpegUrl
+      .replace('/streams/feed/', '/streams/snapshot/')
+      .replace('/stream/feed/', '/stream/snapshot/');
     // En móvil: pedir frame más pequeño (640px, quality 50) para transferir rápido
     const mobile = this.isMobile();
     const suffix = mobile ? '&w=640&q=50' : '';
@@ -299,29 +351,18 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }
   }
 
-  private getStorageKey(cameraId: number): string {
-    return `vds_session_${cameraId}`;
-  }
-
-  private saveSession(cameraId: number, sessionId: string, streamUrl: string): void {
-    try {
-      localStorage.setItem(this.getStorageKey(cameraId), JSON.stringify({ sessionId, streamUrl }));
-    } catch { /* Storage puede no estar disponible */ }
-  }
-
-  private loadSession(cameraId: number): { sessionId: string; streamUrl: string } | null {
-    try {
-      const raw = localStorage.getItem(this.getStorageKey(cameraId));
-      return raw ? JSON.parse(raw) : null;
-    } catch {
+  private toAbsoluteApiUrl(url: string | null): string | null {
+    if (!url) {
       return null;
     }
-  }
 
-  private clearSession(cameraId: number): void {
-    try {
-      localStorage.removeItem(this.getStorageKey(cameraId));
-    } catch { /* ignorar */ }
+    if (/^https?:\/\//i.test(url)) {
+      return url;
+    }
+
+    const apiBase: string = (window as any).__API_BASE_URL__ || 'http://localhost:8080';
+    const normalizedPath = url.startsWith('/') ? url : `/${url}`;
+    return `${apiBase.replace(/\/$/, '')}${normalizedPath}`;
   }
 
   onFiltersChanged(filters: CameraFilters): void {

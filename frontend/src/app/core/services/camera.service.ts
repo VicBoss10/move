@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of, BehaviorSubject } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
@@ -10,10 +10,23 @@ import { Camera, StreamStartRequest, StreamResponse, StreamStopResponse, StreamT
 })
 export class CameraService extends BaseDataService<Camera> {
   protected endpoint = 'cameras';
+  private refreshSubject = new BehaviorSubject<void>(undefined);
+  refresh$ = this.refreshSubject.asObservable();
 
   constructor(apiService: ApiService) {
     super(apiService);
     this.cacheDuration = 10 * 60 * 1000;
+  }
+
+  triggerRefresh(): void {
+    this.refreshSubject.next();
+    // Invalidate cache and fetch fresh data so subscribers get updated lists
+    this.refresh().pipe(
+      catchError((err) => {
+        this.setServiceError(err, 'Error refreshing cameras');
+        return of([] as Camera[]);
+      })
+    ).subscribe();
   }
 
   getCameraByDeviceId(deviceId: number): Observable<Camera> {
@@ -62,6 +75,16 @@ export class CameraService extends BaseDataService<Camera> {
       tap(() => this.clearServiceError()),
       catchError((error) => {
         this.setServiceError(error, 'Error al consultar estado del stream');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getActiveStreamByDevice(deviceId: number): Observable<StreamResponse> {
+    return this.apiService.get<StreamResponse>(`/streams/active/device/${deviceId}`).pipe(
+      tap(() => this.clearServiceError()),
+      catchError((error) => {
+        this.setServiceError(error, 'Error al obtener stream activo por device');
         return throwError(() => error);
       })
     );
