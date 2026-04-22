@@ -222,7 +222,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
    * Validaciones: servicio healthy y cámara no activa
    */
   startDetectionForCamera(camera: Camera): void {
-    console.log('🎯 startDetectionForCamera called with camera:', camera);
+    console.log('startDetectionForCamera called with camera:', camera);
 
     // Validar que el servicio esté healthy
     if (!this.isServiceHealthyLatest) {
@@ -252,7 +252,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
       .update(deviceUpdate as Device)
       .pipe(
         switchMap(() => {
-          console.log('✅ Device updated, calling startStream with cameraId:', camera.id);
+          console.log('Device updated, calling startStream with cameraId:', camera.id);
           return this.cameraService.startStream(camera.id);
         }),
         takeUntil(this.destroy$),

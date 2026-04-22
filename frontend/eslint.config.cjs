@@ -1,6 +1,6 @@
 module.exports = [
   {
-    ignores: ['projects/**/*', 'node_modules/**', 'dist/**'],
+    ignores: ['projects/**/*', 'node_modules/**', 'dist/**', '.angular/**'],
   },
   {
     files: ['**/*.ts'],
@@ -13,9 +13,12 @@ module.exports = [
       },
     },
     plugins: {
-      '@typescript-eslint': require('@typescript-eslint/eslint-plugin')
+      '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
     },
-    rules: {},
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    },
   },
   {
     files: ['**/*.html'],
@@ -23,9 +26,10 @@ module.exports = [
       parser: require('@angular-eslint/template-parser'),
     },
     plugins: {
-      '@angular-eslint/template': require('@angular-eslint/eslint-plugin-template')
+      '@angular-eslint/template': require('@angular-eslint/eslint-plugin-template'),
     },
-    rules: {}
-  }
-  // HTML/template linting removed for now to avoid parsing errors
+    rules: {
+      '@angular-eslint/template/no-negated-async': 'warn',
+    },
+  },
 ];
