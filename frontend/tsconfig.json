@@ -17,6 +17,7 @@
     "moduleResolution": "bundler",
     "importHelpers": true,
     "target": "ES2022",
+    "types": ["jasmine", "node"],
     "module": "ES2022"
   },
   "angularCompilerOptions": {
