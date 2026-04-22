@@ -17,8 +17,5 @@ module.exports = [
     },
     rules: {},
   },
-  {
-    files: ['**/*.html'],
-    rules: {},
-  },
+  // HTML/template linting removed for now to avoid parsing errors
 ];
