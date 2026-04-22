@@ -4,6 +4,7 @@ import com.jade.move.dto.VehicleSearchCriteria;
 import com.jade.move.model.VehicleDetected;
 import com.jade.move.model.VehicleType;
 import com.jade.move.service.VehicleDetectedService;
+import com.jade.move.util.ResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -121,15 +122,15 @@ public class VehicleDetectedController {
             description = "Creates a new vehicle detection record in the system with detection details. All required fields including vehicle type, location, and timestamp must be provided. / Crea un nuevo registro de detección de vehículo en el sistema con detalles de detección. Todos los campos requeridos incluyendo tipo de vehículo, ubicación y marca de tiempo deben proporcionarse."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Vehicle detection created successfully / Detección de vehículo creada exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Vehicle detection created successfully / Detección de vehículo creada exitosamente"),
             @ApiResponse(responseCode = "400", description = "Invalid vehicle detection data or missing required fields / Datos de detección de vehículo inválidos o faltan campos requeridos"),
             @ApiResponse(responseCode = "409", description = "Vehicle detection already exists / La detección de vehículo ya existe"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PostMapping
-    public ResponseEntity<?> createVehicleDetected(@RequestBody VehicleDetected vehicleDetected) {
+    public ResponseEntity<VehicleDetected> createVehicleDetected(@RequestBody VehicleDetected vehicleDetected) {
         VehicleDetected created = vehicleDetectedService.createVehicleDetected(vehicleDetected);
-        return ResponseEntity.ok("VehicleDetected created successfully with id: " + created.getId());
+        return ResponseBuilder.created(created.getId(), "/vehicles", created);
     }
 
     /**
@@ -149,9 +150,9 @@ public class VehicleDetectedController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PutMapping
-    public ResponseEntity<?> updateVehicleDetected(@RequestBody VehicleDetected vehicleDetected) {
+    public ResponseEntity<VehicleDetected> updateVehicleDetected(@RequestBody VehicleDetected vehicleDetected) {
         VehicleDetected updated = vehicleDetectedService.updateVehicleDetected(vehicleDetected);
-        return ResponseEntity.ok("VehicleDetected updated successfully with id: " + updated.getId());
+        return ResponseEntity.ok(updated);
     }
 
     /**
@@ -165,26 +166,26 @@ public class VehicleDetectedController {
             description = "Permanently deletes a vehicle detection record from the system using its unique identifier. This action cannot be undone. / Elimina permanentemente un registro de detección de vehículo del sistema usando su identificador único. Esta acción no se puede deshacer."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Vehicle detection deleted successfully / Detección de vehículo eliminada exitosamente"),
+            @ApiResponse(responseCode = "204", description = "Vehicle detection deleted successfully / Detección de vehículo eliminada exitosamente"),
             @ApiResponse(responseCode = "404", description = "Vehicle detection not found / Detección de vehículo no encontrada"),
             @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteVehicleDetected(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteVehicleDetected(@PathVariable Integer id) {
         vehicleDetectedService.deleteVehicleDetected(id);
-        return ResponseEntity.ok("VehicleDetected deleted successfully with id: " + id);
+        return ResponseBuilder.noContent();
     }
 
         /**
          * Deletes all vehicle detection records.
          *
-         * @return confirmation message
+         * @return 204 No Content response
          */
         @DeleteMapping
-        public ResponseEntity<?> deleteAllVehicleDetected() {
+        public ResponseEntity<Void> deleteAllVehicleDetected() {
                 vehicleDetectedService.deleteAllVehicleDetected();
-                return ResponseEntity.ok("All vehicle detections deleted successfully");
+                return ResponseBuilder.noContent();
         }
 
         /**
@@ -192,14 +193,14 @@ public class VehicleDetectedController {
          *
          * @param start start timestamp (inclusive)
          * @param end end timestamp (inclusive)
-         * @return confirmation message
+         * @return 204 No Content response
          */
         @DeleteMapping("/range")
-        public ResponseEntity<?> deleteVehicleDetectedByRange(
+        public ResponseEntity<Void> deleteVehicleDetectedByRange(
                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
                 vehicleDetectedService.deleteVehicleDetectedByDateRange(start, end);
-                return ResponseEntity.ok("Vehicle detections deleted for range " + start + " - " + end);
+                return ResponseBuilder.noContent();
         }
 
         /**

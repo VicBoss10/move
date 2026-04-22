@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.jade.move.model.Sensor;
 import com.jade.move.service.SensorService;
+import com.jade.move.util.ResponseBuilder;
 
 /**
  * Controller responsible for sensor management.
@@ -101,9 +102,9 @@ public class SensorController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PutMapping
-    public ResponseEntity<?> updateSensor(@RequestBody Sensor sensor) {
+    public ResponseEntity<Sensor> updateSensor(@RequestBody Sensor sensor) {
         Sensor updatedSensor = sensorService.updateSensor(sensor);
-        return ResponseEntity.ok("Sensor updated successfully with id: " + updatedSensor.getId());
+        return ResponseEntity.ok(updatedSensor);
     }
 
     /**
@@ -117,14 +118,14 @@ public class SensorController {
             description = "Permanently deletes a sensor from the system using its unique identifier. This action cannot be undone. / Elimina permanentemente un sensor del sistema usando su identificador único."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sensor deleted successfully / Sensor eliminado exitosamente"),
+            @ApiResponse(responseCode = "204", description = "Sensor deleted successfully / Sensor eliminado exitosamente"),
             @ApiResponse(responseCode = "404", description = "Sensor not found / Sensor no encontrado"),
             @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteSensor(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteSensor(@PathVariable Integer id) {
         sensorService.deleteSensor(id);
-        return ResponseEntity.ok("Sensor deleted successfully with id: " + id);
+        return ResponseBuilder.noContent();
     }
 }

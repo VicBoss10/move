@@ -4,6 +4,7 @@ import com.jade.move.dto.StreamResponse;
 import com.jade.move.dto.StreamStartRequest;
 import com.jade.move.dto.StreamStopResponse;
 import com.jade.move.service.StreamService;
+import com.jade.move.util.ResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -43,21 +44,22 @@ public class StreamController {
             description = "Starts a new video streaming session with vehicle detection for a specified camera. The camera must be active and properly configured. Returns the stream URL and session information. / Inicia una nueva sesión de streaming de video con detección de vehículos para una cámara específica. La cámara debe estar activa y configurada correctamente. Devuelve la URL del stream e información de la sesión."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Stream started successfully / Stream iniciado exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Stream started successfully / Stream iniciado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Invalid camera ID or camera not found / ID de cámara inválido o cámara no encontrada"),
             @ApiResponse(responseCode = "409", description = "Device is not active or not a camera type / El dispositivo no está activo o no es tipo cámara"),
             @ApiResponse(responseCode = "500", description = "Internal server error or Python service unavailable / Error interno del servidor o servicio Python no disponible")
     })
-        /**
-         * Starts a video streaming session with vehicle detection for a camera.
-         *
-         * @param request request containing the camera id to start streaming
-         * @return StreamResponse with stream URL and session information
-         */
-        @PostMapping("/start")
-        public ResponseEntity<StreamResponse> startStream(@Valid @RequestBody StreamStartRequest request) {
-                return ResponseEntity.ok(streamService.startStream(request.getCameraId()));
-        }
+    /**
+     * Starts a video streaming session with vehicle detection for a camera.
+     *
+     * @param request request containing the camera id to start streaming
+     * @return StreamResponse with stream URL and session information
+     */
+    @PostMapping("/start")
+    public ResponseEntity<StreamResponse> startStream(@Valid @RequestBody StreamStartRequest request) {
+        StreamResponse response = streamService.startStream(request.getCameraId());
+        return ResponseBuilder.created(Integer.valueOf(response.getSessionId()), "/streams/start", response);
+    }
 
     @Operation(
             summary = "Stop a video stream / Detener un stream de video",

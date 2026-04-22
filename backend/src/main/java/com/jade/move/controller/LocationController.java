@@ -5,6 +5,7 @@ import java.util.List;
 import com.jade.move.dto.LocationSearchCriteria;
 import com.jade.move.model.Location;
 import com.jade.move.service.LocationService;
+import com.jade.move.util.ResponseBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -123,15 +124,15 @@ public class LocationController {
             description = "Creates a new location in the system and returns confirmation with the generated ID. All required fields must be provided in the request body. / Crea una nueva ubicación en el sistema y devuelve confirmación con el ID generado. Todos los campos requeridos deben proporcionarse en el cuerpo de la petición."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Location created successfully / Ubicación creada exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Location created successfully / Ubicación creada exitosamente"),
             @ApiResponse(responseCode = "400", description = "Invalid location data or missing required fields / Datos de ubicación inválidos o faltan campos requeridos"),
             @ApiResponse(responseCode = "409", description = "Location already exists / La ubicación ya existe"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PostMapping
-    public ResponseEntity<?> createLocation(@RequestBody Location location) {
+    public ResponseEntity<Location> createLocation(@RequestBody Location location) {
         Location createdLocation = locationService.createLocation(location);
-        return ResponseEntity.ok("Location created successfully with id: " + createdLocation.getId());
+        return ResponseBuilder.created(createdLocation.getId(), "/locations", createdLocation);
     }
 
     /**
@@ -151,9 +152,9 @@ public class LocationController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PutMapping
-    public ResponseEntity<?> updateLocation(@RequestBody Location location) {
+    public ResponseEntity<Location> updateLocation(@RequestBody Location location) {
         Location updatedLocation = locationService.updateLocation(location);
-        return ResponseEntity.ok("Location updated successfully with id: " + updatedLocation.getId());
+        return ResponseEntity.ok(updatedLocation);
     }
 
     /**
@@ -167,15 +168,15 @@ public class LocationController {
             description = "Permanently deletes the location with the specified ID from the system. This operation cannot be undone and may affect related entities. / Elimina permanentemente la ubicación con el ID especificado del sistema. Esta operación no se puede deshacer y puede afectar entidades relacionadas."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Location deleted successfully / Ubicación eliminada exitosamente"),
+            @ApiResponse(responseCode = "204", description = "Location deleted successfully / Ubicación eliminada exitosamente"),
             @ApiResponse(responseCode = "404", description = "Location not found with the specified ID / Ubicación no encontrada con el ID especificado"),
             @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
             @ApiResponse(responseCode = "409", description = "Cannot delete location due to existing dependencies / No se puede eliminar la ubicación debido a dependencias existentes"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteLocation(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteLocation(@PathVariable Integer id) {
         locationService.deleteLocation(id);
-        return ResponseEntity.ok("Location deleted successfully with id: " + id);
+        return ResponseBuilder.noContent();
     }
 }

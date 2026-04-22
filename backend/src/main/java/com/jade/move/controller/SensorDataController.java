@@ -3,6 +3,7 @@ package com.jade.move.controller;
 import com.jade.move.dto.SensorDataSearchCriteria;
 import com.jade.move.model.SensorData;
 import com.jade.move.service.SensorDataService;
+import com.jade.move.util.ResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -195,15 +196,15 @@ public class SensorDataController {
             description = "Creates a new sensor data record in the system with environmental measurements. All required sensor readings must be provided. / Crea un nuevo registro de datos de sensor en el sistema con mediciones ambientales. Todas las lecturas de sensor requeridas deben proporcionarse."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sensor data created successfully / Datos de sensor creados exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Sensor data created successfully / Datos de sensor creados exitosamente"),
             @ApiResponse(responseCode = "400", description = "Invalid sensor data or missing required fields / Datos de sensor inválidos o faltan campos requeridos"),
             @ApiResponse(responseCode = "409", description = "Sensor data already exists / Los datos de sensor ya existen"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PostMapping
-    public ResponseEntity<?> createSensorData(@RequestBody SensorData sensorData) {
+    public ResponseEntity<SensorData> createSensorData(@RequestBody SensorData sensorData) {
         SensorData created = sensorDataService.createSensorData(sensorData);
-        return ResponseEntity.ok("Sensor data created successfully with id: " + created.getId());
+        return ResponseBuilder.created(created.getId(), "/sensordata", created);
     }
 
     /**
@@ -216,17 +217,17 @@ public class SensorDataController {
             summary = "Bulk create sensor data / Crear lote de datos de sensores",
             description = "Accepts a JSON array of SensorData objects and persists them in a single bulk operation. / Acepta un array JSON de objetos SensorData y los persiste en una única operación.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sensor data bulk persisted successfully / Datos de sensores persistidos correctamente"),
+            @ApiResponse(responseCode = "201", description = "Sensor data bulk persisted successfully / Datos de sensores persistidos correctamente"),
             @ApiResponse(responseCode = "400", description = "Invalid request body / Cuerpo de petición inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PostMapping("/bulk")
-    public ResponseEntity<?> createSensorDataBulk(@RequestBody List<SensorData> sensorDataList) {
+    public ResponseEntity<List<SensorData>> createSensorDataBulk(@RequestBody List<SensorData> sensorDataList) {
         if (sensorDataList == null || sensorDataList.isEmpty()) {
-            return ResponseEntity.badRequest().body("Request must be a non-empty JSON array of SensorData");
+            return ResponseEntity.badRequest().build();
         }
         List<SensorData> saved = sensorDataService.createBulkSensorData(sensorDataList);
-        return ResponseEntity.ok(saved);
+        return ResponseBuilder.created(1, "/sensordata/bulk", saved);
     }
 
     /**
@@ -246,9 +247,9 @@ public class SensorDataController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PutMapping
-    public ResponseEntity<?> updateSensorData(@RequestBody SensorData sensorData) {
+    public ResponseEntity<SensorData> updateSensorData(@RequestBody SensorData sensorData) {
         SensorData updated = sensorDataService.updateSensorData(sensorData);
-        return ResponseEntity.ok("Sensor data updated successfully with id: " + updated.getId());
+        return ResponseEntity.ok(updated);
     }
 
     /**
@@ -268,20 +269,20 @@ public class SensorDataController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteSensorData(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteSensorData(@PathVariable Integer id) {
         sensorDataService.deleteSensorData(id);
-        return ResponseEntity.ok("Sensor data deleted successfully with id: " + id);
+        return ResponseBuilder.noContent();
     }
 
         /**
          * Deletes all sensor data records from the system.
          *
-         * @return confirmation message
+         * @return 204 No Content response
          */
         @DeleteMapping
-        public ResponseEntity<?> deleteAllSensorData() {
+        public ResponseEntity<Void> deleteAllSensorData() {
                 sensorDataService.deleteAllSensorData();
-                return ResponseEntity.ok("All sensor data deleted successfully");
+                return ResponseBuilder.noContent();
         }
 
         /**
@@ -289,14 +290,14 @@ public class SensorDataController {
          *
          * @param start start timestamp (inclusive)
          * @param end end timestamp (inclusive)
-         * @return confirmation message
+         * @return 204 No Content response
          */
         @DeleteMapping("/range")
-        public ResponseEntity<?> deleteSensorDataByRange(
+        public ResponseEntity<Void> deleteSensorDataByRange(
                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
                 sensorDataService.deleteSensorDataByDateRange(start, end);
-                return ResponseEntity.ok("Sensor data deleted for range " + start + " - " + end);
+                return ResponseBuilder.noContent();
         }
 
         /**

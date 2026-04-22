@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import com.jade.move.model.Camera;
 import com.jade.move.model.StreamType;
 import com.jade.move.service.CameraService;
+import com.jade.move.util.ResponseBuilder;
+import com.jade.move.util.ResponseBuilder;
 
 /**
  * REST controller for camera management.
@@ -117,7 +119,7 @@ public class CameraController {
             description = "Creates a new camera in the system with the provided information. All required fields must be included in the request body. / Crea una nueva cámara en el sistema con la información proporcionada. Todos los campos requeridos deben incluirse en el cuerpo de la petición."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Camera created successfully / Cámara creada exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Camera created successfully / Cámara creada exitosamente"),
             @ApiResponse(responseCode = "400", description = "Invalid camera data or missing required fields / Datos de cámara inválidos o faltan campos requeridos"),
             @ApiResponse(responseCode = "409", description = "Camera already exists for this device / La cámara ya existe para este dispositivo"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
@@ -129,9 +131,9 @@ public class CameraController {
          * @return ResponseEntity confirming creation with generated id
          */
         @PostMapping
-        public ResponseEntity<?> createCamera(@RequestBody Camera camera) {
+        public ResponseEntity<Camera> createCamera(@RequestBody Camera camera) {
                 Camera createdCamera = cameraService.createCamera(camera);
-                return ResponseEntity.ok("Camera created successfully with id: " + createdCamera.getId());
+                return ResponseBuilder.created(createdCamera.getId(), "/cameras", createdCamera);
         }
 
     @Operation(
@@ -151,17 +153,17 @@ public class CameraController {
          * @return ResponseEntity confirming update with id
          */
         @PutMapping
-        public ResponseEntity<?> updateCamera(@RequestBody Camera camera) {
-                Camera updatedCamera = cameraService.updateCamera(camera);
-                return ResponseEntity.ok("Camera updated successfully with id: " + updatedCamera.getId());
-        }
+    public ResponseEntity<Camera> updateCamera(@RequestBody Camera camera) {
+        Camera updatedCamera = cameraService.updateCamera(camera);
+        return ResponseEntity.ok(updatedCamera);
+    }
 
     @Operation(
             summary = "Delete a camera by ID / Eliminar una cámara por ID",
             description = "Permanently deletes a camera from the system using its unique identifier. This action cannot be undone. / Elimina permanentemente una cámara del sistema usando su identificador único. Esta acción no se puede deshacer."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Camera deleted successfully / Cámara eliminada exitosamente"),
+            @ApiResponse(responseCode = "204", description = "Camera deleted successfully / Cámara eliminada exitosamente"),
             @ApiResponse(responseCode = "404", description = "Camera not found / Cámara no encontrada"),
             @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
@@ -173,8 +175,8 @@ public class CameraController {
          * @return ResponseEntity confirming deletion
          */
         @DeleteMapping("/{id}")
-        public ResponseEntity<?> deleteCamera(@PathVariable Integer id) {
+        public ResponseEntity<Void> deleteCamera(@PathVariable Integer id) {
                 cameraService.deleteCamera(id);
-                return ResponseEntity.ok("Camera deleted successfully with id: " + id);
+                return ResponseBuilder.noContent();
         }
 }

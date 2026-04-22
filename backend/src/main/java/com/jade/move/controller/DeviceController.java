@@ -5,6 +5,7 @@ import java.util.List;
 import com.jade.move.dto.DevicesSearchCriteria;
 import com.jade.move.dto.RegisterDeviceRequest;
 import com.jade.move.dto.RegisterDeviceResponse;
+import com.jade.move.util.ResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -147,16 +148,16 @@ public class DeviceController {
             description = "Creates a new device in the system with the provided information. All required fields must be included in the request body. / Crea un nuevo dispositivo en el sistema con la información proporcionada. Todos los campos requeridos deben incluirse en el cuerpo de la petición."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Device created successfully / Dispositivo creado exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Device created successfully / Dispositivo creado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Invalid device data or missing required fields / Datos de dispositivo inválidos o faltan campos requeridos"),
             @ApiResponse(responseCode = "409", description = "Device already exists / El dispositivo ya existe"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
-        @PostMapping
-        public ResponseEntity<?> createDevice(@RequestBody RegisterDeviceRequest request) {
-                RegisterDeviceResponse response = deviceService.registerDevice(request);
-                return ResponseEntity.ok(response);
-        }
+    @PostMapping
+    public ResponseEntity<RegisterDeviceResponse> createDevice(@RequestBody RegisterDeviceRequest request) {
+        RegisterDeviceResponse response = deviceService.registerDevice(request);
+        return ResponseBuilder.created(response.getDeviceId(), "/devices", response);
+    }
 
             /**
              * Registers a device during provisioning (device-initiated).
@@ -173,28 +174,28 @@ public class DeviceController {
                     description = "Endpoint usado por dispositivos en modo provisioning (SoftAP). Valida X-Factory-Token y registra el dispositivo en el sistema."
             )
             @ApiResponses({
-                    @ApiResponse(responseCode = "200", description = "Device registered successfully / Dispositivo registrado exitosamente"),
-                    @ApiResponse(responseCode = "401", description = "Invalid factory token / Token de fábrica inválido"),
-                    @ApiResponse(responseCode = "400", description = "Invalid device data / Datos inválidos"),
-                    @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
-            })
-            @PostMapping("/register-from-device")
-            public ResponseEntity<?> registerFromDevice(
-                    @RequestHeader(value = "X-Factory-Token", required = false) String factoryToken,
-                    @RequestBody RegisterDeviceRequest request
-            ) {
-                                if (provisioningFactoryToken == null || provisioningFactoryToken.isBlank()) {
-                                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Provisioning not enabled");
-                                }
+            @ApiResponse(responseCode = "201", description = "Device registered successfully / Dispositivo registrado exitosamente"),
+            @ApiResponse(responseCode = "401", description = "Invalid factory token / Token de fábrica inválido"),
+            @ApiResponse(responseCode = "400", description = "Invalid device data / Datos inválidos"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+    @PostMapping("/register-from-device")
+    public ResponseEntity<?> registerFromDevice(
+            @RequestHeader(value = "X-Factory-Token", required = false) String factoryToken,
+            @RequestBody RegisterDeviceRequest request
+    ) {
+        if (provisioningFactoryToken == null || provisioningFactoryToken.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Provisioning not enabled");
+        }
 
-                                if (factoryToken == null || !factoryToken.equals(provisioningFactoryToken)) {
-                                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid factory token");
-                                }
+        if (factoryToken == null || !factoryToken.equals(provisioningFactoryToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid factory token");
+        }
 
-                                request.setState(DeviceState.PROVISIONAL);
-                                RegisterDeviceResponse response = deviceService.registerDevice(request);
-                return ResponseEntity.ok(response);
-            }
+        request.setState(DeviceState.PROVISIONAL);
+        RegisterDeviceResponse response = deviceService.registerDevice(request);
+        return ResponseBuilder.created(response.getDeviceId(), "/devices/register-from-device", response);
+    }
 
     /**
      * Updates an existing device.
@@ -213,9 +214,9 @@ public class DeviceController {
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @PutMapping
-    public ResponseEntity<?> updateDevice(@RequestBody Device device) {
+    public ResponseEntity<Device> updateDevice(@RequestBody Device device) {
         Device updatedDevice = deviceService.updateDevice(device);
-        return ResponseEntity.ok("Device updated successfully with id: " + updatedDevice.getId());
+        return ResponseEntity.ok(updatedDevice);
     }
 
     /**
@@ -229,15 +230,15 @@ public class DeviceController {
             description = "Permanently deletes a device from the system using its unique identifier. This action cannot be undone. / Elimina permanentemente un dispositivo del sistema usando su identificador único. Esta acción no se puede deshacer."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Device deleted successfully / Dispositivo eliminado exitosamente"),
+            @ApiResponse(responseCode = "204", description = "Device deleted successfully / Dispositivo eliminado exitosamente"),
             @ApiResponse(responseCode = "404", description = "Device not found / Dispositivo no encontrado"),
             @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
             @ApiResponse(responseCode = "409", description = "Cannot delete device due to existing dependencies / No se puede eliminar el dispositivo debido a dependencias existentes"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteDevice(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteDevice(@PathVariable Integer id) {
         deviceService.deleteDevice(id);
-        return ResponseEntity.ok("Device deleted successfully with id: " + id);
+        return ResponseBuilder.noContent();
     }
 }

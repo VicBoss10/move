@@ -2,6 +2,7 @@ package com.jade.move.controller;
 
 import com.jade.move.dto.UserRegistrationRequest;
 import com.jade.move.service.KeycloakAdminService;
+import com.jade.move.util.ResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -98,12 +99,13 @@ public class UserController {
                 registrationRequest.getFirstName(),
                 registrationRequest.getLastName()
         );
-        return ResponseEntity.status(201).body(Map.of(
+        Map<String, String> body = Map.of(
                 "message", "User created successfully",
                 "userId", keycloakUserId,
                 "username", registrationRequest.getUsername(),
                 "email", registrationRequest.getEmail()
-        ));
+        );
+        return ResponseBuilder.created(keycloakUserId, "/users", body);
     }
 
     /**
@@ -143,14 +145,14 @@ public class UserController {
             description = "Permanently deletes a user from Keycloak. / Elimina permanentemente un usuario de Keycloak."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User deleted successfully / Usuario eliminado exitosamente"),
+            @ApiResponse(responseCode = "204", description = "User deleted successfully / Usuario eliminado exitosamente"),
             @ApiResponse(responseCode = "404", description = "User not found / Usuario no encontrado"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable String id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         keycloakAdminService.getUserById(id);
         keycloakAdminService.deleteUser(id);
-        return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+        return ResponseBuilder.noContent();
     }
 }
