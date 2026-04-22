@@ -251,7 +251,7 @@ public class StreamService {
         }
 
         String uri = UriComponentsBuilder
-                .fromHttpUrl(pythonServiceUrl + "/stream/snapshot/" + sessionId)
+                .fromUriString(pythonServiceUrl + "/stream/snapshot/" + sessionId)
                 .queryParamIfPresent("w", java.util.Optional.ofNullable(width))
                 .queryParamIfPresent("q", java.util.Optional.ofNullable(quality))
                 .build(true)

@@ -30,7 +30,7 @@ public class VehicleDetectedSpecification {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("timestamp"), criteria.getEnd()));
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
         };
     }
 }

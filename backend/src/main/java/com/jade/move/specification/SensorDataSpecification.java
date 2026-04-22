@@ -94,7 +94,7 @@ public class SensorDataSpecification {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("nh3"), criteria.getMaxNh3()));
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
         };
     }
 }
