@@ -32,7 +32,7 @@ public class StartupConfig {
             String seqSql = "SELECT setval(pg_get_serial_sequence('locations','id'), "
                     + "GREATEST((SELECT COALESCE(MAX(id), 0) FROM locations), 1))";
             jdbcTemplate.execute(seqSql);
-        } catch (DataAccessException dae) {                    
+        } catch (DataAccessException dae) {
             log.warn("Unable to create default location (id=0): {}", dae.getMessage());
         }
     }

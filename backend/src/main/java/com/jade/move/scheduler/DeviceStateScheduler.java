@@ -23,7 +23,7 @@ import java.util.List;
  * Scheduled job that marks devices as INACTIVE when no data has been received
  * within the configured thresholds, using Colombia time (America/Bogota)
  * for comparisons (same timezone that data timestamps are stored in).
- * 
+ *
  * Evaluates:
  * - SENSOR devices: uses SensorData, default 10 min threshold
  * - CAMERA devices: uses VehicleDetected, default 60 min threshold
@@ -66,7 +66,7 @@ public class DeviceStateScheduler {
     /**
      * Evaluates SENSOR devices based on sensor data activity.
      * Called by master scheduler or can be called independently.
-     * 
+     *
      * IMPORTANTE: Solo marca como INACTIVE si no hay datos recientes.
      * La transición INACTIVE -> ACTIVE ocurre SOLO cuando llega un dato nuevo (en SensorDataService).
      */
@@ -96,7 +96,7 @@ public class DeviceStateScheduler {
                 log.info("Device {} ({}) marked INACTIVE — no sensor data since threshold ({}m)",
                         device.getId(), device.getName(), sensorInactiveThresholdMinutes);
             }
-            
+
             // NO pasar de INACTIVE a ACTIVE aquí. Eso ocurre en SensorDataService cuando llega un dato nuevo.
             // Esto evita que sensores INACTIVE se activen solo porque hay datos antiguos.
         }
@@ -105,7 +105,7 @@ public class DeviceStateScheduler {
     /**
      * Evaluates CAMERA devices based on vehicle detection activity.
      * Runs same schedule as sensor evaluation.
-     * 
+     *
      * IMPORTANTE: Solo marca como INACTIVE si no hay datos recientes.
      * La transición INACTIVE -> ACTIVE ocurre SOLO cuando llega un dato nuevo (en VehicleDetectedService).
      */
@@ -135,7 +135,7 @@ public class DeviceStateScheduler {
                 log.info("Device {} ({}) marked INACTIVE — no vehicle detections since threshold ({}m)",
                         device.getId(), device.getName(), cameraInactiveThresholdMinutes);
             }
-            
+
             // NO pasar de INACTIVE a ACTIVE aquí. Eso ocurre en VehicleDetectedService cuando llega un dato nuevo.
             // Esto evita que cámaras INACTIVE se activen solo porque hay datos antiguos.
         }

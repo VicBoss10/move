@@ -236,19 +236,19 @@ public class SensorDataService {
 
     public List<SensorData> searchSensorData(SensorDataSearchCriteria criteria) {
         Specification<SensorData> spec = SensorDataSpecification.buildSpecification(criteria);
-        
+
         // Check if pagination parameters are provided
         if (criteria.getPage() != null && criteria.getSize() != null) {
             // Create Pageable with descending order by timestamp
             Pageable pageable = PageRequest.of(
-                criteria.getPage(), 
+                criteria.getPage(),
                 criteria.getSize(),
                 Sort.by(Sort.Direction.DESC, "timestamp")
             );
             Page<SensorData> page = sensorDataRepository.findAll(spec, pageable);
             return page.getContent();
         }
-        
+
         // If no pagination, return all results
         return sensorDataRepository.findAll(spec);
     }

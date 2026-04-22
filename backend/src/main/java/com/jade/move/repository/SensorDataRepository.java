@@ -17,7 +17,7 @@ public interface SensorDataRepository extends JpaRepository<SensorData, Integer>
     List<SensorData> findByDeviceIdAndTimestampBetween(Integer deviceId, LocalDateTime start, LocalDateTime end);
     List<SensorData> findByDeviceLocationId(Integer locationId);
     SensorData findTopByDeviceIdOrderByTimestampDesc(Integer deviceId);
-    
+
     @Modifying
     @Transactional
     void deleteByDeviceId(Integer deviceId);

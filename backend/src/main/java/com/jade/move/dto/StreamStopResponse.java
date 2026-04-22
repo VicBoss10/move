@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StreamStopResponse {
-    
+
     private String message;
     private String sessionId;
 }

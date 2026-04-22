@@ -16,11 +16,11 @@ public class RegisterDeviceRequest {
     private DeviceType type;
     private DeviceState state;
     private Integer locationId;
-    
+
     // Campos de Camera (opcionales, solo para type=CAMERA)
     private StreamType streamType;
     private String source;
-    
+
     // Campos de Sensor (opcionales, solo para type=SENSOR)
     private String macAddress;
     private String firmwareVersion;

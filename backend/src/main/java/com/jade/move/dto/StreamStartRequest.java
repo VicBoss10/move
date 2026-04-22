@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class StreamStartRequest {
-    
+
     @NotNull(message = "Camera ID is required")
     private Integer cameraId;
 }

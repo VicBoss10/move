@@ -132,7 +132,7 @@ public class StreamController {
         Map<String, String> response = new HashMap<>();
         response.put("status", isHealthy ? "HEALTHY" : "UNAVAILABLE");
         response.put("service", "vehicle-detection");
-        
+
         // Siempre retornar 200 OK - el estado está en el JSON
         return ResponseEntity.ok(response);
     }

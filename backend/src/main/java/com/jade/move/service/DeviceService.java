@@ -264,7 +264,7 @@ public class DeviceService {
             try {
                 log.info("Provisioning validation: Checking if ANY sensor data arrived for device {}", deviceId);
                 Optional<SensorData> latestOpt = sensorDataService.getLatestSensorDataByDeviceId(deviceId);
-                
+
                 if (latestOpt.isPresent()) {
                     log.info("✓ Sensor data found for device {}, marking ACTIVE", deviceId);
                     Device d = deviceRepository.findById(deviceId).orElse(null);

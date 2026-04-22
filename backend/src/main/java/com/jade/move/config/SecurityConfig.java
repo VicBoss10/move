@@ -77,10 +77,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/cameras").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/cameras/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/cameras/**").hasRole("ADMIN")
-                        
+
                         // Endpoints Protegidos - Sensors
                         .requestMatchers(HttpMethod.GET, "/sensors").hasAnyRole("ADMIN", "USER", "DEVICE")
-                        .requestMatchers(HttpMethod.GET, "/sensors/**").hasAnyRole("ADMIN", "USER", "DEVICE")                        
+                        .requestMatchers(HttpMethod.GET, "/sensors/**").hasAnyRole("ADMIN", "USER", "DEVICE")
                         .requestMatchers(HttpMethod.POST, "/sensors").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/sensors").hasAnyRole("ADMIN", "DEVICE")
                         .requestMatchers(HttpMethod.DELETE, "/sensors/**").hasRole("ADMIN")

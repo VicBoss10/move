@@ -5,6 +5,9 @@ keycloak/*-import*.json
 #firmware
 #firmware/*
 
+#docs
+docs/*
+
 #tests
 test/
 tools/*

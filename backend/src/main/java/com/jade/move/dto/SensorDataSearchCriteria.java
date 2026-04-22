@@ -22,7 +22,7 @@ public class SensorDataSearchCriteria {
     private Double minNo2;
     private Double maxNo2;
     private Double minNh3;
-    private Double maxNh3;    
+    private Double maxNh3;
     private Integer deviceId;
     private Integer locationId;
 
