@@ -223,7 +223,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
    */
   startDetectionForCamera(camera: Camera): void {
     console.log('🎯 startDetectionForCamera called with camera:', camera);
-    
+
     // Validar que el servicio esté healthy
     if (!this.isServiceHealthyLatest) {
       console.warn('Cannot start detection: Vehicle Detection Service is not running');
@@ -233,7 +233,10 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
 
     // Validar que la cámara no esté ya activa
     if (camera.device.state === DeviceState.ACTIVE || this.isLoading(camera.id)) {
-      console.warn('Camera already active or loading:', { cameraId: camera.id, deviceState: camera.device.state });
+      console.warn('Camera already active or loading:', {
+        cameraId: camera.id,
+        deviceState: camera.device.state,
+      });
       return;
     }
 
