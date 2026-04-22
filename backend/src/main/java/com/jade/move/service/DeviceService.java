@@ -101,12 +101,22 @@ public class DeviceService {
         return deviceRepository.save(device);
     }
 
+    /**
+     * Updates an existing device.
+     *
+     * <p>Supports partial updates (e.g., location-only from firmware)
+     * by loading the existing entity and selectively applying changes
+     * to prevent overwriting with null values.</p>
+     *
+     * @param device device with updated values
+     * @return updated device
+     * @throws IllegalArgumentException if device is null
+     * @throws EntityNotFoundException if device not found
+     */
     public Device updateDevice(Device device) {
         if (device == null) {
             throw new IllegalArgumentException("Device cannot be null");
         }
-        // Load existing entity first so partial updates (e.g. location-only from firmware)
-        // do not overwrite other fields with null, which would violate NOT NULL constraints.
         Device existing = deviceRepository.findById(device.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Device not found with id: " + device.getId()));
         if (device.getName() != null) existing.setName(device.getName());
@@ -116,13 +126,21 @@ public class DeviceService {
         return deviceRepository.save(existing);
     }
 
+    /**
+     * Deletes a device and its dependent entities.
+     *
+     * <p>Cascade-deletes associated camera, sensor, and sensor data
+     * before removing the device.</p>
+     *
+     * @param id device identifier to delete
+     * @throws IllegalArgumentException if id is null
+     */
     @Transactional
     public void deleteDevice(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("Device id cannot be null");
         }
 
-        // Delete dependent Camera first if exists
         try {
             Camera camera = cameraService.getCameraByDeviceId(id);
             if (camera != null) {
@@ -132,7 +150,6 @@ public class DeviceService {
             // Camera may not exist for this device
         }
 
-        // Delete dependent Sensor first if exists
         try {
             Sensor sensor = sensorService.getSensorByDeviceId(id);
             if (sensor != null) {
@@ -142,10 +159,7 @@ public class DeviceService {
             // Sensor may not exist for this device
         }
 
-        // Delete sensor data for this device
         sensorDataService.deleteSensorDataByDeviceId(id);
-
-        // Finally delete the device
         deviceRepository.deleteById(id);
     }
 
@@ -155,9 +169,15 @@ public class DeviceService {
     }
 
     /**
-     * Registra un dispositivo completo (Device + Camera si aplica) en una transacción
-     * @param request DTO con información del dispositivo y cámara (opcional)
-     * @return Device creado con ID generado
+     * Registers a new device (and camera if applicable) in a transaction.
+     *
+     * <p>Creates a Device entity along with a Camera entity if the device
+     * type is CAMERA.</p>
+     *
+     * @param request registration request with device and optional camera data
+     * @return registration response with created device id
+     * @throws IllegalArgumentException if required fields are missing
+     * @throws EntityNotFoundException if location not found
      */
     @Transactional
     public RegisterDeviceResponse registerDevice(RegisterDeviceRequest request) {

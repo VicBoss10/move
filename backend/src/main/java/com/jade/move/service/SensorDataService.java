@@ -29,6 +29,15 @@ import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 
+/**
+ * Service for sensor data management.
+ *
+ * <p>Handles ingestion, retrieval, searching, and deletion of sensor data.
+ * Includes validation logic that rejects records with sentinel value -1,
+ * tracking consecutive rejections and updating device state accordingly.</p>
+ *
+ * @since 0.0.1
+ */
 @Service
 public class SensorDataService {
 
@@ -45,6 +54,15 @@ public class SensorDataService {
         this.deviceRepository = deviceRepository;
     }
 
+    /**
+     * Bulk creates sensor data records.
+     *
+     * <p>Persists all records and then post-processes to delete entries
+     * with invalid sentinel values, updating device state if needed.</p>
+     *
+     * @param sensorDataList list of sensor data to persist
+     * @return list of saved records
+     */
     public List<SensorData> createBulkSensorData(List<SensorData> sensorDataList) {
         if (sensorDataList == null || sensorDataList.isEmpty()) return new ArrayList<>();
 
@@ -83,10 +101,23 @@ public class SensorDataService {
         return saved;
     }
 
+    /**
+     * Retrieves all sensor data records.
+     *
+     * @return list of all records
+     */
     public List<SensorData> getAllSensorData() {
         return sensorDataRepository.findAll();
     }
 
+    /**
+     * Retrieves a sensor data record by identifier.
+     *
+     * @param id sensor data id
+     * @return sensor data record
+     * @throws IllegalArgumentException if id is null
+     * @throws EntityNotFoundException if not found
+     */
     public SensorData getSensorDataById(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("SensorData id cannot be null");
@@ -95,6 +126,12 @@ public class SensorDataService {
                 .orElseThrow(() -> new EntityNotFoundException("Sensor data not found with id: " + id));
     }
 
+    /**
+     * Retrieves all sensor data for a device.
+     *
+     * @param deviceId device identifier
+     * @return list of sensor data for the device
+     */
     public List<SensorData> getSensorDataByDeviceId(Integer deviceId) {
         return sensorDataRepository.findByDeviceId(deviceId);
     }
@@ -115,6 +152,17 @@ public class SensorDataService {
         return Optional.ofNullable(sensorDataRepository.findTopByDeviceIdOrderByTimestampDesc(deviceId));
     }
 
+    /**
+     * Creates a new sensor data record.
+     *
+     * <p>Rejects records containing sentinel value -1 and tracks consecutive
+     * rejections to detect sensor failures.</p>
+     *
+     * @param sensorData sensor data to persist
+     * @return created record
+     * @throws IllegalArgumentException if sensorData is null
+     * @throws BadRequestException if record contains invalid sentinel value
+     */
     @Transactional
     public SensorData createSensorData(SensorData sensorData) {
         if (sensorData == null) {
@@ -136,6 +184,14 @@ public class SensorDataService {
         return sensorDataRepository.save(sensorData);
     }
 
+    /**
+     * Updates an existing sensor data record.
+     *
+     * @param sensorData sensor data with updated values
+     * @return updated record
+     * @throws IllegalArgumentException if sensorData is null
+     * @throws BadRequestException if record contains invalid sentinel value
+     */
     @Transactional
     public SensorData updateSensorData(SensorData sensorData) {
         if (sensorData == null) {
@@ -158,7 +214,13 @@ public class SensorDataService {
 
     // --- Device state helpers ---
 
-    /** Marks device as ACTIVE only when it is currently INACTIVE (avoids unnecessary writes). */
+    /**
+     * Marks device as ACTIVE only when it is currently INACTIVE.
+     * Avoids unnecessary database writes.
+     *
+     * @param deviceId device identifier
+     * @implNote Updates device state if it transitions from INACTIVE to ACTIVE
+     */
     private void updateDeviceStateIfInactive(Integer deviceId) {
         if (deviceId == null) return;
         deviceRepository.findById(deviceId).ifPresent(device -> {
@@ -170,7 +232,13 @@ public class SensorDataService {
         });
     }
 
-    /** Unconditionally sets the device state (used for FAILING). */
+    /**
+     * Unconditionally sets the device state.
+     * Used for marking devices as FAILING.
+     *
+     * @param deviceId device identifier
+     * @param newState target device state
+     */
     void updateDeviceState(Integer deviceId, DeviceState newState) {
         if (deviceId == null) return;
         deviceRepository.findById(deviceId).ifPresent(device -> {
@@ -205,6 +273,12 @@ public class SensorDataService {
         consecutiveRejectedByDevice.remove(deviceId);
     }
 
+    /**
+     * Deletes a sensor data record by identifier.
+     *
+     * @param id record identifier to delete
+     * @throws IllegalArgumentException if id is null
+     */
     public void deleteSensorData(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("Id cannot be null");
@@ -212,24 +286,49 @@ public class SensorDataService {
         sensorDataRepository.deleteById(id);
     }
 
+    /**
+     * Deletes all sensor data for a given device.
+     *
+     * @param deviceId device identifier
+     */
     public void deleteSensorDataByDeviceId(Integer deviceId) {
         if (deviceId == null) return;
         sensorDataRepository.deleteByDeviceId(deviceId);
     }
 
+    /**
+     * Deletes all sensor data records.
+     */
     public void deleteAllSensorData() {
         sensorDataRepository.deleteAll();
     }
 
+    /**
+     * Deletes sensor data within a date-time range.
+     *
+     * @param start start timestamp (inclusive)
+     * @param end end timestamp (inclusive)
+     * @throws IllegalArgumentException if start or end is null
+     */
     public void deleteSensorDataByDateRange(LocalDateTime start, LocalDateTime end) {
         if (start == null || end == null) throw new IllegalArgumentException("start and end cannot be null");
         sensorDataRepository.deleteByTimestampBetween(start, end);
     }
 
+    /**
+     * Retrieves the earliest sensor data record.
+     *
+     * @return first record by timestamp
+     */
     public SensorData getFirstRecord() {
         return sensorDataRepository.findFirstByOrderByTimestampAsc();
     }
 
+    /**
+     * Retrieves the most recent sensor data record.
+     *
+     * @return last record by timestamp
+     */
     public SensorData getLastRecord() {
         return sensorDataRepository.findFirstByOrderByTimestampDesc();
     }

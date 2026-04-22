@@ -28,6 +28,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Service for streaming and video session management.
+ *
+ * <p>Manages streaming sessions by proxying requests to an external
+ * Python-based detection service. Persists session state and provides
+ * MJPEG feed and snapshot proxying.</p>
+ *
+ * @since 0.0.1
+ */
 @Service
 public class StreamService {
     private static final String STATUS_ACTIVE = "active";
@@ -50,6 +59,15 @@ public class StreamService {
         this.streamSessionRepository = streamSessionRepository;
     }
 
+    /**
+     * Starts a video streaming session with vehicle detection.
+     *
+     * @param cameraId camera identifier
+     * @return stream response with session details
+     * @throws IllegalArgumentException if cameraId is null
+     * @throws EntityNotFoundException if camera not found
+     * @throws IllegalStateException if device not active
+     */
     @Transactional
     public StreamResponse startStream(Integer cameraId) {
         if (cameraId == null) {
@@ -129,6 +147,14 @@ public class StreamService {
         }
     }
 
+    /**
+     * Stops an active streaming session.
+     *
+     * @param sessionId session identifier to stop
+     * @return stop response confirmation
+     * @throws IllegalArgumentException if sessionId is null
+     * @throws EntityNotFoundException if session not found
+     */
     @Transactional
     public StreamStopResponse stopStream(String sessionId) {
         if (sessionId == null || sessionId.trim().isEmpty()) {
@@ -164,6 +190,14 @@ public class StreamService {
         }
     }
 
+    /**
+     * Retrieves status for an active streaming session.
+     *
+     * @param sessionId session identifier
+     * @return stream response with current status
+     * @throws IllegalArgumentException if sessionId is null
+     * @throws EntityNotFoundException if session not found
+     */
     public StreamResponse getStreamStatus(String sessionId) {
         if (sessionId == null || sessionId.trim().isEmpty()) {
             throw new IllegalArgumentException("Session ID cannot be null or empty");
@@ -212,6 +246,13 @@ public class StreamService {
         }
     }
 
+    /**
+     * Retrieves the active streaming session for a device.
+     *
+     * @param deviceId device identifier
+     * @return stream response if an active session exists
+     * @throws IllegalArgumentException if deviceId is null
+     */
     @Transactional
     public StreamResponse getActiveStreamByDevice(Integer deviceId) {
         if (deviceId == null) {
@@ -224,6 +265,13 @@ public class StreamService {
                 .orElseGet(() -> loadActiveStreamFromPython(deviceId));
     }
 
+    /**
+     * Proxies an MJPEG stream feed from the detection service.
+     *
+     * @param sessionId session identifier
+     * @return streaming response body with MJPEG frames
+     * @throws IllegalArgumentException if sessionId is null
+     */
     public StreamingResponseBody proxyStreamFeed(String sessionId) {
         if (sessionId == null || sessionId.trim().isEmpty()) {
             throw new IllegalArgumentException("Session ID cannot be null or empty");
@@ -245,6 +293,15 @@ public class StreamService {
         );
     }
 
+    /**
+     * Proxies a JPEG snapshot from the detection service.
+     *
+     * @param sessionId session identifier
+     * @param width optional width parameter
+     * @param quality optional quality parameter
+     * @return JPEG bytes
+     * @throws IllegalArgumentException if sessionId is null
+     */
     public byte[] proxySnapshot(String sessionId, Integer width, Integer quality) {
         if (sessionId == null || sessionId.trim().isEmpty()) {
             throw new IllegalArgumentException("Session ID cannot be null or empty");

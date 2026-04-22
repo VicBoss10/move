@@ -18,6 +18,14 @@ import com.jade.move.exception.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Service for vehicle detection management.
+ *
+ * <p>Handles CRUD operations and searches for vehicle detection records.
+ * Automatically marks devices as ACTIVE when detections occur.</p>
+ *
+ * @since 0.0.1
+ */
 @Service
 public class VehicleDetectedService {
 
@@ -31,10 +39,23 @@ public class VehicleDetectedService {
         this.deviceRepository = deviceRepository;
     }
 
+    /**
+     * Retrieves all vehicle detections.
+     *
+     * @return list of all detections
+     */
     public List<VehicleDetected> getAllVehicleDetected() {
         return vehicleDetectedRepository.findAll();
     }
 
+    /**
+     * Retrieves a vehicle detection by identifier.
+     *
+     * @param id detection identifier
+     * @return detection record
+     * @throws IllegalArgumentException if id is null
+     * @throws EntityNotFoundException if not found
+     */
     public VehicleDetected getVehicleDetectedById(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("Id cannot be null");
@@ -43,6 +64,12 @@ public class VehicleDetectedService {
                 .orElseThrow(() -> new EntityNotFoundException("Vehicle detection not found with id: " + id));
     }
 
+    /**
+     * Retrieves detections for a specific vehicle type.
+     *
+     * @param vehicleType vehicle type to filter
+     * @return list of matching detections
+     */
     public List<VehicleDetected> getVehicleDetectedByVehicleType(VehicleType vehicleType) {
         return vehicleDetectedRepository.findByVehicleType(vehicleType);
     }
@@ -63,6 +90,13 @@ public class VehicleDetectedService {
         return vehicleDetectedRepository.findByDeviceIdAndTimestampBetween(deviceId, start, end);
     }
 
+    /**
+     * Creates a new vehicle detection record.
+     *
+     * @param vehicleDetected detection to persist
+     * @return created record
+     * @throws IllegalArgumentException if vehicleDetected is null
+     */
     @Transactional
     public VehicleDetected createVehicleDetected(VehicleDetected vehicleDetected) {
         if (vehicleDetected == null) {
@@ -88,6 +122,13 @@ public class VehicleDetectedService {
         });
     }
 
+    /**
+     * Updates an existing vehicle detection record.
+     *
+     * @param vehicleDetected detection with updated data
+     * @return updated record
+     * @throws IllegalArgumentException if vehicleDetected is null
+     */
     public VehicleDetected updateVehicleDetected(VehicleDetected vehicleDetected) {
         if (vehicleDetected == null) {
             throw new IllegalArgumentException("VehicleDetected cannot be null");
@@ -95,6 +136,12 @@ public class VehicleDetectedService {
         return vehicleDetectedRepository.save(vehicleDetected);
     }
 
+    /**
+     * Deletes a vehicle detection by identifier.
+     *
+     * @param id detection identifier to delete
+     * @throws IllegalArgumentException if id is null
+     */
     public void deleteVehicleDetected(Integer id) {
         if (id == null) {
             throw new IllegalArgumentException("Id cannot be null");
@@ -102,24 +149,50 @@ public class VehicleDetectedService {
         vehicleDetectedRepository.deleteById(id);
     }
 
+    /**
+     * Searches vehicle detections using flexible criteria.
+     *
+     * @param criteria search criteria (all optional)
+     * @return list of matching detections
+     */
     public List<VehicleDetected> searchVehicles(VehicleSearchCriteria criteria) {
         Specification<VehicleDetected> spec = VehicleDetectedSpecification.buildSpecification(criteria);
         return vehicleDetectedRepository.findAll(spec);
     }
 
+    /**
+     * Deletes all vehicle detection records.
+     */
     public void deleteAllVehicleDetected() {
         vehicleDetectedRepository.deleteAll();
     }
 
+    /**
+     * Deletes vehicle detections within a date-time range.
+     *
+     * @param start start timestamp (inclusive)
+     * @param end end timestamp (inclusive)
+     * @throws IllegalArgumentException if start or end is null
+     */
     public void deleteVehicleDetectedByDateRange(LocalDateTime start, LocalDateTime end) {
         if (start == null || end == null) throw new IllegalArgumentException("start and end cannot be null");
         vehicleDetectedRepository.deleteByTimestampBetween(start, end);
     }
 
+    /**
+     * Retrieves the earliest vehicle detection record.
+     *
+     * @return first record by timestamp
+     */
     public VehicleDetected getFirstRecord() {
         return vehicleDetectedRepository.findFirstByOrderByTimestampAsc();
     }
 
+    /**
+     * Retrieves the most recent vehicle detection record.
+     *
+     * @return last record by timestamp
+     */
     public VehicleDetected getLastRecord() {
         return vehicleDetectedRepository.findFirstByOrderByTimestampDesc();
     }

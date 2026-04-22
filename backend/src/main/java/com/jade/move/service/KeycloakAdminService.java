@@ -28,6 +28,14 @@ import java.util.stream.Collectors;
 
 import jakarta.ws.rs.WebApplicationException;
 
+/**
+ * Service for Keycloak user administration.
+ *
+ * <p>Manages user creation, updates, deletion, and role assignments
+ * via the Keycloak admin client.</p>
+ *
+ * @since 0.0.1
+ */
 @Service
 public class KeycloakAdminService {
 
@@ -46,14 +54,20 @@ public class KeycloakAdminService {
     }
 
     /**
-     * Obtiene todos los usuarios del realm
+     * Retrieves all users in the realm.
+     *
+     * @return list of Keycloak users
      */
     public List<UserRepresentation> getAllUsers() {
         return keycloakAdminClient.realm(realm).users().list();
     }
 
     /**
-     * Obtiene un usuario por su ID de Keycloak
+     * Retrieves a user by Keycloak identifier.
+     *
+     * @param userId user identifier
+     * @return user representation
+     * @throws EntityNotFoundException if user not found
      */
     public UserRepresentation getUserById(String userId) {
         try {
@@ -64,14 +78,15 @@ public class KeycloakAdminService {
     }
 
     /**
-     * Crea un usuario en Keycloak
+     * Creates a new user in Keycloak.
      *
-     * @param username Nombre de usuario
-     * @param password Contraseña
-     * @param email Email del usuario
-     * @param firstName Nombre
-     * @param lastName Apellido
-     * @return ID del usuario creado en Keycloak
+     * @param username username
+     * @param password password
+     * @param email user email
+     * @param firstName first name
+     * @param lastName last name
+     * @return Keycloak user id
+     * @throws ConflictException if user already exists
      */
     @Transactional
     public String createUser(String username, String password, String email, String firstName, String lastName) {
@@ -103,7 +118,10 @@ public class KeycloakAdminService {
     }
 
     /**
-     * Devuelve los nombres de los roles realm del usuario
+     * Retrieves the realm roles for a user.
+     *
+     * @param userId user identifier
+     * @return list of role names
      */
     public List<String> getUserRoles(String userId) {
         return keycloakAdminClient.realm(realm).users().get(userId)
@@ -113,7 +131,12 @@ public class KeycloakAdminService {
     }
 
     /**
-     * Cambia el rol realm del usuario (quita user/admin actuales y asigna el nuevo)
+     * Updates a user's realm role.
+     *
+     * <p>Removes existing user/admin roles and assigns the new role.</p>
+     *
+     * @param userId user identifier
+     * @param newRole new role name to assign
      */
     @Transactional
     public void setUserRole(String userId, String newRole) {
@@ -135,7 +158,12 @@ public class KeycloakAdminService {
     }
 
     /**
-     * Actualiza los datos de un usuario en Keycloak (email, nombre, apellido)
+     * Updates user profile information in Keycloak.
+     *
+     * @param userId user identifier
+     * @param email new email
+     * @param firstName new first name
+     * @param lastName new last name
      */
     @Transactional
     public void updateUser(String userId, String email, String firstName, String lastName) {
