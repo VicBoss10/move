@@ -25,7 +25,7 @@ public class DevicesSpecification {
                 predicates.add(criteriaBuilder.equal(root.get("locationId"), criteria.getLocationId()));
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
         };
     };
 }
