@@ -6,15 +6,25 @@ import io.swagger.v3.oas.models.info.Contact;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * OpenAPI / Swagger configuration for API metadata.
+ *
+ * @since 0.0.1
+ */
 @Configuration
 public class SwaggerConfig {
 
+    /**
+     * Creates the OpenAPI bean with basic API information.
+     *
+     * @return configured OpenAPI instance
+     */
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .info(new Info()
                         .title("MOVE API")
-                        .description("API REST para el sistema MOVE de monitoreo ambiental")
+                        .description("REST API for the MOVE environmental monitoring system")
                         .version("1.0")
                         .contact(new Contact()
                                 .name("Victor")

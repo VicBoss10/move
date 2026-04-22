@@ -9,6 +9,14 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Startup tasks executed when the application boots.
+ *
+ * <p>This configuration creates a default provisional location record (id=0) in the
+ * database if it does not exist. This ensures the system has a fallback location.</p>
+ *
+ * @since 0.0.1
+ */
 @Configuration
 public class StartupConfig {
 
@@ -18,11 +26,25 @@ public class StartupConfig {
     private static final double DEFAULT_LON = 0;
     private static final String DEFAULT_DESC = "Ubicación Provisional";
 
+    /**
+     * Application runner that ensures a default location exists at startup.
+     *
+     * @param jdbcTemplate JDBC template used to run SQL statements
+     * @return an ApplicationRunner bean
+     */
     @Bean
     public ApplicationRunner createDefaultLocationRunner(JdbcTemplate jdbcTemplate) {
         return args -> createDefaultLocation(jdbcTemplate);
     }
 
+    /**
+     * Inserts a default location record (id=0) and adjusts the sequence value.
+     *
+     * <p>The method is transactional and ignores conflicts if the description already
+     * exists in the database.</p>
+     *
+     * @param jdbcTemplate JDBC template used for database operations
+     */
     @Transactional
     public void createDefaultLocation(JdbcTemplate jdbcTemplate) {
         try {

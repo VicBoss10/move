@@ -7,6 +7,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import java.util.Objects;
 
+/**
+ * Provides a Keycloak admin client bean configured from application properties.
+ *
+ * <p>The bean uses username/password grant to obtain administration access to the
+ * Keycloak server. Required properties must be provided via configuration.</p>
+ *
+ * @since 0.0.1
+ */
 @Configuration
 public class KeycloakAdminConfig {
 
@@ -23,16 +31,21 @@ public class KeycloakAdminConfig {
 
     @Value("${keycloak.admin-password}")
     private String adminPassword;
+    /**
+     * Builds and returns a Keycloak admin client instance.
+     *
+     * <p>Required properties: {@code keycloak.server-url}, {@code keycloak.realm},
+     * {@code keycloak.admin-username}, {@code keycloak.admin-password} and optionally
+     * {@code keycloak.admin-client-id} (defaults to {@code admin-cli}).</p>
+     *
+     * @return configured Keycloak admin client
+     */
     @Bean
     public Keycloak keycloakAdminClient() {
-        // Fail fast if required env vars are missing
         Objects.requireNonNull(serverUrl, "KEYCLOAK_SERVER_URL is required");
         Objects.requireNonNull(realm, "KEYCLOAK_REALM is required");
-        // Back to username/password mode: require admin username, password and client id
         Objects.requireNonNull(adminUsername, "keycloak.admin-username is required");
         Objects.requireNonNull(adminPassword, "keycloak.admin-password is required");
-
-        // Use admin client id from property (default 'admin-cli')
         Objects.requireNonNull(adminClientId, "keycloak.admin-client-id is required");
 
         return KeycloakBuilder.builder()
