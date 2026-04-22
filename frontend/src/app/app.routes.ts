@@ -295,12 +295,6 @@ const DASHBOARD_ROUTES: Routes = [
     ],
   },
   {
-    path: 'calendar',
-    loadComponent: () =>
-      import('./pages/calender/calender.component').then((m) => m.CalenderComponent),
-    title: 'Calendario',
-  },
-  {
     path: 'profile',
     loadComponent: () =>
       import('./pages/profile/profile.component').then((m) => m.ProfileComponent),

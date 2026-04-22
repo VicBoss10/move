@@ -13,9 +13,19 @@ module.exports = [
       },
     },
     plugins: {
-      '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
+      '@typescript-eslint': require('@typescript-eslint/eslint-plugin')
     },
     rules: {},
   },
+  {
+    files: ['**/*.html'],
+    languageOptions: {
+      parser: require('@angular-eslint/template-parser'),
+    },
+    plugins: {
+      '@angular-eslint/template': require('@angular-eslint/eslint-plugin-template')
+    },
+    rules: {}
+  }
   // HTML/template linting removed for now to avoid parsing errors
 ];
