@@ -6,7 +6,7 @@ import { DropdownItemTwoComponent } from '../../ui/dropdown/dropdown-item/dropdo
 import { UserService } from '../../../../core/services/user.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 
 @Component({
   selector: 'app-user-dropdown',

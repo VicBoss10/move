@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { map, tap, catchError } from 'rxjs/operators';
+import { tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import {
   Device,
   DeviceSearchCriteria,
   DeviceStats,
-  RegisterDeviceRequest,
 } from '../models/device.model';
 import { QueryParamsBuilder } from '../utils/query-params.builder';
 

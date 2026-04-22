@@ -10,7 +10,7 @@ import { HistoryFiltersComponent } from '../../../shared/components/environment-
 import { SensorDataTableComponent } from '../../../shared/components/environment-detail-charts/sensor-data-table/sensor-data-table.component';
 import { SensorDataService } from '../../../core/services/sensor-data.service';
 import { SensorData, SensorDataSearchCriteria } from '../../../core/models/sensor-data.model';
-import { Observable, of, Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 
 /**

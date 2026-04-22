@@ -14,7 +14,6 @@ import {
   ApexTooltip,
   ApexYAxis,
   ApexLegend,
-  ApexOptions,
 } from 'ng-apexcharts';
 import { ChartTabComponent } from '../../common/chart-tab/chart-tab.component';
 

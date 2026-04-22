@@ -21,7 +21,6 @@ import { SensorDataService } from '../../../core/services/sensor-data.service';
 import { SensorData } from '../../../core/models/sensor-data.model';
 import {
   getEnvironmentStatus,
-  getMetricGaugePercentage,
 } from '../../../core/config/environment-thresholds.config';
 
 ChartJS.register(

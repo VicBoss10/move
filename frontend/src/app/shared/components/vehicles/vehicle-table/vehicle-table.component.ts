@@ -1,6 +1,5 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VehicleDetected } from '../../../../core/models/vehicle.model';
 
 /**
  * VehicleTableComponent

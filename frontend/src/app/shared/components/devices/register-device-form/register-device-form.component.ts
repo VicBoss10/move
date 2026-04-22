@@ -19,7 +19,6 @@ import { ApiService } from '../../../../core/services/api.service';
 import {
   DeviceState,
   DeviceType,
-  RegisterDeviceRequest,
 } from '../../../../core/models/device.model';
 import { ToastService } from '../../../../core/services/toast.service';
 

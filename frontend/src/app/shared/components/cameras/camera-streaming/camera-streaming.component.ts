@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { CameraService } from '../../../../core/services/camera.service';
-import { Camera, StreamResponse } from '../../../../core/models/camera.model';
+import { Camera } from '../../../../core/models/camera.model';
 import { DeviceState } from '../../../../core/models/device.model';
 
 /**

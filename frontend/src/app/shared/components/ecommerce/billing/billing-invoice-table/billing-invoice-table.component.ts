@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { ButtonComponent } from '../../../ui/button/button.component';
 
 interface Invoice {
   id: number;

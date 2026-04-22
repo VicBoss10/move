@@ -6,7 +6,7 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, Subject, forkJoin, of } from 'rxjs';
+import { Subject, forkJoin, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';

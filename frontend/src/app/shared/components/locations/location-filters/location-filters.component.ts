@@ -1,6 +1,5 @@
 import {
   Component,
-  Input,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   OnInit,
@@ -14,13 +13,11 @@ import {
   distinctUntilChanged,
   map,
   switchMap,
-  takeUntil,
   catchError,
   share,
   startWith,
 } from 'rxjs/operators';
 import { LocationTableComponent } from '../location-table/location-table.component';
-import { LocationService } from '../../../../core/services/location.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { Location } from '../../../../core/models/location.model';
 

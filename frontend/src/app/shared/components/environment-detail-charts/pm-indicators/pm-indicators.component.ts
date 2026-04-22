@@ -6,7 +6,6 @@ import { SensorDataService } from '../../../../core/services/sensor-data.service
 import { ThresholdsService } from '../../../../core/services/thresholds.service';
 import {
   getEnvironmentStatusFromConfig,
-  getMetricGaugePercentageFromConfig,
 } from '../../../../core/config/environment-thresholds.config';
 
 /**

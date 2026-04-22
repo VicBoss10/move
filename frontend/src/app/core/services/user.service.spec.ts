@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError, skip, take } from 'rxjs';
 import { UserService } from './user.service';
 import { ApiService } from './api.service';
-import { User, UserSearchCriteria, UserStats } from '../models/user.model';
+import { User, UserSearchCriteria } from '../models/user.model';
 
 /**
  * Test suite para UserService

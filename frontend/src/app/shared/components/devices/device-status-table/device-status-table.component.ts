@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Observable, of, Subject } from 'rxjs';
-import { map, catchError, switchMap, startWith } from 'rxjs/operators';
+import { catchError, switchMap, startWith } from 'rxjs/operators';
 import {
   DeviceStatusService,
   DeviceStatusInfo,

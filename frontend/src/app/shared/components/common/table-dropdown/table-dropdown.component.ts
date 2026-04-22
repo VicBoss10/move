@@ -4,7 +4,6 @@ import {
   Input,
   ElementRef,
   ViewChild,
-  TemplateRef,
   AfterViewInit,
   OnDestroy,
 } from '@angular/core';

@@ -11,7 +11,6 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Observable, of, Subject, combineLatest } from 'rxjs';
 import {
   catchError,
-  shareReplay,
   switchMap,
   map,
   takeUntil,

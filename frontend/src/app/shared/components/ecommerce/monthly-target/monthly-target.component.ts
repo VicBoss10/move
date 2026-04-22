@@ -6,7 +6,6 @@ import {
   ApexPlotOptions,
   ApexFill,
   ApexStroke,
-  ApexOptions,
   NgApexchartsModule,
 } from 'ng-apexcharts';
 import { DropdownComponent } from '../../ui/dropdown/dropdown.component';
