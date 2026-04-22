@@ -11,7 +11,6 @@ import com.jade.move.model.Camera;
 import com.jade.move.model.StreamType;
 import com.jade.move.service.CameraService;
 import com.jade.move.util.ResponseBuilder;
-import com.jade.move.util.ResponseBuilder;
 
 /**
  * REST controller for camera management.

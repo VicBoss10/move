@@ -58,7 +58,7 @@ public class StreamController {
     @PostMapping("/start")
     public ResponseEntity<StreamResponse> startStream(@Valid @RequestBody StreamStartRequest request) {
         StreamResponse response = streamService.startStream(request.getCameraId());
-        return ResponseBuilder.created(Integer.valueOf(response.getSessionId()), "/streams/start", response);
+        return ResponseBuilder.created(response.getSessionId(), "/streams/start", response);
     }
 
     @Operation(
