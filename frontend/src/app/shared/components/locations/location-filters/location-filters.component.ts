@@ -1,8 +1,24 @@
-import { Component, Input, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  Input,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Observable, BehaviorSubject, Subject, combineLatest } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, switchMap, takeUntil, catchError, share, startWith } from 'rxjs/operators';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  switchMap,
+  takeUntil,
+  catchError,
+  share,
+  startWith,
+} from 'rxjs/operators';
 import { LocationTableComponent } from '../location-table/location-table.component';
 import { LocationService } from '../../../../core/services/location.service';
 import { ApiService } from '../../../../core/services/api.service';
@@ -47,29 +63,27 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
 
   constructor(
     private apiService: ApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {
     // Observable reactivo que filtra ubicaciones cuando el searchControl cambia
     this.locations$ = combineLatest([
       this.searchControl.valueChanges.pipe(
         debounceTime(300),
         distinctUntilChanged(),
-        startWith('')
+        startWith(''),
       ),
-      this.refreshTrigger$
+      this.refreshTrigger$,
     ]).pipe(
       switchMap(([searchTerm]) =>
         this.apiService.get<Location[]>('/locations').pipe(
-          map((locations: Location[]) =>
-            this.filterLocations(locations, searchTerm || '')
-          ),
+          map((locations: Location[]) => this.filterLocations(locations, searchTerm || '')),
           catchError(() => {
             this.cdr.markForCheck();
             return [[] as Location[]];
-          })
-        )
+          }),
+        ),
       ),
-      share()
+      share(),
     );
   }
 
@@ -91,9 +105,7 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
     }
 
     const term = searchTerm.toLowerCase();
-    return locations.filter(loc =>
-      (loc.description || '').toLowerCase().includes(term)
-    );
+    return locations.filter((loc) => (loc.description || '').toLowerCase().includes(term));
   }
 
   /**
@@ -103,4 +115,3 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
     this.refreshTrigger$.next();
   }
 }
-

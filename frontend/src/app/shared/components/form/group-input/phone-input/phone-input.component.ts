@@ -8,14 +8,11 @@ export interface CountryCode {
 
 @Component({
   selector: 'app-phone-input',
-  imports: [
-    CommonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './phone-input.component.html',
-  styles: ``
+  styles: ``,
 })
-export class PhoneInputComponent {
-
+export class PhoneInputComponent implements OnInit {
   @Input() countries: CountryCode[] = [];
   @Input() placeholder: string = '+1 (555) 000-0000';
   @Input() selectPosition: 'start' | 'end' = 'start';
@@ -31,7 +28,7 @@ export class PhoneInputComponent {
       this.selectedCountry = this.countries[0].code;
       this.countryCodes = this.countries.reduce(
         (acc, { code, label }) => ({ ...acc, [code]: label }),
-        {}
+        {},
       );
       this.phoneNumber = this.countryCodes[this.selectedCountry] || '';
     }

@@ -3,10 +3,16 @@ import { Observable, throwError, of, BehaviorSubject } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
-import { Camera, StreamStartRequest, StreamResponse, StreamStopResponse, StreamType } from '../models/camera.model';
+import {
+  Camera,
+  StreamStartRequest,
+  StreamResponse,
+  StreamStopResponse,
+  StreamType,
+} from '../models/camera.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CameraService extends BaseDataService<Camera> {
   protected endpoint = 'cameras';
@@ -21,12 +27,14 @@ export class CameraService extends BaseDataService<Camera> {
   triggerRefresh(): void {
     this.refreshSubject.next();
     // Invalidate cache and fetch fresh data so subscribers get updated lists
-    this.refresh().pipe(
-      catchError((err) => {
-        this.setServiceError(err, 'Error refreshing cameras');
-        return of([] as Camera[]);
-      })
-    ).subscribe();
+    this.refresh()
+      .pipe(
+        catchError((err) => {
+          this.setServiceError(err, 'Error refreshing cameras');
+          return of([] as Camera[]);
+        }),
+      )
+      .subscribe();
   }
 
   getCameraByDeviceId(deviceId: number): Observable<Camera> {
@@ -35,7 +43,7 @@ export class CameraService extends BaseDataService<Camera> {
       catchError((error) => {
         this.setServiceError(error, 'Error al obtener cámara por dispositivo');
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -45,7 +53,7 @@ export class CameraService extends BaseDataService<Camera> {
       catchError((error) => {
         this.setServiceError(error, 'Error al filtrar cámaras por tipo de stream');
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -56,7 +64,7 @@ export class CameraService extends BaseDataService<Camera> {
       catchError((error) => {
         this.setServiceError(error, 'Error al iniciar stream');
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -66,7 +74,7 @@ export class CameraService extends BaseDataService<Camera> {
       catchError((error) => {
         this.setServiceError(error, 'Error al detener stream');
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -76,7 +84,7 @@ export class CameraService extends BaseDataService<Camera> {
       catchError((error) => {
         this.setServiceError(error, 'Error al consultar estado del stream');
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -86,34 +94,7 @@ export class CameraService extends BaseDataService<Camera> {
       catchError((error) => {
         this.setServiceError(error, 'Error al obtener stream activo por device');
         return throwError(() => error);
-      })
-    );
-  }
-
-  override update(data: Camera): Observable<Camera> {
-    return this.apiService.putText(`/${this.endpoint}`, data).pipe(
-      map(() => data),
-      tap(() => {
-        this.invalidateCache();
-        this.clearServiceError();
       }),
-      catchError((error) => {
-        this.setServiceError(error, 'Error al actualizar cámara');
-        return throwError(() => error);
-      })
-    );
-  }
-
-  override delete(id: number): Observable<string> {
-    return this.apiService.deleteText(`/${this.endpoint}/${id}`).pipe(
-      tap(() => {
-        this.invalidateCache();
-        this.clearServiceError();
-      }),
-      catchError((error) => {
-        this.setServiceError(error, 'Error al eliminar cámara');
-        return throwError(() => error);
-      })
     );
   }
 }

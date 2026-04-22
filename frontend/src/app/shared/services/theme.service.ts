@@ -4,7 +4,6 @@ import { BehaviorSubject } from 'rxjs';
 type Theme = 'light' | 'dark';
 
 @Injectable({ providedIn: 'root' })
-
 export class ThemeService {
   private themeSubject = new BehaviorSubject<Theme>('light');
   theme$ = this.themeSubject.asObservable();

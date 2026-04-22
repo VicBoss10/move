@@ -21,8 +21,10 @@
       <app-vehicle-table [stats]="stats" *ngIf="!isLoading && !errorMessage" />
 
       <!-- Empty state -->
-      <div *ngIf="!isLoading && (!stats || stats.length === 0) && !errorMessage" 
-           class="flex flex-col items-center justify-center py-12 text-gray-500">
+      <div
+        *ngIf="!isLoading && (!stats || stats.length === 0) && !errorMessage"
+        class="flex flex-col items-center justify-center py-12 text-gray-500"
+      >
         <p>No hay vehículos detectados</p>
       </div>
     </ng-container>

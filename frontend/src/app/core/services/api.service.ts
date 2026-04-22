@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -6,14 +6,14 @@ import { catchError } from 'rxjs/operators';
 /**
  * Servicio base para todas las comunicaciones HTTP con el backend
  * Centraliza la configuración de URL, manejo de errores y operaciones comunes
- * 
+ *
  * @service
  * @providedIn root
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-export class ApiService {
+export class ApiService implements OnInit {
   /**
    * URL base del backend (desde variable de entorno o configuración)
    * En desarrollo: http://localhost:8080
@@ -43,10 +43,13 @@ export class ApiService {
    * @param params - Parámetros de query opcionales
    * @returns Observable con la respuesta del servidor
    */
-  get<T>(endpoint: string, params?: HttpParams | { [key: string]: string | string[] }): Observable<T> {
-    return this.http.get<T>(`${this.apiUrl}${endpoint}`, { params }).pipe(
-      catchError(error => this.handleError(error))
-    );
+  get<T>(
+    endpoint: string,
+    params?: HttpParams | { [key: string]: string | string[] },
+  ): Observable<T> {
+    return this.http
+      .get<T>(`${this.apiUrl}${endpoint}`, { params })
+      .pipe(catchError((error) => this.handleError(error)));
   }
 
   /**
@@ -56,9 +59,9 @@ export class ApiService {
    * @returns Observable con la respuesta del servidor
    */
   post<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.post<T>(`${this.apiUrl}${endpoint}`, body).pipe(
-      catchError(error => this.handleError(error))
-    );
+    return this.http
+      .post<T>(`${this.apiUrl}${endpoint}`, body)
+      .pipe(catchError((error) => this.handleError(error)));
   }
 
   /**
@@ -69,9 +72,9 @@ export class ApiService {
    * @returns Observable<string> con la respuesta del servidor
    */
   postText(endpoint: string, body: any): Observable<string> {
-    return this.http.post(`${this.apiUrl}${endpoint}`, body, { responseType: 'text' }).pipe(
-      catchError(error => this.handleError(error))
-    );
+    return this.http
+      .post(`${this.apiUrl}${endpoint}`, body, { responseType: 'text' })
+      .pipe(catchError((error) => this.handleError(error)));
   }
 
   /**
@@ -80,10 +83,13 @@ export class ApiService {
    * @param params - Parámetros de query opcionales
    * @returns Observable<string> con la respuesta del servidor
    */
-  getText(endpoint: string, params?: HttpParams | { [key: string]: string | string[] }): Observable<string> {
-    return this.http.get(`${this.apiUrl}${endpoint}`, { params, responseType: 'text' }).pipe(
-      catchError(error => this.handleError(error))
-    );
+  getText(
+    endpoint: string,
+    params?: HttpParams | { [key: string]: string | string[] },
+  ): Observable<string> {
+    return this.http
+      .get(`${this.apiUrl}${endpoint}`, { params, responseType: 'text' })
+      .pipe(catchError((error) => this.handleError(error)));
   }
 
   /**
@@ -91,9 +97,9 @@ export class ApiService {
    * Útil para endpoints del backend que retornan strings como "Updated successfully..."
    */
   putText(endpoint: string, body: any): Observable<string> {
-    return this.http.put(`${this.apiUrl}${endpoint}`, body, { responseType: 'text' }).pipe(
-      catchError(error => this.handleError(error))
-    );
+    return this.http
+      .put(`${this.apiUrl}${endpoint}`, body, { responseType: 'text' })
+      .pipe(catchError((error) => this.handleError(error)));
   }
 
   /**
@@ -103,9 +109,9 @@ export class ApiService {
    * @returns Observable con la respuesta del servidor
    */
   put<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.put<T>(`${this.apiUrl}${endpoint}`, body).pipe(
-      catchError(error => this.handleError(error))
-    );
+    return this.http
+      .put<T>(`${this.apiUrl}${endpoint}`, body)
+      .pipe(catchError((error) => this.handleError(error)));
   }
 
   /**
@@ -114,9 +120,9 @@ export class ApiService {
    * @returns Observable con la respuesta del servidor
    */
   delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<T>(`${this.apiUrl}${endpoint}`).pipe(
-      catchError(error => this.handleError(error))
-    );
+    return this.http
+      .delete<T>(`${this.apiUrl}${endpoint}`)
+      .pipe(catchError((error) => this.handleError(error)));
   }
 
   /**
@@ -124,9 +130,9 @@ export class ApiService {
    * Útil para endpoints del backend que retornan strings como "Deleted successfully..."
    */
   deleteText(endpoint: string): Observable<string> {
-    return this.http.delete(`${this.apiUrl}${endpoint}`, { responseType: 'text' }).pipe(
-      catchError(error => this.handleError(error))
-    );
+    return this.http
+      .delete(`${this.apiUrl}${endpoint}`, { responseType: 'text' })
+      .pipe(catchError((error) => this.handleError(error)));
   }
 
   /**
@@ -163,10 +169,13 @@ export class ApiService {
    * GET a una URL absoluta (no concatena `apiUrl`).
    * Útil para servicios externos o microservicios con base distinta.
    */
-  getAbsolute<T>(fullUrl: string, params?: HttpParams | { [key: string]: string | string[] }): Observable<T> {
-    return this.http.get<T>(fullUrl, { params }).pipe(
-      catchError(error => this.handleError(error))
-    );
+  getAbsolute<T>(
+    fullUrl: string,
+    params?: HttpParams | { [key: string]: string | string[] },
+  ): Observable<T> {
+    return this.http
+      .get<T>(fullUrl, { params })
+      .pipe(catchError((error) => this.handleError(error)));
   }
 
   /**
@@ -174,8 +183,6 @@ export class ApiService {
    * Útil para servicios externos o microservicios con base distinta.
    */
   postAbsolute<T>(fullUrl: string, body: any): Observable<T> {
-    return this.http.post<T>(fullUrl, body).pipe(
-      catchError(error => this.handleError(error))
-    );
+    return this.http.post<T>(fullUrl, body).pipe(catchError((error) => this.handleError(error)));
   }
 }

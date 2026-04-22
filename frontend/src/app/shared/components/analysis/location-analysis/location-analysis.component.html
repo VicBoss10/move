@@ -1,5 +1,4 @@
 <div class="space-y-6">
-
   <!-- ── Page header ──────────────────────────────────────────────────────── -->
   <div class="flex flex-col gap-1">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Análisis por Ubicación</h1>
@@ -9,21 +8,26 @@
   </div>
 
   <!-- ── Filters card ─────────────────────────────────────────────────────── -->
-  <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+  <div
+    class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+  >
     <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">Configuración del análisis</h3>
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">
+        Configuración del análisis
+      </h3>
     </div>
     <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-
       <!-- Period selector -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="mr-1 text-sm font-medium text-gray-600 dark:text-gray-400">Período:</span>
         @for (p of periods; track p.key) {
           <button
             (click)="setPeriod(p.key)"
-            [ngClass]="currentFilter.period === p.key
-              ? 'bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700'
-              : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+            [ngClass]="
+              currentFilter.period === p.key
+                ? 'bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700'
+                : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+            "
             class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150"
           >
             {{ p.label }}
@@ -44,15 +48,18 @@
           }
         </select>
       </div>
-
     </div>
   </div>
 
   <!-- ── Loading ─────────────────────────────────────────────────────────── -->
   @if (isLoading) {
-    <div class="flex h-48 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div
+      class="flex h-48 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+    >
       <div class="flex flex-col items-center gap-3">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></div>
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"
+        ></div>
         <p class="text-sm text-gray-500">Cargando datos por ubicación…</p>
       </div>
     </div>
@@ -60,37 +67,43 @@
 
   <!-- ── Error ───────────────────────────────────────────────────────────── -->
   @if (!isLoading && hasError) {
-    <div class="rounded-2xl border border-red-200 bg-red-50 p-5 dark:border-red-800 dark:bg-red-900/20">
+    <div
+      class="rounded-2xl border border-red-200 bg-red-50 p-5 dark:border-red-800 dark:bg-red-900/20"
+    >
       <p class="text-sm font-medium text-red-700 dark:text-red-400">{{ errorMsg }}</p>
     </div>
   }
 
   <!-- ── Empty ───────────────────────────────────────────────────────────── -->
   @if (!isLoading && !hasError && rows.length === 0) {
-    <div class="flex h-48 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div
+      class="flex h-48 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+    >
       <p class="text-sm text-gray-400">No hay datos de ubicaciones para el período seleccionado.</p>
     </div>
   }
 
   <!-- ── Content ─────────────────────────────────────────────────────────── -->
   @if (!isLoading && !hasError && rows.length > 0) {
-
     <!-- Highlight cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
       <!-- Worst pollution -->
       @if (worstLocation) {
-        <div class="rounded-2xl border border-red-200 bg-red-50 p-5 dark:border-red-800 dark:bg-red-900/20">
-          <div class="flex items-center gap-2 mb-2">            
-            <span class="text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">Mayor contaminación</span>
+        <div
+          class="rounded-2xl border border-red-200 bg-red-50 p-5 dark:border-red-800 dark:bg-red-900/20"
+        >
+          <div class="flex items-center gap-2 mb-2">
+            <span
+              class="text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-400"
+              >Mayor contaminación</span
+            >
           </div>
           <p class="text-xl font-bold text-red-700 dark:text-red-300">
             {{ locationLabel(worstLocation.location) }}
           </p>
           <p class="mt-1 text-sm text-red-600 dark:text-red-400">
-            Promedio: <strong>{{ worstLocation.sensorAvg }}</strong>
-            &nbsp;·&nbsp;
-            Vehículos: <strong>{{ worstLocation.vehicleTotal }}</strong>
+            Promedio: <strong>{{ worstLocation.sensorAvg }}</strong> &nbsp;·&nbsp; Vehículos:
+            <strong>{{ worstLocation.vehicleTotal }}</strong>
           </p>
           <p class="mt-0.5 text-xs text-red-500 dark:text-red-400">
             {{ worstLocation.dataPoints }} mediciones registradas
@@ -100,40 +113,44 @@
 
       <!-- Busiest traffic -->
       @if (busiestLocation) {
-        <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-800 dark:bg-indigo-900/20">
+        <div
+          class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-800 dark:bg-indigo-900/20"
+        >
           <div class="flex items-center gap-2 mb-2">
-            <span class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Mayor tráfico</span>
+            <span
+              class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400"
+              >Mayor tráfico</span
+            >
           </div>
           <p class="text-xl font-bold text-indigo-700 dark:text-indigo-300">
             {{ locationLabel(busiestLocation.location) }}
           </p>
           <p class="mt-1 text-sm text-indigo-600 dark:text-indigo-400">
             {{ busiestLocation.vehicleTotal }} vehículos detectados
-         </p>
+          </p>
           <p class="mt-0.5 text-xs text-indigo-500 dark:text-indigo-400">
             Contaminante promedio: <strong>{{ busiestLocation.sensorAvg }}</strong>
           </p>
         </div>
       }
-
     </div>
 
     <!-- Bar chart -->
-    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <div
+      class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+    >
       <h2 class="mb-4 text-base font-semibold text-gray-700 dark:text-gray-200">
         Comparativa por ubicación
       </h2>
       <div class="relative h-72">
-        <canvas baseChart
-          [data]="chartData"
-          [options]="chartOptions"
-          type="bar">
-        </canvas>
+        <canvas baseChart [data]="chartData" [options]="chartOptions" type="bar"> </canvas>
       </div>
     </div>
 
     <!-- Ranking table -->
-    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <div
+      class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+    >
       <h2 class="mb-4 text-base font-semibold text-gray-700 dark:text-gray-200">
         Ranking de ubicaciones
       </h2>
@@ -152,16 +169,24 @@
           </thead>
           <tbody>
             @for (row of rows; track row.location.id) {
-              <tr class="border-b border-gray-50 dark:border-gray-800/60 hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
+              <tr
+                class="border-b border-gray-50 dark:border-gray-800/60 hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors"
+              >
                 <td class="py-2.5 pr-3">
-                  <span [class]="'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ' + rankBadgeClass(row.rank)">
+                  <span
+                    [class]="
+                      'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ' +
+                      rankBadgeClass(row.rank)
+                    "
+                  >
                     {{ row.rank }}
                   </span>
                 </td>
                 <td class="py-2.5 font-medium text-gray-800 dark:text-gray-100">
                   {{ locationLabel(row.location) }}
                   <span class="ml-1.5 text-xs text-gray-400">
-                    ({{ row.location.latitude | number:'1.4-4' }}, {{ row.location.longitude | number:'1.4-4' }})
+                    ({{ row.location.latitude | number: '1.4-4' }},
+                    {{ row.location.longitude | number: '1.4-4' }})
                   </span>
                 </td>
                 <td class="py-2.5 text-right font-semibold text-gray-800 dark:text-gray-100">
@@ -181,15 +206,16 @@
     </div>
 
     <!-- Methodology note -->
-    <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40">
+    <div
+      class="rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40"
+    >
       <p class="text-xs text-gray-400 dark:text-gray-500">
         <strong class="text-gray-500 dark:text-gray-400">Metodología:</strong>
-        Los valores de contaminante son el promedio aritmético de las mediciones de todos los dispositivos
-        asociados a cada ubicación en el período seleccionado.
-        El conteo de vehículos corresponde a las detecciones registradas en ese mismo período.
-        Se muestran solo ubicaciones con al menos una medición disponible.
+        Los valores de contaminante son el promedio aritmético de las mediciones de todos los
+        dispositivos asociados a cada ubicación en el período seleccionado. El conteo de vehículos
+        corresponde a las detecciones registradas en ese mismo período. Se muestran solo ubicaciones
+        con al menos una medición disponible.
       </p>
     </div>
-
   }
 </div>

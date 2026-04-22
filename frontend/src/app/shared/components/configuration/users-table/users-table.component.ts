@@ -41,7 +41,7 @@ export class UsersTableComponent {
     private userService: UserService,
     private apiService: ApiService,
     private toastService: ToastService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {
     this.editForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -104,7 +104,7 @@ export class UsersTableComponent {
         this.editSaving = false;
         this.toastService.error('Error al actualizar usuario', 'Error');
         this.cdr.markForCheck();
-      }
+      },
     });
   }
 
@@ -134,7 +134,7 @@ export class UsersTableComponent {
         this.deleteSaving = false;
         this.toastService.error('No se pudo eliminar el usuario', 'Error');
         this.cdr.markForCheck();
-      }
+      },
     });
   }
 }

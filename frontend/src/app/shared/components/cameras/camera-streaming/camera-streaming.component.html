@@ -19,9 +19,11 @@
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-4">
-      <div class="group relative bg-white border border-gray-200 p-2 dark:border-gray-700 dark:bg-gray-800 transition-all hover:shadow-lg rounded-lg">
-        <div 
-          class="aspect-video relative bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden" 
+      <div
+        class="group relative bg-white border border-gray-200 p-2 dark:border-gray-700 dark:bg-gray-800 transition-all hover:shadow-lg rounded-lg"
+      >
+        <div
+          class="aspect-video relative bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden"
           #streamContainer
           (touchstart)="onStreamTouched()"
         >
@@ -53,13 +55,15 @@
                   d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <p class="text-gray-500 dark:text-gray-400">Selecciona una cámara e inicia la detección para ver el stream</p>
+              <p class="text-gray-500 dark:text-gray-400">
+                Selecciona una cámara e inicia la detección para ver el stream
+              </p>
             </div>
           }
 
           <!-- Overlay Translucido (Estilo YouTube) -->
           @if (selectedCamera) {
-            <div 
+            <div
               class="absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300 sm:p-6"
               [class.opacity-0]="isViewing && !showControlsOnTouch"
               [class.group-hover:opacity-100]="isViewing && !showControlsOnTouch"
@@ -68,14 +72,27 @@
               <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">
-                    <span class="flex h-2 w-2 rounded-full" [ngClass]="getSelectedCameraState() === 'ACTIVE' ? 'bg-red-500 animate-pulse' : 'bg-gray-400'"></span>
+                    <span
+                      class="flex h-2 w-2 rounded-full"
+                      [ngClass]="
+                        getSelectedCameraState() === 'ACTIVE'
+                          ? 'bg-red-500 animate-pulse'
+                          : 'bg-gray-400'
+                      "
+                    ></span>
                     <h3 class="text-lg font-bold text-white drop-shadow-md truncate">
                       {{ getSelectedCameraName() }}
                     </h3>
                   </div>
                   <div class="flex items-center gap-3 text-xs text-gray-200">
-                    <span class="px-2 py-0.5 rounded bg-white/20 backdrop-blur-md border border-white/10">{{ selectedCamera.streamType }}</span>
-                    <span class="px-2 py-0.5 rounded bg-white/20 backdrop-blur-md border border-white/10 uppercase">{{ getSelectedCameraState() }}</span>
+                    <span
+                      class="px-2 py-0.5 rounded bg-white/20 backdrop-blur-md border border-white/10"
+                      >{{ selectedCamera.streamType }}</span
+                    >
+                    <span
+                      class="px-2 py-0.5 rounded bg-white/20 backdrop-blur-md border border-white/10 uppercase"
+                      >{{ getSelectedCameraState() }}</span
+                    >
                   </div>
                 </div>
 
@@ -87,7 +104,11 @@
                         class="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-semibold shadow-lg transition-transform active:scale-95"
                       >
                         <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                          <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                            clip-rule="evenodd"
+                          />
                         </svg>
                         Ver Stream
                       </button>
@@ -97,7 +118,11 @@
                         class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/20 rounded-lg text-sm font-semibold shadow-lg transition-transform active:scale-95"
                       >
                         <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                          <path
+                            fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                            clip-rule="evenodd"
+                          />
                         </svg>
                         Ocultar Stream
                       </button>
@@ -107,15 +132,29 @@
                           class="flex items-center justify-center p-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/20 rounded-lg shadow-lg transition-transform active:scale-95"
                           title="Pantalla Completa"
                         >
-                          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                          <svg
+                            class="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                            />
                           </svg>
                         </button>
                       }
                     }
                   } @else {
-                    <div class="px-3 py-2 bg-black/40 backdrop-blur-md rounded-lg border border-white/10">
-                      <p class="text-[10px] text-gray-300 uppercase tracking-wider font-bold">Detección Inactiva</p>
+                    <div
+                      class="px-3 py-2 bg-black/40 backdrop-blur-md rounded-lg border border-white/10"
+                    >
+                      <p class="text-[10px] text-gray-300 uppercase tracking-wider font-bold">
+                        Detección Inactiva
+                      </p>
                     </div>
                   }
                 </div>
@@ -126,19 +165,34 @@
       </div>
 
       @if (errorMessage) {
-        <div class="rounded-lg bg-red-50 border border-red-200 p-4 dark:bg-red-900/20 dark:border-red-800">
+        <div
+          class="rounded-lg bg-red-50 border border-red-200 p-4 dark:bg-red-900/20 dark:border-red-800"
+        >
           <p class="text-sm text-red-800 dark:text-red-300">{{ errorMessage }}</p>
         </div>
       }
 
-      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div
+        class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+      >
         <div class="flex items-center justify-between mb-3">
           <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Cámaras disponibles</p>
           @if (isLoading) {
             <div class="flex items-center gap-2 text-sm text-gray-500">
               <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               <span>Cargando...</span>
             </div>
@@ -156,8 +210,9 @@
                 [disabled]="isLoading"
                 [ngClass]="{
                   'bg-brand-500 text-white dark:bg-brand-600': selectedCamera?.id === camera.id,
-                  'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300': selectedCamera?.id !== camera.id,
-                  'opacity-50 cursor-not-allowed': isLoading
+                  'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300':
+                    selectedCamera?.id !== camera.id,
+                  'opacity-50 cursor-not-allowed': isLoading,
                 }"
                 class="rounded-lg px-3 py-2 text-sm font-medium transition-colors"
               >
@@ -170,44 +225,81 @@
     </div>
 
     <div class="space-y-4">
-      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div
+        class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+      >
         <div class="flex items-start justify-between">
           <div>
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400">CÁMARAS TOTALES</p>
-            <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ cameras.length }}</p>
+            <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
+              {{ cameras.length }}
+            </p>
           </div>
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-900">
-            <svg class="h-5 w-5 text-brand-500 dark:text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.219A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-900"
+          >
+            <svg
+              class="h-5 w-5 text-brand-500 dark:text-brand-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.219A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              />
             </svg>
           </div>
         </div>
       </div>
 
-      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div
+        class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+      >
         <div class="flex items-start justify-between">
           <div>
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400">DETECCIÓN ACTIVA</p>
-            <p class="mt-2 text-2xl font-bold" [ngClass]="{
-              'text-green-600 dark:text-green-400': detectionActive,
-              'text-gray-600 dark:text-gray-400': !detectionActive
-            }">{{ detectionActive ? 'SÍ' : 'NO' }}</p>
+            <p
+              class="mt-2 text-2xl font-bold"
+              [ngClass]="{
+                'text-green-600 dark:text-green-400': detectionActive,
+                'text-gray-600 dark:text-gray-400': !detectionActive,
+              }"
+            >
+              {{ detectionActive ? 'SÍ' : 'NO' }}
+            </p>
           </div>
-          <div class="flex h-10 w-10 items-center justify-center rounded-full" [ngClass]="{
-            'bg-green-100 dark:bg-green-900': detectionActive,
-            'bg-gray-100 dark:bg-gray-700': !detectionActive
-          }">
-            <svg class="h-5 w-5" [ngClass]="{
-              'text-green-600 dark:text-green-400': detectionActive,
-              'text-gray-600 dark:text-gray-400': !detectionActive
-            }" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-full"
+            [ngClass]="{
+              'bg-green-100 dark:bg-green-900': detectionActive,
+              'bg-gray-100 dark:bg-gray-700': !detectionActive,
+            }"
+          >
+            <svg
+              class="h-5 w-5"
+              [ngClass]="{
+                'text-green-600 dark:text-green-400': detectionActive,
+                'text-gray-600 dark:text-gray-400': !detectionActive,
+              }"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              />
             </svg>
           </div>
         </div>
       </div>
 
-      <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div
+        class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+      >
         <p class="text-xs font-medium text-gray-500 dark:text-gray-400">SESSION ID</p>
         <p class="mt-2 text-xs font-mono text-gray-900 dark:text-white break-all">
           {{ sessionId || 'No activo' }}
@@ -215,5 +307,4 @@
       </div>
     </div>
   </div>
-
-
+</div>

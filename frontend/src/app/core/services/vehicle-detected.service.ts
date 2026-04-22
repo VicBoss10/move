@@ -11,12 +11,12 @@ import { QueryParamsBuilder } from '../utils/query-params.builder';
  * Servicio para gestionar Vehículos Detectados
  * Hereda funcionalidad CRUD base de BaseDataService
  * Agrega búsqueda avanzada y cálculo de estadísticas
- * 
+ *
  * @service
  * @providedIn root
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
   /**
@@ -43,7 +43,7 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
       .build();
 
     return this.apiService.get<VehicleDetected[]>(`/${this.endpoint}/search`, queryParams).pipe(
-      map(data => {
+      map((data) => {
         // Si data es un array, usarlo normalmente
         if (Array.isArray(data)) {
           return data;
@@ -56,7 +56,11 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
       catchError((error) => {
         // Manejo de errores de parsing JSON (cuando backend retorna texto plano)
         // Esto ocurre cuando no hay datos y el backend retorna un mensaje de texto
-        if (error && (error.message?.includes('Http failure during parsing') || error.message?.includes('Unexpected token'))) {
+        if (
+          error &&
+          (error.message?.includes('Http failure during parsing') ||
+            error.message?.includes('Unexpected token'))
+        ) {
           console.warn('No hay datos disponibles para los criterios especificados');
           this.clearServiceError();
           return of([]);
@@ -65,10 +69,10 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
         this.setServiceError(error, 'Error al buscar vehículos');
         return throwError(() => error);
       }),
-      tap(data => {
+      tap((data) => {
         this.dataSubject.next(data);
         this.clearServiceError();
-      })
+      }),
     );
   }
 
@@ -80,34 +84,35 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
     return {
       total: vehicles.length,
       byType: {
-        car: vehicles.filter(v => v.vehicleType === 'CAR').length,
-        truck: vehicles.filter(v => v.vehicleType === 'TRUCK').length,
-        bus: vehicles.filter(v => v.vehicleType === 'BUS').length,
-        motorcycle: vehicles.filter(v => v.vehicleType === 'MOTORCYCLE').length,
+        car: vehicles.filter((v) => v.vehicleType === 'CAR').length,
+        truck: vehicles.filter((v) => v.vehicleType === 'TRUCK').length,
+        bus: vehicles.filter((v) => v.vehicleType === 'BUS').length,
+        motorcycle: vehicles.filter((v) => v.vehicleType === 'MOTORCYCLE').length,
       },
-      todayDetections: vehicles.filter(v => {
+      todayDetections: vehicles.filter((v) => {
         const today = new Date();
         const vDate = new Date(v.timestamp);
         return vDate.toDateString() === today.toDateString();
       }).length,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
-  deleteAll(): Observable<any> {
-    return this.apiService.deleteText(`/${this.endpoint}`).pipe(
-      tap(() => this.invalidateCache())
+  deleteAll(): Observable<void> {
+    return this.apiService.delete(`/${this.endpoint}`).pipe(
+      tap(() => this.invalidateCache()),
+      map(() => undefined),
     );
   }
 
-  deleteByDateRange(start: Date, end: Date): Observable<any> {
-    const params = new HttpParams()
-      .set('start', start.toISOString())
-      .set('end', end.toISOString());
-    return this.apiService['http'].delete(
-      `${this.apiService['apiUrl']}/${this.endpoint}/range`,
-      { params, responseType: 'text' }
-    ).pipe(tap(() => this.invalidateCache()));
+  deleteByDateRange(start: Date, end: Date): Observable<void> {
+    const params = new HttpParams().set('start', start.toISOString()).set('end', end.toISOString());
+    return this.apiService
+      .delete(`/${this.endpoint}/range?start=${start.toISOString()}&end=${end.toISOString()}`)
+      .pipe(
+        tap(() => this.invalidateCache()),
+        map(() => undefined),
+      );
   }
 
   getFirstRecord(): Observable<VehicleDetected> {

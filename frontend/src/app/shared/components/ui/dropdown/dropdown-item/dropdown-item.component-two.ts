@@ -7,18 +7,15 @@ import { RouterModule } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <a
-      [routerLink]="to"
-      [ngClass]="combinedClasses"
-      (click)="handleClick($event)"
-    >
+    <a [routerLink]="to" [ngClass]="combinedClasses" (click)="handleClick($event)">
       <ng-content></ng-content>
     </a>
   `,
 })
 export class DropdownItemTwoComponent {
   @Input() to!: string; // Required route path
-  @Input() baseClassName = 'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900';
+  @Input() baseClassName =
+    'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900';
   @Input() className = '';
   @Output() itemClick = new EventEmitter<void>();
   @Output() click = new EventEmitter<void>();

@@ -56,20 +56,26 @@ interface LocationRow {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const METRICS: MetricOption[] = [
-  { key: 'co2',         label: 'CO₂',        unit: 'ppm',    color: '#ef4444', bg: 'rgba(239,68,68,0.7)'    },
-  { key: 'pm25',        label: 'PM2.5',       unit: 'µg/m³', color: '#a855f7', bg: 'rgba(168,85,247,0.7)'   },
-  { key: 'pm10',        label: 'PM10',        unit: 'µg/m³', color: '#f97316', bg: 'rgba(249,115,22,0.7)'   },
-  { key: 'temperature', label: 'Temperatura', unit: '°C',     color: '#eab308', bg: 'rgba(234,179,8,0.7)'    },
-  { key: 'humidity',    label: 'Humedad',     unit: '%',      color: '#3b82f6', bg: 'rgba(59,130,246,0.7)'   },
-  { key: 'co',         label: 'CO',          unit: 'ppm',    color: '#6b7280', bg: 'rgba(107,114,128,0.7)'  },
-  { key: 'no2',        label: 'NO₂',         unit: 'ppb',    color: '#22c55e', bg: 'rgba(34,197,94,0.7)'    },
-  { key: 'nh3',        label: 'NH₃',         unit: 'ppb',    color: '#14b8a6', bg: 'rgba(20,184,166,0.7)'   },
+  { key: 'co2', label: 'CO₂', unit: 'ppm', color: '#ef4444', bg: 'rgba(239,68,68,0.7)' },
+  { key: 'pm25', label: 'PM2.5', unit: 'µg/m³', color: '#a855f7', bg: 'rgba(168,85,247,0.7)' },
+  { key: 'pm10', label: 'PM10', unit: 'µg/m³', color: '#f97316', bg: 'rgba(249,115,22,0.7)' },
+  {
+    key: 'temperature',
+    label: 'Temperatura',
+    unit: '°C',
+    color: '#eab308',
+    bg: 'rgba(234,179,8,0.7)',
+  },
+  { key: 'humidity', label: 'Humedad', unit: '%', color: '#3b82f6', bg: 'rgba(59,130,246,0.7)' },
+  { key: 'co', label: 'CO', unit: 'ppm', color: '#6b7280', bg: 'rgba(107,114,128,0.7)' },
+  { key: 'no2', label: 'NO₂', unit: 'ppb', color: '#22c55e', bg: 'rgba(34,197,94,0.7)' },
+  { key: 'nh3', label: 'NH₃', unit: 'ppb', color: '#14b8a6', bg: 'rgba(20,184,166,0.7)' },
 ];
 
 const PERIODS: { key: PeriodKey; label: string }[] = [
-  { key: '24h', label: 'Últimas 24h'    },
-  { key: '7d',  label: 'Últimos 7 días' },
-  { key: '30d', label: 'Últimos 30 días'},
+  { key: '24h', label: 'Últimas 24h' },
+  { key: '7d', label: 'Últimos 7 días' },
+  { key: '30d', label: 'Últimos 30 días' },
 ];
 
 const VEHICLE_COLOR = 'rgba(99,102,241,0.7)';
@@ -104,7 +110,6 @@ const VEHICLE_COLOR = 'rgba(99,102,241,0.7)';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationAnalysisComponent implements OnInit, OnDestroy {
-
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   readonly metrics = METRICS;
@@ -119,18 +124,20 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   isLoading = true;
-  hasError  = false;
-  errorMsg  = '';
+  hasError = false;
+  errorMsg = '';
 
-  rows: LocationRow[]                                                       = [];
-  chartData: ChartConfiguration<'bar'>['data']                              = { labels: [], datasets: [] };
-  chartOptions: ChartConfiguration<'bar'>['options']                        = this.buildChartOptions(METRICS[0]);
-  worstLocation:  LocationRow | null                                         = null;
-  busiestLocation: LocationRow | null                                        = null;
+  rows: LocationRow[] = [];
+  chartData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [] };
+  chartOptions: ChartConfiguration<'bar'>['options'] = this.buildChartOptions(METRICS[0]);
+  worstLocation: LocationRow | null = null;
+  busiestLocation: LocationRow | null = null;
 
   // ── Accessors ──────────────────────────────────────────────────────────────
 
-  get currentFilter() { return this.filter$.value; }
+  get currentFilter() {
+    return this.filter$.value;
+  }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -145,20 +152,20 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
     this.filter$
       .pipe(
         takeUntil(this.destroy$),
-        switchMap(f => {
+        switchMap((f) => {
           this.isLoading = true;
-          this.hasError  = false;
+          this.hasError = false;
           this.cdr.markForCheck();
           return this.loadAndAggregate(f.period, f.metric);
         }),
       )
-      .subscribe(result => {
-        this.rows            = result.rows;
-        this.chartData       = result.chartData;
-        this.chartOptions    = result.chartOptions;
-        this.worstLocation   = result.worstLocation;
+      .subscribe((result) => {
+        this.rows = result.rows;
+        this.chartData = result.chartData;
+        this.chartOptions = result.chartOptions;
+        this.worstLocation = result.worstLocation;
         this.busiestLocation = result.busiestLocation;
-        this.isLoading       = false;
+        this.isLoading = false;
         this.cdr.markForCheck();
       });
   }
@@ -170,19 +177,22 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
 
   // ── User interactions ──────────────────────────────────────────────────────
 
-  setPeriod(p: PeriodKey): void { this.filter$.next({ ...this.filter$.value, period: p }); }
-  setMetric(m: MetricKey): void { this.filter$.next({ ...this.filter$.value, metric: m }); }
+  setPeriod(p: PeriodKey): void {
+    this.filter$.next({ ...this.filter$.value, period: p });
+  }
+  setMetric(m: MetricKey): void {
+    this.filter$.next({ ...this.filter$.value, metric: m });
+  }
 
   // ── Data pipeline ──────────────────────────────────────────────────────────
 
   private loadAndAggregate(period: PeriodKey, metricKey: MetricKey) {
-    const end   = new Date();
-    const ms    = { '24h': 24, '7d': 168, '30d': 720 }[period] * 3_600_000;
+    const end = new Date();
+    const ms = { '24h': 24, '7d': 168, '30d': 720 }[period] * 3_600_000;
     const start = new Date(end.getTime() - ms);
-    const metricOption = METRICS.find(m => m.key === metricKey)!;
+    const metricOption = METRICS.find((m) => m.key === metricKey)!;
 
-    const locations$ = this.locationService.getAll()
-      .pipe(catchError(() => of<Location[]>([])));
+    const locations$ = this.locationService.getAll().pipe(catchError(() => of<Location[]>([])));
 
     const sensor$ = this.sensorDataService
       .search({ start, end, size: 10000 })
@@ -193,7 +203,7 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
       .pipe(catchError(() => of<VehicleDetected[]>([])));
 
     return combineLatest([locations$, sensor$, vehicles$]).pipe(
-      catchError(err => {
+      catchError((err) => {
         console.error('[LocationAnalysis] Error:', err);
         this.hasError = true;
         this.errorMsg = 'Error al cargar los datos. Intenta nuevamente.';
@@ -201,7 +211,7 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         return of(null);
       }),
-      switchMap(result => {
+      switchMap((result) => {
         const empty = {
           rows: [] as LocationRow[],
           chartData: { labels: [], datasets: [] } as ChartConfiguration<'bar'>['data'],
@@ -218,17 +228,15 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
         // Aggregate per location
         const rows: LocationRow[] = locations.map((loc, idx) => {
           // Sensor data linked to this location via device.location.id
-          const locSensor = sensorData.filter(d =>
-            d.device?.location?.id === loc.id,
-          );
+          const locSensor = sensorData.filter((d) => d.device?.location?.id === loc.id);
           const values = locSensor
-            .map(d => d[metricKey] as number)
-            .filter(v => v != null && v >= 0);
+            .map((d) => d[metricKey] as number)
+            .filter((v) => v != null && v >= 0);
 
-          const vehicleTotal = vehicleData.filter(v => v.location?.id === loc.id).length;
+          const vehicleTotal = vehicleData.filter((v) => v.location?.id === loc.id).length;
 
           const sensorAvg = values.length
-            ? Math.round(values.reduce((a, b) => a + b, 0) / values.length * 100) / 100
+            ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100
             : 0;
           const sensorMin = values.length ? Math.min(...values) : 0;
           const sensorMax = values.length ? Math.max(...values) : 0;
@@ -248,18 +256,19 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
         rows.sort((a, b) => b.sensorAvg - a.sensorAvg);
         rows.forEach((r, i) => (r.rank = i + 1));
 
-        const worstLocation   = rows[0] ?? null;
-        const busiestLocation = [...rows].sort((a, b) => b.vehicleTotal - a.vehicleTotal)[0] ?? null;
+        const worstLocation = rows[0] ?? null;
+        const busiestLocation =
+          [...rows].sort((a, b) => b.vehicleTotal - a.vehicleTotal)[0] ?? null;
 
         // Build chart
-        const labels = rows.map(r => this.locationLabel(r.location));
+        const labels = rows.map((r) => this.locationLabel(r.location));
 
         const chartData: ChartConfiguration<'bar'>['data'] = {
           labels,
           datasets: [
             {
               label: `${metricOption.label} promedio (${metricOption.unit})`,
-              data: rows.map(r => r.sensorAvg),
+              data: rows.map((r) => r.sensorAvg),
               backgroundColor: metricOption.bg,
               borderColor: metricOption.color,
               borderWidth: 1.5,
@@ -268,7 +277,7 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
             },
             {
               label: 'Vehículos detectados',
-              data: rows.map(r => r.vehicleTotal),
+              data: rows.map((r) => r.vehicleTotal),
               backgroundColor: VEHICLE_COLOR,
               borderColor: '#6366f1',
               borderWidth: 1.5,
@@ -298,8 +307,10 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
   /** Color badge for pollution ranking */
   rankBadgeClass(rank: number): string {
     if (rank === 1) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-    if (rank === 2) return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-    if (rank === 3) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+    if (rank === 2)
+      return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+    if (rank === 3)
+      return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
     return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
   }
 

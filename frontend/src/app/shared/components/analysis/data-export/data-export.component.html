@@ -1,5 +1,4 @@
 <div class="space-y-6">
-
   <!-- ── Page header ──────────────────────────────────────────────────────── -->
   <div class="flex flex-col gap-1">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Exportar Informe PDF</h1>
@@ -9,12 +8,15 @@
   </div>
 
   <!-- ── Filters card ─────────────────────────────────────────────────────── -->
-  <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+  <div
+    class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+  >
     <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">Configuración del informe</h3>
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">
+        Configuración del informe
+      </h3>
     </div>
     <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-
       <!-- Period selector -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="mr-1 text-sm font-medium text-gray-600 dark:text-gray-400">Período:</span>
@@ -22,9 +24,11 @@
           <button
             (click)="setPeriod(p.key)"
             [disabled]="isGenerating"
-            [ngClass]="selectedPeriod === p.key
-              ? 'bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700'
-              : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+            [ngClass]="
+              selectedPeriod === p.key
+                ? 'bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700'
+                : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+            "
             class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 disabled:opacity-50"
           >
             {{ p.label }}
@@ -46,24 +50,28 @@
           }
         </select>
       </div>
-
     </div>
   </div>
 
   <!-- ── Contenido del informe ───────────────────────────────────────────── -->
-  <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+  <div
+    class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+  >
     <h2 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-200">
       Contenido del informe
     </h2>
     <p class="mb-4 text-xs text-gray-400 dark:text-gray-500">
-      El PDF incluirá una portada y las siguientes secciones, todas generadas con los datos del período y contaminante seleccionados.
+      El PDF incluirá una portada y las siguientes secciones, todas generadas con los datos del
+      período y contaminante seleccionados.
     </p>
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
       <!-- Sección 1 -->
       <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
-        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">1</span>
+        <span
+          class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
+          >1</span
+        >
         <div>
           <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Series Temporales</p>
           <p class="text-xs text-gray-400">Evolución del contaminante y vehículos en el tiempo</p>
@@ -72,7 +80,10 @@
 
       <!-- Sección 2 -->
       <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
-        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">2</span>
+        <span
+          class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400"
+          >2</span
+        >
         <div>
           <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Matriz de Correlación</p>
           <p class="text-xs text-gray-400">Pearson entre todas las variables ambientales (9×9)</p>
@@ -81,22 +92,31 @@
 
       <!-- Sección 3 -->
       <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
-        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">3</span>
+        <span
+          class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"
+          >3</span
+        >
         <div>
           <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Análisis de Rezagos</p>
-          <p class="text-xs text-gray-400">Cross-correlación con desfase temporal de −12 h a +12 h</p>
+          <p class="text-xs text-gray-400">
+            Cross-correlación con desfase temporal de −12 h a +12 h
+          </p>
         </div>
       </div>
 
       <!-- Sección 4 -->
       <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
-        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">4</span>
+        <span
+          class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+          >4</span
+        >
         <div>
           <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Análisis por Ubicación</p>
-          <p class="text-xs text-gray-400">Comparativa de contaminantes y tráfico por zona geográfica</p>
+          <p class="text-xs text-gray-400">
+            Comparativa de contaminantes y tráfico por zona geográfica
+          </p>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -104,36 +124,44 @@
   @if (!isGenerating) {
     <button
       (click)="generatePdf()"
-      class="flex items-center justify-center gap-2.5 rounded-2xl bg-brand-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
+      class="flex items-center justify-center gap-2.5 rounded-2xl bg-brand-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+    >
       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v10m-5-5 5 5 5-5M5 19h14" />
       </svg>
       Generar Informe PDF
     </button>
   } @else {
-    <div class="rounded-2xl border border-brand-200 bg-brand-50 p-5 dark:border-brand-800 dark:bg-brand-900/20">
+    <div
+      class="rounded-2xl border border-brand-200 bg-brand-50 p-5 dark:border-brand-800 dark:bg-brand-900/20"
+    >
       <div class="flex items-center gap-3 mb-3">
-        <div class="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></div>
-        <span class="text-sm font-medium text-brand-700 dark:text-brand-300">{{ progressMsg }}</span>
+        <div
+          class="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"
+        ></div>
+        <span class="text-sm font-medium text-brand-700 dark:text-brand-300">{{
+          progressMsg
+        }}</span>
       </div>
       <div class="h-2.5 w-full overflow-hidden rounded-full bg-brand-100 dark:bg-brand-900/50">
         <div
           class="h-full rounded-full bg-brand-500 transition-all duration-300"
-          [style.width.%]="progress">
-        </div>
+          [style.width.%]="progress"
+        ></div>
       </div>
       <p class="mt-2 text-right text-xs text-brand-600 dark:text-brand-400">{{ progress }}%</p>
     </div>
   }
 
   <!-- ── Nota ────────────────────────────────────────────────────────────── -->
-  <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40">
+  <div
+    class="rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40"
+  >
     <p class="text-xs text-gray-400 dark:text-gray-500">
       <strong class="text-gray-500 dark:text-gray-400">Nota:</strong>
       El informe se genera en formato PDF tamaño carta (8.5 × 11 in). Incluye portada con logotipo,
-      gráficos de alta resolución y tablas resumen. La matriz de correlación siempre incluye las 9 variables;
-      el resto de secciones utiliza el contaminante seleccionado.
+      gráficos de alta resolución y tablas resumen. La matriz de correlación siempre incluye las 9
+      variables; el resto de secciones utiliza el contaminante seleccionado.
     </p>
   </div>
-
 </div>

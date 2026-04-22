@@ -22,18 +22,12 @@ interface SortState {
 
 @Component({
   selector: 'app-transaction-list',
-  imports: [
-    CommonModule,
-    RouterModule,
-    TableDropdownComponent,
-    FormsModule,
-  ],
+  imports: [CommonModule, RouterModule, TableDropdownComponent, FormsModule],
   templateUrl: './transaction-list.component.html',
-  styles: ``
+  styles: ``,
 })
 export class TransactionListComponent {
-
-   transactions: Transaction[] = [
+  transactions: Transaction[] = [
     {
       id: 1,
       orderId: '#323534',
@@ -272,15 +266,12 @@ export class TransactionListComponent {
       (row) =>
         row.orderId.toLowerCase().includes(this.search.toLowerCase()) ||
         row.customer.toLowerCase().includes(this.search.toLowerCase()) ||
-        row.email.toLowerCase().includes(this.search.toLowerCase())
+        row.email.toLowerCase().includes(this.search.toLowerCase()),
     );
   }
 
   get paginatedRows(): Transaction[] {
-    return this.filteredRows.slice(
-      (this.page - 1) * this.perPage,
-      this.page * this.perPage
-    );
+    return this.filteredRows.slice((this.page - 1) * this.perPage, this.page * this.perPage);
   }
 
   get totalPagesArray(): number[] {

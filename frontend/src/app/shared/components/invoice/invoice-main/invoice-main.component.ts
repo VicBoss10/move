@@ -5,14 +5,8 @@ import { ButtonComponent } from '../../ui/button/button.component';
 
 @Component({
   selector: 'app-invoice-main',
-  imports: [
-    CommonModule,
-    InvoiceTableComponent,
-    ButtonComponent
-],
+  imports: [CommonModule, InvoiceTableComponent, ButtonComponent],
   templateUrl: './invoice-main.component.html',
-  styles: ``
+  styles: ``,
 })
-export class InvoiceMainComponent {
-
-}
+export class InvoiceMainComponent {}

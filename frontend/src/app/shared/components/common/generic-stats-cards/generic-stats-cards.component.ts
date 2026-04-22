@@ -14,15 +14,15 @@ export interface StatCard {
 
 /**
  * GenericStatsCardsComponent
- * 
+ *
  * Componente reutilizable para mostrar tarjetas de estadísticas.
  * Elimina duplicación de código en vehicles, cameras, locations.
- * 
+ *
  * Uso:
  * ```html
  * <app-generic-stats-cards [cards]="statsCards" />
  * ```
- * 
+ *
  * @standalone true
  * @imports CommonModule
  */
@@ -34,7 +34,11 @@ export interface StatCard {
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       <div
         *ngFor="let card of cards"
-        [class]="'rounded-lg border-l-4 border-' + getBorderColor(card.borderColor) + ' bg-white p-4 dark:bg-gray-800'"
+        [class]="
+          'rounded-lg border-l-4 border-' +
+          getBorderColor(card.borderColor) +
+          ' bg-white p-4 dark:bg-gray-800'
+        "
       >
         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
           {{ card.label }}
@@ -55,7 +59,9 @@ export class GenericStatsCardsComponent {
   /**
    * Mapea el color a clase de Tailwind
    */
-  getBorderColor(color: 'red' | 'green' | 'blue' | 'purple' | 'orange' | 'indigo' | 'yellow' | 'gray'): string {
+  getBorderColor(
+    color: 'red' | 'green' | 'blue' | 'purple' | 'orange' | 'indigo' | 'yellow' | 'gray',
+  ): string {
     const colorMap: Record<string, string> = {
       red: 'red-500',
       green: 'green-500',

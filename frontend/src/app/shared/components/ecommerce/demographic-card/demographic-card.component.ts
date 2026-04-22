@@ -6,12 +6,7 @@ import { CountryMapComponent } from '../country-map/country-map.component';
 
 @Component({
   selector: 'app-demographic-card',
-  imports: [
-    CommonModule,
-    CountryMapComponent,
-    DropdownComponent,
-    DropdownItemComponent,
-  ],
+  imports: [CommonModule, CountryMapComponent, DropdownComponent, DropdownItemComponent],
   templateUrl: './demographic-card.component.html',
 })
 export class DemographicCardComponent {

@@ -4,13 +4,8 @@ import { SignupFormComponent } from '../../../shared/components/auth/signup-form
 
 @Component({
   selector: 'app-sign-up',
-  imports: [
-    AuthPageLayoutComponent,
-    SignupFormComponent,
-  ],
+  imports: [AuthPageLayoutComponent, SignupFormComponent],
   templateUrl: './sign-up.component.html',
-  styles: ``
+  styles: ``,
 })
-export class SignUpComponent {
-
-}
+export class SignUpComponent {}

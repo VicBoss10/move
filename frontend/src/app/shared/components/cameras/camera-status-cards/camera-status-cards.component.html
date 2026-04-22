@@ -10,8 +10,18 @@
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Dispositivos instalados</p>
       </div>
       <div class="bg-brand-50 dark:bg-brand-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.219A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+        <svg
+          class="w-8 h-8 text-brand-600 dark:text-brand-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.219A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+          ></path>
         </svg>
       </div>
     </div>
@@ -26,12 +36,23 @@
           {{ stats.activeCameras | number }}
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
-          {{ calculatePercentage(stats.activeCameras, stats.totalCameras) | number : '1.0-0' }}% en funcionamiento
+          {{ calculatePercentage(stats.activeCameras, stats.totalCameras) | number: '1.0-0' }}% en
+          funcionamiento
         </p>
       </div>
       <div class="bg-green-100 dark:bg-green-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        <svg
+          class="w-8 h-8 text-green-600 dark:text-green-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
         </svg>
       </div>
     </div>
@@ -46,12 +67,23 @@
           {{ stats.inactiveCameras | number }}
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
-          {{ calculatePercentage(stats.inactiveCameras, stats.totalCameras) | number : '1.0-0' }}% sin servicio
+          {{ calculatePercentage(stats.inactiveCameras, stats.totalCameras) | number: '1.0-0' }}%
+          sin servicio
         </p>
       </div>
       <div class="bg-yellow-100 dark:bg-yellow-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 5v1m0-14V3m0 2.5h0m0 5h0m0 5h0"></path>
+        <svg
+          class="w-8 h-8 text-yellow-600 dark:text-yellow-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4v2m0 5v1m0-14V3m0 2.5h0m0 5h0m0 5h0"
+          ></path>
         </svg>
       </div>
     </div>
@@ -66,12 +98,23 @@
           {{ stats.failingCameras | number }}
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
-          {{ calculatePercentage(stats.failingCameras, stats.totalCameras) | number : '1.0-0' }}% requieren atención
+          {{ calculatePercentage(stats.failingCameras, stats.totalCameras) | number: '1.0-0' }}%
+          requieren atención
         </p>
       </div>
       <div class="bg-red-100 dark:bg-red-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        <svg
+          class="w-8 h-8 text-red-600 dark:text-red-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
         </svg>
       </div>
     </div>
@@ -88,8 +131,14 @@
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Registrados en el período</p>
       </div>
       <div class="bg-warning-50 dark:bg-warning-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-warning-600 dark:text-warning-400" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm11 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM5 11l1.5-4.5h11L19 11H5z"></path>
+        <svg
+          class="w-8 h-8 text-warning-600 dark:text-warning-400"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm11 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM5 11l1.5-4.5h11L19 11H5z"
+          ></path>
         </svg>
       </div>
     </div>
@@ -101,13 +150,23 @@
       <div>
         <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Disponibilidad</p>
         <h3 class="text-4xl font-bold text-success-600 dark:text-success-400 mt-2">
-          {{ stats.uptime | number : '1.0-1' }}%
+          {{ stats.uptime | number: '1.0-1' }}%
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Tiempo de disponibilidad</p>
       </div>
       <div class="bg-success-50 dark:bg-success-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-success-600 dark:text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        <svg
+          class="w-8 h-8 text-success-600 dark:text-success-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          ></path>
         </svg>
       </div>
     </div>

@@ -15,5 +15,8 @@
     </form>
   </div>
 
-  <app-location-table [locations]="(locations$ | async) || []" (locationChanged)="onLocationChanged()" />
+  <app-location-table
+    [locations]="(locations$ | async) || []"
+    (locationChanged)="onLocationChanged()"
+  />
 </div>

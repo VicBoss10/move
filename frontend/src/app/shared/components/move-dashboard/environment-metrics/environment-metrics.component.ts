@@ -83,7 +83,7 @@ export class EnvironmentMetricsComponent {
 
   constructor(
     private sensorDataService: SensorDataService,
-    private vehicleService: VehicleDetectedService
+    private vehicleService: VehicleDetectedService,
   ) {
     this.initializeMetrics();
   }
@@ -95,7 +95,7 @@ export class EnvironmentMetricsComponent {
   private initializeMetrics(): void {
     this.metrics$ = combineLatest([
       this.sensorDataService.getLast(),
-      this.vehicleService.getAll()
+      this.vehicleService.getAll(),
     ]).pipe(
       map(([latestSensor, vehicles]) => {
         const stats = this.vehicleService.getStats();
@@ -109,17 +109,25 @@ export class EnvironmentMetricsComponent {
             icon: this.icons.gasIcon,
             value: latestSensor?.co2?.toFixed(0) || '0',
             unit: 'ppm',
-            status: (co2Status.key === 'good' || co2Status.key === 'no-data') ? 'normal' as const
-              : co2Status.key === 'moderate' ? 'warning' as const : 'critical' as const,
+            status:
+              co2Status.key === 'good' || co2Status.key === 'no-data'
+                ? ('normal' as const)
+                : co2Status.key === 'moderate'
+                  ? ('warning' as const)
+                  : ('critical' as const),
           },
           {
             label: 'Temp / Hum',
             icon: this.icons.temperatureIcon,
             value: latestSensor ? `${latestSensor.temperature.toFixed(1)}°C` : '0°C',
             unit: `/ ${latestSensor?.humidity?.toFixed(0) || '0'}%`,
-            status: (tempStatus.key === 'good' || tempStatus.key === 'no-data') ? 'normal' as const
-              : tempStatus.key === 'moderate' ? 'warning' as const : 'critical' as const,
-            secondaryValue: latestSensor?.humidity?.toFixed(0) + '%'
+            status:
+              tempStatus.key === 'good' || tempStatus.key === 'no-data'
+                ? ('normal' as const)
+                : tempStatus.key === 'moderate'
+                  ? ('warning' as const)
+                  : ('critical' as const),
+            secondaryValue: latestSensor?.humidity?.toFixed(0) + '%',
           },
           {
             label: 'Vehículos',
@@ -134,7 +142,7 @@ export class EnvironmentMetricsComponent {
         console.error('Error cargando métricas ambientales:', error);
         return of(this.defaultMetrics);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 }

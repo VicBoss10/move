@@ -1,4 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
@@ -81,8 +87,8 @@ export class VehicleChartComponent implements OnInit, OnDestroy {
           // Eliminamos el 'max: 300' fijo para que Chart.js lo calcule automáticamente
           title: {
             display: true,
-            text: 'Detecciones'
-          }
+            text: 'Detecciones',
+          },
         },
       },
     },
@@ -100,12 +106,7 @@ export class VehicleChartComponent implements OnInit, OnDestroy {
         {
           label: 'Cantidad detectada',
           data: [0, 0, 0, 0],
-          backgroundColor: [
-            '#3b82f6',
-            '#8b5cf6',
-            '#ef4444',
-            '#f59e0b',
-          ],
+          backgroundColor: ['#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b'],
           borderRadius: 8,
         },
       ],
@@ -133,7 +134,7 @@ export class VehicleChartComponent implements OnInit, OnDestroy {
    */
   constructor(
     private vehicleService: VehicleDetectedService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   /**
@@ -164,7 +165,7 @@ export class VehicleChartComponent implements OnInit, OnDestroy {
         catchError((error) => {
           console.error('Error loading vehicle chart data:', error);
           return of([]);
-        })
+        }),
       )
       .subscribe((vehicles: VehicleDetected[]) => {
         this.updateLineChart(vehicles);
@@ -212,10 +213,10 @@ export class VehicleChartComponent implements OnInit, OnDestroy {
    * @returns {void}
    */
   private updateBarChart(vehicles: VehicleDetected[]): void {
-    const carCount = vehicles.filter(v => v.vehicleType === 'CAR').length;
-    const motorcycleCount = vehicles.filter(v => v.vehicleType === 'MOTORCYCLE').length;
-    const truckCount = vehicles.filter(v => v.vehicleType === 'TRUCK').length;
-    const busCount = vehicles.filter(v => v.vehicleType === 'BUS').length;
+    const carCount = vehicles.filter((v) => v.vehicleType === 'CAR').length;
+    const motorcycleCount = vehicles.filter((v) => v.vehicleType === 'MOTORCYCLE').length;
+    const truckCount = vehicles.filter((v) => v.vehicleType === 'TRUCK').length;
+    const busCount = vehicles.filter((v) => v.vehicleType === 'BUS').length;
 
     // Actualizar datos del gráfico
     if (this.barChartConfig.data?.datasets?.[0]) {

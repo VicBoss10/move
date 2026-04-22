@@ -86,7 +86,7 @@ export class HumidityStatsTableComponent {
         console.error('Error cargando estadísticas de humedad:', error);
         return of(this.defaultStats);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

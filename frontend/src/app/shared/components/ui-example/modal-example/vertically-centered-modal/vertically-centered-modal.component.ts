@@ -6,17 +6,11 @@ import { ButtonComponent } from '../../../ui/button/button.component';
 
 @Component({
   selector: 'app-vertically-centered-modal',
-  imports: [
-    CommonModule,
-    ModalComponent,
-    ComponentCardComponent,
-    ButtonComponent,
-  ],
+  imports: [CommonModule, ModalComponent, ComponentCardComponent, ButtonComponent],
   templateUrl: './vertically-centered-modal.component.html',
-  styles: ``
+  styles: ``,
 })
 export class VerticallyCenteredModalComponent {
-
   isOpen = false;
 
   openModal() {

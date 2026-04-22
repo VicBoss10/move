@@ -1,4 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
@@ -101,7 +107,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
   constructor(
     private cameraService: CameraService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -127,15 +133,21 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
   loadCameras(): void {
     this.isLoading = true;
-    this.cameraService.getAll()
+    this.cameraService
+      .getAll()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (cameras) => {
           const all = Array.isArray(cameras) ? cameras : [];
           // Mostrar por defecto solo cámaras con estado ACTIVE
-          this.cameras = all.filter(c => (c.device?.state || '').toString().toUpperCase() === DeviceState.ACTIVE);
+          this.cameras = all.filter(
+            (c) => (c.device?.state || '').toString().toUpperCase() === DeviceState.ACTIVE,
+          );
           // Si la cámara seleccionada ya no está en la lista (por estar inactiva), deseleccionarla
-          if (this.selectedCamera && !this.cameras.find(cc => cc.id === this.selectedCamera?.id)) {
+          if (
+            this.selectedCamera &&
+            !this.cameras.find((cc) => cc.id === this.selectedCamera?.id)
+          ) {
             this.selectedCamera = null;
             this.streamUrl = null;
             this.sessionId = null;
@@ -150,7 +162,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
           this.errorMessage = 'Error al cargar las cámaras';
           this.isLoading = false;
           this.changeDetectorRef.markForCheck();
-        }
+        },
       });
   }
 
@@ -175,7 +187,8 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       // La detección está activa en el backend; solicitar la sesión activa asociada al device
       this.detectionActive = true;
       this.isLoading = true;
-      this.cameraService.getActiveStreamByDevice(camera.device.id)
+      this.cameraService
+        .getActiveStreamByDevice(camera.device.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (res) => {
@@ -192,7 +205,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
             this.feedUrl = null;
             this.isLoading = false;
             this.changeDetectorRef.markForCheck();
-          }
+          },
         });
     }
 
@@ -291,12 +304,13 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
   private isSafariOrIos(): boolean {
     const ua = navigator.userAgent;
-    return /iPad|iPhone|iPod/.test(ua) ||
-      (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/.test(ua));
+    return /iPad|iPhone|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/.test(ua));
   }
 
   isMobile(): boolean {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    );
   }
 
   private startSnapshotPolling(mjpegUrl: string): void {
@@ -320,13 +334,17 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
         this.snapshotUrl = img.src;
         this.changeDetectorRef.detectChanges();
         // Sin delay: encadenar inmediatamente el siguiente frame
-        this.snapshotIntervalRef = setTimeout(scheduleNext, 0) as unknown as ReturnType<typeof setInterval>;
+        this.snapshotIntervalRef = setTimeout(scheduleNext, 0) as unknown as ReturnType<
+          typeof setInterval
+        >;
       };
 
       img.onerror = () => {
         this.pendingPreloadImg = null;
         if (this.snapshotIntervalRef === null) return;
-        this.snapshotIntervalRef = setTimeout(scheduleNext, 300) as unknown as ReturnType<typeof setInterval>;
+        this.snapshotIntervalRef = setTimeout(scheduleNext, 300) as unknown as ReturnType<
+          typeof setInterval
+        >;
       };
 
       img.src = `${snapshotBase}?t=${Date.now()}${suffix}`;
@@ -334,7 +352,9 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
     // Primer snapshot inmediato
     this.snapshotUrl = `${snapshotBase}?t=${Date.now()}${suffix}`;
-    this.snapshotIntervalRef = setTimeout(scheduleNext, 0) as unknown as ReturnType<typeof setInterval>;
+    this.snapshotIntervalRef = setTimeout(scheduleNext, 0) as unknown as ReturnType<
+      typeof setInterval
+    >;
   }
 
   private stopSnapshotPolling(): void {

@@ -11,15 +11,23 @@ import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 @Component({
   selector: 'app-user-dropdown',
   templateUrl: './user-dropdown.component.html',
-  imports:[CommonModule,RouterModule,DropdownComponent,DropdownItemTwoComponent]
+  imports: [CommonModule, RouterModule, DropdownComponent, DropdownItemTwoComponent],
 })
 export class UserDropdownComponent {
   isOpen = false;
 
   /** Observable con el usuario actual (si se encuentra). */
-  user$: Observable<{ firstName?: string; lastName?: string; email?: string; username?: string } | null>;
+  user$: Observable<{
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    username?: string;
+  } | null>;
 
-  constructor(private userService: UserService, private auth: AuthService) {
+  constructor(
+    private userService: UserService,
+    private auth: AuthService,
+  ) {
     // When login status changes, refresh users so newly created users appear immediately.
     // Use token claims only — avoid calling backend (403/roles issues). Show null if no token claims.
     this.user$ = this.auth.isLoggedIn$.pipe(
@@ -31,7 +39,7 @@ export class UserDropdownComponent {
         return null;
       }),
       catchError(() => of(null)),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

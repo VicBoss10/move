@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Observable, of, Subject } from 'rxjs';
 import { map, catchError, switchMap, startWith } from 'rxjs/operators';
-import { DeviceStatusService, DeviceStatusInfo } from '../../../../core/services/device-status.service';
+import {
+  DeviceStatusService,
+  DeviceStatusInfo,
+} from '../../../../core/services/device-status.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { LocationService } from '../../../../core/services/location.service';
 import { CameraService } from '../../../../core/services/camera.service';
@@ -64,7 +67,7 @@ export class DeviceStatusTableComponent {
     private sensorService: SensorService,
     private toastService: ToastService,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {
     this.editForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -81,14 +84,12 @@ export class DeviceStatusTableComponent {
           catchError((error) => {
             console.error('Error loading device statuses:', error);
             return of([]);
-          })
-        )
-      )
+          }),
+        ),
+      ),
     );
 
-    this.locations$ = this.locationService.getAll().pipe(
-      catchError(() => of([]))
-    );
+    this.locations$ = this.locationService.getAll().pipe(catchError(() => of([])));
   }
 
   // ─── Edit ────────────────────────────────────────────────────────────────
@@ -159,13 +160,16 @@ export class DeviceStatusTableComponent {
                 name,
                 type: this.editingDevice!.type,
                 state,
-                location: { ...devicePayload.location, description: devicePayload.location.description ?? null },
+                location: {
+                  ...devicePayload.location,
+                  description: devicePayload.location.description ?? null,
+                },
               },
               streamType: streamType as StreamType,
               source,
             };
             return this.cameraService.update(cameraPayload);
-          })
+          }),
         )
       : this.deviceService.update(devicePayload);
 
@@ -173,7 +177,7 @@ export class DeviceStatusTableComponent {
       next: () => {
         this.toastService.success(
           `El dispositivo "${deviceName}" ha sido actualizado.`,
-          'Dispositivo actualizado'
+          'Dispositivo actualizado',
         );
         this.editingDevice = null;
         this.editingCamera = null;
@@ -214,18 +218,18 @@ export class DeviceStatusTableComponent {
     const deleteOp$ = isCamera
       ? this.cameraService.getCameraByDeviceId(deviceId).pipe(
           switchMap((camera) => this.cameraService.delete(camera.id)),
-          switchMap(() => this.deviceService.delete(deviceId))
+          switchMap(() => this.deviceService.delete(deviceId)),
         )
       : this.sensorService.getSensorByDeviceId(deviceId).pipe(
           switchMap((sensor) => this.sensorService.delete(sensor.id)),
-          switchMap(() => this.deviceService.delete(deviceId))
+          switchMap(() => this.deviceService.delete(deviceId)),
         );
 
     deleteOp$.subscribe({
       next: () => {
         this.toastService.success(
           `El dispositivo "${name}" ha sido eliminado.`,
-          'Dispositivo eliminado'
+          'Dispositivo eliminado',
         );
         this.deleteTarget = null;
         this.deleteSaving = false;

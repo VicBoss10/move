@@ -1,6 +1,5 @@
 <!-- Mapa Google Maps para seleccionar ubicación -->
 <div class="w-full rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-
   <!-- Mapa disponible -->
   <div *ngIf="isApiLoaded; else noApiTemplate">
     <google-map
@@ -39,13 +38,32 @@
     </google-map>
 
     <!-- Instrucciones -->
-    <div *ngIf="!readonly" class="px-4 py-2 text-xs flex items-center gap-2" [ngClass]="gpsAccurate ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'">
+    <div
+      *ngIf="!readonly"
+      class="px-4 py-2 text-xs flex items-center gap-2"
+      [ngClass]="
+        gpsAccurate
+          ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+          : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+      "
+    >
       <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        <path
+          fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+          clip-rule="evenodd"
+        />
       </svg>
-      <span *ngIf="gpsAccurate">GPS obtenido (~{{ gpsAccuracy }}m). Haz clic en el mapa para seleccionar el punto.</span>
-      <span *ngIf="gpsObtained && !gpsAccurate">GPS impreciso (~{{ gpsAccuracy / 1000 | number:'1.0-0' }}km). Navega en el mapa y haz clic para seleccionar.</span>
-      <span *ngIf="!gpsObtained">Navega en el mapa y haz clic para seleccionar la ubicación del punto de monitoreo.</span>
+      <span *ngIf="gpsAccurate"
+        >GPS obtenido (~{{ gpsAccuracy }}m). Haz clic en el mapa para seleccionar el punto.</span
+      >
+      <span *ngIf="gpsObtained && !gpsAccurate"
+        >GPS impreciso (~{{ gpsAccuracy / 1000 | number: '1.0-0' }}km). Navega en el mapa y haz clic
+        para seleccionar.</span
+      >
+      <span *ngIf="!gpsObtained"
+        >Navega en el mapa y haz clic para seleccionar la ubicación del punto de monitoreo.</span
+      >
     </div>
   </div>
 
@@ -55,11 +73,24 @@
       class="flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
       [style.height]="mapHeight"
     >
-      <svg class="w-12 h-12 mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      <svg
+        class="w-12 h-12 mb-3 text-gray-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+        />
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+        />
       </svg>
       <p class="text-sm font-medium">Google Maps no disponible</p>
       <p class="text-xs mt-1">Configura la API Key de Google Maps para habilitar el mapa</p>

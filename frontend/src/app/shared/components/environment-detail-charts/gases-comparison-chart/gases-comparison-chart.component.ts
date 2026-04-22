@@ -1,13 +1,33 @@
 import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import {
+  ChartConfiguration,
+  Chart as ChartJS,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 // Registrar los scales y elementos
-ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
+ChartJS.register(
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+);
 
 /**
  * Componente que muestra un gráfico dinámico comparativo de múltiples gases
@@ -59,8 +79,8 @@ export class GasesComparisonChartComponent {
         left: 20,
         right: 20,
         top: 0,
-        bottom: 0
-      }
+        bottom: 0,
+      },
     },
     plugins: {
       legend: {
@@ -161,7 +181,7 @@ export class GasesComparisonChartComponent {
         console.error('Error cargando datos de gases:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -176,8 +196,8 @@ export class GasesComparisonChartComponent {
         }
 
         const parsedData = data
-          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
-          .filter(d => !isNaN(d._time.getTime()))
+          .map((d) => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter((d) => !isNaN(d._time.getTime()))
           .sort((a, b) => a._time.getTime() - b._time.getTime());
 
         if (parsedData.length === 0) {
@@ -190,7 +210,9 @@ export class GasesComparisonChartComponent {
           latestTime.getMonth(),
           latestTime.getDate(),
           latestTime.getHours(),
-          0, 0, 0
+          0,
+          0,
+          0,
         );
 
         // Crear 12 slots horarios hacia atrás desde la hora más reciente
@@ -202,15 +224,13 @@ export class GasesComparisonChartComponent {
           slots.push({ start: slotStart, end: slotEnd, label });
         }
 
-        const labels = slots.map(s => s.label);
+        const labels = slots.map((s) => s.label);
         const coData: (number | null)[] = [];
         const no2Data: (number | null)[] = [];
         const nh3Data: (number | null)[] = [];
 
         for (const slot of slots) {
-          const slotData = parsedData.filter(
-            d => d._time >= slot.start && d._time < slot.end
-          );
+          const slotData = parsedData.filter((d) => d._time >= slot.start && d._time < slot.end);
           if (slotData.length > 0) {
             const avgCo = slotData.reduce((sum, d) => sum + (d.co || 0), 0) / slotData.length;
             const avgNo2 = slotData.reduce((sum, d) => sum + (d.no2 || 0), 0) / slotData.length;
@@ -273,7 +293,7 @@ export class GasesComparisonChartComponent {
           ],
         };
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -292,9 +312,9 @@ export class GasesComparisonChartComponent {
           co: 0,
           no2: 0,
           nh3: 0,
-        })
+        }),
       ),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 }

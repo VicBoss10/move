@@ -5,13 +5,16 @@
     <p class="text-gray-600 dark:text-gray-400">Añade una nueva cámara o sensor al sistema</p>
   </div>
 
-
   <!-- Main Form Card -->
-  <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 shadow-sm overflow-hidden">
+  <div
+    class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 shadow-sm overflow-hidden"
+  >
     <form [formGroup]="deviceForm" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
       <!-- Step 1: Device Type Selection -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tipo de Dispositivo *</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"
+          >Tipo de Dispositivo *</label
+        >
         <div class="grid grid-cols-2 gap-4">
           <button
             *ngFor="let type of deviceTypes"
@@ -19,7 +22,7 @@
             (click)="deviceForm.patchValue({ type: type.id })"
             [ngClass]="{
               'ring-2 ring-blue-500': (selectedType$ | async) === type.id,
-              'bg-blue-50 dark:bg-blue-900/20': (selectedType$ | async) === type.id
+              'bg-blue-50 dark:bg-blue-900/20': (selectedType$ | async) === type.id,
             }"
             class="p-4 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:border-brand-300 dark:hover:border-brand-400 bg-white dark:bg-gray-700 transition-all cursor-pointer text-left"
           >
@@ -30,11 +33,17 @@
       </div>
 
       <!-- Step 2: Basic Device Information (Only for CAMERA) -->
-      <div *ngIf="(selectedType$ | async) === 'CAMERA'" class="pb-6 border-b border-gray-200 dark:border-gray-700">
+      <div
+        *ngIf="(selectedType$ | async) === 'CAMERA'"
+        class="pb-6 border-b border-gray-200 dark:border-gray-700"
+      >
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- Nombre del Dispositivo -->
           <div>
-            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="name"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Nombre del Dispositivo *
             </label>
             <input
@@ -44,16 +53,26 @@
               placeholder="Ej: Cámara Entrada Principal"
               class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-500/30 transition"
             />
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Nombre descriptivo del dispositivo (3-255 caracteres)</p>
-            <div *ngIf="deviceForm.get('name')?.invalid && deviceForm.get('name')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-              <span *ngIf="deviceForm.get('name')?.hasError('required')">El nombre es requerido</span>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Nombre descriptivo del dispositivo (3-255 caracteres)
+            </p>
+            <div
+              *ngIf="deviceForm.get('name')?.invalid && deviceForm.get('name')?.touched"
+              class="text-red-600 dark:text-red-400 text-xs mt-1"
+            >
+              <span *ngIf="deviceForm.get('name')?.hasError('required')"
+                >El nombre es requerido</span
+              >
               <span *ngIf="deviceForm.get('name')?.hasError('minlength')">Mínimo 3 caracteres</span>
             </div>
           </div>
 
           <!-- Ubicación -->
           <div>
-            <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="location"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Ubicación *
             </label>
             <select
@@ -66,15 +85,23 @@
                 {{ location.description || 'Ubicación ' + location.id }}
               </option>
             </select>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Asigna el dispositivo a una ubicación del sistema</p>
-            <div *ngIf="deviceForm.get('locationId')?.invalid && deviceForm.get('locationId')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Asigna el dispositivo a una ubicación del sistema
+            </p>
+            <div
+              *ngIf="deviceForm.get('locationId')?.invalid && deviceForm.get('locationId')?.touched"
+              class="text-red-600 dark:text-red-400 text-xs mt-1"
+            >
               La ubicación es requerida
             </div>
           </div>
 
           <!-- Estado Inicial -->
           <div>
-            <label for="state" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="state"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Estado Inicial *
             </label>
             <select
@@ -87,21 +114,32 @@
               </option>
             </select>
           </div>
-        </div>        
-        
+        </div>
       </div>
 
       <!-- Step 3: Camera-Specific Configuration -->
-      <div *ngIf="(selectedType$ | async) === 'CAMERA'" class="pb-6 border-b border-gray-200 dark:border-gray-700">
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-          <p class="text-blue-900 dark:text-blue-300 text-sm font-medium">Configuración de Cámara</p>
-          <p class="text-blue-700 dark:text-blue-400 text-xs mt-1">Configure los parámetros de streaming para la cámara</p>
+      <div
+        *ngIf="(selectedType$ | async) === 'CAMERA'"
+        class="pb-6 border-b border-gray-200 dark:border-gray-700"
+      >
+        <div
+          class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4"
+        >
+          <p class="text-blue-900 dark:text-blue-300 text-sm font-medium">
+            Configuración de Cámara
+          </p>
+          <p class="text-blue-700 dark:text-blue-400 text-xs mt-1">
+            Configure los parámetros de streaming para la cámara
+          </p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
           <!-- Tipo de Streaming -->
           <div>
-            <label for="streamType" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="streamType"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Tipo de Streaming *
             </label>
             <select
@@ -114,17 +152,26 @@
                 {{ st.label }}
               </option>
             </select>
-            <p *ngIf="deviceForm.get('streamType')?.value" class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+            <p
+              *ngIf="deviceForm.get('streamType')?.value"
+              class="mt-2 text-xs text-gray-600 dark:text-gray-400"
+            >
               {{ getStreamTypeDescription(deviceForm.get('streamType')?.value) }}
             </p>
-            <div *ngIf="deviceForm.get('streamType')?.invalid && deviceForm.get('streamType')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
+            <div
+              *ngIf="deviceForm.get('streamType')?.invalid && deviceForm.get('streamType')?.touched"
+              class="text-red-600 dark:text-red-400 text-xs mt-1"
+            >
               El tipo de streaming es requerido
             </div>
           </div>
 
           <!-- URL/Ruta del Stream -->
           <div>
-            <label for="source" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="source"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               URL/Ruta del Stream *
             </label>
             <input
@@ -134,105 +181,205 @@
               placeholder="Ej: rtsp://camera.local:554/stream"
               class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-500/30 transition font-mono text-sm"
             />
-            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Proporciona la URL completa del stream de tu cámara</p>
-            <div *ngIf="deviceForm.get('source')?.invalid && deviceForm.get('source')?.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-              <span *ngIf="deviceForm.get('source')?.hasError('required')">La URL del stream es requerida</span>
-              <span *ngIf="deviceForm.get('source')?.hasError('minlength')">La URL debe tener al menos 5 caracteres</span>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Proporciona la URL completa del stream de tu cámara
+            </p>
+            <div
+              *ngIf="deviceForm.get('source')?.invalid && deviceForm.get('source')?.touched"
+              class="text-red-600 dark:text-red-400 text-xs mt-1"
+            >
+              <span *ngIf="deviceForm.get('source')?.hasError('required')"
+                >La URL del stream es requerida</span
+              >
+              <span *ngIf="deviceForm.get('source')?.hasError('minlength')"
+                >La URL debe tener al menos 5 caracteres</span
+              >
             </div>
           </div>
         </div>
       </div>
 
       <!-- Step 4: Sensor-Specific Configuration (Informational) -->
-      <div *ngIf="(selectedType$ | async) === 'SENSOR'" class="pb-6 border-b border-gray-200 dark:border-gray-700">
-        <div class="bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+      <div
+        *ngIf="(selectedType$ | async) === 'SENSOR'"
+        class="pb-6 border-b border-gray-200 dark:border-gray-700"
+      >
+        <div
+          class="bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4"
+        >
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
             <div class="lg:col-span-1">
-              <p class="text-brand-900 dark:text-white text-base font-semibold">1) Conectar sensor a la fuente de energía</p>
-              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">
-                Conecta el sensor a una fuente de alimentación estable (5V/2A recomendados). Tras conectar, el LED rojo del dispositivo debe encenderse de forma fija.
+              <p class="text-brand-900 dark:text-white text-base font-semibold">
+                1) Conectar sensor a la fuente de energía
               </p>
-              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 font-medium">Si el LED no enciende, prueba lo siguiente:</p>
-              <ul class="list-inside list-disc text-gray-600 dark:text-gray-400 text-sm mt-1 space-y-1">
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">
+                Conecta el sensor a una fuente de alimentación estable (5V/2A recomendados). Tras
+                conectar, el LED rojo del dispositivo debe encenderse de forma fija.
+              </p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 font-medium">
+                Si el LED no enciende, prueba lo siguiente:
+              </p>
+              <ul
+                class="list-inside list-disc text-gray-600 dark:text-gray-400 text-sm mt-1 space-y-1"
+              >
                 <li>Verifica que el cable USB esté en buen estado y correctamente conectado.</li>
                 <li>Usa otra fuente de alimentación (otro adaptador o puerto USB).</li>
                 <li>Prueba con otro cable compatible (datos/charging).</li>
-                <li>Si persiste, reinicia el sensor desconectando y volviendo a conectar la alimentación.</li>
+                <li>
+                  Si persiste, reinicia el sensor desconectando y volviendo a conectar la
+                  alimentación.
+                </li>
               </ul>
-              <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">Una vez el sensor esté alimentado y con el LED encendido, continúa con el paso de provisioning mediante el portal cautivo del dispositivo (ver pasos posteriores).</p>
+              <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">
+                Una vez el sensor esté alimentado y con el LED encendido, continúa con el paso de
+                provisioning mediante el portal cautivo del dispositivo (ver pasos posteriores).
+              </p>
             </div>
             <div class="flex items-center justify-center h-full">
-              <img src="/images/device-conection/Conectar.png" alt="Conexión dispositivo" class="w-56 h-auto rounded-md shadow-sm" />
+              <img
+                src="/images/device-conection/Conectar.png"
+                alt="Conexión dispositivo"
+                class="w-56 h-auto rounded-md shadow-sm"
+              />
             </div>
           </div>
         </div>
         <!-- Step 2: Captive portal -->
-        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+        <div
+          class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4"
+        >
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
             <div class="lg:col-span-1">
-              <p class="text-brand-900 dark:text-white text-base font-semibold">2) Portal cautivo y LED indicador</p>
-              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Cuando el portal cautivo esté activo, el LED azul del dispositivo parpadeará — eso indica que la red cautiva está lista para conectarse desde tu teléfono u ordenador.</p>
-              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 font-medium">Conectar al portal:</p>
-              <ol class="list-inside list-decimal text-gray-600 dark:text-gray-400 text-sm mt-1 space-y-1 pl-4">
+              <p class="text-brand-900 dark:text-white text-base font-semibold">
+                2) Portal cautivo y LED indicador
+              </p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">
+                Cuando el portal cautivo esté activo, el LED azul del dispositivo parpadeará — eso
+                indica que la red cautiva está lista para conectarse desde tu teléfono u ordenador.
+              </p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 font-medium">
+                Conectar al portal:
+              </p>
+              <ol
+                class="list-inside list-decimal text-gray-600 dark:text-gray-400 text-sm mt-1 space-y-1 pl-4"
+              >
                 <li>En tu teléfono busca la red Wi‑Fi del sensor (ej. MOVE-XXXX).</li>
                 <li>Conéctate a la red; abre el navegador y serás redirigido al portal cautivo.</li>
-                <li>Sigue las instrucciones del portal para configurar la red local y credenciales del sensor.</li>
+                <li>
+                  Sigue las instrucciones del portal para configurar la red local y credenciales del
+                  sensor.
+                </li>
               </ol>
-              <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">Si el LED azul no parpadea: espera hasta 30s, verifica la alimentación y reinicia el sensor. Si persiste, contacta soporte.</p>
+              <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">
+                Si el LED azul no parpadea: espera hasta 30s, verifica la alimentación y reinicia el
+                sensor. Si persiste, contacta soporte.
+              </p>
             </div>
             <div class="flex items-center justify-center h-full">
-              <img [src]="captiveLedSrc" alt="LED indicador (portal cautivo)" class="w-56 h-auto rounded-md shadow-sm" />
+              <img
+                [src]="captiveLedSrc"
+                alt="LED indicador (portal cautivo)"
+                class="w-56 h-auto rounded-md shadow-sm"
+              />
             </div>
           </div>
         </div>
         <!-- Step 3: Validación de credenciales Wi-Fi -->
-        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+        <div
+          class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4"
+        >
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
             <div class="lg:col-span-1">
-              <p class="text-brand-900 dark:text-white text-base font-semibold">3) Validación de credenciales Wi‑Fi</p>
-              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Mientras el sensor valida las credenciales Wi‑Fi proporcionadas por el portal, ambos LEDs (rojo y azul) permanecerán encendidos de forma fija. Esto indica que el dispositivo está comprobando la conectividad con la red local.</p>
-              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Tiempo estimado: 10–30 segundos. Si la validación tarda más de 30s, revisa las credenciales o verifica la disponibilidad de la red Wi-Fi.</p>
+              <p class="text-brand-900 dark:text-white text-base font-semibold">
+                3) Validación de credenciales Wi‑Fi
+              </p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">
+                Mientras el sensor valida las credenciales Wi‑Fi proporcionadas por el portal, ambos
+                LEDs (rojo y azul) permanecerán encendidos de forma fija. Esto indica que el
+                dispositivo está comprobando la conectividad con la red local.
+              </p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">
+                Tiempo estimado: 10–30 segundos. Si la validación tarda más de 30s, revisa las
+                credenciales o verifica la disponibilidad de la red Wi-Fi.
+              </p>
             </div>
             <div class="flex items-center justify-center h-full">
-              <img src="/images/device-conection/LEDRA2.png" alt="Validación Wi-Fi" class="w-56 h-auto rounded-md shadow-sm" />
+              <img
+                src="/images/device-conection/LEDRA2.png"
+                alt="Validación Wi-Fi"
+                class="w-56 h-auto rounded-md shadow-sm"
+              />
             </div>
           </div>
         </div>
 
         <!-- Step 4: ubicacion -->
-        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+        <div
+          class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4"
+        >
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
             <div class="lg:col-span-1">
-              <p class="text-brand-900 dark:text-white text-base font-semibold">4) Seleccionar ubicación</p>
-              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Si la validación es correcta:</p>
-              <ul class="list-inside list-disc text-gray-600 dark:text-gray-400 text-sm mt-2 space-y-1 pl-4">
-                <li>El sensor se conectará a la red y hará un registro provisional en la base de datos.</li>
+              <p class="text-brand-900 dark:text-white text-base font-semibold">
+                4) Seleccionar ubicación
+              </p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">
+                Si la validación es correcta:
+              </p>
+              <ul
+                class="list-inside list-disc text-gray-600 dark:text-gray-400 text-sm mt-2 space-y-1 pl-4"
+              >
+                <li>
+                  El sensor se conectará a la red y hará un registro provisional en la base de
+                  datos.
+                </li>
                 <li>Se solicitará seleccionar la ubicación del sensor en la aplicación.</li>
                 <li>Finaliza el registro para iniciar la validación de datos.</li>
-                <li>No desconectes el dispositivo durante el proceso de validación (aprox. 3 minutos).</li>
-              </ul>              
+                <li>
+                  No desconectes el dispositivo durante el proceso de validación (aprox. 3 minutos).
+                </li>
+              </ul>
             </div>
             <div class="flex items-center justify-center h-full">
-              <img src="/images/device-conection/Ubicacion.jpg" alt="Registro completado" class="w-56 h-auto rounded-md shadow-sm" />
+              <img
+                src="/images/device-conection/Ubicacion.jpg"
+                alt="Registro completado"
+                class="w-56 h-auto rounded-md shadow-sm"
+              />
             </div>
           </div>
         </div>
 
         <!-- Step 5: Registro exitoso -->
-        <div class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4">
+        <div
+          class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4"
+        >
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
             <div class="lg:col-span-1">
-              <p class="text-brand-900 dark:text-white text-base font-semibold">5) Registro exitoso</p>
-              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Si luego del proceso de validación todo funcionó correctamente, el dispositivo cambiará su estado a "Activo" y el proceso de registro quedará finalizado.</p>
-              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Indicador LED: la luz azul parpadeará cada 30 segundos para indicar que el sensor está enviando datos periódicamente al servidor.</p>
-              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">Verifica en la aplicación que el dispositivo aparece como activo y comprueba las lecturas iniciales en la pantalla de indicadores.</p>
+              <p class="text-brand-900 dark:text-white text-base font-semibold">
+                5) Registro exitoso
+              </p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">
+                Si luego del proceso de validación todo funcionó correctamente, el dispositivo
+                cambiará su estado a "Activo" y el proceso de registro quedará finalizado.
+              </p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">
+                Indicador LED: la luz azul parpadeará cada 30 segundos para indicar que el sensor
+                está enviando datos periódicamente al servidor.
+              </p>
+              <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">
+                Verifica en la aplicación que el dispositivo aparece como activo y comprueba las
+                lecturas iniciales en la pantalla de indicadores.
+              </p>
             </div>
             <div class="flex items-center justify-center h-full">
-              <img src="/images/device-conection/RExitoso.jpg" alt="Registro exitoso" class="w-56 h-auto rounded-md shadow-sm" />
+              <img
+                src="/images/device-conection/RExitoso.jpg"
+                alt="Registro exitoso"
+                class="w-56 h-auto rounded-md shadow-sm"
+              />
             </div>
           </div>
         </div>
-
       </div>
 
       <!-- Form Actions (Only for CAMERA) -->
@@ -253,12 +400,13 @@
         >
           <span *ngIf="!(isLoading$ | async)">Registrar Dispositivo</span>
           <span *ngIf="isLoading$ | async" class="flex items-center gap-2">
-            <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span
+              class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+            ></span>
             Registrando...
           </span>
         </button>
       </div>
     </form>
   </div>
-
 </div>

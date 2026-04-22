@@ -3,12 +3,8 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-invoice-metrics',
-  imports: [
-    RouterModule,
-  ],
+  imports: [RouterModule],
   templateUrl: './invoice-metrics.component.html',
-  styles: ``
+  styles: ``,
 })
-export class InvoiceMetricsComponent {
-
-}
+export class InvoiceMetricsComponent {}

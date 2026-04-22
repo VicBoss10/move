@@ -3,10 +3,10 @@ import { LocationMonitoringViewComponent } from '../../../shared/components/loca
 
 /**
  * LocationMonitoringPageComponent
- * 
+ *
  * Página contenedor para la vista de puntos de monitoreo.
  * Orquesta el componente LocationMonitoringViewComponent de shared.
- * 
+ *
  * @selector app-location-monitoring
  * @standalone true
  */

@@ -8,24 +8,46 @@
   </div>
 
   <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
     <!-- ── Sensor Data Card ── -->
-    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div
+      class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+    >
       <!-- Header -->
       <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
         <div class="flex items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20">
-            <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20"
+          >
+            <svg
+              class="h-5 w-5 text-blue-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"
+              />
             </svg>
           </div>
           <div>
-            <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Datos de Sensores</h3>
-            <p *ngIf="sensorMinDate && sensorMaxDate" class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
+              Datos de Sensores
+            </h3>
+            <p
+              *ngIf="sensorMinDate && sensorMaxDate"
+              class="mt-0.5 text-xs text-gray-500 dark:text-gray-400"
+            >
               Registros desde {{ sensorMinDate }} hasta {{ sensorMaxDate }}
             </p>
-            <p *ngIf="!sensorMinDate || !sensorMaxDate" class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Sin registros disponibles</p>
+            <p
+              *ngIf="!sensorMinDate || !sensorMaxDate"
+              class="mt-0.5 text-xs text-gray-400 dark:text-gray-500"
+            >
+              Sin registros disponibles
+            </p>
           </div>
         </div>
       </div>
@@ -33,7 +55,9 @@
       <!-- Content -->
       <div class="space-y-4 p-5 sm:p-6">
         <!-- Delete All -->
-        <div class="rounded-xl border border-red-100 bg-red-50/50 p-4 dark:border-red-900/30 dark:bg-red-900/10">
+        <div
+          class="rounded-xl border border-red-100 bg-red-50/50 p-4 dark:border-red-900/30 dark:bg-red-900/10"
+        >
           <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Eliminar todo</p>
           <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Borra todos los registros de sensores de la base de datos.
@@ -43,17 +67,28 @@
             [disabled]="(sensorLoading$ | async) || !sensorMinDate"
             class="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-600 dark:hover:bg-red-700"
           >
-            <ng-container *ngIf="(sensorLoading$ | async); else sensorNotLoading">
+            <ng-container *ngIf="sensorLoading$ | async; else sensorNotLoading">
               <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
               Eliminando...
             </ng-container>
             <ng-template #sensorNotLoading>
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
               Eliminar todos los datos
             </ng-template>
@@ -62,10 +97,14 @@
 
         <!-- Delete By Range -->
         <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-          <p class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">Eliminar por rango de fechas</p>
+          <p class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Eliminar por rango de fechas
+          </p>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Fecha inicio</label>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
+                >Fecha inicio</label
+              >
               <input
                 type="date"
                 [(ngModel)]="sensorStartDate"
@@ -76,7 +115,9 @@
               />
             </div>
             <div>
-              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Fecha fin</label>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
+                >Fecha fin</label
+              >
               <input
                 type="date"
                 [(ngModel)]="sensorEndDate"
@@ -93,8 +134,12 @@
             class="mt-3 flex items-center gap-2 rounded-lg border border-red-400 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
             Eliminar rango seleccionado
           </button>
@@ -106,22 +151,45 @@
     </div>
 
     <!-- ── Vehicles Card ── -->
-    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div
+      class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+    >
       <!-- Header -->
       <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
         <div class="flex items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20">
-            <svg class="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20"
+          >
+            <svg
+              class="h-5 w-5 text-amber-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+              />
             </svg>
           </div>
           <div>
-            <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Detecciones de Vehículos</h3>
-            <p *ngIf="vehicleMinDate && vehicleMaxDate" class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
+              Detecciones de Vehículos
+            </h3>
+            <p
+              *ngIf="vehicleMinDate && vehicleMaxDate"
+              class="mt-0.5 text-xs text-gray-500 dark:text-gray-400"
+            >
               Registros desde {{ vehicleMinDate }} hasta {{ vehicleMaxDate }}
             </p>
-            <p *ngIf="!vehicleMinDate || !vehicleMaxDate" class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Sin registros disponibles</p>
+            <p
+              *ngIf="!vehicleMinDate || !vehicleMaxDate"
+              class="mt-0.5 text-xs text-gray-400 dark:text-gray-500"
+            >
+              Sin registros disponibles
+            </p>
           </div>
         </div>
       </div>
@@ -129,7 +197,9 @@
       <!-- Content -->
       <div class="space-y-4 p-5 sm:p-6">
         <!-- Delete All -->
-        <div class="rounded-xl border border-red-100 bg-red-50/50 p-4 dark:border-red-900/30 dark:bg-red-900/10">
+        <div
+          class="rounded-xl border border-red-100 bg-red-50/50 p-4 dark:border-red-900/30 dark:bg-red-900/10"
+        >
           <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Eliminar todo</p>
           <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Borra todas las detecciones de vehículos de la base de datos.
@@ -139,17 +209,28 @@
             [disabled]="(vehicleLoading$ | async) || !vehicleMinDate"
             class="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-600 dark:hover:bg-red-700"
           >
-            <ng-container *ngIf="(vehicleLoading$ | async); else vehicleNotLoading">
+            <ng-container *ngIf="vehicleLoading$ | async; else vehicleNotLoading">
               <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
               Eliminando...
             </ng-container>
             <ng-template #vehicleNotLoading>
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
               Eliminar todas las detecciones
             </ng-template>
@@ -158,10 +239,14 @@
 
         <!-- Delete By Range -->
         <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-          <p class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">Eliminar por rango de fechas</p>
+          <p class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Eliminar por rango de fechas
+          </p>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Fecha inicio</label>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
+                >Fecha inicio</label
+              >
               <input
                 type="date"
                 [(ngModel)]="vehicleStartDate"
@@ -172,7 +257,9 @@
               />
             </div>
             <div>
-              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Fecha fin</label>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
+                >Fecha fin</label
+              >
               <input
                 type="date"
                 [(ngModel)]="vehicleEndDate"
@@ -189,8 +276,12 @@
             class="mt-3 flex items-center gap-2 rounded-lg border border-red-400 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
             Eliminar rango seleccionado
           </button>
@@ -213,11 +304,24 @@
         (click)="$event.stopPropagation()"
       >
         <!-- Modal Header -->
-        <div class="flex items-center gap-3 border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-            <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        <div
+          class="flex items-center gap-3 border-b border-gray-200 px-6 py-4 dark:border-gray-700"
+        >
+          <div
+            class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30"
+          >
+            <svg
+              class="h-5 w-5 text-red-600 dark:text-red-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
           </div>
           <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ confirmTitle }}</h3>
@@ -245,4 +349,3 @@
     </div>
   }
 </div>
-

@@ -6,15 +6,8 @@ import { CardThreeComponent } from '../card-three/card-three.component';
 
 @Component({
   selector: 'app-card-with-image',
-  imports: [
-    ComponentCardComponent,
-    CardOneComponent,
-    CardTwoComponent,
-    CardThreeComponent,
-  ],
+  imports: [ComponentCardComponent, CardOneComponent, CardTwoComponent, CardThreeComponent],
   templateUrl: './card-with-image.component.html',
-  styles: ``
+  styles: ``,
 })
-export class CardWithImageComponent {
-
-}
+export class CardWithImageComponent {}

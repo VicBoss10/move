@@ -5,13 +5,13 @@
 export enum DeviceType {
   CAMERA = 'CAMERA',
   SENSOR = 'SENSOR',
-  THERMAL = 'THERMAL'
+  THERMAL = 'THERMAL',
 }
 
 export enum DeviceState {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
-  FAILING = 'FAILING'
+  FAILING = 'FAILING',
 }
 
 /**

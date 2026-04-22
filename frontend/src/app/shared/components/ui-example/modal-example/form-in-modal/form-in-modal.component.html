@@ -1,10 +1,6 @@
 <app-component-card title="Form In Modal">
   <app-button size="sm" (btnClick)="openModal()"> Open Modal </app-button>
-  <app-modal
-    [isOpen]="isOpen"
-    (close)="closeModal()"
-    className="max-w-[584px] p-5 lg:p-10"
-  >
+  <app-modal [isOpen]="isOpen" (close)="closeModal()" className="max-w-[584px] p-5 lg:p-10">
     <form class="">
       <h4 class="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
         Personal Information
@@ -23,10 +19,7 @@
 
         <div class="col-span-1">
           <app-label>Last Name</app-label>
-          <app-input-field
-            type="email"
-            placeholder="emirhanboruch55@gmail.com"
-          />
+          <app-input-field type="email" placeholder="emirhanboruch55@gmail.com" />
         </div>
 
         <div class="col-span-1">
@@ -41,9 +34,7 @@
       </div>
 
       <div class="flex items-center justify-end w-full gap-3 mt-6">
-        <app-button size="sm" variant="outline" (btnClick)="closeModal()">
-          Close
-        </app-button>
+        <app-button size="sm" variant="outline" (btnClick)="closeModal()"> Close </app-button>
         <app-button size="sm" (btnClick)="handleSave()"> Save Changes </app-button>
       </div>
     </form>

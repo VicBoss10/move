@@ -6,17 +6,11 @@ import { ButtonComponent } from '../../../ui/button/button.component';
 
 @Component({
   selector: 'app-default-modal',
-  imports: [
-    CommonModule,
-    ModalComponent,
-    ComponentCardComponent,
-    ButtonComponent,
-  ],
+  imports: [CommonModule, ModalComponent, ComponentCardComponent, ButtonComponent],
   templateUrl: './default-modal.component.html',
-  styles: ``
+  styles: ``,
 })
 export class DefaultModalComponent {
-
   isOpen = false;
 
   openModal() {

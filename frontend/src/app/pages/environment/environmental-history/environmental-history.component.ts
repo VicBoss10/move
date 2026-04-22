@@ -1,4 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HistoryFiltersComponent } from '../../../shared/components/environment-detail-charts/history-filters/history-filters.component';
 import { SensorDataTableComponent } from '../../../shared/components/environment-detail-charts/sensor-data-table/sensor-data-table.component';
@@ -71,7 +77,10 @@ export class EnvironmentalHistoryComponent implements OnInit, OnDestroy {
    */
   currentCriteria: SensorDataSearchCriteria = {};
 
-  constructor(private sensorDataService: SensorDataService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private sensorDataService: SensorDataService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.loadSensorData();
@@ -88,10 +97,11 @@ export class EnvironmentalHistoryComponent implements OnInit, OnDestroy {
     const criteria: SensorDataSearchCriteria = {
       ...this.currentCriteria,
       page: this.currentPage,
-      size: this.pageSize
+      size: this.pageSize,
     };
 
-    this.sensorDataService.search(criteria)
+    this.sensorDataService
+      .search(criteria)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
@@ -101,7 +111,7 @@ export class EnvironmentalHistoryComponent implements OnInit, OnDestroy {
         }),
         finalize(() => {
           this.isLoading = false;
-        })
+        }),
       )
       .subscribe((data) => {
         this.hasMoreData = data.length === this.pageSize;

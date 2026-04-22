@@ -9,6 +9,6 @@ import { FaqComponent } from '../../../shared/components/help/faq/faq.component'
   selector: 'app-faq-page',
   standalone: true,
   imports: [CommonModule, FaqComponent],
-  templateUrl: './faq.component.html'
+  templateUrl: './faq.component.html',
 })
 export class FaqPageComponent {}

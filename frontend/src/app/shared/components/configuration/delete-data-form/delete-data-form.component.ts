@@ -59,7 +59,7 @@ export class DeleteDataFormComponent implements OnInit {
     private sensorService: SensorDataService,
     private vehicleService: VehicleDetectedService,
     private toastService: ToastService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -69,23 +69,35 @@ export class DeleteDataFormComponent implements OnInit {
 
   private loadSensorDateBounds(): void {
     this.sensorService.getFirstRecord().subscribe({
-      next: (r) => { this.sensorMinDate = this.toDateString(r.timestamp); this.cdr.markForCheck(); },
-      error: () => {}
+      next: (r) => {
+        this.sensorMinDate = this.toDateString(r.timestamp);
+        this.cdr.markForCheck();
+      },
+      error: () => {},
     });
     this.sensorService.getLastRecord().subscribe({
-      next: (r) => { this.sensorMaxDate = this.toDateString(r.timestamp); this.cdr.markForCheck(); },
-      error: () => {}
+      next: (r) => {
+        this.sensorMaxDate = this.toDateString(r.timestamp);
+        this.cdr.markForCheck();
+      },
+      error: () => {},
     });
   }
 
   private loadVehicleDateBounds(): void {
     this.vehicleService.getFirstRecord().subscribe({
-      next: (r) => { this.vehicleMinDate = this.toDateString(r.timestamp); this.cdr.markForCheck(); },
-      error: () => {}
+      next: (r) => {
+        this.vehicleMinDate = this.toDateString(r.timestamp);
+        this.cdr.markForCheck();
+      },
+      error: () => {},
     });
     this.vehicleService.getLastRecord().subscribe({
-      next: (r) => { this.vehicleMaxDate = this.toDateString(r.timestamp); this.cdr.markForCheck(); },
-      error: () => {}
+      next: (r) => {
+        this.vehicleMaxDate = this.toDateString(r.timestamp);
+        this.cdr.markForCheck();
+      },
+      error: () => {},
     });
   }
 
@@ -124,7 +136,7 @@ export class DeleteDataFormComponent implements OnInit {
     this.requestConfirm(
       'Eliminar todos los datos de sensores',
       'Esta acción borrará permanentemente todos los registros de sensores. No se puede deshacer.',
-      () => this.executeSensorAll()
+      () => this.executeSensorAll(),
     );
   }
 
@@ -133,26 +145,27 @@ export class DeleteDataFormComponent implements OnInit {
     this.sensorSuccess$.next(null);
     this.sensorError$.next(null);
     this.cdr.markForCheck();
-    this.sensorService.deleteAll().pipe(
-      finalize(() => this.sensorLoading$.next(false))
-    ).subscribe({
-      next: () => {
-        const msg = 'Todos los datos de sensores han sido eliminados correctamente.';
-        this.sensorSuccess$.next(msg);
-        this.toastService.success(msg, 'Éxito');
-        this.sensorMinDate = '';
-        this.sensorMaxDate = '';
-        this.sensorStartDate = '';
-        this.sensorEndDate = '';
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
-        this.sensorError$.next(msg);
-        this.toastService.error(msg, 'Error');
-        this.cdr.markForCheck();
-      }
-    });
+    this.sensorService
+      .deleteAll()
+      .pipe(finalize(() => this.sensorLoading$.next(false)))
+      .subscribe({
+        next: () => {
+          const msg = 'Todos los datos de sensores han sido eliminados correctamente.';
+          this.sensorSuccess$.next(msg);
+          this.toastService.success(msg, 'Éxito');
+          this.sensorMinDate = '';
+          this.sensorMaxDate = '';
+          this.sensorStartDate = '';
+          this.sensorEndDate = '';
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
+          this.sensorError$.next(msg);
+          this.toastService.error(msg, 'Error');
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   deleteSensorByRange(): void {
@@ -160,7 +173,7 @@ export class DeleteDataFormComponent implements OnInit {
     this.requestConfirm(
       'Eliminar datos de sensores por rango',
       `Se eliminarán permanentemente los registros entre ${this.sensorStartDate} y ${this.sensorEndDate}.`,
-      () => this.executeSensorByRange()
+      () => this.executeSensorByRange(),
     );
   }
 
@@ -171,25 +184,26 @@ export class DeleteDataFormComponent implements OnInit {
     this.cdr.markForCheck();
     const start = new Date(this.sensorStartDate + 'T00:00:00');
     const end = new Date(this.sensorEndDate + 'T23:59:59');
-    this.sensorService.deleteByDateRange(start, end).pipe(
-      finalize(() => this.sensorLoading$.next(false))
-    ).subscribe({
-      next: () => {
-        const msg = `Datos entre ${this.sensorStartDate} y ${this.sensorEndDate} eliminados correctamente.`;
-        this.sensorSuccess$.next(msg);
-        this.toastService.success(msg, 'Éxito');
-        this.sensorStartDate = '';
-        this.sensorEndDate = '';
-        this.loadSensorDateBounds();
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
-        this.sensorError$.next(msg);
-        this.toastService.error(msg, 'Error');
-        this.cdr.markForCheck();
-      }
-    });
+    this.sensorService
+      .deleteByDateRange(start, end)
+      .pipe(finalize(() => this.sensorLoading$.next(false)))
+      .subscribe({
+        next: () => {
+          const msg = `Datos entre ${this.sensorStartDate} y ${this.sensorEndDate} eliminados correctamente.`;
+          this.sensorSuccess$.next(msg);
+          this.toastService.success(msg, 'Éxito');
+          this.sensorStartDate = '';
+          this.sensorEndDate = '';
+          this.loadSensorDateBounds();
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
+          this.sensorError$.next(msg);
+          this.toastService.error(msg, 'Error');
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   // ── Vehicle actions ─────────────────────────────────────────────────────────
@@ -198,7 +212,7 @@ export class DeleteDataFormComponent implements OnInit {
     this.requestConfirm(
       'Eliminar todas las detecciones de vehículos',
       'Esta acción borrará permanentemente todos los registros de vehículos detectados. No se puede deshacer.',
-      () => this.executeVehicleAll()
+      () => this.executeVehicleAll(),
     );
   }
 
@@ -207,26 +221,27 @@ export class DeleteDataFormComponent implements OnInit {
     this.vehicleSuccess$.next(null);
     this.vehicleError$.next(null);
     this.cdr.markForCheck();
-    this.vehicleService.deleteAll().pipe(
-      finalize(() => this.vehicleLoading$.next(false))
-    ).subscribe({
-      next: () => {
-        const msg = 'Todas las detecciones de vehículos han sido eliminadas correctamente.';
-        this.vehicleSuccess$.next(msg);
-        this.toastService.success(msg, 'Éxito');
-        this.vehicleMinDate = '';
-        this.vehicleMaxDate = '';
-        this.vehicleStartDate = '';
-        this.vehicleEndDate = '';
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
-        this.vehicleError$.next(msg);
-        this.toastService.error(msg, 'Error');
-        this.cdr.markForCheck();
-      }
-    });
+    this.vehicleService
+      .deleteAll()
+      .pipe(finalize(() => this.vehicleLoading$.next(false)))
+      .subscribe({
+        next: () => {
+          const msg = 'Todas las detecciones de vehículos han sido eliminadas correctamente.';
+          this.vehicleSuccess$.next(msg);
+          this.toastService.success(msg, 'Éxito');
+          this.vehicleMinDate = '';
+          this.vehicleMaxDate = '';
+          this.vehicleStartDate = '';
+          this.vehicleEndDate = '';
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
+          this.vehicleError$.next(msg);
+          this.toastService.error(msg, 'Error');
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   deleteVehicleByRange(): void {
@@ -234,7 +249,7 @@ export class DeleteDataFormComponent implements OnInit {
     this.requestConfirm(
       'Eliminar detecciones por rango de fechas',
       `Se eliminarán permanentemente los registros entre ${this.vehicleStartDate} y ${this.vehicleEndDate}.`,
-      () => this.executeVehicleByRange()
+      () => this.executeVehicleByRange(),
     );
   }
 
@@ -245,24 +260,25 @@ export class DeleteDataFormComponent implements OnInit {
     this.cdr.markForCheck();
     const start = new Date(this.vehicleStartDate + 'T00:00:00');
     const end = new Date(this.vehicleEndDate + 'T23:59:59');
-    this.vehicleService.deleteByDateRange(start, end).pipe(
-      finalize(() => this.vehicleLoading$.next(false))
-    ).subscribe({
-      next: () => {
-        const msg = `Registros entre ${this.vehicleStartDate} y ${this.vehicleEndDate} eliminados correctamente.`;
-        this.vehicleSuccess$.next(msg);
-        this.toastService.success(msg, 'Éxito');
-        this.vehicleStartDate = '';
-        this.vehicleEndDate = '';
-        this.loadVehicleDateBounds();
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
-        this.vehicleError$.next(msg);
-        this.toastService.error(msg, 'Error');
-        this.cdr.markForCheck();
-      }
-    });
+    this.vehicleService
+      .deleteByDateRange(start, end)
+      .pipe(finalize(() => this.vehicleLoading$.next(false)))
+      .subscribe({
+        next: () => {
+          const msg = `Registros entre ${this.vehicleStartDate} y ${this.vehicleEndDate} eliminados correctamente.`;
+          this.vehicleSuccess$.next(msg);
+          this.toastService.success(msg, 'Éxito');
+          this.vehicleStartDate = '';
+          this.vehicleEndDate = '';
+          this.loadVehicleDateBounds();
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
+          this.vehicleError$.next(msg);
+          this.toastService.error(msg, 'Error');
+          this.cdr.markForCheck();
+        },
+      });
   }
 }

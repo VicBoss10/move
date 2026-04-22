@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-twentyone-isto-nine',
   imports: [],
   templateUrl: './twentyone-isto-nine.component.html',
-  styles: ``
+  styles: ``,
 })
-export class TwentyoneIstoNineComponent {
-
-}
+export class TwentyoneIstoNineComponent {}

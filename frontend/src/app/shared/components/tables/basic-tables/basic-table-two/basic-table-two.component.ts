@@ -6,17 +6,11 @@ import { CheckboxComponent } from '../../../form/input/checkbox.component';
 
 @Component({
   selector: 'app-basic-table-two',
-  imports: [
-    CommonModule,
-    BadgeComponent,
-    AvatarTextComponent,
-    CheckboxComponent,
-  ],
+  imports: [CommonModule, BadgeComponent, AvatarTextComponent, CheckboxComponent],
   templateUrl: './basic-table-two.component.html',
-  styles: ``
+  styles: ``,
 })
 export class BasicTableTwoComponent {
-
   tableRowData = [
     {
       id: 'DE124321',
@@ -66,7 +60,7 @@ export class BasicTableTwoComponent {
   handleSelectAll() {
     this.selectAll = !this.selectAll;
     if (this.selectAll) {
-      this.selectedRows = this.tableRowData.map(row => row.id);
+      this.selectedRows = this.tableRowData.map((row) => row.id);
     } else {
       this.selectedRows = [];
     }
@@ -74,7 +68,7 @@ export class BasicTableTwoComponent {
 
   handleRowSelect(id: string) {
     if (this.selectedRows.includes(id)) {
-      this.selectedRows = this.selectedRows.filter(rowId => rowId !== id);
+      this.selectedRows = this.selectedRows.filter((rowId) => rowId !== id);
     } else {
       this.selectedRows = [...this.selectedRows, id];
     }

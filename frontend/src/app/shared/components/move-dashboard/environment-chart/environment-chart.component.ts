@@ -1,14 +1,34 @@
 import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import {
+  ChartConfiguration,
+  Chart as ChartJS,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 
 // Registrar los scales y elementos
-ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
+ChartJS.register(
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+);
 
 /**
  * EnvironmentChartComponent
@@ -84,8 +104,8 @@ export class EnvironmentChartComponent {
         left: 20,
         right: 20,
         top: 0,
-        bottom: 0
-      }
+        bottom: 0,
+      },
     },
     plugins: {
       legend: {
@@ -207,7 +227,7 @@ export class EnvironmentChartComponent {
         console.error('Error cargando datos de sensores:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -226,8 +246,8 @@ export class EnvironmentChartComponent {
 
         // Parsear timestamps y ordenar cronológicamente
         const parsedData = data
-          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
-          .filter(d => !isNaN(d._time.getTime()))
+          .map((d) => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter((d) => !isNaN(d._time.getTime()))
           .sort((a, b) => a._time.getTime() - b._time.getTime());
 
         if (parsedData.length === 0) {
@@ -241,7 +261,9 @@ export class EnvironmentChartComponent {
           latestTime.getMonth(),
           latestTime.getDate(),
           latestTime.getHours(),
-          0, 0, 0
+          0,
+          0,
+          0,
         );
 
         // Crear 12 slots horarios hacia atrás desde la hora más reciente
@@ -253,20 +275,20 @@ export class EnvironmentChartComponent {
           slots.push({ start: slotStart, end: slotEnd, label });
         }
 
-        const labels = slots.map(s => s.label);
+        const labels = slots.map((s) => s.label);
 
         // Agrupar datos en cada slot horario y promediar
         const tempData: (number | null)[] = [];
         const humidityData: (number | null)[] = [];
 
         for (const slot of slots) {
-          const slotData = parsedData.filter(
-            d => d._time >= slot.start && d._time < slot.end
-          );
+          const slotData = parsedData.filter((d) => d._time >= slot.start && d._time < slot.end);
 
           if (slotData.length > 0) {
-            const avgTemp = slotData.reduce((sum, d) => sum + (d.temperature || 0), 0) / slotData.length;
-            const avgHum = slotData.reduce((sum, d) => sum + (d.humidity || 0), 0) / slotData.length;
+            const avgTemp =
+              slotData.reduce((sum, d) => sum + (d.temperature || 0), 0) / slotData.length;
+            const avgHum =
+              slotData.reduce((sum, d) => sum + (d.humidity || 0), 0) / slotData.length;
             tempData.push(Math.round(avgTemp * 100) / 100);
             humidityData.push(Math.round(avgHum * 100) / 100);
           } else {
@@ -313,7 +335,7 @@ export class EnvironmentChartComponent {
           ],
         };
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -328,7 +350,7 @@ export class EnvironmentChartComponent {
         const sum = data.reduce((acc, d) => acc + (d.temperature || 0), 0);
         return sum / data.length;
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
 
     this.avgHumidity$ = this.sensorData$.pipe(
@@ -337,7 +359,7 @@ export class EnvironmentChartComponent {
         const sum = data.reduce((acc, d) => acc + (d.humidity || 0), 0);
         return sum / data.length;
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
 
     this.avgCo2$ = this.sensorData$.pipe(
@@ -346,7 +368,7 @@ export class EnvironmentChartComponent {
         const sum = data.reduce((acc, d) => acc + (d.co2 || 0), 0);
         return sum / data.length;
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 }

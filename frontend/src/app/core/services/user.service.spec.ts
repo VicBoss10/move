@@ -8,7 +8,7 @@ import { User, UserSearchCriteria, UserStats } from '../models/user.model';
 
 /**
  * Test suite para UserService
- * 
+ *
  * Cubre:
  * - Creación e inyección de dependencias
  * - Búsqueda de usuarios (search)
@@ -28,40 +28,37 @@ describe('UserService', () => {
       email: 'admin@example.com',
       username: 'admin',
       role: 'ADMIN',
-      createdAt: new Date('2024-01-01')
+      createdAt: new Date('2024-01-01'),
     },
     {
       id: 2,
       email: 'user1@example.com',
       username: 'user1',
       role: 'USER',
-      createdAt: new Date('2024-01-15')
+      createdAt: new Date('2024-01-15'),
     },
     {
       id: 3,
       email: 'user2@example.com',
       username: 'user2',
       role: 'USER',
-      createdAt: new Date('2024-02-01')
+      createdAt: new Date('2024-02-01'),
     },
     {
       id: 4,
       email: 'viewer@example.com',
       username: 'viewer',
       role: 'VIEWER',
-      createdAt: new Date('2024-02-15')
-    }
+      createdAt: new Date('2024-02-15'),
+    },
   ];
 
   beforeEach(() => {
     // Crear mock de ApiService
     const spy = jasmine.createSpyObj('ApiService', ['get', 'post', 'put', 'delete']);
-    
+
     TestBed.configureTestingModule({
-      providers: [
-        UserService,
-        { provide: ApiService, useValue: spy }
-      ]
+      providers: [UserService, { provide: ApiService, useValue: spy }],
     });
 
     service = TestBed.inject(UserService);
@@ -83,15 +80,12 @@ describe('UserService', () => {
   describe('search()', () => {
     it('should search users by role', (done) => {
       const criteria: UserSearchCriteria = { role: 'ADMIN' };
-      const adminUsers = mockUsers.filter(u => u.role === 'ADMIN');
+      const adminUsers = mockUsers.filter((u) => u.role === 'ADMIN');
 
       apiServiceMock.get.and.returnValue(of(adminUsers));
 
       service.search(criteria).subscribe((users) => {
-        expect(apiServiceMock.get).toHaveBeenCalledWith(
-          '/users/search',
-          jasmine.any(Object)
-        );
+        expect(apiServiceMock.get).toHaveBeenCalledWith('/users/search', jasmine.any(Object));
         expect(users.length).toBe(1);
         expect(users[0].role).toBe('ADMIN');
         done();
@@ -100,7 +94,7 @@ describe('UserService', () => {
 
     it('should search users by keyword', (done) => {
       const criteria: UserSearchCriteria = { keyword: 'user1' };
-      const filtered = mockUsers.filter(u => u.username.includes('user1'));
+      const filtered = mockUsers.filter((u) => u.username.includes('user1'));
 
       apiServiceMock.get.and.returnValue(of(filtered));
 
@@ -124,7 +118,7 @@ describe('UserService', () => {
 
     it('should update data$ observable on successful search', (done) => {
       const criteria: UserSearchCriteria = { role: 'USER' };
-      const userResults = mockUsers.filter(u => u.role === 'USER');
+      const userResults = mockUsers.filter((u) => u.role === 'USER');
 
       apiServiceMock.get.and.returnValue(of(userResults));
 
@@ -170,7 +164,7 @@ describe('UserService', () => {
         error: (err) => {
           expect(err).toBeDefined();
           done();
-        }
+        },
       });
     });
 
@@ -180,17 +174,19 @@ describe('UserService', () => {
 
       apiServiceMock.get.and.returnValue(throwError(() => error));
 
-      service.error$.pipe(
-        skip(1), // Skip initial null emission
-        take(1)  // Take only the error emission
-      ).subscribe((err) => {
-        expect(err).toBeDefined();
-        expect(typeof err).toBe('string');
-        done();
-      });
+      service.error$
+        .pipe(
+          skip(1), // Skip initial null emission
+          take(1), // Take only the error emission
+        )
+        .subscribe((err) => {
+          expect(err).toBeDefined();
+          expect(typeof err).toBe('string');
+          done();
+        });
 
       service.search(criteria).subscribe({
-        error: () => {} // Ignore
+        error: () => {}, // Ignore
       });
     });
   });
@@ -234,7 +230,7 @@ describe('UserService', () => {
         { id: 1, email: 'a@x.com', username: 'a', role: 'ADMIN' },
         { id: 2, email: 'b@x.com', username: 'b', role: 'ADMIN' },
         { id: 3, email: 'c@x.com', username: 'c', role: 'ADMIN' },
-        { id: 4, email: 'd@x.com', username: 'd', role: 'VIEWER' }
+        { id: 4, email: 'd@x.com', username: 'd', role: 'VIEWER' },
       ];
 
       service['cacheData'] = mixedUsers;
@@ -277,7 +273,7 @@ describe('UserService', () => {
     it('should build query params correctly for search', (done) => {
       const criteria: UserSearchCriteria = {
         role: 'ADMIN',
-        keyword: 'admin'
+        keyword: 'admin',
       };
 
       apiServiceMock.get.and.returnValue(of([]));

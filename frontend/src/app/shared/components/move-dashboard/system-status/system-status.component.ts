@@ -75,27 +75,25 @@ export class SystemStatusComponent {
       icon: this.icons.systemIcon,
       status: 'offline',
       primary: '● OFFLINE',
-      secondary: 'Sin conexión con servicios'
+      secondary: 'Sin conexión con servicios',
     },
     {
       label: 'Dispositivos',
       icon: this.icons.deviceIcon,
       status: 'offline',
       primary: '0 / 0',
-      secondary: 'Sin conexión'
+      secondary: 'Sin conexión',
     },
     {
       label: 'Cámaras',
       icon: this.icons.cameraIcon,
       status: 'inactive',
       primary: '0',
-      secondary: 'Sin conexión'
-    }
+      secondary: 'Sin conexión',
+    },
   ];
 
-  constructor(
-    private deviceService: DeviceService
-  ) {
+  constructor(private deviceService: DeviceService) {
     this.initializeStatusCards();
   }
 
@@ -124,25 +122,26 @@ export class SystemStatusComponent {
           {
             label: 'Sistema',
             icon: this.icons.systemIcon,
-            status: 'online' as 'online',
+            status: 'online' as const,
             primary: '● ONLINE',
-            secondary: backendAvailable && allDevices.length === 0
-              ? 'Backend disponible — sin dispositivos registrados'
-              : `${activeDevicesTotal} dispositivos activos`
+            secondary:
+              backendAvailable && allDevices.length === 0
+                ? 'Backend disponible — sin dispositivos registrados'
+                : `${activeDevicesTotal} dispositivos activos`,
           },
           {
             label: 'Dispositivos',
             icon: this.icons.deviceIcon,
             status: (sensorsActive > 0 ? 'online' : 'offline') as 'online' | 'offline',
             primary: `${sensorsActive} / ${sensorsTotal}`,
-            secondary: 'Sensores activos / registrados'
+            secondary: 'Sensores activos / registrados',
           },
           {
             label: 'Cámaras',
             icon: this.icons.cameraIcon,
             status: (camerasActive > 0 ? 'active' : 'inactive') as 'active' | 'inactive',
             primary: `${camerasActive} / ${camerasTotal}`,
-            secondary: 'Activas / Registradas'
+            secondary: 'Activas / Registradas',
           },
         ];
       }),
@@ -150,7 +149,7 @@ export class SystemStatusComponent {
         console.error('Error cargando estado del sistema:', error);
         return of(this.defaultStatusCards);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

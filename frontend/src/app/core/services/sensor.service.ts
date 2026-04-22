@@ -11,7 +11,7 @@ export interface Sensor {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SensorService extends BaseDataService<Sensor> {
   protected endpoint = 'sensors';
@@ -27,20 +27,7 @@ export class SensorService extends BaseDataService<Sensor> {
       catchError((error) => {
         this.setServiceError(error, 'Error al obtener sensor por dispositivo');
         return throwError(() => error);
-      })
-    );
-  }
-
-  override delete(id: number): Observable<string> {
-    return this.apiService.deleteText(`/${this.endpoint}/${id}`).pipe(
-      tap(() => {
-        this.invalidateCache();
-        this.clearServiceError();
       }),
-      catchError((error) => {
-        this.setServiceError(error, 'Error al eliminar sensor');
-        return throwError(() => error);
-      })
     );
   }
 }

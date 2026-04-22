@@ -7,7 +7,7 @@ import { Co2StatsTableComponent } from '../../../shared/components/environment-d
 /**
  * Componente de página que muestra el detalle de CO₂.
  * Organiza la visualización de indicador, gráfico de tendencia y estadísticas de CO₂.
- * 
+ *
  * @selector app-co2-detail
  * @standalone true
  * @imports CommonModule, Co2ChartComponent, Co2GaugeComponent, Co2StatsTableComponent

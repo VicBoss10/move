@@ -6,17 +6,11 @@ import { ComponentCardComponent } from '../../../common/component-card/component
 
 @Component({
   selector: 'app-text-area-input',
-  imports: [
-    TextAreaComponent,
-    CommonModule,
-    LabelComponent,
-    ComponentCardComponent,
-  ],
+  imports: [TextAreaComponent, CommonModule, LabelComponent, ComponentCardComponent],
   templateUrl: './text-area-input.component.html',
-  styles: ``
+  styles: ``,
 })
 export class TextAreaInputComponent {
-
   message = '';
   messageTwo = '';
 }

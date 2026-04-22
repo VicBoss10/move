@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-two-column-image-grid',
   imports: [],
   templateUrl: './two-column-image-grid.component.html',
-  styles: ``
+  styles: ``,
 })
-export class TwoColumnImageGridComponent {
-
-}
+export class TwoColumnImageGridComponent {}

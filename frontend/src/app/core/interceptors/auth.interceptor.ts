@@ -12,30 +12,30 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   return from(auth.getToken()).pipe(
-    switchMap(token => {
-      const authReq = token
-        ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-        : req;
+    switchMap((token) => {
+      const authReq = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
       return next(authReq).pipe(
         catchError((error: HttpErrorResponse) => {
           // On 401, attempt a single token refresh and retry the original request once
           if (error.status === 401 && token) {
             return auth.refreshAccessToken().pipe(
-              switchMap(newToken => {
+              switchMap((newToken) => {
                 if (newToken) {
-                  const retryReq = req.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } });
+                  const retryReq = req.clone({
+                    setHeaders: { Authorization: `Bearer ${newToken}` },
+                  });
                   return next(retryReq);
                 }
                 // Refresh token expired or invalid — force logout
                 auth.logout();
                 return throwError(() => error);
-              })
+              }),
             );
           }
           return throwError(() => error);
-        })
+        }),
       );
-    })
+    }),
   );
 };

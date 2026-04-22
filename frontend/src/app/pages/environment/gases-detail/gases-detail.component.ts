@@ -8,7 +8,7 @@ import { GasesStatsTableComponent } from '../../../shared/components/environment
  * Componente de página que muestra el detalle de Gases.
  * Organiza la visualización comparativa de gases múltiples (CO, NO₂, NH₃, C₆H₆)
  * con indicadores, gráfico y estadísticas.
- * 
+ *
  * @selector app-gases-detail
  * @standalone true
  * @imports CommonModule, GasesComparisonChartComponent, MultiGasIndicatorsComponent, GasesStatsTableComponent
@@ -17,7 +17,12 @@ import { GasesStatsTableComponent } from '../../../shared/components/environment
 @Component({
   selector: 'app-gases-detail',
   standalone: true,
-  imports: [CommonModule, GasesComparisonChartComponent, MultiGasIndicatorsComponent, GasesStatsTableComponent],
+  imports: [
+    CommonModule,
+    GasesComparisonChartComponent,
+    MultiGasIndicatorsComponent,
+    GasesStatsTableComponent,
+  ],
   templateUrl: './gases-detail.component.html',
 })
 export class GasesDetailComponent {}

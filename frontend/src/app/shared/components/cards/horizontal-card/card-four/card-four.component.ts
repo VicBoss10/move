@@ -5,14 +5,8 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-card-four',
-  imports: [
-    CardTitleComponent,
-    CardDescriptionComponent,
-    RouterModule,
-  ],
+  imports: [CardTitleComponent, CardDescriptionComponent, RouterModule],
   templateUrl: './card-four.component.html',
-  styles: ``
+  styles: ``,
 })
-export class CardFourComponent {
-
-}
+export class CardFourComponent {}

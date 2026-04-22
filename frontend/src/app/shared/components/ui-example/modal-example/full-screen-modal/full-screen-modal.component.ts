@@ -6,17 +6,11 @@ import { ButtonComponent } from '../../../ui/button/button.component';
 
 @Component({
   selector: 'app-full-screen-modal',
-  imports: [
-    CommonModule,
-    ModalComponent,
-    ComponentCardComponent,
-    ButtonComponent
-  ],
+  imports: [CommonModule, ModalComponent, ComponentCardComponent, ButtonComponent],
   templateUrl: './full-screen-modal.component.html',
-  styles: ``
+  styles: ``,
 })
 export class FullScreenModalComponent {
-
   isOpen = false;
 
   openModal() {

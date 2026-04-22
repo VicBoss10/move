@@ -13,36 +13,24 @@
   <!-- Grid de Estadísticas Generales -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <!-- Total de Detecciones -->
-    <div
-      class="rounded-lg border-l-4 border-brand-500 bg-white p-4 dark:bg-gray-800"
-    >
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-        TOTAL DETECCIONES
-      </p>
+    <div class="rounded-lg border-l-4 border-brand-500 bg-white p-4 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">TOTAL DETECCIONES</p>
       <p class="mt-2 text-2xl font-bold text-brand-600 dark:text-brand-400">
         {{ overallStats.totalDetections | number }}
       </p>
     </div>
 
     <!-- Detecciones de Vehículos -->
-    <div
-      class="rounded-lg border-l-4 border-warning-500 bg-white p-4 dark:bg-gray-800"
-    >
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-        VEHÍCULOS DETECTADOS
-      </p>
+    <div class="rounded-lg border-l-4 border-warning-500 bg-white p-4 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">VEHÍCULOS DETECTADOS</p>
       <p class="mt-2 text-2xl font-bold text-warning-600 dark:text-warning-400">
         {{ overallStats.totalVehicleDetections | number }}
       </p>
     </div>
 
     <!-- Detecciones de Sensores -->
-    <div
-      class="rounded-lg border-l-4 border-green-500 bg-white p-4 dark:bg-gray-800"
-    >
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-        SENSORES DETECTADOS
-      </p>
+    <div class="rounded-lg border-l-4 border-green-500 bg-white p-4 dark:bg-gray-800">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">SENSORES DETECTADOS</p>
       <p class="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
         {{ overallStats.totalSensorDetections | number }}
       </p>
@@ -51,14 +39,10 @@
 
   <!-- Tabla de Historial de Detecciones -->
   <div class="space-y-4">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-      Detecciones por Ubicación
-    </h2>
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Detecciones por Ubicación</h2>
 
     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-      <table
-        class="w-full text-sm text-gray-700 dark:text-gray-300"
-      >
+      <table class="w-full text-sm text-gray-700 dark:text-gray-300">
         <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-900">
           <tr>
             <th class="px-6 py-3 text-left font-semibold">Ubicación</th>
@@ -104,9 +88,7 @@
       *ngIf="detectionHistory.length === 0 && !isLoading"
       class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800"
     >
-      <p class="text-gray-600 dark:text-gray-400">
-        No hay detecciones registradas
-      </p>
+      <p class="text-gray-600 dark:text-gray-400">No hay detecciones registradas</p>
     </div>
   </div>
 </div>

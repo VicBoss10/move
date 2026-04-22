@@ -6,15 +6,8 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-card-one',
-  imports: [
-    CardComponent,
-    CardTitleComponent,
-    CardDescriptionComponent,
-    RouterModule,
-  ],
+  imports: [CardComponent, CardTitleComponent, CardDescriptionComponent, RouterModule],
   templateUrl: './card-one.component.html',
-  styles: ``
+  styles: ``,
 })
-export class CardOneComponent {
-
-}
+export class CardOneComponent {}

@@ -86,7 +86,7 @@ export class TemperatureStatsTableComponent {
         console.error('Error cargando estadísticas de temperatura:', error);
         return of(this.defaultStats);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-sixteen-isto-nine',
   imports: [],
   templateUrl: './sixteen-isto-nine.component.html',
-  styles: ``
+  styles: ``,
 })
-export class SixteenIstoNineComponent {
-
-}
+export class SixteenIstoNineComponent {}

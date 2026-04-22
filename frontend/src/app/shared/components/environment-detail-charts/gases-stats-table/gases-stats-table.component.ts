@@ -121,7 +121,7 @@ export class GasesStatsTableComponent {
         console.error('Error cargando estadísticas de gases:', error);
         return of(this.defaultStats);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

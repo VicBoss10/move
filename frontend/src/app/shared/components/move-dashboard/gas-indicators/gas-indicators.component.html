@@ -1,9 +1,9 @@
-<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
+<div
+  class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6"
+>
   <!-- Header -->
   <div class="mb-6">
-    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-      Indicadores de Gases
-    </h3>
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Indicadores de Gases</h3>
     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
       Niveles actuales de contaminantes atmosféricos
     </p>
@@ -25,7 +25,7 @@
                 stroke-width="8"
                 class="text-gray-200 dark:text-gray-700"
               />
-              
+
               <!-- Progress arc (colored) -->
               <path
                 [attr.d]="getArcPath(getGaugeAngle(getPercentage(gas)), 45)"
@@ -35,15 +35,33 @@
                 [style.color]="gas.color"
                 stroke-linecap="round"
               />
-              
+
               <!-- Center circle -->
-              <circle cx="50" cy="50" r="28" fill="currentColor" class="text-white dark:text-gray-800" />
-              
+              <circle
+                cx="50"
+                cy="50"
+                r="28"
+                fill="currentColor"
+                class="text-white dark:text-gray-800"
+              />
+
               <!-- Value text -->
-              <text x="50" y="48" text-anchor="middle" class="text-sm font-bold text-gray-900 dark:text-white" fill="currentColor">
+              <text
+                x="50"
+                y="48"
+                text-anchor="middle"
+                class="text-sm font-bold text-gray-900 dark:text-white"
+                fill="currentColor"
+              >
                 {{ gas.value | number: '1.0-1' }}
               </text>
-              <text x="50" y="58" text-anchor="middle" class="text-xs text-gray-500 dark:text-gray-400" fill="currentColor">
+              <text
+                x="50"
+                y="58"
+                text-anchor="middle"
+                class="text-xs text-gray-500 dark:text-gray-400"
+                fill="currentColor"
+              >
                 {{ gas.unit }}
               </text>
             </svg>
@@ -52,7 +70,14 @@
           <!-- Label and Status -->
           <div class="mt-3 text-center w-full">
             <h4 class="font-semibold text-gray-800 dark:text-white text-sm">{{ gas.label }}</h4>
-            <span [class]="'inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ' + gas.statusBgClass + ' ' + gas.statusTextClass">
+            <span
+              [class]="
+                'inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ' +
+                gas.statusBgClass +
+                ' ' +
+                gas.statusTextClass
+              "
+            >
               {{ gas.statusLabel }}
             </span>
           </div>
@@ -63,7 +88,9 @@
       <div class="py-8 flex items-center justify-center">
         <div class="text-center">
           <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
-          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Verifica tu conexión con el servidor</p>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
+            Verifica tu conexión con el servidor
+          </p>
         </div>
       </div>
     </ng-template>
@@ -74,7 +101,12 @@
     <p class="text-xs text-gray-500 dark:text-gray-400">
       <ng-container *ngIf="statusLegend$ | async as legend">
         <ng-container *ngFor="let item of legend; let first = first">
-          <span class="inline-block w-3 h-3 rounded-full mr-2" [class.ml-3]="!first" [style.background-color]="item.color"></span>{{ item.label }}
+          <span
+            class="inline-block w-3 h-3 rounded-full mr-2"
+            [class.ml-3]="!first"
+            [style.background-color]="item.color"
+          ></span
+          >{{ item.label }}
         </ng-container>
       </ng-container>
     </p>

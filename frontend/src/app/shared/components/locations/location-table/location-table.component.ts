@@ -1,4 +1,11 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Location } from '../../../../core/models/location.model';
@@ -6,7 +13,10 @@ import { LocationService } from '../../../../core/services/location.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ModalComponent } from '../../ui/modal/modal.component';
-import { LocationMapPickerComponent, MapCoordinates } from '../location-map-picker/location-map-picker.component';
+import {
+  LocationMapPickerComponent,
+  MapCoordinates,
+} from '../location-map-picker/location-map-picker.component';
 
 /**
  * LocationTableComponent
@@ -33,7 +43,7 @@ import { LocationMapPickerComponent, MapCoordinates } from '../location-map-pick
 @Component({
   selector: 'app-location-table',
   standalone: true,
-  imports:  [CommonModule, ReactiveFormsModule, ModalComponent, LocationMapPickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, ModalComponent, LocationMapPickerComponent],
   templateUrl: './location-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -58,7 +68,7 @@ export class LocationTableComponent {
     private locationService: LocationService,
     private deviceService: DeviceService,
     private toastService: ToastService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {
     this.editForm = this.fb.group({
       description: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
@@ -149,13 +159,19 @@ export class LocationTableComponent {
       next: () => {
         this.deleteSaving = false;
         this.closeDelete();
-        this.toastService.success(`Ubicación "${target.description ?? '#' + target.id}" eliminada`, 'Éxito');
+        this.toastService.success(
+          `Ubicación "${target.description ?? '#' + target.id}" eliminada`,
+          'Éxito',
+        );
         this.locationChanged.emit();
         this.cdr.markForCheck();
       },
       error: () => {
         this.deleteSaving = false;
-        this.toastService.error('No se pudo eliminar. Puede tener dispositivos asignados.', 'Error');
+        this.toastService.error(
+          'No se pudo eliminar. Puede tener dispositivos asignados.',
+          'Error',
+        );
         this.cdr.markForCheck();
       },
     });

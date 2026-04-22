@@ -4,14 +4,11 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-user-info-card',
-  imports: [
-    CommonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './user-info-card.component.html',
-  styles: ``
+  styles: ``,
 })
 export class UserInfoCardComponent implements OnInit {
-
   constructor(private auth: AuthService) {}
 
   user: any = {

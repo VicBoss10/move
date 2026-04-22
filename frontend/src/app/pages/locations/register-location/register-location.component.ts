@@ -17,4 +17,3 @@ import { RegisterLocationViewComponent } from '../../../shared/components/locati
   templateUrl: './register-location.component.html',
 })
 export class RegisterLocationComponent {}
-

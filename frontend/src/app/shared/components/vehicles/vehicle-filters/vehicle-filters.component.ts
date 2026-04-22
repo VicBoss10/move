@@ -66,8 +66,6 @@ export class VehicleFiltersComponent {
     { value: 'TRUCK', label: 'Camión' },
   ];
 
-
-
   /**
    * Filtros actuales
    */
@@ -93,7 +91,7 @@ export class VehicleFiltersComponent {
         console.error('Error loading devices:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
     // Derivar lista de ubicaciones únicas por location.id
     this.locations$ = this.devices$.pipe(
@@ -108,7 +106,7 @@ export class VehicleFiltersComponent {
         }
         return Array.from(map.values());
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

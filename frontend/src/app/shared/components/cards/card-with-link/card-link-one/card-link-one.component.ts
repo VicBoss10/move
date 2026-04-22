@@ -5,14 +5,8 @@ import { CardDescriptionComponent } from '../../../ui/card/card-description.comp
 
 @Component({
   selector: 'app-card-link-one',
-  imports: [
-    RouterModule,
-    CardTitleComponent,
-    CardDescriptionComponent,
-  ],
+  imports: [RouterModule, CardTitleComponent, CardDescriptionComponent],
   templateUrl: './card-link-one.component.html',
-  styles: ``
+  styles: ``,
 })
-export class CardLinkOneComponent {
-
-}
+export class CardLinkOneComponent {}

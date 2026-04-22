@@ -5,14 +5,8 @@ import { PageBreadcrumbComponent } from '../../../shared/components/common/page-
 
 @Component({
   selector: 'app-avatar-element',
-  imports: [
-    AvatarComponent,
-    ComponentCardComponent,
-    PageBreadcrumbComponent
-  ],
+  imports: [AvatarComponent, ComponentCardComponent, PageBreadcrumbComponent],
   templateUrl: './avatar-element.component.html',
-  styles: ``
+  styles: ``,
 })
-export class AvatarElementComponent {
-
-}
+export class AvatarElementComponent {}

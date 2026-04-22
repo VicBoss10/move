@@ -1,7 +1,16 @@
 import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, Chart as ChartJS, BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend } from 'chart.js';
+import {
+  ChartConfiguration,
+  Chart as ChartJS,
+  BarController,
+  BarElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 import { VehicleDetected } from '../../../../core/models/vehicle.model';
 import { Observable, of } from 'rxjs';
@@ -154,14 +163,14 @@ export class VehicleActivityComponent {
   private initializeVehicleData(): void {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    
+
     this.vehicleData$ = this.vehicleService.getAll().pipe(
       map((vehicles: VehicleDetected[]) => {
         if (!vehicles || vehicles.length === 0) {
           return [];
         }
         // Filtrar solo vehículos de hoy
-        return vehicles.filter(v => {
+        return vehicles.filter((v) => {
           const vDate = new Date(v.timestamp);
           return vDate >= todayStart && vDate <= now;
         });
@@ -170,7 +179,7 @@ export class VehicleActivityComponent {
         console.error('Error cargando datos de vehículos:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -200,20 +209,14 @@ export class VehicleActivityComponent {
                 '#ef4444', // Rojo para Camiones
                 '#8b5cf6', // Púrpura para Bicicletas
               ],
-              borderColor: [
-                '#1e40af',
-                '#059669',
-                '#ea580c',
-                '#dc2626',
-                '#6d28d9',
-              ],
+              borderColor: ['#1e40af', '#059669', '#ea580c', '#dc2626', '#6d28d9'],
               borderWidth: 1,
               borderRadius: 4,
             },
           ],
         };
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -229,7 +232,7 @@ export class VehicleActivityComponent {
         }
         return this.calculateVehicleCounts(vehicles);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

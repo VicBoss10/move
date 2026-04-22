@@ -5,14 +5,8 @@ import { CardDescriptionComponent } from '../../../ui/card/card-description.comp
 
 @Component({
   selector: 'app-card-five',
-  imports: [
-    RouterModule,
-    CardTitleComponent,
-    CardDescriptionComponent,
-  ],
+  imports: [RouterModule, CardTitleComponent, CardDescriptionComponent],
   templateUrl: './card-five.component.html',
-  styles: ``
+  styles: ``,
 })
-export class CardFiveComponent {
-
-}
+export class CardFiveComponent {}

@@ -4,7 +4,10 @@ import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { ThresholdsService } from '../../../../core/services/thresholds.service';
-import { getEnvironmentStatusFromConfig, getMetricGaugePercentageFromConfig } from '../../../../core/config/environment-thresholds.config';
+import {
+  getEnvironmentStatusFromConfig,
+  getMetricGaugePercentageFromConfig,
+} from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Interface para indicador de partículas
@@ -48,7 +51,10 @@ export class PmIndicatorsComponent {
    */
   pmIndicators$!: Observable<PMIndicator[]>;
 
-  constructor(private sensorDataService: SensorDataService, private thresholds: ThresholdsService) {
+  constructor(
+    private sensorDataService: SensorDataService,
+    private thresholds: ThresholdsService,
+  ) {
     this.initializePMIndicators();
   }
 
@@ -95,7 +101,7 @@ export class PmIndicatorsComponent {
         console.error('Error cargando indicadores de partículas:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

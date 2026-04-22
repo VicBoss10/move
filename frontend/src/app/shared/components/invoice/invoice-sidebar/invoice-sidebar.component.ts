@@ -3,14 +3,11 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-invoice-sidebar',
-  imports: [
-    CommonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './invoice-sidebar.component.html',
-  styles: ``
+  styles: ``,
 })
 export class InvoiceSidebarComponent {
-
   users = [
     {
       name: 'Zain Geidt',
@@ -34,5 +31,4 @@ export class InvoiceSidebarComponent {
       image: './images/user/user-34.jpg',
     },
   ];
-
 }

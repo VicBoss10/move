@@ -5,7 +5,9 @@ import { Component, Input } from '@angular/core';
   selector: 'app-table-row',
   imports: [CommonModule],
   template: `
-   <tr [ngClass]="className"><ng-content></ng-content></tr>
+    <tr [ngClass]="className">
+      <ng-content></ng-content>
+    </tr>
   `,
 })
 export class TableRowComponent {

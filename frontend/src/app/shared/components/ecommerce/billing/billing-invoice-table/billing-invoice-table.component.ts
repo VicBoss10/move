@@ -13,13 +13,10 @@ interface Invoice {
 
 @Component({
   selector: 'app-billing-invoice-table',
-  imports: [
-    CommonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './billing-invoice-table.component.html',
 })
 export class BillingInvoiceTableComponent {
-
   invoices: Invoice[] = [
     {
       id: 1,
@@ -27,7 +24,7 @@ export class BillingInvoiceTableComponent {
       date: 'May 01, 2024',
       price: '$120.00',
       plan: 'Starter Plan',
-      status: 'Paid'
+      status: 'Paid',
     },
     {
       id: 2,
@@ -35,7 +32,7 @@ export class BillingInvoiceTableComponent {
       date: 'June 01, 2024',
       price: '$120.00',
       plan: 'Starter Plan',
-      status: 'Paid'
+      status: 'Paid',
     },
     {
       id: 3,
@@ -43,7 +40,7 @@ export class BillingInvoiceTableComponent {
       date: 'July 01, 2024',
       price: '$120.00',
       plan: 'Starter Plan',
-      status: 'Unpaid'
+      status: 'Unpaid',
     },
     {
       id: 4,
@@ -51,7 +48,7 @@ export class BillingInvoiceTableComponent {
       date: 'August 01, 2024',
       price: '$250.00',
       plan: 'Pro Plan',
-      status: 'Paid'
+      status: 'Paid',
     },
     {
       id: 5,
@@ -59,7 +56,7 @@ export class BillingInvoiceTableComponent {
       date: 'September 01, 2024',
       price: '$250.00',
       plan: 'Pro Plan',
-      status: 'Paid'
+      status: 'Paid',
     },
     {
       id: 6,
@@ -67,7 +64,7 @@ export class BillingInvoiceTableComponent {
       date: 'October 01, 2024',
       price: '$250.00',
       plan: 'Pro Plan',
-      status: 'Unpaid'
+      status: 'Unpaid',
     },
     {
       id: 7,
@@ -75,7 +72,7 @@ export class BillingInvoiceTableComponent {
       date: 'November 01, 2024',
       price: '$500.00',
       plan: 'Enterprise Plan',
-      status: 'Paid'
+      status: 'Paid',
     },
     {
       id: 8,
@@ -83,7 +80,7 @@ export class BillingInvoiceTableComponent {
       date: 'December 01, 2024',
       price: '$500.00',
       plan: 'Enterprise Plan',
-      status: 'Paid'
+      status: 'Paid',
     },
     {
       id: 9,
@@ -91,7 +88,7 @@ export class BillingInvoiceTableComponent {
       date: 'January 01, 2025',
       price: '$500.00',
       plan: 'Enterprise Plan',
-      status: 'Unpaid'
+      status: 'Unpaid',
     },
     {
       id: 10,
@@ -99,7 +96,7 @@ export class BillingInvoiceTableComponent {
       date: 'February 01, 2025',
       price: '$500.00',
       plan: 'Enterprise Plan',
-      status: 'Paid'
+      status: 'Paid',
     },
     {
       id: 11,
@@ -107,7 +104,7 @@ export class BillingInvoiceTableComponent {
       date: 'March 01, 2025',
       price: '$120.00',
       plan: 'Starter Plan',
-      status: 'Paid'
+      status: 'Paid',
     },
     {
       id: 12,
@@ -115,8 +112,8 @@ export class BillingInvoiceTableComponent {
       date: 'April 01, 2025',
       price: '$120.00',
       plan: 'Starter Plan',
-      status: 'Unpaid'
-    }
+      status: 'Unpaid',
+    },
   ];
 
   currentPage: number = 1;
@@ -141,14 +138,14 @@ export class BillingInvoiceTableComponent {
   get paginatedInvoices(): Invoice[] {
     return this.invoices.slice(
       (this.currentPage - 1) * this.itemsPerPage,
-      this.currentPage * this.itemsPerPage
+      this.currentPage * this.itemsPerPage,
     );
   }
 
   visiblePages(): number[] {
     const maxVisible: number = 5;
     let start: number = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
-    let end: number = Math.min(this.totalPages, start + maxVisible - 1);
+    const end: number = Math.min(this.totalPages, start + maxVisible - 1);
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
     }

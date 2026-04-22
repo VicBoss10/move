@@ -3,14 +3,11 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-basic-table-five',
-  imports: [
-    CommonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './basic-table-five.component.html',
-  styles: ``
+  styles: ``,
 })
 export class BasicTableFiveComponent {
-
   tableData = [
     {
       id: 1,

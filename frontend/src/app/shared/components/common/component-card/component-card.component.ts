@@ -5,10 +5,9 @@ import { Component, Input } from '@angular/core';
   selector: 'app-component-card',
   imports: [CommonModule],
   templateUrl: './component-card.component.html',
-  styles: ``
+  styles: ``,
 })
 export class ComponentCardComponent {
-
   @Input() title!: string;
   @Input() desc: string = '';
   @Input() className: string = '';

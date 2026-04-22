@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-faqs-three',
   imports: [],
   templateUrl: './faqs-three.component.html',
-  styles: ``
+  styles: ``,
 })
-export class FaqsThreeComponent {
-
-}
+export class FaqsThreeComponent {}

@@ -1,4 +1,3 @@
-
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 
@@ -7,7 +6,7 @@ type TabOption = 'optionOne' | 'optionTwo' | 'optionThree';
 @Component({
   selector: 'app-chart-tab',
   imports: [CommonModule],
-  templateUrl: './chart-tab.component.html'
+  templateUrl: './chart-tab.component.html',
 })
 export class ChartTabComponent {
   selected: TabOption = 'optionOne';

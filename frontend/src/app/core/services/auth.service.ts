@@ -12,12 +12,12 @@ interface TokenResponse {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
-
   // Prefer runtime-injected value from /assets/config.json (set by main.ts before bootstrap)
-  private readonly keycloakUrl: string = (window as any).__AUTH_BASE_URL__ || 'http://localhost:8081';
+  private readonly keycloakUrl: string =
+    (window as any).__AUTH_BASE_URL__ || 'http://localhost:8081';
   private readonly realm = 'move';
   private readonly clientId = 'move-frontend';
   // If your Keycloak client is confidential, set the secret here or
@@ -40,7 +40,10 @@ export class AuthService {
   private readonly _isLoggedIn$ = new BehaviorSubject<boolean>(false);
   readonly isLoggedIn$: Observable<boolean> = this._isLoggedIn$.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+  ) {
     this.loadFromSession();
   }
 
@@ -103,9 +106,8 @@ export class AuthService {
       clearTimeout(this.refreshTimerId);
       this.refreshTimerId = null;
     }
-    const msUntilExpiry = expiresIn !== undefined
-      ? expiresIn * 1000
-      : this.tokenExpiry - Date.now();
+    const msUntilExpiry =
+      expiresIn !== undefined ? expiresIn * 1000 : this.tokenExpiry - Date.now();
     // Refresh REFRESH_THRESHOLD_SECONDS before expiry; minimum 1 s to avoid re-entrant calls
     const delay = Math.max(msUntilExpiry - this.REFRESH_THRESHOLD_SECONDS * 1000, 1000);
     this.refreshTimerId = setTimeout(() => {
@@ -125,8 +127,8 @@ export class AuthService {
     const finalBody = this.clientSecret ? body.set('client_secret', this.clientSecret) : body;
 
     return this.http.post<TokenResponse>(this.tokenUrl, finalBody.toString(), { headers }).pipe(
-      tap(response => this.storeTokens(response)),
-      map(() => undefined)
+      tap((response) => this.storeTokens(response)),
+      map(() => undefined),
     );
   }
 
@@ -134,10 +136,11 @@ export class AuthService {
     const token = this.refreshToken;
     this.clearTokens();
     if (token) {
-      const body = new HttpParams()
-        .set('client_id', this.clientId)
-        .set('refresh_token', token);
-      this.http.post(this.logoutUrl, body).pipe(catchError(() => of(null))).subscribe();
+      const body = new HttpParams().set('client_id', this.clientId).set('refresh_token', token);
+      this.http
+        .post(this.logoutUrl, body)
+        .pipe(catchError(() => of(null)))
+        .subscribe();
     }
     this.router.navigate(['/signin']);
   }
@@ -183,31 +186,41 @@ export class AuthService {
     const finalBody = this.clientSecret ? body.set('client_secret', this.clientSecret) : body;
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
 
-    this.refresh$ = this.http.post<TokenResponse>(this.tokenUrl, finalBody.toString(), { headers }).pipe(
-      tap(response => this.storeTokens(response)),
-      map(response => response.access_token),
-      catchError(() => {
-        this.clearTokens();
-        return of(null);
-      }),
-      // Clear the shared observable once the source completes so future calls create a fresh request
-      finalize(() => { this.refresh$ = null; }),
-      // Replay the result to any callers that subscribe after the HTTP response arrives
-      shareReplay(1)
-    );
+    this.refresh$ = this.http
+      .post<TokenResponse>(this.tokenUrl, finalBody.toString(), { headers })
+      .pipe(
+        tap((response) => this.storeTokens(response)),
+        map((response) => response.access_token),
+        catchError(() => {
+          this.clearTokens();
+          return of(null);
+        }),
+        // Clear the shared observable once the source completes so future calls create a fresh request
+        finalize(() => {
+          this.refresh$ = null;
+        }),
+        // Replay the result to any callers that subscribe after the HTTP response arrives
+        shareReplay(1),
+      );
 
     return this.refresh$;
   }
 
-  getUserInfo(): { username?: string; email?: string; firstName?: string; lastName?: string; roles: string[] } {
+  getUserInfo(): {
+    username?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    roles: string[];
+  } {
     if (!this.accessToken) return { roles: [] };
     try {
       // Properly decode base64url JWT payload and interpret as UTF-8
       const base64Url = this.accessToken.split('.')[1] || '';
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
       const raw = atob(padded);
-      const bytes = Uint8Array.from(raw.split('').map(c => c.charCodeAt(0)));
+      const bytes = Uint8Array.from(raw.split('').map((c) => c.charCodeAt(0)));
       let payload: any;
       try {
         // Use TextDecoder when available to correctly decode UTF-8
@@ -215,7 +228,10 @@ export class AuthService {
         payload = JSON.parse(decoder.decode(bytes));
       } catch {
         // Fallback: percent-encoding trick
-        const escaped = raw.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+        const escaped = raw
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('');
         payload = JSON.parse(decodeURIComponent(escaped));
       }
       return {

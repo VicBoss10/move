@@ -6,15 +6,8 @@ import { ComponentCardComponent } from '../../../shared/components/common/compon
 
 @Component({
   selector: 'app-bar-chart',
-  imports: [
-    CommonModule,
-    ComponentCardComponent,
-    PageBreadcrumbComponent,
-    BarChartOneComponent,
-  ],
+  imports: [CommonModule, ComponentCardComponent, PageBreadcrumbComponent, BarChartOneComponent],
   templateUrl: './bar-chart.component.html',
-  styles: ``
+  styles: ``,
 })
-export class BarChartComponent {
-
-}
+export class BarChartComponent {}

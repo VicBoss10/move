@@ -1,4 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VehicleTableComponent } from '../../../shared/components/vehicles/vehicle-table/vehicle-table.component';
 import { VehicleFiltersComponent } from '../../../shared/components/vehicles/vehicle-filters/vehicle-filters.component';
@@ -30,7 +36,9 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
    */
   vehicles$!: Observable<VehicleDetected[]>;
   /** Estadísticas por tipo derivadas de `vehicles$` */
-  stats$!: Observable<Array<{ type: string; count: number; percent: number; trend?: number[]; trendMax?: number }>>;
+  stats$!: Observable<
+    Array<{ type: string; count: number; percent: number; trend?: number[]; trendMax?: number }>
+  >;
 
   /**
    * Flag de carga
@@ -44,7 +52,7 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
 
   constructor(
     private vehicleDetectedService: VehicleDetectedService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -65,7 +73,7 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
       switchMap((criteria) =>
         criteria
           ? this.vehicleDetectedService.search(criteria)
-          : this.vehicleDetectedService.getAll()
+          : this.vehicleDetectedService.getAll(),
       ),
       map((data) => {
         if (!Array.isArray(data)) {
@@ -73,8 +81,8 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
           return [];
         }
         // Ordenar por fecha (más recientes primero)
-        return data.sort((a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        return data.sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         );
       }),
       tap(() => {
@@ -88,7 +96,7 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
 
     // Derivar estadísticas por tipo
@@ -105,16 +113,26 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
           slots.push({ start, end });
         }
 
-        return types.map((t) => {
-          const count = vehicles.filter(v => v.vehicleType === t).length;
-          // trend: counts per slot
-          const trend = slots.map(s => vehicles.filter(v => v.vehicleType === t && new Date(v.timestamp) >= s.start && new Date(v.timestamp) < s.end).length);
-          const trendMax = Math.max(...trend, 1);
-          const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-          return { type: t, count, percent, trend, trendMax };
-        }).filter(s => s.count > 0);
+        return types
+          .map((t) => {
+            const count = vehicles.filter((v) => v.vehicleType === t).length;
+            // trend: counts per slot
+            const trend = slots.map(
+              (s) =>
+                vehicles.filter(
+                  (v) =>
+                    v.vehicleType === t &&
+                    new Date(v.timestamp) >= s.start &&
+                    new Date(v.timestamp) < s.end,
+                ).length,
+            );
+            const trendMax = Math.max(...trend, 1);
+            const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+            return { type: t, count, percent, trend, trendMax };
+          })
+          .filter((s) => s.count > 0);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

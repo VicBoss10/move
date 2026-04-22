@@ -4,15 +4,11 @@ import { FaqItemOneComponent } from '../../../faqs/faq-item-one/faq-item-one.com
 
 @Component({
   selector: 'app-faqs-one',
-  imports: [
-    CommonModule,
-    FaqItemOneComponent,
-  ],
+  imports: [CommonModule, FaqItemOneComponent],
   templateUrl: './faqs-one.component.html',
-  styles: ``
+  styles: ``,
 })
 export class FaqsOneComponent {
-
   faqs = [
     {
       title: 'Do I get free updates?',

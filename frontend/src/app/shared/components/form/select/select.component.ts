@@ -8,7 +8,7 @@ export interface Option {
 
 @Component({
   selector: 'app-select',
-  imports:[CommonModule],
+  imports: [CommonModule],
   templateUrl: './select.component.html',
 })
 export class SelectComponent implements OnInit {

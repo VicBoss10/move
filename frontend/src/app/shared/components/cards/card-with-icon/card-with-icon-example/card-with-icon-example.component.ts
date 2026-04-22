@@ -5,14 +5,8 @@ import { CardIconTwoComponent } from '../card-icon-two/card-icon-two.component';
 
 @Component({
   selector: 'app-card-with-icon-example',
-  imports: [
-    ComponentCardComponent,
-    CardIconOneComponent,
-    CardIconTwoComponent,
-],
+  imports: [ComponentCardComponent, CardIconOneComponent, CardIconTwoComponent],
   templateUrl: './card-with-icon-example.component.html',
-  styles: ``
+  styles: ``,
 })
-export class CardWithIconExampleComponent {
-
-}
+export class CardWithIconExampleComponent {}

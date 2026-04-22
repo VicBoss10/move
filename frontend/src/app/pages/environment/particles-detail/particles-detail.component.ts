@@ -8,7 +8,7 @@ import { PmStatsTableComponent } from '../../../shared/components/environment-de
  * Componente de página que muestra el detalle de Partículas.
  * Organiza la visualización comparativa de partículas suspendidas (PM2.5 y PM10)
  * con indicadores, gráfico y estadísticas.
- * 
+ *
  * @selector app-particles-detail
  * @standalone true
  * @imports CommonModule, ParticlesChartComponent, PmIndicatorsComponent, PmStatsTableComponent

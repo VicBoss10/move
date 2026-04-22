@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-one-isto-one',
   imports: [],
   templateUrl: './one-isto-one.component.html',
-  styles: ``
+  styles: ``,
 })
-export class OneIstoOneComponent {
-
-}
+export class OneIstoOneComponent {}

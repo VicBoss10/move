@@ -2,7 +2,11 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { ThresholdsService } from '../../../../core/services/thresholds.service';
-import { getEnvironmentStatusFromConfig, getMetricGaugePercentageFromConfig, EnvironmentMetricKey } from '../../../../core/config/environment-thresholds.config';
+import {
+  getEnvironmentStatusFromConfig,
+  getMetricGaugePercentageFromConfig,
+  EnvironmentMetricKey,
+} from '../../../../core/config/environment-thresholds.config';
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -79,10 +83,17 @@ export class GasIndicatorsComponent {
    */
   private readonly defaultIndicators: GasIndicator[] = [];
 
-  constructor(private sensorDataService: SensorDataService, private thresholds: ThresholdsService) {
-    this.statusLegend$ = this.thresholds.getAll().pipe(
-      map(all => all['co2'].levels.map(level => ({ color: level.color, label: level.label })))
-    );
+  constructor(
+    private sensorDataService: SensorDataService,
+    private thresholds: ThresholdsService,
+  ) {
+    this.statusLegend$ = this.thresholds
+      .getAll()
+      .pipe(
+        map((all) =>
+          all['co2'].levels.map((level) => ({ color: level.color, label: level.label })),
+        ),
+      );
     this.initializeGasIndicators();
   }
 
@@ -99,12 +110,12 @@ export class GasIndicatorsComponent {
       map(([latest, allThresholds]) => {
         const gasConfigs: { key: EnvironmentMetricKey; field: string; color: string }[] = [
           { key: 'co2', field: 'co2', color: '#10b981' },
-          { key: 'co',  field: 'co',  color: '#f59e0b' },
+          { key: 'co', field: 'co', color: '#f59e0b' },
           { key: 'no2', field: 'no2', color: '#ef4444' },
           { key: 'nh3', field: 'nh3', color: '#3b82f6' },
         ];
 
-        const indicators: GasIndicator[] = gasConfigs.map(cfg => {
+        const indicators: GasIndicator[] = gasConfigs.map((cfg) => {
           const config = allThresholds[cfg.key];
           const value = (latest as any)?.[cfg.field] || 0;
           const status = getEnvironmentStatusFromConfig(config, value);
@@ -135,7 +146,7 @@ export class GasIndicatorsComponent {
         console.error('Error cargando datos de gases:', error);
         return of(this.defaultIndicators);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -169,17 +180,17 @@ export class GasIndicatorsComponent {
   getArcPath(angle: number, radius: number = 45): string {
     const startAngle = -180;
     const endAngle = angle;
-    
+
     const startRad = (startAngle * Math.PI) / 180;
     const endRad = (endAngle * Math.PI) / 180;
-    
+
     const x1 = 50 + radius * Math.cos(startRad);
     const y1 = 50 + radius * Math.sin(startRad);
     const x2 = 50 + radius * Math.cos(endRad);
     const y2 = 50 + radius * Math.sin(endRad);
-    
+
     const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-    
+
     return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
   }
 
@@ -192,15 +203,15 @@ export class GasIndicatorsComponent {
   getBackgroundArcPath(radius: number = 45): string {
     const startAngle = -180;
     const endAngle = 180;
-    
+
     const startRad = (startAngle * Math.PI) / 180;
     const endRad = (endAngle * Math.PI) / 180;
-    
+
     const x1 = 50 + radius * Math.cos(startRad);
     const y1 = 50 + radius * Math.sin(startRad);
     const x2 = 50 + radius * Math.cos(endRad);
     const y2 = 50 + radius * Math.sin(endRad);
-    
+
     return `M ${x1} ${y1} A ${radius} ${radius} 0 1 1 ${x2} ${y2}`;
   }
 }

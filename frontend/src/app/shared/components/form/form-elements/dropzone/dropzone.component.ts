@@ -2,18 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, Output, EventEmitter, HostListener } from '@angular/core';
 import { ComponentCardComponent } from '../../../common/component-card/component-card.component';
 
-
 @Component({
   selector: 'app-dropzone',
-  imports: [
-    CommonModule,
-    ComponentCardComponent,
-  ],
+  imports: [CommonModule, ComponentCardComponent],
   templateUrl: './dropzone.component.html',
-  styles: ``
+  styles: ``,
 })
 export class DropzoneComponent {
-
   isDragActive = false;
 
   @Output() filesDropped = new EventEmitter<File[]>();
@@ -43,8 +38,8 @@ export class DropzoneComponent {
     event.preventDefault();
     this.isDragActive = false;
     if (event.dataTransfer && event.dataTransfer.files.length) {
-      const files = Array.from(event.dataTransfer.files).filter(file =>
-        ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(file.type)
+      const files = Array.from(event.dataTransfer.files).filter((file) =>
+        ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(file.type),
       );
       this.filesDropped.emit(files);
       console.log('Files dropped:', files);

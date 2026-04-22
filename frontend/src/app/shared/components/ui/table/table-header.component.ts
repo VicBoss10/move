@@ -5,9 +5,11 @@ import { Component, Input } from '@angular/core';
   selector: 'app-table-header',
   imports: [CommonModule],
   template: `
-    <thead [ngClass]="className"><ng-content></ng-content></thead>
+    <thead [ngClass]="className">
+      <ng-content></ng-content>
+    </thead>
   `,
-  styles: ``
+  styles: ``,
 })
 export class TableHeaderComponent {
   @Input() className = '';

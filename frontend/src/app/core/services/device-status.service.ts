@@ -27,21 +27,20 @@ export interface DeviceStatusInfo {
 
 /**
  * Servicio que proporciona información de estado de dispositivos
- * 
+ *
  * Responsabilidad: Mostrar información de estado general (conectividad, ubicación, actividad)
  * NO incluye: Datos específicos de sensores (temperatura, CO2, etc.) o estadísticas de cámaras
- * 
+ *
  * Los datos específicos de cada dispositivo se muestran en vistas dedicadas.
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DeviceStatusService {
-
   constructor(
     private deviceService: DeviceService,
     private sensorDataService: SensorDataService,
-    private vehicleDetectedService: VehicleDetectedService
+    private vehicleDetectedService: VehicleDetectedService,
   ) {}
 
   /**
@@ -52,16 +51,18 @@ export class DeviceStatusService {
     return combineLatest([
       this.deviceService.getAll(),
       this.sensorDataService.getAll(),
-      this.vehicleDetectedService.getAll()
+      this.vehicleDetectedService.getAll(),
     ]).pipe(
       map(([devices, sensorData, vehiclesDetected]) => {
-        return devices.map(device => this.enrichDeviceWithMetrics(device, sensorData, vehiclesDetected));
+        return devices.map((device) =>
+          this.enrichDeviceWithMetrics(device, sensorData, vehiclesDetected),
+        );
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('Error loading device statuses:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -71,9 +72,8 @@ export class DeviceStatusService {
   private enrichDeviceWithMetrics(
     device: Device,
     allSensorData: SensorData[],
-    allVehiclesDetected: VehicleDetected[]
+    allVehiclesDetected: VehicleDetected[],
   ): DeviceStatusInfo {
-
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
@@ -84,17 +84,23 @@ export class DeviceStatusService {
 
     if (device.type === DeviceType.SENSOR) {
       // Para sensores, obtener sus datos ambientales
-      deviceSensorData = allSensorData.filter(sd => sd.deviceId === device.id || sd.device?.id === device.id);
+      deviceSensorData = allSensorData.filter(
+        (sd) => sd.deviceId === device.id || sd.device?.id === device.id,
+      );
       if (deviceSensorData.length > 0) {
         // Usar la fecha más reciente de todos los datos disponibles
-        lastActivity = new Date(Math.max(...deviceSensorData.map(sd => new Date(sd.timestamp).getTime())));
+        lastActivity = new Date(
+          Math.max(...deviceSensorData.map((sd) => new Date(sd.timestamp).getTime())),
+        );
       }
     } else if (device.type === DeviceType.CAMERA) {
       // Para cámaras, obtener detecciones del dispositivo
-      deviceVehiclesDetected = allVehiclesDetected.filter(vd => vd.device?.id === device.id);
+      deviceVehiclesDetected = allVehiclesDetected.filter((vd) => vd.device?.id === device.id);
       if (deviceVehiclesDetected.length > 0) {
         // Usar la fecha más reciente de todos los datos disponibles
-        lastActivity = new Date(Math.max(...deviceVehiclesDetected.map(vd => new Date(vd.timestamp).getTime())));
+        lastActivity = new Date(
+          Math.max(...deviceVehiclesDetected.map((vd) => new Date(vd.timestamp).getTime())),
+        );
       }
     }
 
@@ -102,7 +108,12 @@ export class DeviceStatusService {
     const isOnline = device.state === 'ACTIVE';
 
     // Calcular métricas específicas por tipo
-    const metrics = this.calculateDeviceMetrics(device, deviceSensorData, deviceVehiclesDetected, last24Hours);
+    const metrics = this.calculateDeviceMetrics(
+      device,
+      deviceSensorData,
+      deviceVehiclesDetected,
+      last24Hours,
+    );
 
     return {
       id: device.id,
@@ -113,7 +124,7 @@ export class DeviceStatusService {
       lastActivity,
       isOnline,
       dataPoints: deviceSensorData.length + deviceVehiclesDetected.length,
-      ...metrics
+      ...metrics,
     };
   }
 
@@ -125,7 +136,7 @@ export class DeviceStatusService {
     device: Device,
     sensorData: SensorData[],
     vehiclesDetected: VehicleDetected[],
-    last24Hours: Date
+    last24Hours: Date,
   ): Partial<DeviceStatusInfo> {
     // Las tarjetas de estado muestran solo información de estado
     // Los datos de sensores/cámaras se mostrarán en vistas específicas

@@ -4,12 +4,9 @@ import { ModalComponent } from '../../../ui/modal/modal.component';
 
 @Component({
   selector: 'app-invoice-preview-modal',
-  imports: [
-    ButtonComponent,
-    ModalComponent,
-  ],
+  imports: [ButtonComponent, ModalComponent],
   templateUrl: './invoice-preview-modal.component.html',
-  styles: ``
+  styles: ``,
 })
 export class InvoicePreviewModalComponent {
   isOpen = false;

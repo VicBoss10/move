@@ -3,11 +3,7 @@
     <!-- Default TextArea -->
     <div>
       <app-label>Description</app-label>
-      <app-text-area
-        [value]="message"
-        (valueChange)="message = $event"
-        [rows]="6"
-      ></app-text-area>
+      <app-text-area [value]="message" (valueChange)="message = $event" [rows]="6"></app-text-area>
     </div>
 
     <!-- Disabled TextArea -->

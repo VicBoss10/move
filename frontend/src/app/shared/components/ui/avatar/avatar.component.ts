@@ -4,27 +4,25 @@ import { Component, Input } from '@angular/core';
 type AvatarSize = 'xsmall' | 'small' | 'medium' | 'large' | 'xlarge' | 'xxlarge';
 type AvatarStatus = 'online' | 'offline' | 'busy' | 'none';
 
-
 @Component({
   selector: 'app-avatar',
   imports: [CommonModule],
-  template:`
+  template: `
     <div class="relative rounded-full" [ngClass]="sizeClasses[size]">
-    <!-- Avatar Image -->
-    <img [src]="src" [alt]="alt" class="object-cover rounded-full" />
+      <!-- Avatar Image -->
+      <img [src]="src" [alt]="alt" class="object-cover rounded-full" />
 
-    <!-- Status Indicator -->
-    @if (status !== 'none') {
-    <span
-      class="absolute bottom-0 right-0 rounded-full border-[1.5px] border-white dark:border-gray-900"
-      [ngClass]="statusSizeClasses[size] + ' ' + (statusColorClasses[status] || '')"
-    ></span>
-    }
-  </div>
-  `
+      <!-- Status Indicator -->
+      @if (status !== 'none') {
+        <span
+          class="absolute bottom-0 right-0 rounded-full border-[1.5px] border-white dark:border-gray-900"
+          [ngClass]="statusSizeClasses[size] + ' ' + (statusColorClasses[status] || '')"
+        ></span>
+      }
+    </div>
+  `,
 })
 export class AvatarComponent {
-
   @Input() src!: string;
   @Input() alt: string = 'User Avatar';
   @Input() size: AvatarSize = 'medium';

@@ -5,14 +5,8 @@ import { CardFiveComponent } from '../card-five/card-five.component';
 
 @Component({
   selector: 'app-horizontal-card-with-image',
-  imports: [
-    ComponentCardComponent,
-    CardFourComponent,
-    CardFiveComponent,
-  ],
+  imports: [ComponentCardComponent, CardFourComponent, CardFiveComponent],
   templateUrl: './horizontal-card-with-image.component.html',
-  styles: ``
+  styles: ``,
 })
-export class HorizontalCardWithImageComponent {
-
-}
+export class HorizontalCardWithImageComponent {}

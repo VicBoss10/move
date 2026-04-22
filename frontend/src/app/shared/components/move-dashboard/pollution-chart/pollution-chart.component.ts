@@ -1,13 +1,33 @@
 import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import {
+  ChartConfiguration,
+  Chart as ChartJS,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 
 // Registrar los elementos de Chart.js
-ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
+ChartJS.register(
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+);
 
 /**
  * PollutionChartComponent
@@ -70,8 +90,6 @@ export class PollutionChartComponent {
     datasets: [],
   };
 
-
-
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
@@ -80,8 +98,8 @@ export class PollutionChartComponent {
         left: 20,
         right: 20,
         top: 0,
-        bottom: 0
-      }
+        bottom: 0,
+      },
     },
     plugins: {
       legend: {
@@ -203,7 +221,7 @@ export class PollutionChartComponent {
         console.error('Error cargando datos de partículas:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -221,8 +239,8 @@ export class PollutionChartComponent {
 
         // Parsear timestamps y ordenar cronológicamente
         const parsedData = data
-          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
-          .filter(d => !isNaN(d._time.getTime()))
+          .map((d) => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter((d) => !isNaN(d._time.getTime()))
           .sort((a, b) => a._time.getTime() - b._time.getTime());
 
         if (parsedData.length === 0) {
@@ -236,7 +254,9 @@ export class PollutionChartComponent {
           latestTime.getMonth(),
           latestTime.getDate(),
           latestTime.getHours(),
-          0, 0, 0
+          0,
+          0,
+          0,
         );
 
         // Crear 12 slots horarios hacia atrás desde la hora más reciente
@@ -248,16 +268,14 @@ export class PollutionChartComponent {
           slots.push({ start: slotStart, end: slotEnd, label });
         }
 
-        const labels = slots.map(s => s.label);
+        const labels = slots.map((s) => s.label);
 
         // Agrupar datos en cada slot horario y promediar
         const pm25Data: (number | null)[] = [];
         const pm10Data: (number | null)[] = [];
 
         for (const slot of slots) {
-          const slotData = parsedData.filter(
-            d => d._time >= slot.start && d._time < slot.end
-          );
+          const slotData = parsedData.filter((d) => d._time >= slot.start && d._time < slot.end);
 
           if (slotData.length > 0) {
             const avgPm25 = slotData.reduce((sum, d) => sum + (d.pm25 || 0), 0) / slotData.length;
@@ -306,7 +324,7 @@ export class PollutionChartComponent {
           ],
         };
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -318,21 +336,21 @@ export class PollutionChartComponent {
     this.avgPm25$ = this.sensorData$.pipe(
       map((data: any[]) => {
         if (!data || data.length === 0) return 0;
-        const values = data.filter(d => d.pm25 != null).map(d => d.pm25);
+        const values = data.filter((d) => d.pm25 != null).map((d) => d.pm25);
         if (values.length === 0) return 0;
         return values.reduce((a: number, b: number) => a + b, 0) / values.length;
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
 
     this.avgPm10$ = this.sensorData$.pipe(
       map((data: any[]) => {
         if (!data || data.length === 0) return 0;
-        const values = data.filter(d => d.pm10 != null).map(d => d.pm10);
+        const values = data.filter((d) => d.pm10 != null).map((d) => d.pm10);
         if (values.length === 0) return 0;
         return values.reduce((a: number, b: number) => a + b, 0) / values.length;
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 }

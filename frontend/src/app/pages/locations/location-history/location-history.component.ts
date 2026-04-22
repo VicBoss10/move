@@ -3,10 +3,10 @@ import { LocationHistoryViewComponent } from '../../../shared/components/locatio
 
 /**
  * LocationHistoryPageComponent
- * 
+ *
  * Página contenedor para la vista de histórico de detecciones.
  * Orquesta el componente LocationHistoryViewComponent de shared.
- * 
+ *
  * @selector app-location-history
  * @standalone true
  */

@@ -5,14 +5,16 @@
     <form
       class="dropzone rounded-xl border-dashed border-gray-300 p-7 lg:p-10"
       id="demo-upload"
-      [ngClass]="isDragActive
-        ? 'border-brand-500 bg-gray-100 dark:bg-gray-800'
-        : 'border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900'"
+      [ngClass]="
+        isDragActive
+          ? 'border-brand-500 bg-gray-100 dark:bg-gray-800'
+          : 'border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900'
+      "
       (dragover)="onDragOver($event)"
       (dragleave)="onDragLeave($event)"
       (drop)="onDrop($event)"
       (click)="fileInput.click()"
-      style="position: relative;"
+      style="position: relative"
     >
       <!-- Hidden Input -->
       <input
@@ -27,7 +29,9 @@
       <div class="dz-message flex flex-col items-center m-0!">
         <!-- Icon Container -->
         <div class="mb-[22px] flex justify-center">
-          <div class="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400">
+          <div
+            class="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+          >
             <svg
               class="fill-current"
               width="29"
@@ -49,13 +53,13 @@
           {{ isDragActive ? 'Drop Files Here' : 'Drag & Drop Files Here' }}
         </h4>
 
-        <span class="text-center mb-5 block w-full max-w-[290px] text-sm text-gray-700 dark:text-gray-400">
+        <span
+          class="text-center mb-5 block w-full max-w-[290px] text-sm text-gray-700 dark:text-gray-400"
+        >
           Drag and drop your PNG, JPG, WebP, SVG images here or browse
         </span>
 
-        <span class="font-medium underline text-theme-sm text-brand-500">
-          Browse File
-        </span>
+        <span class="font-medium underline text-theme-sm text-brand-500"> Browse File </span>
       </div>
     </form>
   </div>

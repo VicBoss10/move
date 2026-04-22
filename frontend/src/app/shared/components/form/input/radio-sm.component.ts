@@ -7,7 +7,10 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   template: `
     <label
       [attr.for]="id"
-      [ngClass]="'flex cursor-pointer select-none items-center text-sm text-gray-500 dark:text-gray-400 ' + className"
+      [ngClass]="
+        'flex cursor-pointer select-none items-center text-sm text-gray-500 dark:text-gray-400 ' +
+        className
+      "
     >
       <span class="relative">
         <!-- Hidden Input -->
@@ -32,8 +35,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
           <!-- Inner Dot -->
           <span
             [ngClass]="
-              'h-1.5 w-1.5 rounded-full ' +
-              (checked ? 'bg-white' : 'bg-white dark:bg-[#1e2636]')
+              'h-1.5 w-1.5 rounded-full ' + (checked ? 'bg-white' : 'bg-white dark:bg-[#1e2636]')
             "
           ></span>
         </span>
@@ -41,10 +43,9 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
       {{ label }}
     </label>
   `,
-  styles: ``
+  styles: ``,
 })
 export class RadioSmComponent {
-
   @Input() id!: string;
   @Input() name!: string;
   @Input() value!: string;

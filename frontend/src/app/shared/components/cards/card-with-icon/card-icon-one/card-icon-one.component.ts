@@ -4,13 +4,8 @@ import { CardDescriptionComponent } from '../../../ui/card/card-description.comp
 
 @Component({
   selector: 'app-card-icon-one',
-  imports: [
-    CardTitleComponent,
-    CardDescriptionComponent,
-  ],
+  imports: [CardTitleComponent, CardDescriptionComponent],
   templateUrl: './card-icon-one.component.html',
-  styles: ``
+  styles: ``,
 })
-export class CardIconOneComponent {
-
-}
+export class CardIconOneComponent {}

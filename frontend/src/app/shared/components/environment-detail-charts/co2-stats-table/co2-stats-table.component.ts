@@ -59,7 +59,7 @@ export class Co2StatsTableComponent {
         console.error('Error cargando datos de CO₂:', error);
         return of(this.getEmptyStats());
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

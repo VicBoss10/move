@@ -1,4 +1,6 @@
-<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
+<div
+  class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6"
+>
   <!-- Header -->
   <div class="mb-6">
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
@@ -18,7 +20,7 @@
           type="line"
           [data]="data"
           [options]="chartOptions"
-          style="max-height: 350px; position: relative;"
+          style="max-height: 350px; position: relative"
         ></canvas>
       </ng-container>
     </div>
@@ -31,15 +33,21 @@
       <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400">CO</p>
-          <p class="mt-1 text-sm font-bold text-purple-600 dark:text-purple-400">{{ values.co }} ppm</p>
+          <p class="mt-1 text-sm font-bold text-purple-600 dark:text-purple-400">
+            {{ values.co }} ppm
+          </p>
         </div>
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400">NO₂</p>
-          <p class="mt-1 text-sm font-bold text-amber-600 dark:text-amber-400">{{ values.no2 }} µg/m³</p>
+          <p class="mt-1 text-sm font-bold text-amber-600 dark:text-amber-400">
+            {{ values.no2 }} µg/m³
+          </p>
         </div>
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400">NH₃</p>
-          <p class="mt-1 text-sm font-bold text-cyan-600 dark:text-cyan-400">{{ values.nh3 }} ppb</p>
+          <p class="mt-1 text-sm font-bold text-cyan-600 dark:text-cyan-400">
+            {{ values.nh3 }} ppb
+          </p>
         </div>
       </div>
     </ng-container>

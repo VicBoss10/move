@@ -1,9 +1,19 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil, map } from 'rxjs/operators';
 import { GoogleMapsModule, MapInfoWindow, MapAdvancedMarker } from '@angular/google-maps';
-import { LocationFiltersComponent, LocationSearchCriteria } from '../location-filters/location-filters.component';
+import {
+  LocationFiltersComponent,
+  LocationSearchCriteria,
+} from '../location-filters/location-filters.component';
 import { LocationService } from '../../../../core/services/location.service';
 import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
 import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
@@ -116,7 +126,7 @@ export class LocationMapViewComponent implements OnInit, OnDestroy {
   constructor(
     private locationService: LocationService,
     private mapsLoader: GoogleMapsLoaderService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   /**
@@ -162,7 +172,8 @@ export class LocationMapViewComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
-    this.locationService.getAll()
+    this.locationService
+      .getAll()
       .pipe(
         map((backendLocations) => this.transformToMapLocations(backendLocations)),
         finalize(() => {
@@ -174,11 +185,11 @@ export class LocationMapViewComponent implements OnInit, OnDestroy {
           this.errorMessage = 'Error al cargar ubicaciones del mapa';
           return of([]);
         }),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe((locations) => {
         this.locations = locations;
-        this.locations.forEach(loc => {
+        this.locations.forEach((loc) => {
           loc.markerContent = this.createMarkerContent(loc.status);
         });
         this.fitMapToLocations();
@@ -228,9 +239,12 @@ export class LocationMapViewComponent implements OnInit, OnDestroy {
     if (this.locations.length === 0) return;
 
     // Filtrar ubicaciones con coordenadas válidas
-    const valid = this.locations.filter(loc =>
-      loc.latitude != null && loc.longitude != null &&
-      isFinite(loc.latitude) && isFinite(loc.longitude)
+    const valid = this.locations.filter(
+      (loc) =>
+        loc.latitude != null &&
+        loc.longitude != null &&
+        isFinite(loc.latitude) &&
+        isFinite(loc.longitude),
     );
     if (valid.length === 0) return;
 
@@ -263,7 +277,8 @@ export class LocationMapViewComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = null;
 
-    this.locationService.search(criteria)
+    this.locationService
+      .search(criteria)
       .pipe(
         map((backendLocations) => this.transformToMapLocations(backendLocations)),
         finalize(() => {
@@ -275,11 +290,11 @@ export class LocationMapViewComponent implements OnInit, OnDestroy {
           this.errorMessage = 'Error en la búsqueda de ubicaciones';
           return of([]);
         }),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe((locations) => {
         this.locations = locations;
-        this.locations.forEach(loc => {
+        this.locations.forEach((loc) => {
           loc.markerContent = this.createMarkerContent(loc.status);
         });
         this.fitMapToLocations();

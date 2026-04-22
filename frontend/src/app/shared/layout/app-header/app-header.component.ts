@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, OnDestroy } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnDestroy, AfterViewInit } from '@angular/core';
 import { SidebarService } from '../../services/sidebar.service';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
@@ -23,7 +23,7 @@ import { AuthService } from '../../../core/services/auth.service';
   ],
   templateUrl: './app-header.component.html',
 })
-export class AppHeaderComponent implements OnDestroy {
+export class AppHeaderComponent implements OnDestroy, AfterViewInit {
   isApplicationMenuOpen = false;
   readonly isMobileOpen$;
 
@@ -48,21 +48,22 @@ export class AppHeaderComponent implements OnDestroy {
     this.suggestions$ = this.searchQuery.valueChanges.pipe(
       debounceTime(150),
       distinctUntilChanged(),
-      map(q => {
+      map((q) => {
         this.selectedIndex = -1;
-        const isAdmin = this.authService.getUserInfo().roles
-          .some((r: string) => r.toLowerCase() === 'admin');
+        const isAdmin = this.authService
+          .getUserInfo()
+          .roles.some((r: string) => r.toLowerCase() === 'admin');
         return this.searchService.search(q ?? '', isAdmin);
       }),
       takeUntil(this.destroy$),
     );
 
     // Keep latest suggestions for keyboard navigation without relying on template locals
-    this.suggestions$.pipe(takeUntil(this.destroy$)).subscribe(vals => {
+    this.suggestions$.pipe(takeUntil(this.destroy$)).subscribe((vals) => {
       this.latestSuggestions = vals || [];
       const q = (this.searchQuery.value || '').toString();
       // Show dropdown when we have suggestions or user typed >=2 chars
-      this.showDropdown = (this.latestSuggestions.length > 0) || q.length >= 2;
+      this.showDropdown = this.latestSuggestions.length > 0 || q.length >= 2;
     });
   }
 
@@ -75,8 +76,9 @@ export class AppHeaderComponent implements OnDestroy {
 
   onFocus() {
     const q = (this.searchQuery.value || '').toString();
-    const isAdmin = this.authService.getUserInfo().roles
-      .some((r: string) => r.toLowerCase() === 'admin');
+    const isAdmin = this.authService
+      .getUserInfo()
+      .roles.some((r: string) => r.toLowerCase() === 'admin');
 
     if (q.length >= 2) {
       // perform an immediate search so suggestions populate on focus
@@ -84,7 +86,8 @@ export class AppHeaderComponent implements OnDestroy {
     }
 
     // Show dropdown only when there are suggestions or when user typed >=2 chars
-    this.showDropdown = (this.latestSuggestions && this.latestSuggestions.length > 0) || q.length >= 2;
+    this.showDropdown =
+      (this.latestSuggestions && this.latestSuggestions.length > 0) || q.length >= 2;
   }
 
   hideSuggestions() {

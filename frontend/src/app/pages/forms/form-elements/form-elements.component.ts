@@ -29,8 +29,6 @@ import { DropzoneComponent } from '../../../shared/components/form/form-elements
     DropzoneComponent,
   ],
   templateUrl: './form-elements.component.html',
-  styles: ``
+  styles: ``,
 })
-export class FormElementsComponent {
-
-}
+export class FormElementsComponent {}

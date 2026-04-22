@@ -4,14 +4,14 @@
  */
 export interface SensorData {
   id: number;
-  temperature: number;      // °C
-  humidity: number;         // %
-  co2: number;             // ppm
-  pm25: number;            // µg/m³
-  pm10: number;            // µg/m³
-  co: number;              // ppm
-  no2: number;             // ppb
-  nh3: number;             // ppb
+  temperature: number; // °C
+  humidity: number; // %
+  co2: number; // ppm
+  pm25: number; // µg/m³
+  pm10: number; // µg/m³
+  co: number; // ppm
+  no2: number; // ppb
+  nh3: number; // ppb
   timestamp: Date;
   deviceId: number;
   /**
@@ -92,5 +92,5 @@ export interface ValueRange {
 export enum AirQualityStatus {
   GOOD = 'good',
   MODERATE = 'moderate',
-  POOR = 'poor'
+  POOR = 'poor',
 }

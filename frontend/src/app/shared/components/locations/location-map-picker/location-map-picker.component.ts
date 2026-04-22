@@ -113,7 +113,7 @@ export class LocationMapPickerComponent implements OnInit {
 
   constructor(
     private mapsLoader: GoogleMapsLoaderService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   /**

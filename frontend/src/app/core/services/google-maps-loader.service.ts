@@ -76,7 +76,8 @@ export class GoogleMapsLoaderService {
         const loaded = new Set<string>();
 
         const bootstrap = (): Promise<void> => {
-          return (d.__promise ||
+          return (
+            d.__promise ||
             (d.__promise = new Promise<void>((res, rej) => {
               const script = document.createElement('script');
               const params = new URLSearchParams({
@@ -94,7 +95,8 @@ export class GoogleMapsLoaderService {
                 rej(new Error('Google Maps API could not load.'));
               };
               document.head.appendChild(script);
-            })));
+            }))
+          );
         };
 
         if (!d.importLibrary) {
@@ -105,15 +107,17 @@ export class GoogleMapsLoaderService {
         }
 
         // Trigger the load and wait for it
-        bootstrap().then(() => {
-          console.log('Google Maps API cargada correctamente');
-          this.errorSubject.next(null);
-          resolve(true);
-        }).catch(() => {
-          console.error('Error al cargar Google Maps API');
-          this.errorSubject.next('Error al cargar Google Maps API');
-          resolve(false);
-        });
+        bootstrap()
+          .then(() => {
+            console.log('Google Maps API cargada correctamente');
+            this.errorSubject.next(null);
+            resolve(true);
+          })
+          .catch(() => {
+            console.error('Error al cargar Google Maps API');
+            this.errorSubject.next('Error al cargar Google Maps API');
+            resolve(false);
+          });
       } catch {
         console.error('Error al inicializar Google Maps bootstrap');
         this.errorSubject.next('Error al inicializar Google Maps bootstrap');
@@ -170,7 +174,9 @@ export class GoogleMapsLoaderService {
             lng: position.coords.longitude,
             accuracy: position.coords.accuracy,
           };
-          console.log(`Geolocation: lat=${result.lat.toFixed(6)}, lng=${result.lng.toFixed(6)}, accuracy=${result.accuracy.toFixed(0)}m`);
+          console.log(
+            `Geolocation: lat=${result.lat.toFixed(6)}, lng=${result.lng.toFixed(6)}, accuracy=${result.accuracy.toFixed(0)}m`,
+          );
           this.errorSubject.next(null);
           done(result);
         },
@@ -179,7 +185,7 @@ export class GoogleMapsLoaderService {
           this.errorSubject.next(`Geolocalización error: ${error.message}`);
           done(null);
         },
-        { enableHighAccuracy: true, timeout: 3000, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 3000, maximumAge: 60000 },
       );
 
       // Timeout de seguridad: 3s máximo

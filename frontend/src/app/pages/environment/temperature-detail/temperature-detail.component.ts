@@ -7,7 +7,7 @@ import { TemperatureStatsTableComponent } from '../../../shared/components/envir
 /**
  * Componente de página que muestra el detalle de Temperatura.
  * Organiza la visualización de indicador, gráfico de tendencia y estadísticas de temperatura.
- * 
+ *
  * @selector app-temperature-detail
  * @standalone true
  * @imports CommonModule, TemperatureChartComponent, TemperatureGaugeComponent, TemperatureStatsTableComponent
@@ -16,7 +16,12 @@ import { TemperatureStatsTableComponent } from '../../../shared/components/envir
 @Component({
   selector: 'app-temperature-detail',
   standalone: true,
-  imports: [CommonModule, TemperatureChartComponent, TemperatureGaugeComponent, TemperatureStatsTableComponent],
+  imports: [
+    CommonModule,
+    TemperatureChartComponent,
+    TemperatureGaugeComponent,
+    TemperatureStatsTableComponent,
+  ],
   templateUrl: './temperature-detail.component.html',
 })
 export class TemperatureDetailComponent {}

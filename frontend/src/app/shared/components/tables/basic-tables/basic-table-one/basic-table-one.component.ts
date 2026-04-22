@@ -4,15 +4,11 @@ import { BadgeComponent } from '../../../ui/badge/badge.component';
 
 @Component({
   selector: 'app-basic-table-one',
-  imports: [
-    CommonModule,
-    BadgeComponent,
-  ],
+  imports: [CommonModule, BadgeComponent],
   templateUrl: './basic-table-one.component.html',
-  styles: ``
+  styles: ``,
 })
 export class BasicTableOneComponent {
-
   tableData = [
     {
       id: 1,

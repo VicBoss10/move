@@ -1,12 +1,10 @@
-<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+<div
+  class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+>
   <!-- Header -->
   <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
-    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-      Vehículos Detectados
-    </h3>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-      Listado de vehículos detectados
-    </p>
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Vehículos Detectados</h3>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Listado de vehículos detectados</p>
   </div>
 
   <!-- Stats Table (rows by vehicle type) -->
@@ -14,41 +12,76 @@
     <table class="w-full">
       <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
         <tr>
-          <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">Tipo</th>
-          <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">Detecciones</th>
-          <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">Porcentaje %</th>
-          <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6">Tendencia (12h)</th>
+          <th
+            class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6"
+          >
+            Tipo
+          </th>
+          <th
+            class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6"
+          >
+            Detecciones
+          </th>
+          <th
+            class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6"
+          >
+            Porcentaje %
+          </th>
+          <th
+            class="px-5 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 sm:px-6"
+          >
+            Tendencia (12h)
+          </th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let s of stats" class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50">
+        <tr
+          *ngFor="let s of stats"
+          class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50"
+        >
           <!-- Tipo -->
           <td class="whitespace-nowrap px-5 py-4 text-sm sm:px-6">
             <span class="inline-flex items-center gap-3">
-              <span class="inline-block rounded-full px-3 py-1 text-xs font-semibold" [class]="getTypeColor(s.type)">
+              <span
+                class="inline-block rounded-full px-3 py-1 text-xs font-semibold"
+                [class]="getTypeColor(s.type)"
+              >
                 {{ getTypeLabel(s.type) }}
               </span>
             </span>
           </td>
 
           <!-- Count -->
-          <td class="px-5 py-4 text-sm font-medium text-gray-900 dark:text-white/90 sm:px-6">{{ s.count }}</td>
+          <td class="px-5 py-4 text-sm font-medium text-gray-900 dark:text-white/90 sm:px-6">
+            {{ s.count }}
+          </td>
 
           <!-- Percent -->
-          <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 sm:px-6">{{ s.percent }}%</td>
+          <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 sm:px-6">
+            {{ s.percent }}%
+          </td>
 
           <!-- Trend -->
           <td class="px-5 py-4 text-sm sm:px-6">
-            <div *ngIf="s.trend && s.trend.length > 0" class="flex items-end gap-1 h-8" [title]="'Tendencia de las últimas 12 horas'">
-                <ng-container *ngFor="let v of s.trend; let i = index">
-                  <div 
-                    class="w-1.5 bg-brand-500 rounded-t-sm transition-all duration-300 hover:bg-brand-600 dark:bg-brand-500/80" 
-                    [style.height.px]="barHeight(v, s.trendMax)"
-                    [title]="'Hora -' + (11-i) + ': ' + v + ' detecciones'">
-                  </div>
-                </ng-container>
+            <div
+              *ngIf="s.trend && s.trend.length > 0"
+              class="flex items-end gap-1 h-8"
+              [title]="'Tendencia de las últimas 12 horas'"
+            >
+              <ng-container *ngFor="let v of s.trend; let i = index">
+                <div
+                  class="w-1.5 bg-brand-500 rounded-t-sm transition-all duration-300 hover:bg-brand-600 dark:bg-brand-500/80"
+                  [style.height.px]="barHeight(v, s.trendMax)"
+                  [title]="'Hora -' + (11 - i) + ': ' + v + ' detecciones'"
+                ></div>
+              </ng-container>
             </div>
-            <div *ngIf="!s.trend || s.trend.length === 0" class="text-xs text-gray-400 dark:text-gray-500">-</div>
+            <div
+              *ngIf="!s.trend || s.trend.length === 0"
+              class="text-xs text-gray-400 dark:text-gray-500"
+            >
+              -
+            </div>
           </td>
         </tr>
       </tbody>
@@ -60,7 +93,12 @@
     *ngIf="!stats || stats.length === 0"
     class="flex flex-col items-center justify-center border-t border-gray-200 px-5 py-12 text-center dark:border-gray-800 sm:px-6"
   >
-    <svg class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg
+      class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-700"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
       <path
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -68,8 +106,6 @@
         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     </svg>
-    <p class="text-gray-500 dark:text-gray-400">
-      No hay vehículos detectados en este momento
-    </p>
+    <p class="text-gray-500 dark:text-gray-400">No hay vehículos detectados en este momento</p>
   </div>
 </div>

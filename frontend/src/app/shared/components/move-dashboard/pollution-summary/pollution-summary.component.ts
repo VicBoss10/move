@@ -2,7 +2,11 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { SensorData } from '../../../../core/models/sensor-data.model';
-import { ENV_THRESHOLDS, getEnvironmentStatus, EnvironmentMetricKey } from '../../../../core/config/environment-thresholds.config';
+import {
+  ENV_THRESHOLDS,
+  getEnvironmentStatus,
+  EnvironmentMetricKey,
+} from '../../../../core/config/environment-thresholds.config';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -81,7 +85,7 @@ export class PollutionSummaryComponent {
   private initializePollutionData(): void {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    
+
     this.pollutionData$ = this.sensorDataService.getAll().pipe(
       map((data: SensorData[]) => {
         if (!data || data.length === 0) {
@@ -89,7 +93,7 @@ export class PollutionSummaryComponent {
         }
 
         // Filtrar solo datos de hoy para las métricas
-        const todayData = data.filter(d => {
+        const todayData = data.filter((d) => {
           const dDate = new Date(d.timestamp);
           return dDate >= todayStart && dDate <= now;
         });
@@ -107,11 +111,14 @@ export class PollutionSummaryComponent {
           { key: 'no2', field: 'no2' },
         ];
 
-        return pollutantConfigs.map(cfg => {
+        return pollutantConfigs.map((cfg) => {
           const config = ENV_THRESHOLDS[cfg.key];
           const values = todayData.map((d: any) => d[cfg.field]).filter((v: any) => v != null);
           const current = values[values.length - 1] || 0;
-          const average = values.length > 0 ? values.reduce((a: number, b: number) => a + b, 0) / values.length : 0;
+          const average =
+            values.length > 0
+              ? values.reduce((a: number, b: number) => a + b, 0) / values.length
+              : 0;
           const min = values.length > 0 ? Math.min(...values) : 0;
           const max = values.length > 0 ? Math.max(...values) : 0;
           const status = getEnvironmentStatus(cfg.key, current);
@@ -134,7 +141,7 @@ export class PollutionSummaryComponent {
         console.error('Error cargando resumen de contaminantes:', error);
         return of(this.defaultPollutionData);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

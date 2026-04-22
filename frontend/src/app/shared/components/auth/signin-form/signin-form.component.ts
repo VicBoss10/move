@@ -10,12 +10,18 @@ import { ButtonComponent } from '../../ui/button/button.component';
 
 @Component({
   selector: 'app-signin-form',
-  imports: [RouterModule, CommonModule, FormsModule, LabelComponent, InputFieldComponent, ButtonComponent],
+  imports: [
+    RouterModule,
+    CommonModule,
+    FormsModule,
+    LabelComponent,
+    InputFieldComponent,
+    ButtonComponent,
+  ],
   templateUrl: './signin-form.component.html',
-  styles: ``
+  styles: ``,
 })
 export class SigninFormComponent {
-
   email = '';
   password = '';
   showPassword = false;
@@ -23,7 +29,10 @@ export class SigninFormComponent {
   errorMessage = '';
   loading = false;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+  ) {}
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
@@ -38,7 +47,7 @@ export class SigninFormComponent {
       error: () => {
         this.errorMessage = 'Correo o contraseña incorrectos.';
         this.loading = false;
-      }
+      },
     });
   }
 }

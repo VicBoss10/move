@@ -6,14 +6,14 @@ import { Component, Input } from '@angular/core';
   imports: [CommonModule],
   template: `
     @if (isHeader) {
-    <ng-container>
-      <th [ngClass]="className"><ng-content></ng-content></th>
-    </ng-container>
+      <ng-container>
+        <th [ngClass]="className"><ng-content></ng-content></th>
+      </ng-container>
     } @else {
-    <td [ngClass]="className"><ng-content></ng-content></td>
+      <td [ngClass]="className"><ng-content></ng-content></td>
     }
   `,
-  styles: ``
+  styles: ``,
 })
 export class TableCellComponent {
   @Input() isHeader = false;

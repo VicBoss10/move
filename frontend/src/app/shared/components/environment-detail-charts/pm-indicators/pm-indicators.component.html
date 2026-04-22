@@ -1,54 +1,78 @@
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
   <ng-container *ngIf="pmIndicators$ | async as indicators">
     @for (pm of indicators; track pm.symbol) {
-  <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02]" [ngClass]="pm.bgColor">
-    <!-- Header -->
-    <div class="px-5 pt-5 sm:px-6 sm:pt-6">
-      <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-        {{ pm.symbol }}
-      </h4>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        {{ pm.name }}
-      </p>
-    </div>
+      <div
+        class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02]"
+        [ngClass]="pm.bgColor"
+      >
+        <!-- Header -->
+        <div class="px-5 pt-5 sm:px-6 sm:pt-6">
+          <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+            {{ pm.symbol }}
+          </h4>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {{ pm.name }}
+          </p>
+        </div>
 
-    <!-- Gauge -->
-    <div class="flex flex-col items-center justify-center px-5 py-8 sm:px-6">
-      <!-- SVG Gauge -->
-      <div class="relative w-40 h-40">
-        <svg class="w-full h-full" viewBox="0 0 200 200">
-          <!-- Background circle -->
-          <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" stroke-width="12" class="text-gray-200 dark:text-gray-700" />
-          
-          <!-- Progress circle -->
-          <circle
-            cx="100"
-            cy="100"
-            r="90"
-            fill="none"
-            [attr.stroke-dasharray]="564.4"
-            [attr.stroke-dashoffset]="564.4 - (564.4 * getGaugePercentage(pm.value, pm.maxValue)) / 100"
-            stroke-width="12"
-            stroke-linecap="round"
-            [ngClass]="'origin-center -rotate-90 transition-all duration-500 ' + pm.color"
-          />
+        <!-- Gauge -->
+        <div class="flex flex-col items-center justify-center px-5 py-8 sm:px-6">
+          <!-- SVG Gauge -->
+          <div class="relative w-40 h-40">
+            <svg class="w-full h-full" viewBox="0 0 200 200">
+              <!-- Background circle -->
+              <circle
+                cx="100"
+                cy="100"
+                r="90"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="12"
+                class="text-gray-200 dark:text-gray-700"
+              />
 
-          <!-- Center text -->
-          <text x="100" y="95" text-anchor="middle" class="text-3xl font-bold fill-current" [class]="pm.color">
-            {{ pm.value }}
-          </text>
-          <text x="100" y="115" text-anchor="middle" class="text-sm fill-gray-500 dark:fill-gray-400">
-            {{ pm.unit }}
-          </text>
-        </svg>
+              <!-- Progress circle -->
+              <circle
+                cx="100"
+                cy="100"
+                r="90"
+                fill="none"
+                [attr.stroke-dasharray]="564.4"
+                [attr.stroke-dashoffset]="
+                  564.4 - (564.4 * getGaugePercentage(pm.value, pm.maxValue)) / 100
+                "
+                stroke-width="12"
+                stroke-linecap="round"
+                [ngClass]="'origin-center -rotate-90 transition-all duration-500 ' + pm.color"
+              />
+
+              <!-- Center text -->
+              <text
+                x="100"
+                y="95"
+                text-anchor="middle"
+                class="text-3xl font-bold fill-current"
+                [class]="pm.color"
+              >
+                {{ pm.value }}
+              </text>
+              <text
+                x="100"
+                y="115"
+                text-anchor="middle"
+                class="text-sm fill-gray-500 dark:fill-gray-400"
+              >
+                {{ pm.unit }}
+              </text>
+            </svg>
+          </div>
+
+          <!-- Status -->
+          <p [class]="'mt-4 text-sm font-semibold ' + pm.color">
+            {{ pm.status }}
+          </p>
+        </div>
       </div>
-
-      <!-- Status -->
-      <p [class]="'mt-4 text-sm font-semibold ' + pm.color">
-        {{ pm.status }}
-      </p>
-    </div>
-  </div>
     }
   </ng-container>
 </div>

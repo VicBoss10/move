@@ -4,7 +4,11 @@ import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { ThresholdsService } from '../../../../core/services/thresholds.service';
-import { getEnvironmentStatusFromConfig, getMetricGaugePercentageFromConfig, EnvironmentMetricKey } from '../../../../core/config/environment-thresholds.config';
+import {
+  getEnvironmentStatusFromConfig,
+  getMetricGaugePercentageFromConfig,
+  EnvironmentMetricKey,
+} from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Interface para un indicador de gas
@@ -47,7 +51,10 @@ export class MultiGasIndicatorsComponent {
    */
   gasIndicators$!: Observable<GasIndicator[]>;
 
-  constructor(private sensorDataService: SensorDataService, private thresholds: ThresholdsService) {
+  constructor(
+    private sensorDataService: SensorDataService,
+    private thresholds: ThresholdsService,
+  ) {
     this.initializeGasIndicators();
   }
 
@@ -61,13 +68,18 @@ export class MultiGasIndicatorsComponent {
       this.thresholds.getAll(),
     ]).pipe(
       map(([latestData, allThresholds]) => {
-        const gasConfigs: { key: EnvironmentMetricKey; field: string; name: string; symbol: string }[] = [
-          { key: 'co',  field: 'co',  name: 'Monóxido de Carbono', symbol: 'CO' },
+        const gasConfigs: {
+          key: EnvironmentMetricKey;
+          field: string;
+          name: string;
+          symbol: string;
+        }[] = [
+          { key: 'co', field: 'co', name: 'Monóxido de Carbono', symbol: 'CO' },
           { key: 'no2', field: 'no2', name: 'Dióxido de Nitrógeno', symbol: 'NO₂' },
           { key: 'nh3', field: 'nh3', name: 'Amoníaco', symbol: 'NH₃' },
         ];
 
-        return gasConfigs.map(cfg => {
+        return gasConfigs.map((cfg) => {
           const value = Math.round(((latestData as any)?.[cfg.field] || 0) * 10) / 10;
           const config = allThresholds[cfg.key];
           const status = getEnvironmentStatusFromConfig(config, value);
@@ -87,7 +99,7 @@ export class MultiGasIndicatorsComponent {
         console.error('Error cargando indicadores de gases:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

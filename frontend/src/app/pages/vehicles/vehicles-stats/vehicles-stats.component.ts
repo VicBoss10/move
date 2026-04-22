@@ -1,8 +1,17 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, Subject, of, interval, BehaviorSubject } from 'rxjs';
 import { catchError, map, shareReplay, switchMap, takeUntil, tap } from 'rxjs/operators';
-import { VehicleStatsCardsComponent, VehicleStats } from '../../../shared/components/vehicles/vehicle-stats-cards/vehicle-stats-cards.component';
+import {
+  VehicleStatsCardsComponent,
+  VehicleStats,
+} from '../../../shared/components/vehicles/vehicle-stats-cards/vehicle-stats-cards.component';
 import { VehicleChartComponent } from '../../../shared/components/vehicles/vehicle-chart/vehicle-chart.component';
 import { VehicleTypeChartComponent } from '../../../shared/components/vehicles/vehicle-type-chart/vehicle-type-chart.component';
 import { VehicleHeatmapComponent } from '../../../shared/components/vehicles/vehicle-heatmap/vehicle-heatmap.component';
@@ -33,7 +42,13 @@ import { VehicleDetectedService } from '../../../core/services/vehicle-detected.
 @Component({
   selector: 'app-vehicles-stats',
   standalone: true,
-  imports: [CommonModule, VehicleStatsCardsComponent, VehicleChartComponent, VehicleTypeChartComponent, VehicleHeatmapComponent],
+  imports: [
+    CommonModule,
+    VehicleStatsCardsComponent,
+    VehicleChartComponent,
+    VehicleTypeChartComponent,
+    VehicleHeatmapComponent,
+  ],
   templateUrl: './vehicles-stats.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -79,7 +94,7 @@ export class VehiclesStatsComponent implements OnInit, OnDestroy {
    */
   constructor(
     private vehicleService: VehicleDetectedService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   /**
@@ -131,8 +146,7 @@ export class VehiclesStatsComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         return of(this.defaultStats);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
-
 }

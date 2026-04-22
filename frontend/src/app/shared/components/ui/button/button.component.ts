@@ -4,18 +4,12 @@ import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 
 @Component({
   selector: 'app-button',
-  imports: [
-    CommonModule,
-    SafeHtmlPipe,
-  ],
+  imports: [CommonModule, SafeHtmlPipe],
   templateUrl: './button.component.html',
   styles: ``,
-  host: {
-
-  },
+  host: {},
 })
 export class ButtonComponent {
-
   @Input() size: 'sm' | 'md' = 'md';
   @Input() variant: 'primary' | 'outline' = 'primary';
   @Input() disabled = false;
@@ -26,9 +20,7 @@ export class ButtonComponent {
   @Output() btnClick = new EventEmitter<Event>();
 
   get sizeClasses(): string {
-    return this.size === 'sm'
-      ? 'px-4 py-3 text-sm'
-      : 'px-5 py-3.5 text-sm';
+    return this.size === 'sm' ? 'px-4 py-3 text-sm' : 'px-5 py-3.5 text-sm';
   }
 
   get variantClasses(): string {

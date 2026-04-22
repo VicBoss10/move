@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-order-history',
   imports: [],
   templateUrl: './order-history.component.html',
-  styles: ``
+  styles: ``,
 })
-export class OrderHistoryComponent {
-
-}
+export class OrderHistoryComponent {}

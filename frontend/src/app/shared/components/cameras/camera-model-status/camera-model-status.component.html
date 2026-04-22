@@ -10,8 +10,12 @@
   <!-- Información del Modelo y Acciones -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Información del Modelo -->
-    <div class="lg:col-span-2 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-      <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Información del Modelo de Detección</h2>
+    <div
+      class="lg:col-span-2 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+    >
+      <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+        Información del Modelo de Detección
+      </h2>
 
       <div class="grid grid-cols-2 gap-4">
         <div class="flex flex-col">
@@ -19,9 +23,11 @@
           <span class="mt-1 text-lg font-medium">
             <ng-container *ngIf="modelInfo$ | async as info">
               <span
-                [ngClass]="info.isRunning
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'"
+                [ngClass]="
+                  info.isRunning
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
+                "
               >
                 {{ info.isRunning ? '🟢 En Ejecución' : '🔴 Detenido' }}
               </span>
@@ -39,16 +45,22 @@
         <div class="flex flex-col">
           <span class="text-sm text-gray-600 dark:text-gray-400">Cámaras Activas</span>
           <span class="mt-1 text-lg font-medium text-gray-900 dark:text-white">
-            <ng-container *ngIf="cameraStats$ | async as stats">{{ stats.activeCameras }}</ng-container>
+            <ng-container *ngIf="cameraStats$ | async as stats">{{
+              stats.activeCameras
+            }}</ng-container>
           </span>
         </div>
 
         <div class="flex flex-col">
           <span class="text-sm text-gray-600 dark:text-gray-400">Última Actualización</span>
           <span class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-            <ng-container *ngIf="lastVehicleDetection$ | async as last; else fromModel">{{ last | date: 'short' }}</ng-container>
+            <ng-container *ngIf="lastVehicleDetection$ | async as last; else fromModel">{{
+              last | date: 'short'
+            }}</ng-container>
             <ng-template #fromModel>
-              <ng-container *ngIf="modelInfo$ | async as info">{{ info.lastUpdate | date: 'short' }}</ng-container>
+              <ng-container *ngIf="modelInfo$ | async as info">{{
+                info.lastUpdate | date: 'short'
+              }}</ng-container>
             </ng-template>
           </span>
         </div>
@@ -56,32 +68,63 @@
     </div>
 
     <!-- Guía de Uso del Sistema -->
-    <div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-      <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Flujo de Detección Vehicular</h3>
+    <div
+      class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+    >
+      <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+        Flujo de Detección Vehicular
+      </h3>
 
       <div class="space-y-4">
         <div class="flex gap-3">
-          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">1</div>
-          <p class="text-sm text-gray-600 dark:text-gray-400">Verifica que el <b>Estado del Modelo</b> esté en ejecución.</p>
+          <div
+            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600 dark:bg-brand-900/30 dark:text-brand-400"
+          >
+            1
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Verifica que el <b>Estado del Modelo</b> esté en ejecución.
+          </p>
         </div>
-        
+
         <div class="flex gap-3">
-          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">2</div>
-          <p class="text-sm text-gray-600 dark:text-gray-400">Activa la <b>Detección</b> para ese dispositivo específico.</p>
+          <div
+            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600 dark:bg-brand-900/30 dark:text-brand-400"
+          >
+            2
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Activa la <b>Detección</b> para ese dispositivo específico.
+          </p>
         </div>
-        
+
         <div class="flex gap-3">
-          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">3</div>
-          <p class="text-sm text-gray-600 dark:text-gray-400">Ve a <b>Streaming de Cámaras</b> y selecciona un dispositivo.</p>
+          <div
+            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600 dark:bg-brand-900/30 dark:text-brand-400"
+          >
+            3
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Ve a <b>Streaming de Cámaras</b> y selecciona un dispositivo.
+          </p>
         </div>
 
         <div class="flex gap-3 border-t border-gray-100 pt-4 dark:border-gray-700">
-          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-600 dark:bg-green-900/30 dark:text-green-400">
+          <div
+            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-600 dark:bg-green-900/30 dark:text-green-400"
+          >
             <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          <p class="text-xs text-gray-500 dark:text-gray-500 italic">Una vez activa, podrás iniciar el stream para ver los cuadros de detección en vivo.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 italic">
+            Una vez activa, podrás iniciar el stream para ver los cuadros de detección en vivo.
+          </p>
         </div>
       </div>
     </div>

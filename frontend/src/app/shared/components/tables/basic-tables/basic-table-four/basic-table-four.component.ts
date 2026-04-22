@@ -5,16 +5,11 @@ import { TableDropdownComponent } from '../../../common/table-dropdown/table-dro
 
 @Component({
   selector: 'app-basic-table-four',
-  imports: [
-    CommonModule,
-    BadgeComponent,
-    TableDropdownComponent,
-  ],
+  imports: [CommonModule, BadgeComponent, TableDropdownComponent],
   templateUrl: './basic-table-four.component.html',
-  styles: ``
+  styles: ``,
 })
 export class BasicTableFourComponent {
-
   campaigns = [
     {
       id: 1,

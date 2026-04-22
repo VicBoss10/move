@@ -7,7 +7,7 @@ import { VehicleDetected } from '../../../../core/models/vehicle.model';
  *
  * Componente que muestra una tabla de vehículos detectados con todos sus datos.
  * Incluye filtrado, ordenamiento y detalles de cada vehículo.
- * 
+ *
  * Características:
  * - Tabla responsive con scroll en mobile
  * - Indicadores de estado con colores
@@ -35,7 +35,13 @@ export class VehicleTableComponent {
    * Estadísticas por tipo que el componente mostrará en filas.
    * Cada elemento contiene `type`, `count`, `percent` y `trend` (array numérico).
    */
-  @Input() stats: Array<{ type: string; count: number; percent: number; trend?: number[]; trendMax?: number }> = [];
+  @Input() stats: Array<{
+    type: string;
+    count: number;
+    percent: number;
+    trend?: number[];
+    trendMax?: number;
+  }> = [];
 
   /** Devuelve la altura (px) para una barra de tendencia */
   barHeight(value: number, trendMax?: number): number {
@@ -50,13 +56,15 @@ export class VehicleTableComponent {
    */
   getTypeColor(vehicleType: string): string {
     const typeColors: Record<string, string> = {
-      'CAR': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-      'BUS': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-      'MOTORCYCLE': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-      'BICYCLE': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      'TRUCK': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+      CAR: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+      BUS: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+      MOTORCYCLE: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+      BICYCLE: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+      TRUCK: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
     };
-    return typeColors[vehicleType] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    return (
+      typeColors[vehicleType] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+    );
   }
 
   /**
@@ -66,11 +74,11 @@ export class VehicleTableComponent {
    */
   getTypeLabel(vehicleType: string): string {
     const typeLabels: Record<string, string> = {
-      'CAR': 'Auto',
-      'BUS': 'Bus',
-      'MOTORCYCLE': 'Moto',
-      'BICYCLE': 'Bicicleta',
-      'TRUCK': 'Camion',
+      CAR: 'Auto',
+      BUS: 'Bus',
+      MOTORCYCLE: 'Moto',
+      BICYCLE: 'Bicicleta',
+      TRUCK: 'Camion',
     };
     return typeLabels[vehicleType] || 'Desconocido';
   }
@@ -82,11 +90,11 @@ export class VehicleTableComponent {
    */
   getTypeIcon(vehicleType: string): string {
     const icons: Record<string, string> = {
-      'CAR': 'car',
-      'BUS': 'bus',
-      'MOTORCYCLE': 'motorcycle',
-      'BICYCLE': 'bike',
-      'TRUCK': 'truck',
+      CAR: 'car',
+      BUS: 'bus',
+      MOTORCYCLE: 'motorcycle',
+      BICYCLE: 'bike',
+      TRUCK: 'truck',
     };
     return icons[vehicleType] || 'vehicle';
   }

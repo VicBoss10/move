@@ -5,7 +5,7 @@ import { ComponentCardComponent } from '../../../shared/components/common/compon
 import { SixteenIstoNineComponent } from '../../../shared/components/ui/videos/sixteen-isto-nine/sixteen-isto-nine.component';
 import { FourIstoThreeComponent } from '../../../shared/components/ui/videos/four-isto-three/four-isto-three.component';
 import { OneIstoOneComponent } from '../../../shared/components/ui/videos/one-isto-one/one-isto-one.component';
-import { TwentyoneIstoNineComponent } from "../../../shared/components/ui/videos/twentyone-isto-nine/twentyone-isto-nine.component";
+import { TwentyoneIstoNineComponent } from '../../../shared/components/ui/videos/twentyone-isto-nine/twentyone-isto-nine.component';
 
 @Component({
   selector: 'app-videos',
@@ -16,11 +16,9 @@ import { TwentyoneIstoNineComponent } from "../../../shared/components/ui/videos
     SixteenIstoNineComponent,
     FourIstoThreeComponent,
     OneIstoOneComponent,
-    TwentyoneIstoNineComponent
-],
+    TwentyoneIstoNineComponent,
+  ],
   templateUrl: './videos.component.html',
-  styles: ``
+  styles: ``,
 })
-export class VideosComponent {
-
-}
+export class VideosComponent {}

@@ -3,19 +3,24 @@ import { Observable, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
-import { Device, DeviceSearchCriteria, DeviceStats, RegisterDeviceRequest } from '../models/device.model';
+import {
+  Device,
+  DeviceSearchCriteria,
+  DeviceStats,
+  RegisterDeviceRequest,
+} from '../models/device.model';
 import { QueryParamsBuilder } from '../utils/query-params.builder';
 
 /**
  * Servicio para gestionar Dispositivos (Cámaras, Sensores)
  * Hereda funcionalidad CRUD base de BaseDataService
  * Agrega búsqueda avanzada y cálculo de estadísticas
- * 
+ *
  * @service
  * @providedIn root
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DeviceService extends BaseDataService<Device> {
   /**
@@ -42,14 +47,14 @@ export class DeviceService extends BaseDataService<Device> {
       .build();
 
     return this.apiService.get<Device[]>(`/${this.endpoint}/search`, queryParams).pipe(
-      tap(data => {
+      tap((data) => {
         this.dataSubject.next(data);
         this.clearServiceError();
       }),
       catchError((error) => {
         this.setServiceError(error, 'Error al buscar dispositivos');
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -60,14 +65,14 @@ export class DeviceService extends BaseDataService<Device> {
     const devices = this.getCachedData();
     return {
       total: devices.length,
-      active: devices.filter(d => d.state === 'ACTIVE').length,
-      inactive: devices.filter(d => d.state === 'INACTIVE').length,
+      active: devices.filter((d) => d.state === 'ACTIVE').length,
+      inactive: devices.filter((d) => d.state === 'INACTIVE').length,
       byType: {
-        camera: devices.filter(d => d.type === 'CAMERA').length,
-        sensor: devices.filter(d => d.type === 'SENSOR').length,
-        thermal: devices.filter(d => d.type === 'THERMAL').length,
+        camera: devices.filter((d) => d.type === 'CAMERA').length,
+        sensor: devices.filter((d) => d.type === 'SENSOR').length,
+        thermal: devices.filter((d) => d.type === 'THERMAL').length,
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -77,43 +82,20 @@ export class DeviceService extends BaseDataService<Device> {
    * @returns Observable<string> con mensaje de confirmación
    */
   register(deviceData: any): Observable<import('../models/device.model').RegisterDeviceResponse> {
-    return this.apiService.post<import('../models/device.model').RegisterDeviceResponse>(`/${this.endpoint}`, deviceData).pipe(
-      tap(() => {
-        // Invalidar caché para forzar recarga
-        this.invalidateCache();
-        this.clearServiceError();
-      }),
-      catchError((error) => {
-        this.setServiceError(error, 'Error al registrar dispositivo');
-        return throwError(() => error);
-      })
-    );
-  }
-
-  override update(data: Device): Observable<Device> {
-    return this.apiService.putText(`/${this.endpoint}`, data).pipe(
-      map(() => data),
-      tap(() => {
-        this.invalidateCache();
-        this.clearServiceError();
-      }),
-      catchError((error) => {
-        this.setServiceError(error, 'Error al actualizar dispositivo');
-        return throwError(() => error);
-      })
-    );
-  }
-
-  override delete(id: number): Observable<string> {
-    return this.apiService.deleteText(`/${this.endpoint}/${id}`).pipe(
-      tap(() => {
-        this.invalidateCache();
-        this.clearServiceError();
-      }),
-      catchError((error) => {
-        this.setServiceError(error, 'Error al eliminar dispositivo');
-        return throwError(() => error);
-      })
-    );
+    return this.apiService
+      .post<
+        import('../models/device.model').RegisterDeviceResponse
+      >(`/${this.endpoint}`, deviceData)
+      .pipe(
+        tap(() => {
+          // Invalidar caché para forzar recarga
+          this.invalidateCache();
+          this.clearServiceError();
+        }),
+        catchError((error) => {
+          this.setServiceError(error, 'Error al registrar dispositivo');
+          return throwError(() => error);
+        }),
+      );
   }
 }

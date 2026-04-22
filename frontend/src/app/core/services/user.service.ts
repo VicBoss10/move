@@ -10,12 +10,12 @@ import { QueryParamsBuilder } from '../utils/query-params.builder';
  * Servicio para gestionar Usuarios
  * Hereda funcionalidad CRUD base de BaseDataService
  * Agrega búsqueda avanzada y cálculo de estadísticas
- * 
+ *
  * @service
  * @providedIn root
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserService extends BaseDataService<User> {
   /**
@@ -41,14 +41,14 @@ export class UserService extends BaseDataService<User> {
       .build();
 
     return this.apiService.get<User[]>(`/${this.endpoint}/search`, queryParams).pipe(
-      tap(data => {
+      tap((data) => {
         this.dataSubject.next(data);
         this.clearServiceError();
       }),
       catchError((error) => {
         this.setServiceError(error, 'Error al buscar usuarios');
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -60,11 +60,11 @@ export class UserService extends BaseDataService<User> {
     return {
       total: users.length,
       byRole: {
-        admin: users.filter(u => u.role === 'ADMIN').length,
-        user: users.filter(u => u.role === 'USER').length,
-        viewer: users.filter(u => u.role === 'VIEWER').length,
+        admin: users.filter((u) => u.role === 'ADMIN').length,
+        user: users.filter((u) => u.role === 'USER').length,
+        viewer: users.filter((u) => u.role === 'VIEWER').length,
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 }

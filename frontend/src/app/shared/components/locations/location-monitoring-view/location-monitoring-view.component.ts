@@ -1,4 +1,11 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, of, combineLatest } from 'rxjs';
 import { catchError, finalize, takeUntil, map } from 'rxjs/operators';
@@ -93,7 +100,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     private deviceService: DeviceService,
     private vehicleService: VehicleDetectedService,
     private sensorService: SensorDataService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   /**
@@ -136,14 +143,14 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
       catchError((err) => {
         console.error('Error loading locations:', err);
         return of([] as AppLocation[]);
-      })
+      }),
     );
 
     const devices$ = this.deviceService.getAll().pipe(
       catchError((err) => {
         console.error('Error loading devices:', err);
         return of([] as any[]);
-      })
+      }),
     );
 
     const vehicleLast$ = this.vehicleService.getLastRecord().pipe(
@@ -151,7 +158,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
       catchError((err) => {
         console.warn('Error fetching last vehicle detection:', err);
         return of(null);
-      })
+      }),
     );
 
     const sensorLast$ = this.sensorService.getLastRecord().pipe(
@@ -159,14 +166,14 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
       catchError((err) => {
         console.warn('Error fetching last sensor data:', err);
         return of(null);
-      })
+      }),
     );
 
     const lastDetect$ = combineLatest([vehicleLast$, sensorLast$]).pipe(
       map(([vDate, sDate]) => {
         if (vDate && sDate) return vDate > sDate ? vDate : sDate;
         return vDate || sDate || new Date();
-      })
+      }),
     );
 
     combineLatest([locations$, devices$, lastDetect$])
@@ -175,7 +182,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
           this.isLoading = false;
           this.cdr.markForCheck();
         }),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe((values) => {
         const [locations, devices, lastDetection] = values as [AppLocation[], any[], Date];
@@ -225,16 +232,19 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
 
     // Load devices on the client side (avoid depending on search params on backend)
-    this.deviceService.getAll().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (devices) => {
-        const related = (devices || []).filter(d => (d as any).location?.id === location.id);
-        (this.selectedInfoLocation as any).devices = related;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.warn('Failed to load devices list', err);
-      }
-    });
+    this.deviceService
+      .getAll()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (devices) => {
+          const related = (devices || []).filter((d) => (d as any).location?.id === location.id);
+          (this.selectedInfoLocation as any).devices = related;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.warn('Failed to load devices list', err);
+        },
+      });
   }
 
   /**
@@ -242,12 +252,15 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * Color y estilo se calculan según actividad/estado de la ubicación
    */
   getMarkerIcon(location: AppLocation): string | google.maps.Icon {
-    const lastActivity = (location as any).lastActivity ? new Date((location as any).lastActivity).getTime() : 0;
-    const isRecent = lastActivity && (Date.now() - lastActivity) < 24 * 60 * 60 * 1000; // 24h
+    const lastActivity = (location as any).lastActivity
+      ? new Date((location as any).lastActivity).getTime()
+      : 0;
+    const isRecent = lastActivity && Date.now() - lastActivity < 24 * 60 * 60 * 1000; // 24h
     const color = isRecent ? '#10B981' : '#14d83f'; // green or blue
 
     // Determine device count to adjust marker visual size
-    const deviceCount = ((location as any).deviceCount || ((location as any).devices || []).length) as number;
+    const deviceCount = ((location as any).deviceCount ||
+      ((location as any).devices || []).length) as number;
     const baseSize = isRecent ? 36 : 48; // px
     const size = baseSize + Math.min(24, (deviceCount || 0) * 6);
 
@@ -266,10 +279,16 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * Return a small label object to show emoji indicators for camera/sensor
    */
   getMarkerLabel(location: AppLocation): google.maps.MarkerLabel | null {
-    const hasCamera = ((location as any).cameraCount && (location as any).cameraCount > 0)
-      || (((location as any).devices || []) as any[]).some(d => (d.type || '').toLowerCase().includes('camera'));
-    const hasSensor = ((location as any).sensorCount && (location as any).sensorCount > 0)
-      || (((location as any).devices || []) as any[]).some(d => (d.type || '').toLowerCase().includes('sensor'));
+    const hasCamera =
+      ((location as any).cameraCount && (location as any).cameraCount > 0) ||
+      (((location as any).devices || []) as any[]).some((d) =>
+        (d.type || '').toLowerCase().includes('camera'),
+      );
+    const hasSensor =
+      ((location as any).sensorCount && (location as any).sensorCount > 0) ||
+      (((location as any).devices || []) as any[]).some((d) =>
+        (d.type || '').toLowerCase().includes('sensor'),
+      );
 
     let text = '';
     if (hasCamera && hasSensor) text = 'C/S';
@@ -319,9 +338,12 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     if (this.locations.length === 0) return;
 
     // Filtrar ubicaciones con coordenadas válidas
-    const valid = this.locations.filter(loc =>
-      loc.latitude != null && loc.longitude != null &&
-      isFinite(loc.latitude) && isFinite(loc.longitude)
+    const valid = this.locations.filter(
+      (loc) =>
+        loc.latitude != null &&
+        loc.longitude != null &&
+        isFinite(loc.latitude) &&
+        isFinite(loc.longitude),
     );
     if (valid.length === 0) return;
 

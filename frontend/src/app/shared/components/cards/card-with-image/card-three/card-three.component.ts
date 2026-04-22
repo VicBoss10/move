@@ -6,15 +6,8 @@ import { CardDescriptionComponent } from '../../../ui/card/card-description.comp
 
 @Component({
   selector: 'app-card-three',
-  imports: [
-    RouterModule,
-    CardComponent,
-    CardTitleComponent,
-    CardDescriptionComponent,
-  ],
+  imports: [RouterModule, CardComponent, CardTitleComponent, CardDescriptionComponent],
   templateUrl: './card-three.component.html',
-  styles: ``
+  styles: ``,
 })
-export class CardThreeComponent {
-
-}
+export class CardThreeComponent {}

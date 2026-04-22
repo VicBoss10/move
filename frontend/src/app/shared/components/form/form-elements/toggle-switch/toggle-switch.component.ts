@@ -4,15 +4,11 @@ import { ComponentCardComponent } from '../../../common/component-card/component
 
 @Component({
   selector: 'app-toggle-switch',
-  imports: [
-    SwitchComponent,
-    ComponentCardComponent,
-  ],
+  imports: [SwitchComponent, ComponentCardComponent],
   templateUrl: './toggle-switch.component.html',
-  styles: ``
+  styles: ``,
 })
 export class ToggleSwitchComponent {
-
   handleSwitchChange(checked: boolean) {
     console.log('Switch is now:', checked ? 'ON' : 'OFF');
   }

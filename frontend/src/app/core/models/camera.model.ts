@@ -2,7 +2,7 @@ export enum StreamType {
   USB = 'USB',
   URL = 'URL',
   RTSP = 'RTSP',
-  YOUTUBE = 'YOUTUBE'
+  YOUTUBE = 'YOUTUBE',
 }
 
 export interface Camera {

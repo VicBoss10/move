@@ -25,38 +25,38 @@ interface Variable {
 }
 
 interface CellResult {
-  r: number;           // Pearson coefficient [-1, 1]
-  n: number;           // sample size
-  label: string;       // formatted value
-  color: string;       // Tailwind bg class
-  textColor: string;   // Tailwind text class
+  r: number; // Pearson coefficient [-1, 1]
+  n: number; // sample size
+  label: string; // formatted value
+  color: string; // Tailwind bg class
+  textColor: string; // Tailwind text class
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const VARIABLES: Variable[] = [
-  { key: 'co2',           label: 'CO₂',          shortLabel: 'CO₂',   unit: 'ppm'     },
-  { key: 'pm25',          label: 'PM2.5',         shortLabel: 'PM2.5', unit: 'µg/m³'  },
-  { key: 'pm10',          label: 'PM10',          shortLabel: 'PM10',  unit: 'µg/m³'  },
-  { key: 'temperature',   label: 'Temperatura',   shortLabel: 'Temp',  unit: '°C'      },
-  { key: 'humidity',      label: 'Humedad',       shortLabel: 'Hum.',  unit: '%'       },
-  { key: 'co',            label: 'CO',            shortLabel: 'CO',    unit: 'ppm'     },
-  { key: 'no2',           label: 'NO₂',           shortLabel: 'NO₂',   unit: 'ppb'     },
-  { key: 'nh3',           label: 'NH₃',           shortLabel: 'NH₃',   unit: 'ppb'     },
-  { key: 'vehicleCount',  label: 'Vehículos',     shortLabel: 'Veh.',  unit: 'count'   },
+  { key: 'co2', label: 'CO₂', shortLabel: 'CO₂', unit: 'ppm' },
+  { key: 'pm25', label: 'PM2.5', shortLabel: 'PM2.5', unit: 'µg/m³' },
+  { key: 'pm10', label: 'PM10', shortLabel: 'PM10', unit: 'µg/m³' },
+  { key: 'temperature', label: 'Temperatura', shortLabel: 'Temp', unit: '°C' },
+  { key: 'humidity', label: 'Humedad', shortLabel: 'Hum.', unit: '%' },
+  { key: 'co', label: 'CO', shortLabel: 'CO', unit: 'ppm' },
+  { key: 'no2', label: 'NO₂', shortLabel: 'NO₂', unit: 'ppb' },
+  { key: 'nh3', label: 'NH₃', shortLabel: 'NH₃', unit: 'ppb' },
+  { key: 'vehicleCount', label: 'Vehículos', shortLabel: 'Veh.', unit: 'count' },
 ];
 
 const PERIODS: { key: PeriodKey; label: string }[] = [
-  { key: '24h', label: 'Últimas 24h'    },
-  { key: '7d',  label: 'Últimos 7 días' },
-  { key: '30d', label: 'Últimos 30 días'},
+  { key: '24h', label: 'Últimas 24h' },
+  { key: '7d', label: 'Últimos 7 días' },
+  { key: '30d', label: 'Últimos 30 días' },
 ];
 
 // interval size used to pair sensor ↔ vehicle readings
 const SLOT_MS: Record<PeriodKey, number> = {
-  '24h': 3_600_000,       // 1 h
-  '7d':  4 * 3_600_000,   // 4 h
-  '30d': 24 * 3_600_000,  // 1 day
+  '24h': 3_600_000, // 1 h
+  '7d': 4 * 3_600_000, // 4 h
+  '30d': 24 * 3_600_000, // 1 day
 };
 
 /**
@@ -92,18 +92,17 @@ const SLOT_MS: Record<PeriodKey, number> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CorrelationMatrixComponent implements OnInit, OnDestroy {
-
   readonly variables = VARIABLES;
-  readonly periods   = PERIODS;
+  readonly periods = PERIODS;
 
   // ── State ──────────────────────────────────────────────────────────────────
 
   private readonly period$ = new BehaviorSubject<PeriodKey>('7d');
   private readonly destroy$ = new Subject<void>();
 
-  isLoading  = true;
-  hasError   = false;
-  errorMsg   = '';
+  isLoading = true;
+  hasError = false;
+  errorMsg = '';
 
   /** matrix[row][col] = CellResult */
   matrix: CellResult[][] = [];
@@ -113,11 +112,11 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
 
   /** legend entries */
   readonly legend = [
-    { color: 'bg-emerald-600',  text: 'Correlación positiva fuerte  (r ≥ 0.7)' },
-    { color: 'bg-emerald-300',  text: 'Correlación positiva moderada (0.3 ≤ r < 0.7)' },
+    { color: 'bg-emerald-600', text: 'Correlación positiva fuerte  (r ≥ 0.7)' },
+    { color: 'bg-emerald-300', text: 'Correlación positiva moderada (0.3 ≤ r < 0.7)' },
     { color: 'bg-gray-100 dark:bg-gray-700', text: 'Sin correlación significativa (|r| < 0.3)' },
-    { color: 'bg-blue-300',     text: 'Correlación negativa moderada (-0.7 < r ≤ -0.3)' },
-    { color: 'bg-blue-600',     text: 'Correlación negativa fuerte  (r ≤ -0.7)' },
+    { color: 'bg-blue-300', text: 'Correlación negativa moderada (-0.7 < r ≤ -0.3)' },
+    { color: 'bg-blue-600', text: 'Correlación negativa fuerte  (r ≤ -0.7)' },
   ];
 
   // ── Accessors ──────────────────────────────────────────────────────────────
@@ -140,15 +139,15 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         switchMap((period) => {
           this.isLoading = true;
-          this.hasError  = false;
+          this.hasError = false;
           this.cdr.markForCheck();
           return this.loadAndCompute(period);
         }),
       )
       .subscribe(({ matrix, sampleSize }) => {
-        this.matrix     = matrix;
+        this.matrix = matrix;
         this.sampleSize = sampleSize;
-        this.isLoading  = false;
+        this.isLoading = false;
         this.cdr.markForCheck();
       });
   }
@@ -167,10 +166,10 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
   // ── Data pipeline ──────────────────────────────────────────────────────────
 
   private loadAndCompute(period: PeriodKey) {
-    const end   = new Date();
-    const ms    = { '24h': 24, '7d': 7 * 24, '30d': 30 * 24 }[period] * 3_600_000;
+    const end = new Date();
+    const ms = { '24h': 24, '7d': 7 * 24, '30d': 30 * 24 }[period] * 3_600_000;
     const start = new Date(end.getTime() - ms);
-    const slot  = SLOT_MS[period];
+    const slot = SLOT_MS[period];
 
     const sensor$ = this.sensorDataService
       .search({ start, end, size: 10000 })
@@ -181,7 +180,7 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
       .pipe(catchError(() => of<VehicleDetected[]>([])));
 
     return combineLatest([sensor$, vehicle$]).pipe(
-      catchError(err => {
+      catchError((err) => {
         console.error('[CorrelationMatrix] Error cargando datos:', err);
         this.hasError = true;
         this.errorMsg = 'Error al cargar los datos. Intenta nuevamente.';
@@ -189,7 +188,7 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         return of(null);
       }),
-      switchMap(result => {
+      switchMap((result) => {
         if (!result) {
           return of({ matrix: [] as CellResult[][], sampleSize: 0 });
         }
@@ -205,14 +204,14 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
 
         for (let i = 0; i < slotCount; i++) {
           const sStart = slotStart + i * slot;
-          const sEnd   = sStart + slot;
+          const sEnd = sStart + slot;
 
-          const inSlotSensor = sensorData.filter(d => {
+          const inSlotSensor = sensorData.filter((d) => {
             const t = new Date(d.timestamp).getTime();
             return t >= sStart && t < sEnd;
           });
 
-          const vehicleCount = vehicleData.filter(v => {
+          const vehicleCount = vehicleData.filter((v) => {
             const t = new Date(v.timestamp).getTime();
             return t >= sStart && t < sEnd;
           }).length;
@@ -222,31 +221,35 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
           const avg = (key: keyof SensorData) =>
             inSlotSensor.length === 0
               ? 0
-              : inSlotSensor.reduce((s, d) => s + ((d[key] as number) ?? 0), 0) / inSlotSensor.length;
+              : inSlotSensor.reduce((s, d) => s + ((d[key] as number) ?? 0), 0) /
+                inSlotSensor.length;
 
           rows.push({
-            co2:          avg('co2'),
-            pm25:         avg('pm25'),
-            pm10:         avg('pm10'),
-            temperature:  avg('temperature'),
-            humidity:     avg('humidity'),
-            co:           avg('co'),
-            no2:          avg('no2'),
-            nh3:          avg('nh3'),
+            co2: avg('co2'),
+            pm25: avg('pm25'),
+            pm10: avg('pm10'),
+            temperature: avg('temperature'),
+            humidity: avg('humidity'),
+            co: avg('co'),
+            no2: avg('no2'),
+            nh3: avg('nh3'),
             vehicleCount,
           });
         }
 
         const n = rows.length;
-        const keys = VARIABLES.map(v => v.key);
+        const keys = VARIABLES.map((v) => v.key);
 
         // Compute Pearson matrix
-        const matrix: CellResult[][] = keys.map(rowKey =>
-          keys.map(colKey => {
+        const matrix: CellResult[][] = keys.map((rowKey) =>
+          keys.map((colKey) => {
             if (rowKey === colKey) {
               return { r: 1, n, label: '1.00', ...this.cellStyle(1) } as CellResult;
             }
-            const r = this.pearson(rows.map(r => r[rowKey]), rows.map(r => r[colKey]));
+            const r = this.pearson(
+              rows.map((r) => r[rowKey]),
+              rows.map((r) => r[colKey]),
+            );
             return {
               r,
               n,
@@ -273,11 +276,13 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
     const meanX = xs.reduce((a, b) => a + b, 0) / n;
     const meanY = ys.reduce((a, b) => a + b, 0) / n;
 
-    let num = 0, denX = 0, denY = 0;
+    let num = 0,
+      denX = 0,
+      denY = 0;
     for (let i = 0; i < n; i++) {
       const dx = xs[i] - meanX;
       const dy = ys[i] - meanY;
-      num  += dx * dy;
+      num += dx * dy;
       denX += dx * dx;
       denY += dy * dy;
     }
@@ -289,11 +294,19 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
   // ── Styling ────────────────────────────────────────────────────────────────
 
   private cellStyle(r: number): { color: string; textColor: string } {
-    if (isNaN(r))  return { color: 'bg-gray-100 dark:bg-gray-700', textColor: 'text-gray-400' };
-    if (r >=  0.7) return { color: 'bg-emerald-600',               textColor: 'text-white'     };
-    if (r >=  0.3) return { color: 'bg-emerald-200 dark:bg-emerald-900/50', textColor: 'text-emerald-900 dark:text-emerald-200' };
-    if (r <= -0.7) return { color: 'bg-blue-600',                  textColor: 'text-white'     };
-    if (r <= -0.3) return { color: 'bg-blue-200 dark:bg-blue-900/50',       textColor: 'text-blue-900 dark:text-blue-200' };
+    if (isNaN(r)) return { color: 'bg-gray-100 dark:bg-gray-700', textColor: 'text-gray-400' };
+    if (r >= 0.7) return { color: 'bg-emerald-600', textColor: 'text-white' };
+    if (r >= 0.3)
+      return {
+        color: 'bg-emerald-200 dark:bg-emerald-900/50',
+        textColor: 'text-emerald-900 dark:text-emerald-200',
+      };
+    if (r <= -0.7) return { color: 'bg-blue-600', textColor: 'text-white' };
+    if (r <= -0.3)
+      return {
+        color: 'bg-blue-200 dark:bg-blue-900/50',
+        textColor: 'text-blue-900 dark:text-blue-200',
+      };
     return { color: 'bg-gray-100 dark:bg-gray-700', textColor: 'text-gray-500 dark:text-gray-400' };
   }
 

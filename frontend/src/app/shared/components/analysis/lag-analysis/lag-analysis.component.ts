@@ -41,9 +41,9 @@ interface MetricOption {
 }
 
 interface LagResult {
-  lag: number;        // shift in slots (negative = vehicles lead pollutant)
-  lagHours: number;   // human-readable lag in hours
-  r: number;          // cross-correlation at this lag
+  lag: number; // shift in slots (negative = vehicles lead pollutant)
+  lagHours: number; // human-readable lag in hours
+  r: number; // cross-correlation at this lag
 }
 
 interface LagSummary {
@@ -55,19 +55,19 @@ interface LagSummary {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const METRICS: MetricOption[] = [
-  { key: 'co2',         label: 'CO₂',        unit: 'ppm',    color: '#ef4444' },
-  { key: 'pm25',        label: 'PM2.5',       unit: 'µg/m³', color: '#a855f7' },
-  { key: 'pm10',        label: 'PM10',        unit: 'µg/m³', color: '#f97316' },
-  { key: 'temperature', label: 'Temperatura', unit: '°C',     color: '#eab308' },
-  { key: 'humidity',    label: 'Humedad',     unit: '%',      color: '#3b82f6' },
-  { key: 'co',         label: 'CO',          unit: 'ppm',    color: '#6b7280' },
-  { key: 'no2',        label: 'NO₂',         unit: 'ppb',    color: '#22c55e' },
-  { key: 'nh3',        label: 'NH₃',         unit: 'ppb',    color: '#14b8a6' },
+  { key: 'co2', label: 'CO₂', unit: 'ppm', color: '#ef4444' },
+  { key: 'pm25', label: 'PM2.5', unit: 'µg/m³', color: '#a855f7' },
+  { key: 'pm10', label: 'PM10', unit: 'µg/m³', color: '#f97316' },
+  { key: 'temperature', label: 'Temperatura', unit: '°C', color: '#eab308' },
+  { key: 'humidity', label: 'Humedad', unit: '%', color: '#3b82f6' },
+  { key: 'co', label: 'CO', unit: 'ppm', color: '#6b7280' },
+  { key: 'no2', label: 'NO₂', unit: 'ppb', color: '#22c55e' },
+  { key: 'nh3', label: 'NH₃', unit: 'ppb', color: '#14b8a6' },
 ];
 
 const PERIODS: { key: PeriodKey; label: string }[] = [
-  { key: '3d',  label: 'Últimos 3 días'  },
-  { key: '7d',  label: 'Últimos 7 días'  },
+  { key: '3d', label: 'Últimos 3 días' },
+  { key: '7d', label: 'Últimos 7 días' },
   { key: '30d', label: 'Últimos 30 días' },
 ];
 
@@ -111,7 +111,6 @@ const MAX_LAG = 12;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LagAnalysisComponent implements OnInit, OnDestroy {
-
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   readonly metrics = METRICS;
@@ -126,17 +125,19 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   isLoading = true;
-  hasError  = false;
-  errorMsg  = '';
+  hasError = false;
+  errorMsg = '';
 
   summary: LagSummary | null = null;
 
-  chartData: ChartConfiguration<'bar'>['data']        = { labels: [], datasets: [] };
-  chartOptions: ChartConfiguration<'bar'>['options']  = this.buildChartOptions(METRICS[0]);
+  chartData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [] };
+  chartOptions: ChartConfiguration<'bar'>['options'] = this.buildChartOptions(METRICS[0]);
 
   // ── Accessors ──────────────────────────────────────────────────────────────
 
-  get currentFilter() { return this.filter$.value; }
+  get currentFilter() {
+    return this.filter$.value;
+  }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -150,18 +151,18 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     this.filter$
       .pipe(
         takeUntil(this.destroy$),
-        switchMap(f => {
+        switchMap((f) => {
           this.isLoading = true;
-          this.hasError  = false;
+          this.hasError = false;
           this.cdr.markForCheck();
           return this.loadAndCompute(f.period, f.metric);
         }),
       )
       .subscribe(({ summary, chartData, chartOptions }) => {
-        this.summary      = summary;
-        this.chartData    = chartData;
+        this.summary = summary;
+        this.chartData = chartData;
         this.chartOptions = chartOptions;
-        this.isLoading    = false;
+        this.isLoading = false;
         this.cdr.markForCheck();
       });
   }
@@ -173,16 +174,20 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
 
   // ── User interactions ──────────────────────────────────────────────────────
 
-  setPeriod(p: PeriodKey): void  { this.filter$.next({ ...this.filter$.value, period: p }); }
-  setMetric(m: MetricKey): void  { this.filter$.next({ ...this.filter$.value, metric: m }); }
+  setPeriod(p: PeriodKey): void {
+    this.filter$.next({ ...this.filter$.value, period: p });
+  }
+  setMetric(m: MetricKey): void {
+    this.filter$.next({ ...this.filter$.value, metric: m });
+  }
 
   // ── Data pipeline ──────────────────────────────────────────────────────────
 
   private loadAndCompute(period: PeriodKey, metricKey: MetricKey) {
-    const end   = new Date();
+    const end = new Date();
     const hours = { '3d': 72, '7d': 168, '30d': 720 }[period];
     const start = new Date(end.getTime() - hours * 3_600_000);
-    const metricOption = METRICS.find(m => m.key === metricKey)!;
+    const metricOption = METRICS.find((m) => m.key === metricKey)!;
 
     const sensor$ = this.sensorDataService
       .search({ start, end, size: 10000 })
@@ -193,7 +198,7 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
       .pipe(catchError(() => of<VehicleDetected[]>([])));
 
     return combineLatest([sensor$, vehicle$]).pipe(
-      catchError(err => {
+      catchError((err) => {
         console.error('[LagAnalysis] Error:', err);
         this.hasError = true;
         this.errorMsg = 'Error al cargar los datos. Intenta nuevamente.';
@@ -201,36 +206,41 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         return of(null);
       }),
-      switchMap(result => {
+      switchMap((result) => {
         if (!result) {
-          return of({ summary: null as unknown as LagSummary, chartData: { labels: [], datasets: [] } as ChartConfiguration<'bar'>['data'], chartOptions: this.buildChartOptions(metricOption) });
+          return of({
+            summary: null as unknown as LagSummary,
+            chartData: { labels: [], datasets: [] } as ChartConfiguration<'bar'>['data'],
+            chartOptions: this.buildChartOptions(metricOption),
+          });
         }
 
         const [sensorData, vehicleData] = result;
 
         // Build hourly time slots
         const slotOrigin = Math.floor(start.getTime() / SLOT_MS) * SLOT_MS;
-        const slotCount  = Math.ceil((end.getTime() - slotOrigin) / SLOT_MS);
+        const slotCount = Math.ceil((end.getTime() - slotOrigin) / SLOT_MS);
 
         const pollutant: number[] = [];
-        const vehicles:  number[] = [];
+        const vehicles: number[] = [];
 
         for (let i = 0; i < slotCount; i++) {
           const sStart = slotOrigin + i * SLOT_MS;
-          const sEnd   = sStart + SLOT_MS;
+          const sEnd = sStart + SLOT_MS;
 
-          const inSensor = sensorData.filter(d => {
+          const inSensor = sensorData.filter((d) => {
             const t = new Date(d.timestamp).getTime();
             return t >= sStart && t < sEnd;
           });
-          const vCount = vehicleData.filter(v => {
+          const vCount = vehicleData.filter((v) => {
             const t = new Date(v.timestamp).getTime();
             return t >= sStart && t < sEnd;
           }).length;
 
-          const avg = inSensor.length > 0
-            ? inSensor.reduce((s, d) => s + ((d[metricKey] as number) ?? 0), 0) / inSensor.length
-            : 0;
+          const avg =
+            inSensor.length > 0
+              ? inSensor.reduce((s, d) => s + ((d[metricKey] as number) ?? 0), 0) / inSensor.length
+              : 0;
 
           pollutant.push(avg);
           vehicles.push(vCount);
@@ -252,8 +262,8 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
         const summary: LagSummary = { bestLag, interpretation, results };
 
         // Build chart
-        const labels   = results.map(r => `${r.lag >= 0 ? '+' : ''}${r.lag}h`);
-        const barColors = results.map(r =>
+        const labels = results.map((r) => `${r.lag >= 0 ? '+' : ''}${r.lag}h`);
+        const barColors = results.map((r) =>
           r.lag === bestLag.lag
             ? metricOption.color
             : r.r > 0.3
@@ -268,9 +278,9 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
           datasets: [
             {
               label: `Cross-correlation vehículos → ${metricOption.label}`,
-              data: results.map(r => Math.round(r.r * 1000) / 1000),
+              data: results.map((r) => Math.round(r.r * 1000) / 1000),
               backgroundColor: barColors,
-              borderColor: barColors.map(c => c.replace('0.55', '1').replace('0.4', '0.8')),
+              borderColor: barColors.map((c) => c.replace('0.55', '1').replace('0.4', '0.8')),
               borderWidth: 1,
               borderRadius: 4,
             },
@@ -301,14 +311,16 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     }
     if (pairs.length < 2) return 0;
 
-    const xs = pairs.map(p => p[0]);
-    const ys = pairs.map(p => p[1]);
-    const m  = xs.length;
+    const xs = pairs.map((p) => p[0]);
+    const ys = pairs.map((p) => p[1]);
+    const m = xs.length;
 
     const mx = xs.reduce((a, b) => a + b, 0) / m;
     const my = ys.reduce((a, b) => a + b, 0) / m;
 
-    let num = 0, dx2 = 0, dy2 = 0;
+    let num = 0,
+      dx2 = 0,
+      dy2 = 0;
     for (let i = 0; i < m; i++) {
       const dx = xs[i] - mx;
       const dy = ys[i] - my;
@@ -357,7 +369,7 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
           borderWidth: 1,
           padding: 12,
           callbacks: {
-            label: ctx => ` r = ${(ctx.parsed.y as number).toFixed(3)}`,
+            label: (ctx) => ` r = ${(ctx.parsed.y as number).toFixed(3)}`,
           },
         },
       },
@@ -372,7 +384,7 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
           display: true,
           title: { display: true, text: 'Correlación (r)', color: '#6B7280', font: { size: 11 } },
           min: -1,
-          max:  1,
+          max: 1,
           grid: { color: 'rgba(107,114,128,0.1)' },
           ticks: { color: '#6B7280', stepSize: 0.2 },
         },
@@ -382,8 +394,10 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
 
   /** Color for the best-lag badge */
   badgeClass(r: number): string {
-    if (Math.abs(r) >= 0.5) return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
-    if (Math.abs(r) >= 0.3) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+    if (Math.abs(r) >= 0.5)
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
+    if (Math.abs(r) >= 0.3)
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
     return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
   }
 

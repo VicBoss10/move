@@ -3,14 +3,12 @@
     <full-calendar #calendar [options]="calendarOptions"></full-calendar>
   </div>
 
-  <app-modal
-    [isOpen]="isOpen"
-    (close)="closeModal()"
-    className="max-w-[700px] p-6 lg:p-10"
-  >
+  <app-modal [isOpen]="isOpen" (close)="closeModal()" className="max-w-[700px] p-6 lg:p-10">
     <div class="flex flex-col px-2 overflow-y-auto custom-scrollbar">
       <div>
-        <h5 class="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
+        <h5
+          class="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl"
+        >
           {{ selectedEvent ? 'Edit Event' : 'Add Event' }}
         </h5>
         <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -36,10 +34,8 @@
           Event Color
         </label>
         <div class="flex flex-wrap items-center gap-4 sm:gap-5">
-          @for (entry of (calendarsEvents | keyvalue); track $index) {
-            <div
-              class="n-chk"
-            >
+          @for (entry of calendarsEvents | keyvalue; track $index) {
+            <div class="n-chk">
               <div class="form-check form-check-inline" [class]="'form-check-' + entry.value">
                 <label
                   class="flex items-center text-sm text-gray-700 form-check-label dark:text-gray-400"

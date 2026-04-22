@@ -1,17 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+} from '@angular/core';
 import flatpickr from 'flatpickr';
 import { LabelComponent } from '../label/label.component';
-import "flatpickr/dist/flatpickr.css";
+import 'flatpickr/dist/flatpickr.css';
 
 @Component({
   selector: 'app-date-picker',
-  imports: [CommonModule,LabelComponent],
+  imports: [CommonModule, LabelComponent],
   templateUrl: './date-picker.component.html',
-  styles: ``
+  styles: ``,
 })
-export class DatePickerComponent {
-
+export class DatePickerComponent implements AfterViewInit, OnDestroy {
   @Input() id!: string;
   @Input() mode: 'single' | 'multiple' | 'range' | 'time' = 'single';
   @Input() defaultDate?: string | Date | string[] | Date[];
@@ -32,7 +40,7 @@ export class DatePickerComponent {
       defaultDate: this.defaultDate,
       onChange: (selectedDates, dateStr, instance) => {
         this.dateChange.emit({ selectedDates, dateStr, instance });
-      }
+      },
     });
   }
 

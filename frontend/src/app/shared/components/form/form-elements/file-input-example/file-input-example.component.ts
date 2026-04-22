@@ -6,19 +6,17 @@ import { FileInputComponent } from '../../input/file-input.component';
 
 @Component({
   selector: 'app-file-input-example',
-  imports: [
-    CommonModule,
-    ComponentCardComponent,
-    LabelComponent,
-    FileInputComponent
-  ],
+  imports: [CommonModule, ComponentCardComponent, LabelComponent, FileInputComponent],
   template: `
-   <app-component-card title="File Input">
-    <div>
-      <app-label>Upload file</app-label>
-      <app-file-input (change)="handleFileChange($event)" className="custom-class"></app-file-input>
-    </div>
-  </app-component-card>
+    <app-component-card title="File Input">
+      <div>
+        <app-label>Upload file</app-label>
+        <app-file-input
+          (change)="handleFileChange($event)"
+          className="custom-class"
+        ></app-file-input>
+      </div>
+    </app-component-card>
   `,
 })
 export class FileInputExampleComponent {

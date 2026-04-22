@@ -1,18 +1,19 @@
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
   <!-- Status Card Item Start -->
   <ng-container *ngIf="statusCards$ | async as cards">
-    <div 
+    <div
       *ngFor="let card of cards"
       [class]="'rounded-2xl border p-5 md:p-6 ' + getStatusColor(card.status)"
     >
       <!-- Icon Container -->
-      <div class="flex items-center justify-center w-12 h-12 rounded-xl" 
-           [class.bg-green-100]="card.status === 'online' || card.status === 'active'"
-           [class.dark:bg-green-800]="card.status === 'online' || card.status === 'active'"
-           [class.bg-red-100]="card.status === 'offline' || card.status === 'inactive'"
-           [class.dark:bg-red-800]="card.status === 'offline' || card.status === 'inactive'">
-        <span [innerHTML]="card.icon | safeHtml" 
-              [class]="getTextColor(card.status)"></span>
+      <div
+        class="flex items-center justify-center w-12 h-12 rounded-xl"
+        [class.bg-green-100]="card.status === 'online' || card.status === 'active'"
+        [class.dark:bg-green-800]="card.status === 'online' || card.status === 'active'"
+        [class.bg-red-100]="card.status === 'offline' || card.status === 'inactive'"
+        [class.dark:bg-red-800]="card.status === 'offline' || card.status === 'inactive'"
+      >
+        <span [innerHTML]="card.icon | safeHtml" [class]="getTextColor(card.status)"></span>
       </div>
 
       <!-- Content -->

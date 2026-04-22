@@ -5,10 +5,7 @@ import { ToastContainerComponent } from './shared/components/ui/toast-container/
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [
-    RouterModule,
-    ToastContainerComponent,
-  ],
+  imports: [RouterModule, ToastContainerComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

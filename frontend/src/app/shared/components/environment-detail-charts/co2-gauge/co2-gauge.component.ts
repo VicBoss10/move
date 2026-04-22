@@ -4,7 +4,10 @@ import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { ThresholdsService } from '../../../../core/services/thresholds.service';
-import { getEnvironmentStatusFromConfig, getMetricGaugePercentageFromConfig } from '../../../../core/config/environment-thresholds.config';
+import {
+  getEnvironmentStatusFromConfig,
+  getMetricGaugePercentageFromConfig,
+} from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Co2GaugeComponent
@@ -36,7 +39,10 @@ export class Co2GaugeComponent {
     scaleLevels: { color: string; label: string; rangeLabel: string }[];
   }>;
 
-  constructor(private sensorDataService: SensorDataService, private thresholds: ThresholdsService) {
+  constructor(
+    private sensorDataService: SensorDataService,
+    private thresholds: ThresholdsService,
+  ) {
     this.initializeGaugeData();
   }
 
@@ -61,17 +67,27 @@ export class Co2GaugeComponent {
           scaleLevels: config.levels.map((l, i, arr) => ({
             color: l.color,
             label: l.label,
-            rangeLabel: (l.max === Infinity || l.max == null)
-              ? `>${arr[i - 1]?.max ?? 0}`
-              : (i === 0 ? `<${l.max}` : `${arr[i - 1].max}–${l.max}`),
+            rangeLabel:
+              l.max === Infinity || l.max == null
+                ? `>${arr[i - 1]?.max ?? 0}`
+                : i === 0
+                  ? `<${l.max}`
+                  : `${arr[i - 1].max}–${l.max}`,
           })),
         };
       }),
       catchError((error) => {
         console.error('Error cargando datos de CO₂:', error);
-        return of({ co2Value: 0, gaugePercentage: 0, gaugeColor: 'text-gray-500 dark:text-gray-400', status: 'Sin datos', bgColor: 'from-gray-500/20 to-gray-600/20', scaleLevels: [] });
+        return of({
+          co2Value: 0,
+          gaugePercentage: 0,
+          gaugeColor: 'text-gray-500 dark:text-gray-400',
+          status: 'Sin datos',
+          bgColor: 'from-gray-500/20 to-gray-600/20',
+          scaleLevels: [],
+        });
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 }

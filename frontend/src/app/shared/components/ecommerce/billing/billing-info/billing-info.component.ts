@@ -4,17 +4,14 @@ import { ButtonComponent } from '../../../ui/button/button.component';
 
 @Component({
   selector: 'app-billing-info',
-  imports: [
-    ModalComponent,
-    ButtonComponent,
-  ],
+  imports: [ModalComponent, ButtonComponent],
   templateUrl: './billing-info.component.html',
   host: {
-    class: 'rounded-2xl border border-gray-200 bg-white xl:w-2/6 dark:border-gray-800 dark:bg-white/[0.03]',
+    class:
+      'rounded-2xl border border-gray-200 bg-white xl:w-2/6 dark:border-gray-800 dark:bg-white/[0.03]',
   },
 })
 export class BillingInfoComponent {
-
   isOpen = false;
 
   openModal() {
@@ -25,9 +22,9 @@ export class BillingInfoComponent {
     this.isOpen = false;
   }
 
-  handleSave ()  {
+  handleSave() {
     // Handle save logic here
-    console.log("Saving changes...");
+    console.log('Saving changes...');
     this.closeModal();
-  };
+  }
 }

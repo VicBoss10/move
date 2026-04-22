@@ -19,10 +19,9 @@ import { TimePickerComponent } from '../../time-picker/time-picker.component';
     TimePickerComponent,
   ],
   templateUrl: './default-inputs.component.html',
-  styles: ``
+  styles: ``,
 })
 export class DefaultInputsComponent {
-
   showPassword = false;
   options = [
     { value: 'marketing', label: 'Marketing' },

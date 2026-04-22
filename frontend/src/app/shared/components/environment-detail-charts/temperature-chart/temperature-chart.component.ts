@@ -1,13 +1,33 @@
 import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import {
+  ChartConfiguration,
+  Chart as ChartJS,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 // Registrar los scales y elementos
-ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
+ChartJS.register(
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+);
 
 /**
  * Componente que muestra un gráfico dinámico de línea con la tendencia de temperatura
@@ -58,8 +78,8 @@ export class TemperatureChartComponent {
         left: 20,
         right: 20,
         top: 0,
-        bottom: 0
-      }
+        bottom: 0,
+      },
     },
     plugins: {
       legend: {
@@ -168,7 +188,7 @@ export class TemperatureChartComponent {
         console.error('Error cargando datos de temperatura:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -183,8 +203,8 @@ export class TemperatureChartComponent {
         }
 
         const parsedData = data
-          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
-          .filter(d => !isNaN(d._time.getTime()))
+          .map((d) => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter((d) => !isNaN(d._time.getTime()))
           .sort((a, b) => a._time.getTime() - b._time.getTime());
 
         if (parsedData.length === 0) {
@@ -197,7 +217,9 @@ export class TemperatureChartComponent {
           latestTime.getMonth(),
           latestTime.getDate(),
           latestTime.getHours(),
-          0, 0, 0
+          0,
+          0,
+          0,
         );
 
         // Crear 24 slots horarios hacia atrás desde la hora más reciente
@@ -209,15 +231,14 @@ export class TemperatureChartComponent {
           slots.push({ start: slotStart, end: slotEnd, label });
         }
 
-        const labels = slots.map(s => s.label);
+        const labels = slots.map((s) => s.label);
         const tempData: (number | null)[] = [];
 
         for (const slot of slots) {
-          const slotData = parsedData.filter(
-            d => d._time >= slot.start && d._time < slot.end
-          );
+          const slotData = parsedData.filter((d) => d._time >= slot.start && d._time < slot.end);
           if (slotData.length > 0) {
-            const avg = slotData.reduce((sum, d) => sum + (d.temperature || 0), 0) / slotData.length;
+            const avg =
+              slotData.reduce((sum, d) => sum + (d.temperature || 0), 0) / slotData.length;
             tempData.push(Math.round(avg * 100) / 100);
           } else {
             tempData.push(null);
@@ -245,7 +266,7 @@ export class TemperatureChartComponent {
           ],
         };
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -256,7 +277,7 @@ export class TemperatureChartComponent {
     this.tempValue$ = this.sensorDataService.getLatest().pipe(
       map((latestData: any) => Math.round((latestData?.temperature || 0) * 10) / 10),
       catchError(() => of(0)),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -264,7 +285,7 @@ export class TemperatureChartComponent {
    * Calcula el valor mínimo de un array de datos
    */
   getMinValue(data: any[]): number {
-    const validData = data.filter(d => d !== null && typeof d === 'number') as number[];
+    const validData = data.filter((d) => d !== null && typeof d === 'number') as number[];
     return validData.length > 0 ? Math.min(...validData) : 0;
   }
 
@@ -272,7 +293,7 @@ export class TemperatureChartComponent {
    * Calcula el valor promedio de un array de datos
    */
   getAvgValue(data: any[]): number {
-    const validData = data.filter(d => d !== null && typeof d === 'number') as number[];
+    const validData = data.filter((d) => d !== null && typeof d === 'number') as number[];
     if (validData.length === 0) return 0;
     const sum = validData.reduce((acc, val) => acc + val, 0);
     return sum / validData.length;
@@ -282,7 +303,7 @@ export class TemperatureChartComponent {
    * Calcula el valor máximo de un array de datos
    */
   getMaxValue(data: any[]): number {
-    const validData = data.filter(d => d !== null && typeof d === 'number') as number[];
+    const validData = data.filter((d) => d !== null && typeof d === 'number') as number[];
     return validData.length > 0 ? Math.max(...validData) : 0;
   }
 }

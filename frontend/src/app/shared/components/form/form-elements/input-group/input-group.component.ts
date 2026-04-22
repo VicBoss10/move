@@ -15,10 +15,9 @@ import { ComponentCardComponent } from '../../../common/component-card/component
     ComponentCardComponent,
   ],
   templateUrl: './input-group.component.html',
-  styles: ``
+  styles: ``,
 })
 export class InputGroupComponent {
-
   countries = [
     { code: 'US', label: '+1' },
     { code: 'GB', label: '+44' },

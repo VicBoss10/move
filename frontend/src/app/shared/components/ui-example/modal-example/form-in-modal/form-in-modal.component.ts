@@ -14,13 +14,12 @@ import { InputFieldComponent } from '../../../form/input/input-field.component';
     ComponentCardComponent,
     ButtonComponent,
     LabelComponent,
-    InputFieldComponent
+    InputFieldComponent,
   ],
   templateUrl: './form-in-modal.component.html',
-  styles: ``
+  styles: ``,
 })
 export class FormInModalComponent {
-
   isOpen = false;
 
   openModal() {

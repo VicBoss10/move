@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-three-column-image-grid',
   imports: [],
   templateUrl: './three-column-image-grid.component.html',
-  styles: ``
+  styles: ``,
 })
-export class ThreeColumnImageGridComponent {
-
-}
+export class ThreeColumnImageGridComponent {}

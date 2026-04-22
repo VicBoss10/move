@@ -11,6 +11,6 @@ import { CommonModule } from '@angular/common';
   selector: 'app-architecture',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './architecture.component.html'
+  templateUrl: './architecture.component.html',
 })
 export class ArchitectureComponent {}

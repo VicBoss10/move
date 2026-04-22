@@ -16,7 +16,11 @@ import { map, catchError, shareReplay, takeUntil } from 'rxjs/operators';
 import { LocationService } from '../../../../core/services/location.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { ApiService } from '../../../../core/services/api.service';
-import { DeviceState, DeviceType, RegisterDeviceRequest } from '../../../../core/models/device.model';
+import {
+  DeviceState,
+  DeviceType,
+  RegisterDeviceRequest,
+} from '../../../../core/models/device.model';
 import { ToastService } from '../../../../core/services/toast.service';
 
 /**
@@ -74,12 +78,19 @@ export class RegisterDeviceFormComponent implements OnDestroy {
     private deviceService: DeviceService,
     private apiService: ApiService,
     private router: Router,
-    private toastService: ToastService
-    ,
-    private cdr: ChangeDetectorRef
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef,
   ) {
     this.deviceForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), this.trimmedTextValidator()]],
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(100),
+          this.trimmedTextValidator(),
+        ],
+      ],
       type: ['', Validators.required],
       locationId: ['', [Validators.required, this.positiveIntegerValidator()]],
       state: ['ACTIVE', Validators.required],
@@ -93,21 +104,22 @@ export class RegisterDeviceFormComponent implements OnDestroy {
         console.error('Error loading locations:', error);
         return of([] as any[]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
 
-    this.deviceForm.get('type')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe((type) => {
-      this.selectedType$.next(type);
-      this.updateValidators(type);
-      // start/stop captive LED blinking when entering/exiting SENSOR type
-      if (type === 'SENSOR') {
-        this.startCaptiveLedBlink();
-      } else {
-        this.stopCaptiveLedBlink();
-      }
-    });
+    this.deviceForm
+      .get('type')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((type) => {
+        this.selectedType$.next(type);
+        this.updateValidators(type);
+        // start/stop captive LED blinking when entering/exiting SENSOR type
+        if (type === 'SENSOR') {
+          this.startCaptiveLedBlink();
+        } else {
+          this.stopCaptiveLedBlink();
+        }
+      });
   }
 
   private startCaptiveLedBlink(): void {
@@ -184,7 +196,10 @@ export class RegisterDeviceFormComponent implements OnDestroy {
     // from the UI for sensors — show an informational toast and navigate back.
     if (baseData.type === DeviceType.SENSOR) {
       this.isLoading$.next(false);
-      this.toastService.success('El registro de sensores se realiza desde el propio dispositivo (portal cautivo).', 'Registro de Sensor');
+      this.toastService.success(
+        'El registro de sensores se realiza desde el propio dispositivo (portal cautivo).',
+        'Registro de Sensor',
+      );
       setTimeout(() => {
         this.router.navigate(['/dashboard/devices/device-status']);
       }, 900);
@@ -199,26 +214,29 @@ export class RegisterDeviceFormComponent implements OnDestroy {
       source: String(formValue.source).trim(),
     };
 
-    this.deviceService.register(payload).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (response) => {
-        this.isLoading$.next(false);
-        const typeName = 'Cámara';
-        const guidance = 'Para iniciar la detección dirígete a Cámara → Streaming.';
-        this.successMessage$.next(`${typeName} registrado(a) exitosamente. ${guidance}`);
-        this.toastService.success(`${typeName} registrado(a) exitosamente. ${guidance}`, 'Éxito');
+    this.deviceService
+      .register(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.isLoading$.next(false);
+          const typeName = 'Cámara';
+          const guidance = 'Para iniciar la detección dirígete a Cámara → Streaming.';
+          this.successMessage$.next(`${typeName} registrado(a) exitosamente. ${guidance}`);
+          this.toastService.success(`${typeName} registrado(a) exitosamente. ${guidance}`, 'Éxito');
 
-        setTimeout(() => {
-          this.router.navigate(['/dashboard/devices/device-status']);
-        }, 1400);
-      },
-      error: (error: any) => {
-        this.isLoading$.next(false);
-        const errorMsg = error?.message || 'Error al registrar el dispositivo';
-        this.errorMessage$.next(errorMsg);
-        this.toastService.error(errorMsg, 'Error');
-        console.error('Error registering device:', error);
-      }
-    });
+          setTimeout(() => {
+            this.router.navigate(['/dashboard/devices/device-status']);
+          }, 1400);
+        },
+        error: (error: any) => {
+          this.isLoading$.next(false);
+          const errorMsg = error?.message || 'Error al registrar el dispositivo';
+          this.errorMessage$.next(errorMsg);
+          this.toastService.error(errorMsg, 'Error');
+          console.error('Error registering device:', error);
+        },
+      });
   }
 
   resetForm(): void {

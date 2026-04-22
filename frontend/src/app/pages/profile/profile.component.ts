@@ -6,15 +6,8 @@ import { UserInfoCardComponent } from '../../shared/components/user-profile/user
 
 @Component({
   selector: 'app-profile',
-  imports: [
-    CommonModule,
-    PageBreadcrumbComponent,
-    UserMetaCardComponent,
-    UserInfoCardComponent,
-  ],
+  imports: [CommonModule, PageBreadcrumbComponent, UserMetaCardComponent, UserInfoCardComponent],
   templateUrl: './profile.component.html',
-  styles: ``
+  styles: ``,
 })
-export class ProfileComponent {
-
-}
+export class ProfileComponent {}

@@ -1,7 +1,7 @@
 /**
  * Constructor de parámetros de query reutilizable
  * Reduce duplicación entre servicios al construir queryParams
- * 
+ *
  * @utility
  */
 export class QueryParamsBuilder {

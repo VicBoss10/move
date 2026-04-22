@@ -23,7 +23,7 @@ export const roleGuard: CanActivateFn = async (route, state) => {
   if (!roles) return true; // no roles required
 
   const required: string[] = Array.isArray(roles) ? roles : [roles];
-  const allowed = required.some(r => auth.hasRole(r));
+  const allowed = required.some((r) => auth.hasRole(r));
 
   if (allowed) return true;
 

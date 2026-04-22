@@ -12,6 +12,6 @@ import { HowItWorksComponent } from '../../../shared/components/help/how-it-work
   selector: 'app-how-it-works-page',
   standalone: true,
   imports: [CommonModule, HowItWorksComponent],
-  templateUrl: './how-it-works.component.html'
+  templateUrl: './how-it-works.component.html',
 })
 export class HowItWorksPageComponent {}

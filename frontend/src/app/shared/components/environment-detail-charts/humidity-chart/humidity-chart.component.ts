@@ -1,13 +1,33 @@
 import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import {
+  ChartConfiguration,
+  Chart as ChartJS,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 // Registrar los scales y elementos
-ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
+ChartJS.register(
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+);
 
 /**
  * HumidityChartComponent
@@ -76,8 +96,8 @@ export class HumidityChartComponent {
         left: 20,
         right: 20,
         top: 0,
-        bottom: 0
-      }
+        bottom: 0,
+      },
     },
     plugins: {
       legend: {
@@ -158,7 +178,6 @@ export class HumidityChartComponent {
           display: true,
         },
       },
-
     },
   };
 
@@ -183,7 +202,7 @@ export class HumidityChartComponent {
         console.error('Error cargando datos de humedad:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -198,8 +217,8 @@ export class HumidityChartComponent {
         }
 
         const parsedData = data
-          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
-          .filter(d => !isNaN(d._time.getTime()))
+          .map((d) => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter((d) => !isNaN(d._time.getTime()))
           .sort((a, b) => a._time.getTime() - b._time.getTime());
 
         if (parsedData.length === 0) {
@@ -212,7 +231,9 @@ export class HumidityChartComponent {
           latestTime.getMonth(),
           latestTime.getDate(),
           latestTime.getHours(),
-          0, 0, 0
+          0,
+          0,
+          0,
         );
 
         // Crear 24 slots horarios hacia atrás desde la hora más reciente
@@ -224,13 +245,11 @@ export class HumidityChartComponent {
           slots.push({ start: slotStart, end: slotEnd, label });
         }
 
-        const labels = slots.map(s => s.label);
+        const labels = slots.map((s) => s.label);
         const humidityData: (number | null)[] = [];
 
         for (const slot of slots) {
-          const slotData = parsedData.filter(
-            d => d._time >= slot.start && d._time < slot.end
-          );
+          const slotData = parsedData.filter((d) => d._time >= slot.start && d._time < slot.end);
           if (slotData.length > 0) {
             const avg = slotData.reduce((sum, d) => sum + (d.humidity || 0), 0) / slotData.length;
             humidityData.push(Math.round(avg * 100) / 100);
@@ -259,7 +278,7 @@ export class HumidityChartComponent {
           ],
         };
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -270,19 +289,19 @@ export class HumidityChartComponent {
     this.humidityValue$ = this.sensorDataService.getLatest().pipe(
       map((latestData: any) => Math.round((latestData?.humidity || 0) * 10) / 10),
       catchError(() => of(0)),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
   getMinValue(values: any[]): number {
     if (!values || values.length === 0) return 0;
-    const numValues = values.filter(v => typeof v === 'number');
+    const numValues = values.filter((v) => typeof v === 'number');
     return numValues.length > 0 ? Math.min(...numValues) : 0;
   }
 
   getAvgValue(values: any[]): number {
     if (!values || values.length === 0) return 0;
-    const numValues = values.filter(v => typeof v === 'number');
+    const numValues = values.filter((v) => typeof v === 'number');
     if (numValues.length === 0) return 0;
     const sum = numValues.reduce((acc, val) => acc + val, 0);
     return Math.round((sum / numValues.length) * 10) / 10;
@@ -290,7 +309,7 @@ export class HumidityChartComponent {
 
   getMaxValue(values: any[]): number {
     if (!values || values.length === 0) return 0;
-    const numValues = values.filter(v => typeof v === 'number');
+    const numValues = values.filter((v) => typeof v === 'number');
     return numValues.length > 0 ? Math.max(...numValues) : 0;
   }
 }

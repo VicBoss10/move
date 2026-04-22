@@ -4,7 +4,7 @@ import { ToastService, Toast, ToastVariant } from './toast.service';
 
 /**
  * Test suite for ToastService.
- * 
+ *
  * Tests the notification/toast display system including:
  * - Adding toasts with different variants
  * - Auto-dismiss functionality
@@ -87,9 +87,9 @@ describe('ToastService', () => {
 
       service.show('Default timeout message');
       expect(toasts[1].length).toBe(1);
-      
+
       flush();
-      
+
       expect(toasts[2].length).toBe(0);
       subscription.unsubscribe();
     }));
@@ -114,9 +114,9 @@ describe('ToastService', () => {
 
       service.success('Saved', 'Saved', 2000);
       expect(toasts[1].length).toBe(1);
-      
+
       flush();
-      
+
       expect(toasts[2].length).toBe(0);
       subscription.unsubscribe();
     }));
@@ -244,9 +244,9 @@ describe('ToastService', () => {
 
       service.show('Quick exit', { timeout: 10 });
       expect(toasts[1].length).toBe(1);
-      
+
       flush();
-      
+
       expect(toasts[2].length).toBe(0);
       subscription.unsubscribe();
     }));

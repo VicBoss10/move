@@ -8,16 +8,9 @@ import { AppHeaderComponent } from '../app-header/app-header.component';
 
 @Component({
   selector: 'app-layout',
-  imports: [
-    CommonModule,
-    RouterModule,
-    AppHeaderComponent,
-    AppSidebarComponent,
-    BackdropComponent
-  ],
+  imports: [CommonModule, RouterModule, AppHeaderComponent, AppSidebarComponent, BackdropComponent],
   templateUrl: './app-layout.component.html',
 })
-
 export class AppLayoutComponent {
   readonly isExpanded$;
   readonly isHovered$;
@@ -35,9 +28,8 @@ export class AppLayoutComponent {
       'transition-all',
       'duration-300',
       'ease-in-out',
-      (this.isExpanded$ || this.isHovered$) ? 'xl:ml-[290px]' : 'xl:ml-[90px]',
-      this.isMobileOpen$ ? 'ml-0' : ''
+      this.isExpanded$ || this.isHovered$ ? 'xl:ml-[290px]' : 'xl:ml-[90px]',
+      this.isMobileOpen$ ? 'ml-0' : '',
     ];
   }
-
 }

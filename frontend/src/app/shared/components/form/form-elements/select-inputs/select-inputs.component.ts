@@ -26,10 +26,9 @@ interface MultiOption {
     LabelComponent,
   ],
   templateUrl: './select-inputs.component.html',
-  styles: ``
+  styles: ``,
 })
 export class SelectInputsComponent {
-
   options = [
     { value: 'marketing', label: 'Marketing' },
     { value: 'template', label: 'Template' },

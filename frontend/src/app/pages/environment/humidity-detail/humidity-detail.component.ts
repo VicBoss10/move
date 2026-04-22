@@ -2,15 +2,38 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
-import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import {
+  ChartConfiguration,
+  Chart as ChartJS,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
 import { HumidityChartComponent } from '../../../shared/components/environment-detail-charts/humidity-chart/humidity-chart.component';
 import { HumidityGaugeComponent } from '../../../shared/components/environment-detail-charts/humidity-gauge/humidity-gauge.component';
 import { HumidityStatsTableComponent } from '../../../shared/components/environment-detail-charts/humidity-stats-table/humidity-stats-table.component';
 import { SensorDataService } from '../../../core/services/sensor-data.service';
 import { SensorData } from '../../../core/models/sensor-data.model';
-import { getEnvironmentStatus, getMetricGaugePercentage } from '../../../core/config/environment-thresholds.config';
+import {
+  getEnvironmentStatus,
+  getMetricGaugePercentage,
+} from '../../../core/config/environment-thresholds.config';
 
-ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
+ChartJS.register(
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+);
 
 interface GaugeData {
   humidity: number;
@@ -35,7 +58,12 @@ interface HumidityStats {
 @Component({
   selector: 'app-humidity-detail',
   standalone: true,
-  imports: [CommonModule, HumidityChartComponent, HumidityGaugeComponent, HumidityStatsTableComponent],
+  imports: [
+    CommonModule,
+    HumidityChartComponent,
+    HumidityGaugeComponent,
+    HumidityStatsTableComponent,
+  ],
   templateUrl: './humidity-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -126,7 +154,7 @@ export class HumidityDetailComponent implements OnInit {
         console.error('Error cargando datos de humedad:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -145,7 +173,7 @@ export class HumidityDetailComponent implements OnInit {
         console.error('Error cargando datos de humedad:', error);
         return of(this.defaultGaugeData);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -155,8 +183,8 @@ export class HumidityDetailComponent implements OnInit {
         if (!data || data.length === 0) return this.defaultChartData;
 
         const parsedData = data
-          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
-          .filter(d => !isNaN(d._time.getTime()))
+          .map((d) => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter((d) => !isNaN(d._time.getTime()))
           .sort((a, b) => a._time.getTime() - b._time.getTime());
 
         if (parsedData.length === 0) return this.defaultChartData;
@@ -167,7 +195,9 @@ export class HumidityDetailComponent implements OnInit {
           latestTime.getMonth(),
           latestTime.getDate(),
           latestTime.getHours(),
-          0, 0, 0
+          0,
+          0,
+          0,
         );
 
         const slots: { start: Date; end: Date; label: string }[] = [];
@@ -181,11 +211,11 @@ export class HumidityDetailComponent implements OnInit {
           });
         }
 
-        const labels = slots.map(s => s.label);
+        const labels = slots.map((s) => s.label);
         const humidityData: (number | null)[] = [];
 
         for (const slot of slots) {
-          const hourData = parsedData.filter(d => d._time >= slot.start && d._time < slot.end);
+          const hourData = parsedData.filter((d) => d._time >= slot.start && d._time < slot.end);
           if (hourData.length > 0) {
             const avg = hourData.reduce((sum, d) => sum + (d.humidity || 0), 0) / hourData.length;
             humidityData.push(Math.round(avg * 10) / 10);
@@ -212,7 +242,7 @@ export class HumidityDetailComponent implements OnInit {
             },
           ],
         };
-      })
+      }),
     );
   }
 
@@ -225,7 +255,10 @@ export class HumidityDetailComponent implements OnInit {
         const actual = humidityValues.length > 0 ? humidityValues[humidityValues.length - 1] : 0;
         const minimo = Math.min(...humidityValues);
         const maximo = Math.max(...humidityValues);
-        const promedio = humidityValues.length > 0 ? humidityValues.reduce((a, b) => a + b, 0) / humidityValues.length : 0;
+        const promedio =
+          humidityValues.length > 0
+            ? humidityValues.reduce((a, b) => a + b, 0) / humidityValues.length
+            : 0;
         const variacion = maximo - minimo;
 
         return {
@@ -240,7 +273,7 @@ export class HumidityDetailComponent implements OnInit {
         console.error('Error cargando estadísticas de humedad:', error);
         return of(this.defaultStats);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 }

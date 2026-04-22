@@ -12,21 +12,16 @@ import {
   ApexTooltip,
   ApexYAxis,
   ApexLegend,
-  NgApexchartsModule
+  NgApexchartsModule,
 } from 'ng-apexcharts';
-
 
 @Component({
   selector: 'app-line-chart-one',
-  imports: [
-    CommonModule,
-    NgApexchartsModule,
-  ],
+  imports: [CommonModule, NgApexchartsModule],
   templateUrl: './line-chart-one.component.html',
-  styles: ``
+  styles: ``,
 })
 export class LineChartOneComponent {
-
   public series: ApexAxisChartSeries = [
     {
       name: 'Sales',
@@ -43,23 +38,23 @@ export class LineChartOneComponent {
     height: 310,
     type: 'area',
     toolbar: {
-      show: false
-    }
+      show: false,
+    },
   };
 
   public colors: string[] = ['#465FFF', '#9CB9FF'];
 
   public stroke: ApexStroke = {
     curve: 'straight',
-    width: [2, 2]
+    width: [2, 2],
   };
 
   public fill: ApexFill = {
     type: 'gradient',
     gradient: {
       opacityFrom: 0.55,
-      opacityTo: 0
-    }
+      opacityTo: 0,
+    },
   };
 
   public markers: ApexMarkers = {
@@ -67,69 +62,79 @@ export class LineChartOneComponent {
     strokeColors: '#fff',
     strokeWidth: 2,
     hover: {
-      size: 6
-    }
+      size: 6,
+    },
   };
 
   public grid: ApexGrid = {
     xaxis: {
       lines: {
-        show: false
-      }
+        show: false,
+      },
     },
     yaxis: {
       lines: {
-        show: true
-      }
-    }
+        show: true,
+      },
+    },
   };
 
   public dataLabels: ApexDataLabels = {
-    enabled: false
+    enabled: false,
   };
 
   public tooltip: ApexTooltip = {
     enabled: true,
     x: {
-      format: 'dd MMM yyyy'
-    }
+      format: 'dd MMM yyyy',
+    },
   };
 
   public xaxis: ApexXAxis = {
     type: 'category',
     categories: [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ],
     axisBorder: {
-      show: false
+      show: false,
     },
     axisTicks: {
-      show: false
+      show: false,
     },
     tooltip: {
-      enabled: false
-    }
+      enabled: false,
+    },
   };
 
   public yaxis: ApexYAxis = {
     labels: {
       style: {
         fontSize: '12px',
-        colors: ['#6B7280']
-      }
+        colors: ['#6B7280'],
+      },
     },
     title: {
       text: '',
       style: {
-        fontSize: '0px'
-      }
-    }
+        fontSize: '0px',
+      },
+    },
   };
 
   public legend: ApexLegend = {
     show: false,
     position: 'top',
-    horizontalAlign: 'left'
+    horizontalAlign: 'left',
   };
 }

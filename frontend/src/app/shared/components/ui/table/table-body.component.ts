@@ -5,7 +5,9 @@ import { Component, Input } from '@angular/core';
   selector: 'app-table-body',
   imports: [CommonModule],
   template: `
-    <tbody [ngClass]="className"><ng-content></ng-content></tbody>
+    <tbody [ngClass]="className">
+      <ng-content></ng-content>
+    </tbody>
   `,
 })
 export class TableBodyComponent {

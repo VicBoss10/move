@@ -10,14 +10,21 @@
   <!-- Cards de dispositivos -->
   <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
     <ng-container *ngFor="let device of devices$ | async">
-      <div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+      <div
+        class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+      >
         <!-- Encabezado del Card -->
         <div class="mb-4 flex items-start justify-between">
           <div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ device.name }}</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">{{ getDeviceTypeText(device.type) }}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              {{ getDeviceTypeText(device.type) }}
+            </p>
           </div>
-          <span [ngClass]="getStatusColor(device.status)" class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium">
+          <span
+            [ngClass]="getStatusColor(device.status)"
+            class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+          >
             {{ getStatusIcon(device.status) }}
             {{ getStatusText(device.status) }}
           </span>
@@ -36,8 +43,14 @@
           <!-- Estado de conectividad -->
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-600 dark:text-gray-400">Conectividad</span>
-            <span [ngClass]="device.isOnline ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
-                  class="text-xs font-medium">
+            <span
+              [ngClass]="
+                device.isOnline
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-red-600 dark:text-red-400'
+              "
+              class="text-xs font-medium"
+            >
               {{ device.isOnline ? 'En línea' : 'Fuera de línea' }}
             </span>
           </div>
@@ -46,7 +59,7 @@
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-600 dark:text-gray-400">Última actividad</span>
             <span class="font-medium text-gray-900 dark:text-white">
-              {{ device.lastActivity ? (device.lastActivity | date:'short') : 'Sin datos' }}
+              {{ device.lastActivity ? (device.lastActivity | date: 'short') : 'Sin datos' }}
             </span>
           </div>
 
@@ -78,11 +91,15 @@
 </div>
 
 <!-- Modal Editar dispositivo -->
-<app-modal [isOpen]="!!editingDevice" (close)="closeEdit()" [showCloseButton]="false" className="max-w-lg mx-4">
+<app-modal
+  [isOpen]="!!editingDevice"
+  (close)="closeEdit()"
+  [showCloseButton]="false"
+  className="max-w-lg mx-4"
+>
   <div *ngIf="editingDevice" class="p-6">
     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Dispositivo</h2>
     <form [formGroup]="editForm" (ngSubmit)="saveEdit()" class="space-y-4">
-
       <!-- Nombre -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -94,8 +111,10 @@
           class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-500/30 transition"
           placeholder="Nombre del dispositivo"
         />
-        <p *ngIf="editForm.get('name')?.invalid && editForm.get('name')?.touched"
-           class="text-red-600 dark:text-red-400 text-xs mt-1">
+        <p
+          *ngIf="editForm.get('name')?.invalid && editForm.get('name')?.touched"
+          class="text-red-600 dark:text-red-400 text-xs mt-1"
+        >
           El nombre es requerido (mínimo 2 caracteres).
         </p>
       </div>
@@ -126,19 +145,25 @@
         >
           <option [ngValue]="null" disabled>Selecciona una ubicación</option>
           <ng-container *ngFor="let loc of locations$ | async">
-            <option [value]="loc.id">{{ loc.description || ('Ubicación #' + loc.id) }}</option>
+            <option [value]="loc.id">{{ loc.description || 'Ubicación #' + loc.id }}</option>
           </ng-container>
         </select>
-        <p *ngIf="editForm.get('locationId')?.invalid && editForm.get('locationId')?.touched"
-           class="text-red-600 dark:text-red-400 text-xs mt-1">
+        <p
+          *ngIf="editForm.get('locationId')?.invalid && editForm.get('locationId')?.touched"
+          class="text-red-600 dark:text-red-400 text-xs mt-1"
+        >
           Debes seleccionar una ubicación.
         </p>
       </div>
 
       <!-- Configuración de Cámara (solo para CAMERA) -->
       <ng-container *ngIf="editingDevice.type === DeviceType.CAMERA">
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-4 py-3">
-          <p class="text-blue-900 dark:text-blue-300 text-sm font-medium">Configuración de Cámara</p>
+        <div
+          class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-4 py-3"
+        >
+          <p class="text-blue-900 dark:text-blue-300 text-sm font-medium">
+            Configuración de Cámara
+          </p>
         </div>
 
         <!-- Tipo de Streaming -->
@@ -192,13 +217,29 @@
 </app-modal>
 
 <!-- Modal Confirmar eliminación -->
-<app-modal [isOpen]="!!deleteTarget" (close)="closeDelete()" [showCloseButton]="false" className="max-w-sm mx-4">
+<app-modal
+  [isOpen]="!!deleteTarget"
+  (close)="closeDelete()"
+  [showCloseButton]="false"
+  className="max-w-sm mx-4"
+>
   <div *ngIf="deleteTarget" class="p-6">
     <div class="flex items-start gap-3 mb-4">
-      <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40">
-        <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      <div
+        class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40"
+      >
+        <svg
+          class="w-5 h-5 text-red-600 dark:text-red-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+          />
         </svg>
       </div>
       <div>

@@ -4,14 +4,11 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-theme-toggle-two',
-  imports: [
-    CommonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './theme-toggle-two.component.html',
-  styles: ``
+  styles: ``,
 })
 export class ThemeToggleTwoComponent {
-
   theme$;
 
   constructor(private themeService: ThemeService) {

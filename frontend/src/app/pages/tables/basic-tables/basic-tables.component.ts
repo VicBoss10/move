@@ -19,8 +19,6 @@ import { BasicTableFiveComponent } from '../../../shared/components/tables/basic
     BasicTableFiveComponent,
   ],
   templateUrl: './basic-tables.component.html',
-  styles: ``
+  styles: ``,
 })
-export class BasicTablesComponent {
-
-}
+export class BasicTablesComponent {}

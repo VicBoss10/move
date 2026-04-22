@@ -5,14 +5,8 @@ import { InvoiceMainComponent } from '../../shared/components/invoice/invoice-ma
 
 @Component({
   selector: 'app-invoices',
-  imports: [
-    PageBreadcrumbComponent,
-    InvoiceSidebarComponent,
-    InvoiceMainComponent
-  ],
+  imports: [PageBreadcrumbComponent, InvoiceSidebarComponent, InvoiceMainComponent],
   templateUrl: './invoices.component.html',
-  styles: ``
+  styles: ``,
 })
-export class InvoicesComponent {
-
-}
+export class InvoicesComponent {}

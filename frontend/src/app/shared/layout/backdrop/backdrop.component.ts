@@ -4,12 +4,9 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-backdrop',
-  imports: [
-    CommonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './backdrop.component.html',
 })
-
 export class BackdropComponent {
   readonly isMobileOpen$;
 

@@ -4,12 +4,19 @@
     <div class="flex items-center gap-3">
       <div class="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center">
         <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
         </svg>
       </div>
       <div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Cómo Funciona</h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Flujo de datos y componentes del sistema</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Flujo de datos y componentes del sistema
+        </p>
       </div>
     </div>
   </div>
@@ -17,24 +24,48 @@
   <!-- Flujo visual con tarjetas -->
   <div class="space-y-4">
     <!-- Paso 1: Flujo de datos -->
-    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow">
+    <div
+      class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow"
+    >
       <div class="flex items-start gap-4">
-        <div class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-          <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        <div
+          class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0"
+        >
+          <svg
+            class="w-6 h-6 text-blue-600 dark:text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+            />
           </svg>
         </div>
         <div class="flex-1">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">1. Flujo de Datos</h3>
-          <p class="text-gray-600 dark:text-gray-400 mb-3">Los dispositivos (cámaras y sensores) envían datos al sistema:</p>
+          <p class="text-gray-600 dark:text-gray-400 mb-3">
+            Los dispositivos (cámaras y sensores) envían datos al sistema:
+          </p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-              <p class="text-sm font-semibold text-blue-900 dark:text-blue-300"> Cámaras</p>
-              <p class="text-xs text-blue-800 dark:text-blue-400 mt-1">RTSP/HTTP para video en tiempo real</p>
+            <div
+              class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
+            >
+              <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">Cámaras</p>
+              <p class="text-xs text-blue-800 dark:text-blue-400 mt-1">
+                RTSP/HTTP para video en tiempo real
+              </p>
             </div>
-            <div class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-              <p class="text-sm font-semibold text-blue-900 dark:text-blue-300"> Sensores</p>
-              <p class="text-xs text-blue-800 dark:text-blue-400 mt-1">Lecturas periódicas de CO₂, temperatura, etc.</p>
+            <div
+              class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
+            >
+              <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">Sensores</p>
+              <p class="text-xs text-blue-800 dark:text-blue-400 mt-1">
+                Lecturas periódicas de CO₂, temperatura, etc.
+              </p>
             </div>
           </div>
         </div>
@@ -42,59 +73,138 @@
     </div>
 
     <!-- Paso 2: Detección -->
-    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow">
+    <div
+      class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow"
+    >
       <div class="flex items-start gap-4">
-        <div class="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-          <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0012 14.5a3.374 3.374 0 00-2.667 1.279l-.548-.547z" />
+        <div
+          class="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0"
+        >
+          <svg
+            class="w-6 h-6 text-purple-600 dark:text-purple-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0012 14.5a3.374 3.374 0 00-2.667 1.279l-.548-.547z"
+            />
           </svg>
         </div>
         <div class="flex-1">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">2. Detección de Vehículos (ML)</h3>
-          <p class="text-gray-600 dark:text-gray-400 mb-3">El microservicio Python procesa streams en tiempo real:</p>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+            2. Detección de Vehículos (ML)
+          </h3>
+          <p class="text-gray-600 dark:text-gray-400 mb-3">
+            El microservicio Python procesa streams en tiempo real:
+          </p>
           <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <li class="flex gap-2"><span class="text-purple-600 dark:text-purple-400">→</span> Extrae frames de video</li>
-            <li class="flex gap-2"><span class="text-purple-600 dark:text-purple-400">→</span> Ejecuta modelos ML (YOLO11n)</li>
-            <li class="flex gap-2"><span class="text-purple-600 dark:text-purple-400">→</span> Emite eventos con clase, bounding box y score</li>
+            <li class="flex gap-2">
+              <span class="text-purple-600 dark:text-purple-400">→</span> Extrae frames de video
+            </li>
+            <li class="flex gap-2">
+              <span class="text-purple-600 dark:text-purple-400">→</span> Ejecuta modelos ML
+              (YOLO11n)
+            </li>
+            <li class="flex gap-2">
+              <span class="text-purple-600 dark:text-purple-400">→</span> Emite eventos con clase,
+              bounding box y score
+            </li>
           </ul>
         </div>
       </div>
     </div>
 
     <!-- Paso 3: Backend y Almacenamiento -->
-    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow">
+    <div
+      class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow"
+    >
       <div class="flex items-start gap-4">
-        <div class="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-          <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        <div
+          class="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0"
+        >
+          <svg
+            class="w-6 h-6 text-green-600 dark:text-green-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         </div>
         <div class="flex-1">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">3. Backend & Seguridad</h3>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+            3. Backend & Seguridad
+          </h3>
           <p class="text-gray-600 dark:text-gray-400 mb-3">Spring Boot procesa y almacena datos:</p>
-          <div class="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-3">
-            <p class="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">✓ API REST protegida por Keycloak</p>
-            <p class="text-xs text-green-800 dark:text-green-400">Enriquece eventos con metadatos (ubicación, timestamp, confianza) y aplica reglas de umbral/alerta</p>
+          <div
+            class="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-3"
+          >
+            <p class="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">
+              ✓ API REST protegida por Keycloak
+            </p>
+            <p class="text-xs text-green-800 dark:text-green-400">
+              Enriquece eventos con metadatos (ubicación, timestamp, confianza) y aplica reglas de
+              umbral/alerta
+            </p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Paso 4: Visualización -->
-    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow">
+    <div
+      class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow"
+    >
       <div class="flex items-start gap-4">
-        <div class="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
-          <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        <div
+          class="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0"
+        >
+          <svg
+            class="w-6 h-6 text-orange-600 dark:text-orange-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
           </svg>
         </div>
         <div class="flex-1">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">4. Visualización & Análisis</h3>
-          <p class="text-gray-600 dark:text-gray-400 mb-3">Angular consume la API para mostrar dashboards interactivos:</p>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+            4. Visualización & Análisis
+          </h3>
+          <p class="text-gray-600 dark:text-gray-400 mb-3">
+            Angular consume la API para mostrar dashboards interactivos:
+          </p>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <div class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded"> Series temporales</div>
-            <div class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded"> Análisis por ubicación</div>
-            <div class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded"> Mapas de calor</div>
+            <div
+              class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded"
+            >
+              Series temporales
+            </div>
+            <div
+              class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded"
+            >
+              Análisis por ubicación
+            </div>
+            <div
+              class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded"
+            >
+              Mapas de calor
+            </div>
           </div>
         </div>
       </div>
@@ -102,18 +212,43 @@
   </div>
 
   <!-- Consejos rápidos -->
-  <div class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10 p-6">
+  <div
+    class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10 p-6"
+  >
     <div class="flex items-start gap-3">
-      <svg class="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <svg
+        class="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
       <div>
-        <h3 class="text-lg font-bold text-amber-900 dark:text-amber-300 mb-3"> Consejos Prácticos</h3>
+        <h3 class="text-lg font-bold text-amber-900 dark:text-amber-300 mb-3">
+          Consejos Prácticos
+        </h3>
         <ul class="space-y-2 text-sm text-amber-800 dark:text-amber-200">
-          <li class="flex gap-2"><span class="font-bold">→</span> Prefiera <strong>RTSP</strong> para baja latencia en detección en tiempo real</li>
-          <li class="flex gap-2"><span class="font-bold">→</span> Use resolución <strong>≥720p</strong> y <strong>15–20 FPS</strong> para la mayoría de modelos</li>
-          <li class="flex gap-2"><span class="font-bold">→</span> Configure umbrales de alerta en la UI</li>
-          <li class="flex gap-2"><span class="font-bold">→</span> Asigne dispositivos a <strong>ubicaciones</strong> para contextualizar eventos y mejorar análisis</li>
+          <li class="flex gap-2">
+            <span class="font-bold">→</span> Prefiera <strong>RTSP</strong> para baja latencia en
+            detección en tiempo real
+          </li>
+          <li class="flex gap-2">
+            <span class="font-bold">→</span> Use resolución <strong>≥720p</strong> y
+            <strong>15–20 FPS</strong> para la mayoría de modelos
+          </li>
+          <li class="flex gap-2">
+            <span class="font-bold">→</span> Configure umbrales de alerta en la UI
+          </li>
+          <li class="flex gap-2">
+            <span class="font-bold">→</span> Asigne dispositivos a <strong>ubicaciones</strong> para
+            contextualizar eventos y mejorar análisis
+          </li>
         </ul>
       </div>
     </div>

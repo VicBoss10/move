@@ -6,7 +6,7 @@ import { ApiService } from './api.service';
  * Clase abstracta base para servicios de datos
  * Proporciona CRUD genérico, caché, y manejo de Observables
  * para reducir duplicación entre SensorDataService, VehicleService, etc.
- * 
+ *
  * @abstract
  * @template T - Tipo de datos que maneja el servicio (ej: SensorData, VehicleDetected)
  */
@@ -88,7 +88,7 @@ export abstract class BaseDataService<T> {
 
     // Caché válido: devolver sin petición HTTP
     if (this.cacheData.length > 0 && now - this.lastFetch < this.cacheDuration) {
-      return new Observable(observer => {
+      return new Observable((observer) => {
         observer.next(this.cacheData);
         observer.complete();
       });
@@ -101,7 +101,7 @@ export abstract class BaseDataService<T> {
 
     // Nueva petición HTTP
     this.inFlightGetAll$ = this.apiService.get<T[]>(`/${this.endpoint}`).pipe(
-      tap(data => {
+      tap((data) => {
         this.cacheData = data;
         this.lastFetch = now;
         this.dataSubject.next(this.cacheData);
@@ -113,7 +113,7 @@ export abstract class BaseDataService<T> {
         this.setServiceError(error, `Error al obtener datos de ${this.endpoint}`);
         return throwError(() => error);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
 
     return this.inFlightGetAll$;
@@ -130,7 +130,7 @@ export abstract class BaseDataService<T> {
       catchError((error) => {
         this.setServiceError(error, `Error al obtener recurso ${id} en ${this.endpoint}`);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -148,7 +148,7 @@ export abstract class BaseDataService<T> {
       catchError((error) => {
         this.setServiceError(error, `Error al crear recurso en ${this.endpoint}`);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -166,7 +166,7 @@ export abstract class BaseDataService<T> {
       catchError((error) => {
         this.setServiceError(error, `Error al actualizar recurso en ${this.endpoint}`);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -184,7 +184,7 @@ export abstract class BaseDataService<T> {
       catchError((error) => {
         this.setServiceError(error, `Error al eliminar recurso ${id} en ${this.endpoint}`);
         return throwError(() => error);
-      })
+      }),
     );
   }
 

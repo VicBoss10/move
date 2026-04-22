@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-responsive-image',
   imports: [],
   templateUrl: './responsive-image.component.html',
-  styles: ``
+  styles: ``,
 })
-export class ResponsiveImageComponent {
-
-}
+export class ResponsiveImageComponent {}

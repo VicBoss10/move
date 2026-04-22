@@ -14,37 +14,36 @@ import { ButtonComponent } from '../../ui/button/button.component';
     InputFieldComponent,
     SelectComponent,
     TextAreaComponent,
-    ButtonComponent
+    ButtonComponent,
   ],
   templateUrl: './add-product-form.component.html',
-  styles: ``
+  styles: ``,
 })
 export class AddProductFormComponent {
-
   categories = [
     { value: 'Laptop', label: 'Laptop' },
     { value: 'Phone', label: 'Phone' },
     { value: 'Watch', label: 'Watch' },
     { value: 'Electronics', label: 'Electronics' },
-    { value: 'Accessories', label: 'Accessories' }
+    { value: 'Accessories', label: 'Accessories' },
   ];
 
   brands = [
     { value: '1', label: 'Apple' },
     { value: '2', label: 'Samsung' },
-    { value: '3', label: 'LG' }
+    { value: '3', label: 'LG' },
   ];
 
   availability = [
     { value: '1', label: 'In Stock' },
-    { value: '2', label: 'Out of Stock' }
+    { value: '2', label: 'Out of Stock' },
   ];
 
   colors = [
     { value: '1', label: 'Silver' },
     { value: '2', label: 'Black' },
     { value: '3', label: 'White' },
-    { value: '4', label: 'Gray' }
+    { value: '4', label: 'Gray' },
   ];
 
   stockQuantity: number = 1;

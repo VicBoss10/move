@@ -2,8 +2,13 @@ import { KeyValuePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
 
-import { Component, ViewChild } from '@angular/core';
-import { EventInput, CalendarOptions, DateSelectArg, EventClickArg } from '@fullcalendar/core/index.js';
+import { Component, ViewChild, OnInit } from '@angular/core';
+import {
+  EventInput,
+  CalendarOptions,
+  DateSelectArg,
+  EventClickArg,
+} from '@fullcalendar/core/index.js';
 import dayGridPlugin from '@fullcalendar/daygrid/index.js';
 import timeGridPlugin from '@fullcalendar/timegrid/index.js';
 import interactionPlugin from '@fullcalendar/interaction/index.js';
@@ -17,17 +22,11 @@ interface CalendarEvent extends EventInput {
 
 @Component({
   selector: 'app-calender',
-  imports: [
-    FormsModule,
-    KeyValuePipe,
-    FullCalendarModule,
-    ModalComponent
-  ],
+  imports: [FormsModule, KeyValuePipe, FullCalendarModule, ModalComponent],
   templateUrl: './calender.component.html',
-  styles: ``
+  styles: ``,
 })
-export class CalenderComponent {
-
+export class CalenderComponent implements OnInit {
   @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
 
   events: CalendarEvent[] = [];
@@ -42,7 +41,7 @@ export class CalenderComponent {
     Danger: 'danger',
     Success: 'success',
     Primary: 'primary',
-    Warning: 'warning'
+    Warning: 'warning',
   };
 
   calendarOptions!: CalendarOptions;
@@ -53,21 +52,21 @@ export class CalenderComponent {
         id: '1',
         title: 'Event Conf.',
         start: new Date().toISOString().split('T')[0],
-        extendedProps: { calendar: 'Danger' }
+        extendedProps: { calendar: 'Danger' },
       },
       {
         id: '2',
         title: 'Meeting',
         start: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        extendedProps: { calendar: 'Success' }
+        extendedProps: { calendar: 'Success' },
       },
       {
         id: '3',
         title: 'Workshop',
         start: new Date(Date.now() + 172800000).toISOString().split('T')[0],
         end: new Date(Date.now() + 259200000).toISOString().split('T')[0],
-        extendedProps: { calendar: 'Primary' }
-      }
+        extendedProps: { calendar: 'Primary' },
+      },
     ];
 
     this.calendarOptions = {
@@ -76,7 +75,7 @@ export class CalenderComponent {
       headerToolbar: {
         left: 'prev,next addEventButton',
         center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        right: 'dayGridMonth,timeGridWeek,timeGridDay',
       },
       selectable: true,
       events: this.events,
@@ -85,10 +84,10 @@ export class CalenderComponent {
       customButtons: {
         addEventButton: {
           text: 'Add Event +',
-          click: () => this.openModal()
-        }
+          click: () => this.openModal(),
+        },
       },
-      eventContent: (arg) => this.renderEventContent(arg)
+      eventContent: (arg) => this.renderEventContent(arg),
     };
   }
 
@@ -106,7 +105,7 @@ export class CalenderComponent {
       title: event.title,
       start: event.startStr,
       end: event.endStr,
-      extendedProps: { calendar: event.extendedProps.calendar }
+      extendedProps: { calendar: event.extendedProps.calendar },
     };
     this.eventTitle = event.title;
     this.eventStartDate = event.startStr;
@@ -117,16 +116,16 @@ export class CalenderComponent {
 
   handleAddOrUpdateEvent() {
     if (this.selectedEvent) {
-      this.events = this.events.map(ev =>
+      this.events = this.events.map((ev) =>
         ev.id === this.selectedEvent!.id
           ? {
               ...ev,
               title: this.eventTitle,
               start: this.eventStartDate,
               end: this.eventEndDate,
-              extendedProps: { calendar: this.eventLevel }
+              extendedProps: { calendar: this.eventLevel },
             }
-          : ev
+          : ev,
       );
     } else {
       const newEvent: CalendarEvent = {
@@ -135,7 +134,7 @@ export class CalenderComponent {
         start: this.eventStartDate,
         end: this.eventEndDate,
         allDay: true,
-        extendedProps: { calendar: this.eventLevel }
+        extendedProps: { calendar: this.eventLevel },
       };
       this.events = [...this.events, newEvent];
     }
@@ -170,7 +169,7 @@ export class CalenderComponent {
           <div class="fc-event-time">${eventInfo.timeText || ''}</div>
           <div class="fc-event-title">${eventInfo.event.title}</div>
         </div>
-      `
+      `,
     };
   }
 }

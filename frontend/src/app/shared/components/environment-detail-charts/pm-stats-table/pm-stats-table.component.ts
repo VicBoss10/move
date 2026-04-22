@@ -109,7 +109,7 @@ export class PmStatsTableComponent {
         console.error('Error cargando estadísticas de partículas:', error);
         return of(this.defaultStats);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

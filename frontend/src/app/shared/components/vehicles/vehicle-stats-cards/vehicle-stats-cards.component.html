@@ -10,8 +10,18 @@
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Detecciones totales</p>
       </div>
       <div class="bg-brand-50 dark:bg-brand-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        <svg
+          class="w-8 h-8 text-brand-600 dark:text-brand-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          ></path>
         </svg>
       </div>
     </div>
@@ -26,12 +36,19 @@
           {{ stats.carCount | number }}
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
-          {{ calculatePercentage(stats.carCount, stats.totalDetected) | number : '1.0-0' }}% del total
+          {{ calculatePercentage(stats.carCount, stats.totalDetected) | number: '1.0-0' }}% del
+          total
         </p>
       </div>
       <div class="bg-warning-50 dark:bg-warning-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-warning-600 dark:text-warning-400" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm11 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM5 11l1.5-4.5h11L19 11H5z"></path>
+        <svg
+          class="w-8 h-8 text-warning-600 dark:text-warning-400"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm11 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM5 11l1.5-4.5h11L19 11H5z"
+          ></path>
         </svg>
       </div>
     </div>
@@ -46,12 +63,19 @@
           {{ stats.busCount | number }}
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
-          {{ calculatePercentage(stats.busCount, stats.totalDetected) | number : '1.0-0' }}% del total
+          {{ calculatePercentage(stats.busCount, stats.totalDetected) | number: '1.0-0' }}% del
+          total
         </p>
       </div>
       <div class="bg-orange-100 dark:bg-orange-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M17 10.5V7c0 .55-.45 1-1 1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"></path>
+        <svg
+          class="w-8 h-8 text-orange-600 dark:text-orange-400"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M17 10.5V7c0 .55-.45 1-1 1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"
+          ></path>
         </svg>
       </div>
     </div>
@@ -66,12 +90,15 @@
           {{ stats.motorcycleCount | number }}
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
-          {{ calculatePercentage(stats.motorcycleCount, stats.totalDetected) | number : '1.0-0' }}% del total
+          {{ calculatePercentage(stats.motorcycleCount, stats.totalDetected) | number: '1.0-0' }}%
+          del total
         </p>
       </div>
       <div class="bg-red-100 dark:bg-red-900 rounded-full p-4">
         <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path>
+          <path
+            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+          ></path>
         </svg>
       </div>
     </div>
@@ -86,12 +113,19 @@
           {{ stats.truckCount | number }}
         </h3>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
-          {{ calculatePercentage(stats.truckCount, stats.totalDetected) | number : '1.0-0' }}% del total
+          {{ calculatePercentage(stats.truckCount, stats.totalDetected) | number: '1.0-0' }}% del
+          total
         </p>
       </div>
       <div class="bg-yellow-100 dark:bg-yellow-900 rounded-full p-4">
-        <svg class="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M18 18.5a1.5 1.5 0 01-1.5-1.5 1.5 1.5 0 011.5-1.5 1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5m1.5-9l1.96 2.5H17V9.5M17 8h4l-6-7H3c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2v-8H17V8z"></path>
+        <svg
+          class="w-8 h-8 text-yellow-600 dark:text-yellow-400"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M18 18.5a1.5 1.5 0 01-1.5-1.5 1.5 1.5 0 011.5-1.5 1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5m1.5-9l1.96 2.5H17V9.5M17 8h4l-6-7H3c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2v-8H17V8z"
+          ></path>
         </svg>
       </div>
     </div>

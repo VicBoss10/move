@@ -1,13 +1,22 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { LocationService } from '../../../../core/services/location.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { Location } from '../../../../core/models/location.model';
-import { LocationMapPickerComponent, MapCoordinates } from '../location-map-picker/location-map-picker.component';
+import {
+  LocationMapPickerComponent,
+  MapCoordinates,
+} from '../location-map-picker/location-map-picker.component';
 
 /**
  * RegisterLocationViewComponent
@@ -49,12 +58,18 @@ export class RegisterLocationViewComponent {
     private fb: FormBuilder,
     private locationService: LocationService,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
   ) {
     this.locationForm = this.fb.group({
       description: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
-      latitude: ['', [Validators.required, Validators.pattern(/^-?([0-8]?[0-9]|90)(\.[0-9]{1,8})?$/)]],
-      longitude: ['', [Validators.required, Validators.pattern(/^-?(1[0-7][0-9]|[1-9]?[0-9])(\.[0-9]{1,8})?$/)]],
+      latitude: [
+        '',
+        [Validators.required, Validators.pattern(/^-?([0-8]?[0-9]|90)(\.[0-9]{1,8})?$/)],
+      ],
+      longitude: [
+        '',
+        [Validators.required, Validators.pattern(/^-?(1[0-7][0-9]|[1-9]?[0-9])(\.[0-9]{1,8})?$/)],
+      ],
     });
   }
 
@@ -78,25 +93,29 @@ export class RegisterLocationViewComponent {
       description: formValue.description,
     } as Location;
 
-    this.locationService.create(locationData).pipe(
-      finalize(() => this.isLoading$.next(false))
-    ).subscribe({
-      next: () => {
-        this.successMessage$.next(null);
-        this.toastService.success(
-          `Ubicación "${formValue.description}" registrada correctamente`,
-          'Éxito'
-        );
-        setTimeout(() => {
-          this.router.navigate(['/dashboard/locations/monitoring']);
-        }, 1200);
-      },
-      error: (err) => {
-        console.error('Error al registrar ubicación:', err);
-        this.errorMessage$.next(null);
-        this.toastService.error('Error al registrar la ubicación. Por favor, inténtalo de nuevo.', 'Error');
-      },
-    });
+    this.locationService
+      .create(locationData)
+      .pipe(finalize(() => this.isLoading$.next(false)))
+      .subscribe({
+        next: () => {
+          this.successMessage$.next(null);
+          this.toastService.success(
+            `Ubicación "${formValue.description}" registrada correctamente`,
+            'Éxito',
+          );
+          setTimeout(() => {
+            this.router.navigate(['/dashboard/locations/monitoring']);
+          }, 1200);
+        },
+        error: (err) => {
+          console.error('Error al registrar ubicación:', err);
+          this.errorMessage$.next(null);
+          this.toastService.error(
+            'Error al registrar la ubicación. Por favor, inténtalo de nuevo.',
+            'Error',
+          );
+        },
+      });
   }
 
   /**

@@ -1,4 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, Subject, forkJoin, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
@@ -18,19 +24,17 @@ interface DetectionRecord {
 
 /**
  * LocationHistoryViewComponent
- * 
+ *
  * Componente que muestra el historial de detecciones (vehículos y sensores) por ubicación.
  * Carga datos en tiempo real desde el backend.
- * 
+ *
  * @component
  * @standalone true
  */
 @Component({
   selector: 'app-location-history-view',
   standalone: true,
-  imports: [
-    CommonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './location-history-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -71,7 +75,7 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
     private vehicleService: VehicleDetectedService,
     private sensorService: SensorDataService,
     private locationService: LocationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   /**
@@ -104,19 +108,19 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
         catchError((error) => {
           console.error('Error loading locations:', error);
           return of([]);
-        })
+        }),
       ),
       vehicles: this.vehicleService.getAll().pipe(
         catchError((error) => {
           console.error('Error loading vehicles:', error);
           return of([]);
-        })
+        }),
       ),
       sensors: this.sensorService.getAll().pipe(
         catchError((error) => {
           console.error('Error loading sensors:', error);
           return of([]);
-        })
+        }),
       ),
     })
       .pipe(
@@ -124,7 +128,7 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
           this.isLoading = false;
           this.cdr.markForCheck();
         }),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe(({ locations, vehicles, sensors }) => {
         this.processDetectionData(locations, vehicles, sensors);
@@ -159,7 +163,8 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
     // Contar detecciones de vehículos por ubicación y actualizar último timestamp
     vehicles.forEach((vehicle) => {
       // Try multiple paths where a vehicle's location can be stored
-      const locationId = vehicle.location?.id ?? vehicle.device?.location?.id ?? vehicle.device?.locationId ?? null;
+      const locationId =
+        vehicle.location?.id ?? vehicle.device?.location?.id ?? vehicle.device?.locationId ?? null;
       if (locationId) {
         if (!locationMap.has(locationId)) {
           // create placeholder entry if vehicle references a location not in the locations list
@@ -230,15 +235,13 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
   private calculateStats(): void {
     this.overallStats.totalVehicleDetections = this.detectionHistory.reduce(
       (sum, item) => sum + item.vehicleDetections,
-      0
+      0,
     );
     this.overallStats.totalSensorDetections = this.detectionHistory.reduce(
       (sum, item) => sum + item.sensorDetections,
-      0
+      0,
     );
     this.overallStats.totalDetections =
       this.overallStats.totalVehicleDetections + this.overallStats.totalSensorDetections;
   }
-
-
 }

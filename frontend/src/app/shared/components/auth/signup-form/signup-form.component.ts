@@ -11,12 +11,18 @@ import { CheckboxComponent } from '../../form/input/checkbox.component';
 
 @Component({
   selector: 'app-signup-form',
-  imports: [RouterModule, CommonModule, FormsModule, LabelComponent, InputFieldComponent, CheckboxComponent],
+  imports: [
+    RouterModule,
+    CommonModule,
+    FormsModule,
+    LabelComponent,
+    InputFieldComponent,
+    CheckboxComponent,
+  ],
   templateUrl: './signup-form.component.html',
-  styles: ``
+  styles: ``,
 })
 export class SignupFormComponent {
-
   fname = '';
   lname = '';
   email = '';
@@ -26,7 +32,11 @@ export class SignupFormComponent {
   errorMessage = '';
   loading = false;
 
-  constructor(private auth: AuthService, private api: ApiService, private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private api: ApiService,
+    private router: Router,
+  ) {}
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
@@ -42,22 +52,24 @@ export class SignupFormComponent {
       firstName: this.fname,
       lastName: this.lname,
       email: this.email,
-      password: this.password
+      password: this.password,
     };
-    this.api.post('/users', registerData).pipe(
-      switchMap(() => this.auth.login(this.email, this.password))
-    ).subscribe({
-      next: () => this.router.navigate(['/dashboard/dashboard']),
-      error: (err) => {
-        // Try to show backend validation message if present
-        try {
-          const msg = err?.error?.message || err?.error?.error_description || err?.message;
-          this.errorMessage = msg || 'Error al registrarse. Verifica los datos e inténtalo de nuevo.';
-        } catch {
-          this.errorMessage = 'Error al registrarse. Verifica los datos e inténtalo de nuevo.';
-        }
-        this.loading = false;
-      }
-    });
+    this.api
+      .post('/users', registerData)
+      .pipe(switchMap(() => this.auth.login(this.email, this.password)))
+      .subscribe({
+        next: () => this.router.navigate(['/dashboard/dashboard']),
+        error: (err) => {
+          // Try to show backend validation message if present
+          try {
+            const msg = err?.error?.message || err?.error?.error_description || err?.message;
+            this.errorMessage =
+              msg || 'Error al registrarse. Verifica los datos e inténtalo de nuevo.';
+          } catch {
+            this.errorMessage = 'Error al registrarse. Verifica los datos e inténtalo de nuevo.';
+          }
+          this.loading = false;
+        },
+      });
   }
 }

@@ -8,14 +8,11 @@ export interface Option {
 
 @Component({
   selector: 'app-multi-select',
-  imports: [
-    CommonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './multi-select.component.html',
-  styles: ``
+  styles: ``,
 })
-export class MultiSelectComponent {
-
+export class MultiSelectComponent implements OnInit {
   @Input() label: string = '';
   @Input() options: Option[] = [];
   @Input() defaultSelected: string[] = [];
@@ -35,7 +32,7 @@ export class MultiSelectComponent {
 
   handleSelect(optionValue: string) {
     if (this.selectedOptions.includes(optionValue)) {
-      this.selectedOptions = this.selectedOptions.filter(v => v !== optionValue);
+      this.selectedOptions = this.selectedOptions.filter((v) => v !== optionValue);
     } else {
       this.selectedOptions = [...this.selectedOptions, optionValue];
     }
@@ -43,13 +40,13 @@ export class MultiSelectComponent {
   }
 
   removeOption(value: string) {
-    this.selectedOptions = this.selectedOptions.filter(opt => opt !== value);
+    this.selectedOptions = this.selectedOptions.filter((opt) => opt !== value);
     this.selectionChange.emit(this.selectedOptions);
   }
 
   get selectedValuesText(): string[] {
     return this.selectedOptions
-      .map(value => this.options.find(option => option.value === value)?.text || '')
+      .map((value) => this.options.find((option) => option.value === value)?.text || '')
       .filter(Boolean);
   }
 }

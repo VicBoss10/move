@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-four-isto-three',
   imports: [],
   templateUrl: './four-isto-three.component.html',
-  styles: ``
+  styles: ``,
 })
-export class FourIstoThreeComponent {
-
-}
+export class FourIstoThreeComponent {}

@@ -39,14 +39,19 @@ export class ConnectedSensorsListComponent {
             id: d.id,
             name: d.name,
             type: 'DISPOSITIVO AMBIENTAL',
-            status: d.state === 'ACTIVE' ? ('ONLINE' as const) : d.state === 'FAILING' ? ('ERROR' as const) : ('OFFLINE' as const),
-          }))
+            status:
+              d.state === 'ACTIVE'
+                ? ('ONLINE' as const)
+                : d.state === 'FAILING'
+                  ? ('ERROR' as const)
+                  : ('OFFLINE' as const),
+          })),
       ),
       catchError((error) => {
         console.error('Error cargando dispositivos:', error);
         return of([] as ConnectedDevice[]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 

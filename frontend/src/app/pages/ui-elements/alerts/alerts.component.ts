@@ -5,14 +5,8 @@ import { PageBreadcrumbComponent } from '../../../shared/components/common/page-
 
 @Component({
   selector: 'app-alerts',
-  imports: [
-    AlertComponent,
-    ComponentCardComponent,
-    PageBreadcrumbComponent,
-  ],
+  imports: [AlertComponent, ComponentCardComponent, PageBreadcrumbComponent],
   templateUrl: './alerts.component.html',
-  styles: ``
+  styles: ``,
 })
-export class AlertsComponent {
-
-}
+export class AlertsComponent {}

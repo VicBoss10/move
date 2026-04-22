@@ -12,6 +12,6 @@ import { ArchitectureComponent } from '../../../shared/components/help/architect
   selector: 'app-architecture-page',
   standalone: true,
   imports: [CommonModule, ArchitectureComponent],
-  templateUrl: './architecture.component.html'
+  templateUrl: './architecture.component.html',
 })
 export class ArchitecturePageComponent {}

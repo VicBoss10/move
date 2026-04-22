@@ -1,7 +1,22 @@
-import { Component, Input, OnChanges, SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartData, Chart, DoughnutController, ArcElement, Tooltip, Legend } from 'chart.js';
+import {
+  ChartConfiguration,
+  ChartData,
+  Chart,
+  DoughnutController,
+  ArcElement,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { VehicleStats } from '../vehicle-stats-cards/vehicle-stats-cards.component';
 
 // Registrar los módulos necesarios de Chart.js para el gráfico Donut

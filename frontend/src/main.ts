@@ -28,8 +28,7 @@ async function main() {
     (window as any).__AUTH_BASE_URL__ = cfg.authBaseUrl;
   }
 
-  bootstrapApplication(AppComponent, appConfig)
-    .catch((err) => console.error(err));
+  bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
 }
 
 main();

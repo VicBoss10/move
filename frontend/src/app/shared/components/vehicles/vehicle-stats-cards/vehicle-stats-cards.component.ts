@@ -1,6 +1,9 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GenericStatsCardsComponent, StatCard } from '../../common/generic-stats-cards/generic-stats-cards.component';
+import {
+  GenericStatsCardsComponent,
+  StatCard,
+} from '../../common/generic-stats-cards/generic-stats-cards.component';
 
 /**
  * Interfaz para estadísticas de vehículos
@@ -43,9 +46,7 @@ export interface VehicleStats {
   selector: 'app-vehicle-stats-cards',
   standalone: true,
   imports: [CommonModule, GenericStatsCardsComponent],
-  template: `
-    <app-generic-stats-cards [cards]="getStatCards()" />
-  `,
+  template: ` <app-generic-stats-cards [cards]="getStatCards()" /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehicleStatsCardsComponent {

@@ -1,13 +1,33 @@
 import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, Chart as ChartJS, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+import {
+  ChartConfiguration,
+  Chart as ChartJS,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 // Registrar los scales y elementos
-ChartJS.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
+ChartJS.register(
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler,
+);
 
 /**
  * Componente que muestra un gráfico dinámico de línea con la tendencia de CO₂
@@ -58,8 +78,8 @@ export class Co2ChartComponent {
         left: 20,
         right: 20,
         top: 0,
-        bottom: 0
-      }
+        bottom: 0,
+      },
     },
     plugins: {
       legend: {
@@ -160,7 +180,7 @@ export class Co2ChartComponent {
         console.error('Error cargando datos de CO₂:', error);
         return of([]);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -175,8 +195,8 @@ export class Co2ChartComponent {
         }
 
         const parsedData = data
-          .map(d => ({ ...d, _time: new Date(d.timestamp) }))
-          .filter(d => !isNaN(d._time.getTime()))
+          .map((d) => ({ ...d, _time: new Date(d.timestamp) }))
+          .filter((d) => !isNaN(d._time.getTime()))
           .sort((a, b) => a._time.getTime() - b._time.getTime());
 
         if (parsedData.length === 0) {
@@ -189,7 +209,9 @@ export class Co2ChartComponent {
           latestTime.getMonth(),
           latestTime.getDate(),
           latestTime.getHours(),
-          0, 0, 0
+          0,
+          0,
+          0,
         );
 
         // Crear 12 slots horarios hacia atrás desde la hora más reciente
@@ -201,13 +223,11 @@ export class Co2ChartComponent {
           slots.push({ start: slotStart, end: slotEnd, label });
         }
 
-        const labels = slots.map(s => s.label);
+        const labels = slots.map((s) => s.label);
         const co2Data: (number | null)[] = [];
 
         for (const slot of slots) {
-          const slotData = parsedData.filter(
-            d => d._time >= slot.start && d._time < slot.end
-          );
+          const slotData = parsedData.filter((d) => d._time >= slot.start && d._time < slot.end);
           if (slotData.length > 0) {
             const avg = slotData.reduce((sum, d) => sum + (d.co2 || 0), 0) / slotData.length;
             co2Data.push(Math.round(avg * 100) / 100);
@@ -237,7 +257,7 @@ export class Co2ChartComponent {
           ],
         };
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -250,7 +270,7 @@ export class Co2ChartComponent {
         if (!data || data.length === 0) {
           return { min: 0, avg: 0, max: 0 };
         }
-        const co2Values = data.map(d => d.co2).filter((v: any) => v != null && v > 0);
+        const co2Values = data.map((d) => d.co2).filter((v: any) => v != null && v > 0);
         if (co2Values.length === 0) {
           return { min: 0, avg: 0, max: 0 };
         }
@@ -260,7 +280,7 @@ export class Co2ChartComponent {
         return { min: Math.round(min), avg: Math.round(avg), max: Math.round(max) };
       }),
       catchError(() => of({ min: 0, avg: 0, max: 0 })),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 }

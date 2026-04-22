@@ -4,13 +4,8 @@ import { PageBreadcrumbComponent } from '../../shared/components/common/page-bre
 
 @Component({
   selector: 'app-blank',
-  imports: [
-    CommonModule,
-    PageBreadcrumbComponent,
-  ],
+  imports: [CommonModule, PageBreadcrumbComponent],
   templateUrl: './blank.component.html',
-  styles: ``
+  styles: ``,
 })
-export class BlankComponent {
-
-}
+export class BlankComponent {}

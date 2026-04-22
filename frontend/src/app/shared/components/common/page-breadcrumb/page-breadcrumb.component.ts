@@ -3,11 +3,9 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-page-breadcrumb',
-  imports: [
-    RouterModule,
-  ],
+  imports: [RouterModule],
   templateUrl: './page-breadcrumb.component.html',
-  styles: ``
+  styles: ``,
 })
 export class PageBreadcrumbComponent {
   @Input() pageTitle = '';

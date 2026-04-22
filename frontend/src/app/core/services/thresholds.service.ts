@@ -1,13 +1,19 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { ENV_THRESHOLDS, MetricThresholdConfig, EnvironmentMetricKey } from '../config/environment-thresholds.config';
+import {
+  ENV_THRESHOLDS,
+  MetricThresholdConfig,
+  EnvironmentMetricKey,
+} from '../config/environment-thresholds.config';
 
 const STORAGE_KEY = 'env_thresholds_overrides_v1';
 
 @Injectable({ providedIn: 'root' })
 export class ThresholdsService {
   /** Almacén reactivo con la configuración actual (incluye overrides). */
-  private store$ = new BehaviorSubject<Record<EnvironmentMetricKey, MetricThresholdConfig>>(this.load());
+  private store$ = new BehaviorSubject<Record<EnvironmentMetricKey, MetricThresholdConfig>>(
+    this.load(),
+  );
 
   constructor() {}
 
@@ -21,7 +27,9 @@ export class ThresholdsService {
       const raw = localStorage.getItem(STORAGE_KEY);
       const overrides = raw ? JSON.parse(raw) : {};
       // shallow merge of each metric
-      const merged: Record<EnvironmentMetricKey, MetricThresholdConfig> = { ...ENV_THRESHOLDS } as any;
+      const merged: Record<EnvironmentMetricKey, MetricThresholdConfig> = {
+        ...ENV_THRESHOLDS,
+      } as any;
       for (const k of Object.keys(overrides)) {
         (merged as any)[k] = { ...(merged as any)[k], ...(overrides as any)[k] };
       }
@@ -65,7 +73,9 @@ export class ThresholdsService {
         overrides[key] = next[key];
       }
     }
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides)); } catch (e) {}
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+    } catch (e) {}
     this.store$.next(next as any);
   }
 
@@ -73,7 +83,9 @@ export class ThresholdsService {
    * Restaura los valores por defecto y limpia los overrides persistidos.
    */
   reset() {
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
     this.store$.next({ ...(ENV_THRESHOLDS as any) });
   }
 }

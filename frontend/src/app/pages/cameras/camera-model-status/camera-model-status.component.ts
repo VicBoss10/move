@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { Observable, of, BehaviorSubject, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay, tap, switchMap, timeout } from 'rxjs/operators';
 import { CameraModelStatusComponent as CameraModelStatusSharedComponent } from '../../../shared/components/cameras/camera-model-status/camera-model-status.component';
-import { CameraStatusCardsComponent, CameraStats } from '../../../shared/components/cameras/camera-status-cards/camera-status-cards.component';
+import {
+  CameraStatusCardsComponent,
+  CameraStats,
+} from '../../../shared/components/cameras/camera-status-cards/camera-status-cards.component';
 import { CameraFiltersTableComponent } from '../../../shared/components/cameras/camera-filters-table/camera-filters-table.component';
 import { CameraService } from '../../../core/services/camera.service';
 import { VehicleDetectedService } from '../../../core/services/vehicle-detected.service';
@@ -92,7 +95,7 @@ export class CameraModelStatusComponent implements OnInit {
     private cameraService: CameraService,
     private vehicleService: VehicleDetectedService,
     private apiService: ApiService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -106,8 +109,8 @@ export class CameraModelStatusComponent implements OnInit {
 
   private initializeServiceHealthy(): void {
     this.isServiceHealthy$ = this.modelInfo$.pipe(
-      map(info => info.isRunning),
-      shareReplay(1)
+      map((info) => info.isRunning),
+      shareReplay(1),
     );
   }
 
@@ -122,10 +125,10 @@ export class CameraModelStatusComponent implements OnInit {
               return null;
             }
           }),
-          catchError(() => of(null))
-        )
+          catchError(() => of(null)),
+        ),
       ),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -136,10 +139,7 @@ export class CameraModelStatusComponent implements OnInit {
     this.cameraStats$ = this.refreshTrigger$.pipe(
       tap(() => this.changeDetectorRef.markForCheck()),
       switchMap(() =>
-        combineLatest([
-          this.cameraService.getAll(),
-          this.vehicleService.getAll(),
-        ]).pipe(
+        combineLatest([this.cameraService.getAll(), this.vehicleService.getAll()]).pipe(
           map(([cameras, vehicles]) => ({
             totalCameras: cameras.length,
             activeCameras: cameras.filter((c) => c.device.state === 'ACTIVE').length,
@@ -151,10 +151,10 @@ export class CameraModelStatusComponent implements OnInit {
           catchError(() => {
             this.changeDetectorRef.markForCheck();
             return of(this.defaultCameraStats);
-          })
-        )
+          }),
+        ),
       ),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -170,33 +170,34 @@ export class CameraModelStatusComponent implements OnInit {
       }),
       switchMap(() =>
         // Llamar al endpoint del backend - siempre retorna 200 OK
-        this.apiService.get<{ status: string; service: string }>('/streams/health/detection-service').pipe(
-          timeout(5000),
-          map((response) => {
-            const isRunning = response.status === 'HEALTHY';
-            return {
-              isRunning,
-              streamType: isRunning
-                ? 'Vehicle Detection Service (Activo)'
-                : 'Vehicle Detection Service (Detenido)',
-              detectionCount: isRunning ? 1 : 0,
-              lastUpdate: new Date(),
-            };
-          }),
-          catchError(() => {
-            return of({
-              isRunning: false,
-              streamType: 'Vehicle Detection Service (Detenido)',
-              detectionCount: 0,
-              lastUpdate: new Date(),
-            });
-          })
-        )
+        this.apiService
+          .get<{ status: string; service: string }>('/streams/health/detection-service')
+          .pipe(
+            timeout(5000),
+            map((response) => {
+              const isRunning = response.status === 'HEALTHY';
+              return {
+                isRunning,
+                streamType: isRunning
+                  ? 'Vehicle Detection Service (Activo)'
+                  : 'Vehicle Detection Service (Detenido)',
+                detectionCount: isRunning ? 1 : 0,
+                lastUpdate: new Date(),
+              };
+            }),
+            catchError(() => {
+              return of({
+                isRunning: false,
+                streamType: 'Vehicle Detection Service (Detenido)',
+                detectionCount: 0,
+                lastUpdate: new Date(),
+              });
+            }),
+          ),
       ),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
-
 
   /**
    * Maneja click en botón de reinicio

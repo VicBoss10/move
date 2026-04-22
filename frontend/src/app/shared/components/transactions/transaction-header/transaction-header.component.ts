@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-transaction-header',
   imports: [],
   templateUrl: './transaction-header.component.html',
-  styles: ``
+  styles: ``,
 })
-export class TransactionHeaderComponent {
-
-}
+export class TransactionHeaderComponent {}

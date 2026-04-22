@@ -2,7 +2,12 @@ import { Component, ChangeDetectionStrategy, OnInit, ChangeDetectorRef } from '@
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ThresholdsService } from '../../../../core/services/thresholds.service';
-import { ENV_THRESHOLDS, EnvironmentMetricKey, MetricThresholdConfig, ThresholdLevel } from '../../../../core/config/environment-thresholds.config';
+import {
+  ENV_THRESHOLDS,
+  EnvironmentMetricKey,
+  MetricThresholdConfig,
+  ThresholdLevel,
+} from '../../../../core/config/environment-thresholds.config';
 import { ToastService } from '../../../../core/services/toast.service';
 
 /**
@@ -36,7 +41,7 @@ export class AlertThresholdsFormComponent implements OnInit {
     private fb: FormBuilder,
     private thresholds: ThresholdsService,
     private toast: ToastService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -53,7 +58,7 @@ export class AlertThresholdsFormComponent implements OnInit {
     const cfg = this.thresholds.getMetric(metric) as MetricThresholdConfig;
     this.form = this.fb.group({
       metric: [metric, Validators.required],
-      levels: this.fb.array(cfg.levels.map((l: any) => this.levelGroup(l)))
+      levels: this.fb.array(cfg.levels.map((l: any) => this.levelGroup(l))),
     });
     this.selected = metric;
     this.cdr.markForCheck();
@@ -69,11 +74,11 @@ export class AlertThresholdsFormComponent implements OnInit {
     const isInfinity = level.max === Infinity;
     return this.fb.group({
       max: [
-        isInfinity ? null : level.max, 
-        isInfinity ? [] : [Validators.required, Validators.min(0)]
+        isInfinity ? null : level.max,
+        isInfinity ? [] : [Validators.required, Validators.min(0)],
       ],
       key: [level.key],
-      label: [level.label]
+      label: [level.label],
     });
   }
 
@@ -93,12 +98,13 @@ export class AlertThresholdsFormComponent implements OnInit {
   validateOrder(): string | null {
     // Solo validamos hasta el penúltimo, ya que el último es Infinity (null en form)
     const values = this.levels.controls
-      .map(c => c.get('max')?.value)
-      .filter(v => v !== null)
-      .map(v => Number(v));
+      .map((c) => c.get('max')?.value)
+      .filter((v) => v !== null)
+      .map((v) => Number(v));
 
     for (let i = 1; i < values.length; i++) {
-      if (isNaN(values[i]) || isNaN(values[i - 1])) return 'Todos los umbrales deben ser números válidos';
+      if (isNaN(values[i]) || isNaN(values[i - 1]))
+        return 'Todos los umbrales deben ser números válidos';
       if (values[i] <= values[i - 1]) {
         return `El nivel ${i} debe ser mayor que el nivel ${i - 1}`;
       }
@@ -118,7 +124,7 @@ export class AlertThresholdsFormComponent implements OnInit {
     }
     const cfg = this.thresholds.getMetric(this.selected);
 
-    cfg.levels = this.levels.controls.map(c => {
+    cfg.levels = this.levels.controls.map((c) => {
       const isLast = c.get('key')?.value === 'critical';
       return {
         key: c.get('key')?.value,
@@ -127,7 +133,8 @@ export class AlertThresholdsFormComponent implements OnInit {
         color: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.color || '#999',
         textClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.textClass || '',
         bgClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.bgClass || '',
-        gaugeGradient: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.gaugeGradient || ''
+        gaugeGradient:
+          cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.gaugeGradient || '',
       } as ThresholdLevel;
     });
 
@@ -149,10 +156,10 @@ export class AlertThresholdsFormComponent implements OnInit {
    */
   getLevelColorClass(index: number): string {
     const colors = [
-      'bg-green-500',    // good
-      'bg-yellow-500',   // moderate
-      'bg-orange-500',   // poor
-      'bg-red-500'       // critical
+      'bg-green-500', // good
+      'bg-yellow-500', // moderate
+      'bg-orange-500', // poor
+      'bg-red-500', // critical
     ];
     return colors[index] || 'bg-gray-500';
   }

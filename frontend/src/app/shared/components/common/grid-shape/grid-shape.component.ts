@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-grid-shape',
   imports: [],
   templateUrl: './grid-shape.component.html',
-  styles: ``
+  styles: ``,
 })
-export class GridShapeComponent {
-
-}
+export class GridShapeComponent {}

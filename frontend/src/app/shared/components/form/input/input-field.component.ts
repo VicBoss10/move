@@ -21,20 +21,21 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
       />
 
       @if (hint) {
-      <p class="mt-1.5 text-xs"
-        [ngClass]="{
-          'text-error-500': error,
-          'text-success-500': success,
-          'text-gray-500': !error && !success
-        }">
-        {{ hint }}
-      </p>
+        <p
+          class="mt-1.5 text-xs"
+          [ngClass]="{
+            'text-error-500': error,
+            'text-success-500': success,
+            'text-gray-500': !error && !success,
+          }"
+        >
+          {{ hint }}
+        </p>
       }
     </div>
   `,
 })
 export class InputFieldComponent {
-
   @Input() type: string = 'text';
   @Input() id?: string = '';
   @Input() name?: string = '';

@@ -90,34 +90,34 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
     private cameraService: CameraService,
     private deviceService: DeviceService,
     private apiService: ApiService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
   ) {
-
     // Tabla reactiva que filtra cuando el formControl cambia
     // Usar apiService directamente para evitar caché y permitir actualizaciones en tiempo real
-    this.cameras$ = combineLatest([this.searchControl.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      startWith('')
-    ), this.cameraService.refresh$]).pipe(
+    this.cameras$ = combineLatest([
+      this.searchControl.valueChanges.pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        startWith(''),
+      ),
+      this.cameraService.refresh$,
+    ]).pipe(
       switchMap(([searchTerm]) =>
         this.apiService.get<Camera[]>('/cameras').pipe(
-          map((cameras: Camera[]) =>
-            this.filterCameras(cameras, searchTerm || '')
-          ),
+          map((cameras: Camera[]) => this.filterCameras(cameras, searchTerm || '')),
           catchError((error) => {
             this.changeDetectorRef.markForCheck();
             return of([] as Camera[]);
-          })
-        )
+          }),
+        ),
       ),
-      share()
+      share(),
     );
   }
 
   ngOnInit(): void {
     // Suscribir health del servicio para usarlo en handlers y template
-    this.isServiceHealthy$.pipe(takeUntil(this.destroy$)).subscribe(v => {
+    this.isServiceHealthy$.pipe(takeUntil(this.destroy$)).subscribe((v) => {
       this.isServiceHealthyLatest = !!v;
       this.changeDetectorRef.markForCheck();
     });
@@ -146,10 +146,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   /**
    * Aplica filtros a los datos de cámaras
    */
-  private filterCameras(
-    cameras: Camera[],
-    searchTerm: string
-  ): Camera[] {
+  private filterCameras(cameras: Camera[], searchTerm: string): Camera[] {
     return cameras.filter((camera) => {
       // Filtrar por nombre de dispositivo
       if (searchTerm.trim()) {
@@ -167,10 +164,8 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
    */
   getStateColor(state: string): string {
     const stateColors: Record<string, string> = {
-      ACTIVE:
-        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      INACTIVE:
-        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+      ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+      INACTIVE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
       FAILING: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
     };
     return stateColors[state] || stateColors['INACTIVE'];
@@ -227,6 +222,8 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
    * Validaciones: servicio healthy y cámara no activa
    */
   startDetectionForCamera(camera: Camera): void {
+    console.log('🎯 startDetectionForCamera called with camera:', camera);
+    
     // Validar que el servicio esté healthy
     if (!this.isServiceHealthyLatest) {
       console.warn('Cannot start detection: Vehicle Detection Service is not running');
@@ -236,6 +233,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
 
     // Validar que la cámara no esté ya activa
     if (camera.device.state === DeviceState.ACTIVE || this.isLoading(camera.id)) {
+      console.warn('Camera already active or loading:', { cameraId: camera.id, deviceState: camera.device.state });
       return;
     }
 
@@ -247,12 +245,14 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
       state: DeviceState.ACTIVE,
     };
 
-    this.deviceService.update(deviceUpdate as Device)
+    this.deviceService
+      .update(deviceUpdate as Device)
       .pipe(
         switchMap(() => {
+          console.log('✅ Device updated, calling startStream with cameraId:', camera.id);
           return this.cameraService.startStream(camera.id);
         }),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe({
         next: (response) => {
@@ -268,13 +268,14 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
             id: camera.device.id,
             state: DeviceState.INACTIVE,
           };
-          this.deviceService.update(revertUpdate as Device)
+          this.deviceService
+            .update(revertUpdate as Device)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
-              error: (revertError) => console.error('Error reverting device state:', revertError)
+              error: (revertError) => console.error('Error reverting device state:', revertError),
             });
           this.changeDetectorRef.markForCheck();
-        }
+        },
       });
   }
 
@@ -290,82 +291,113 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
     this.loadingStates.set(camera.id, true);
     this.changeDetectorRef.markForCheck();
     // 1) Intentar obtener la sesión activa en el VDS y detenerla
-    this.cameraService.getActiveStreamByDevice(camera.device.id).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (res) => {
-        const sessionId = (res as any)?.sessionId;
-        if (sessionId) {
-          this.cameraService.stopStream(sessionId).pipe(takeUntil(this.destroy$)).subscribe({
-            next: () => {
-              console.log(`Stopped session ${sessionId} for device ${camera.id}`);
-              // Luego actualizar el estado en la BD
-              const deviceUpdate: Partial<Device> = { id: camera.device.id, state: DeviceState.INACTIVE };
-              this.deviceService.update(deviceUpdate as Device).pipe(takeUntil(this.destroy$)).subscribe({
+    this.cameraService
+      .getActiveStreamByDevice(camera.device.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const sessionId = (res as any)?.sessionId;
+          if (sessionId) {
+            this.cameraService
+              .stopStream(sessionId)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: () => {
+                  console.log(`Stopped session ${sessionId} for device ${camera.id}`);
+                  // Luego actualizar el estado en la BD
+                  const deviceUpdate: Partial<Device> = {
+                    id: camera.device.id,
+                    state: DeviceState.INACTIVE,
+                  };
+                  this.deviceService
+                    .update(deviceUpdate as Device)
+                    .pipe(takeUntil(this.destroy$))
+                    .subscribe({
+                      next: () => {
+                        this.loadingStates.set(camera.id, false);
+                        this.cameraService.triggerRefresh();
+                        this.changeDetectorRef.markForCheck();
+                      },
+                      error: (err) => {
+                        console.error(
+                          'Error updating device state after stopping VDS session',
+                          err,
+                        );
+                        this.loadingStates.set(camera.id, false);
+                        this.changeDetectorRef.markForCheck();
+                      },
+                    });
+                },
+                error: (err) => {
+                  console.error('Error stopping VDS session', err);
+                  // Even if stop fails, update device state to INACTIVE to keep DB consistent
+                  const deviceUpdate: Partial<Device> = {
+                    id: camera.device.id,
+                    state: DeviceState.INACTIVE,
+                  };
+                  this.deviceService
+                    .update(deviceUpdate as Device)
+                    .pipe(takeUntil(this.destroy$))
+                    .subscribe({
+                      next: () => {
+                        this.loadingStates.set(camera.id, false);
+                        this.cameraService.triggerRefresh();
+                        this.changeDetectorRef.markForCheck();
+                      },
+                      error: (err2) => {
+                        console.error('Error updating device state after failed stop', err2);
+                        this.loadingStates.set(camera.id, false);
+                        this.changeDetectorRef.markForCheck();
+                      },
+                    });
+                },
+              });
+          } else {
+            // No hay sesión activa: solo actualizar estado
+            const deviceUpdate: Partial<Device> = {
+              id: camera.device.id,
+              state: DeviceState.INACTIVE,
+            };
+            this.deviceService
+              .update(deviceUpdate as Device)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
                 next: () => {
                   this.loadingStates.set(camera.id, false);
                   this.cameraService.triggerRefresh();
                   this.changeDetectorRef.markForCheck();
                 },
                 error: (err) => {
-                  console.error('Error updating device state after stopping VDS session', err);
+                  console.error('Error updating device state when no active session found', err);
                   this.loadingStates.set(camera.id, false);
-                  this.changeDetectorRef.markForCheck();
-                }
-              });
-            },
-            error: (err) => {
-              console.error('Error stopping VDS session', err);
-              // Even if stop fails, update device state to INACTIVE to keep DB consistent
-              const deviceUpdate: Partial<Device> = { id: camera.device.id, state: DeviceState.INACTIVE };
-              this.deviceService.update(deviceUpdate as Device).pipe(takeUntil(this.destroy$)).subscribe({
-                next: () => {
-                  this.loadingStates.set(camera.id, false);
-                  this.cameraService.triggerRefresh();
                   this.changeDetectorRef.markForCheck();
                 },
-                error: (err2) => {
-                  console.error('Error updating device state after failed stop', err2);
-                  this.loadingStates.set(camera.id, false);
-                  this.changeDetectorRef.markForCheck();
-                }
               });
-            }
-          });
-        } else {
-          // No hay sesión activa: solo actualizar estado
-          const deviceUpdate: Partial<Device> = { id: camera.device.id, state: DeviceState.INACTIVE };
-          this.deviceService.update(deviceUpdate as Device).pipe(takeUntil(this.destroy$)).subscribe({
-            next: () => {
-              this.loadingStates.set(camera.id, false);
-                  this.cameraService.triggerRefresh();
-              this.changeDetectorRef.markForCheck();
-            },
-            error: (err) => {
-              console.error('Error updating device state when no active session found', err);
-              this.loadingStates.set(camera.id, false);
-              this.changeDetectorRef.markForCheck();
-            }
-          });
-        }
-      },
-      error: (err) => {
-        // Error consultando VDS: intentar solo actualizar DB para evitar bloqueo del usuario
-        console.warn('Error querying VDS for active session, updating device state anyway', err);
-        const deviceUpdate: Partial<Device> = { id: camera.device.id, state: DeviceState.INACTIVE };
-        this.deviceService.update(deviceUpdate as Device).pipe(takeUntil(this.destroy$)).subscribe({
-            next: () => {
-            this.loadingStates.set(camera.id, false);
-            this.cameraService.triggerRefresh();
-            this.changeDetectorRef.markForCheck();
-          },
-          error: (err2) => {
-            console.error('Error updating device state after VDS query failure', err2);
-            this.loadingStates.set(camera.id, false);
-            this.changeDetectorRef.markForCheck();
           }
-        });
-      }
-    });
+        },
+        error: (err) => {
+          // Error consultando VDS: intentar solo actualizar DB para evitar bloqueo del usuario
+          console.warn('Error querying VDS for active session, updating device state anyway', err);
+          const deviceUpdate: Partial<Device> = {
+            id: camera.device.id,
+            state: DeviceState.INACTIVE,
+          };
+          this.deviceService
+            .update(deviceUpdate as Device)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => {
+                this.loadingStates.set(camera.id, false);
+                this.cameraService.triggerRefresh();
+                this.changeDetectorRef.markForCheck();
+              },
+              error: (err2) => {
+                console.error('Error updating device state after VDS query failure', err2);
+                this.loadingStates.set(camera.id, false);
+                this.changeDetectorRef.markForCheck();
+              },
+            });
+        },
+      });
   }
 }

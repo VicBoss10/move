@@ -6,7 +6,7 @@ import { Component, Input } from '@angular/core';
   imports: [CommonModule],
   template: `<div
     class="flex h-10 w-10 items-center justify-center rounded-full 
-    {{colorClass}} {{ className }}"
+    {{ colorClass }} {{ className }}"
   >
     <span class="text-sm font-medium">{{ initials }}</span>
   </div>`,
@@ -36,9 +36,7 @@ export class AvatarTextComponent {
       'bg-yellow-100 text-yellow-600',
       'bg-error-100 text-error-600',
     ];
-    const index = this.name
-      .split('')
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const index = this.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return colors[index % colors.length];
   }
 }

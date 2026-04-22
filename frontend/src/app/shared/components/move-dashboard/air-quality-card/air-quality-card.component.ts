@@ -1,11 +1,11 @@
-import { Component, ChangeDetectionStrategy } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { SafeHtmlPipe } from "../../../pipe/safe-html.pipe";
-import { SensorDataService } from "../../../../core/services/sensor-data.service";
-import { ComponentColorUtility } from "../../../../core/utils/component-color.utility";
-import { getEnvironmentStatus } from "../../../../core/config/environment-thresholds.config";
-import { Observable, of } from "rxjs";
-import { map, catchError, shareReplay } from "rxjs/operators";
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { ComponentColorUtility } from '../../../../core/utils/component-color.utility';
+import { getEnvironmentStatus } from '../../../../core/config/environment-thresholds.config';
+import { Observable, of } from 'rxjs';
+import { map, catchError, shareReplay } from 'rxjs/operators';
 
 /**
  * Interfaz para métricas de calidad del aire
@@ -22,7 +22,7 @@ interface AirQualityMetric {
   icon: string;
   value: number;
   unit: string;
-  status: "good" | "moderate" | "unhealthy";
+  status: 'good' | 'moderate' | 'unhealthy';
   statusLabel: string;
 }
 
@@ -48,10 +48,10 @@ interface AirQualityMetric {
  * <app-air-quality-card />
  */
 @Component({
-  selector: "app-air-quality-card",
+  selector: 'app-air-quality-card',
   standalone: true,
   imports: [CommonModule, SafeHtmlPipe],
-  templateUrl: "./air-quality-card.component.html",
+  templateUrl: './air-quality-card.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AirQualityCardComponent {
@@ -78,20 +78,20 @@ export class AirQualityCardComponent {
    */
   private readonly defaultMetrics: AirQualityMetric[] = [
     {
-      label: "PM 2.5",
+      label: 'PM 2.5',
       icon: this.icons.pm25Icon,
       value: 0,
-      unit: "µg/m³",
-      status: "good",
-      statusLabel: "Sin datos",
+      unit: 'µg/m³',
+      status: 'good',
+      statusLabel: 'Sin datos',
     },
     {
-      label: "PM 10",
+      label: 'PM 10',
       icon: this.icons.pm10Icon,
       value: 0,
-      unit: "µg/m³",
-      status: "good",
-      statusLabel: "Sin datos",
+      unit: 'µg/m³',
+      status: 'good',
+      statusLabel: 'Sin datos',
     },
   ];
 
@@ -114,28 +114,28 @@ export class AirQualityCardComponent {
 
         return [
           {
-            label: "PM 2.5",
+            label: 'PM 2.5',
             icon: this.icons.pm25Icon,
             value: pm25,
-            unit: "µg/m³",
+            unit: 'µg/m³',
             status: pm25Status.key as any,
             statusLabel: pm25Status.label,
           },
           {
-            label: "PM 10",
+            label: 'PM 10',
             icon: this.icons.pm10Icon,
             value: pm10,
-            unit: "µg/m³",
+            unit: 'µg/m³',
             status: pm10Status.key as any,
             statusLabel: pm10Status.label,
           },
         ] as AirQualityMetric[];
       }),
       catchError((error) => {
-        console.error("Error cargando datos de aire:", error);
+        console.error('Error cargando datos de aire:', error);
         return of(this.defaultMetrics);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 }

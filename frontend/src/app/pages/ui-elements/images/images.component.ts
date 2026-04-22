@@ -15,8 +15,6 @@ import { TwoColumnImageGridComponent } from '../../../shared/components/ui/image
     TwoColumnImageGridComponent,
   ],
   templateUrl: './images.component.html',
-  styles: ``
+  styles: ``,
 })
-export class ImagesComponent {
-
-}
+export class ImagesComponent {}

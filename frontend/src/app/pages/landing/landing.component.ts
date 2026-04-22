@@ -9,8 +9,7 @@ import { CommonModule } from '@angular/common';
   template: '',
 })
 export class LandingComponent implements OnInit {
-
-  constructor() { }
+  constructor() {}
 
   ngOnInit(): void {
     // Esta es la clave:

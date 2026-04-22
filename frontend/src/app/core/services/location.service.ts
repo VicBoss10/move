@@ -11,12 +11,12 @@ import { QueryParamsBuilder } from '../utils/query-params.builder';
  * Servicio para gestionar Ubicaciones de monitoreo
  * Hereda funcionalidad CRUD base de BaseDataService
  * Agrega búsqueda avanzada y cálculo de estadísticas
- * 
+ *
  * @service
  * @providedIn root
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class LocationService extends BaseDataService<Location> {
   /**
@@ -26,7 +26,7 @@ export class LocationService extends BaseDataService<Location> {
 
   constructor(
     apiService: ApiService,
-    private vehicleService: VehicleDetectedService
+    private vehicleService: VehicleDetectedService,
   ) {
     super(apiService);
     // Datos de ubicaciones son casi estáticos - TTL largo (1 hora)
@@ -41,7 +41,7 @@ export class LocationService extends BaseDataService<Location> {
     const now = Date.now();
 
     if (this.cacheData.length > 0 && now - this.lastFetch < this.cacheDuration) {
-      return new Observable(observer => {
+      return new Observable((observer) => {
         observer.next(this.cacheData as Location[]);
         observer.complete();
       });
@@ -59,7 +59,7 @@ export class LocationService extends BaseDataService<Location> {
         this.setServiceError(error, `Error al obtener datos de ${this.endpoint}`);
         return throwError(() => error);
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
@@ -80,42 +80,7 @@ export class LocationService extends BaseDataService<Location> {
       catchError((error) => {
         this.setServiceError(error, 'Error al crear ubicación');
         return throwError(() => error);
-      })
-    );
-  }
-
-  /**
-   * Elimina una ubicación por ID.
-   * Override porque el backend retorna texto plano en vez de JSON.
-   */
-  override delete(id: number): Observable<any> {
-    return this.apiService.deleteText(`/${this.endpoint}/${id}`).pipe(
-      tap(() => {
-        this.invalidateCache();
-        this.clearServiceError();
       }),
-      catchError((error) => {
-        this.setServiceError(error, 'Error al eliminar ubicación');
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /**
-   * Actualiza una ubicación existente.
-   * Override porque el backend retorna texto plano en vez de JSON.
-   */
-  override update(data: Location): Observable<Location> {
-    return this.apiService.putText(`/${this.endpoint}`, data).pipe(
-      tap(() => {
-        this.invalidateCache();
-        this.clearServiceError();
-      }),
-      map(() => data),
-      catchError((error) => {
-        this.setServiceError(error, 'Error al actualizar ubicación');
-        return throwError(() => error);
-      })
     );
   }
 
@@ -142,7 +107,7 @@ export class LocationService extends BaseDataService<Location> {
       catchError((error) => {
         this.setServiceError(error, 'Error al buscar ubicaciones');
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -153,12 +118,12 @@ export class LocationService extends BaseDataService<Location> {
   getStats(): LocationStats {
     const locations = this.getCachedData().filter((l) => (l as any).id !== 0);
     const vehicleStats = this.vehicleService.getStats();
-    
+
     return {
       total: locations.length,
       activeLocations: locations.length,
       totalVehicleDetections: vehicleStats.total,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 }

@@ -1,8 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap")
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap')
 layer(base);
 
-@import "tailwindcss";
-@import "swiper/css/bundle";
+@import 'tailwindcss';
+@import 'swiper/css/bundle';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -44,35 +44,34 @@ layer(base);
 
   /* --- PALETA DE MARCA (BRAND) - REEMPLAZADA CON TUS VERDES --- */
   /* Usaremos tu verde de acento como el color principal de la marca */
-  --color-brand-25: #f2fbf5;      /* Un verde muy muy claro para fondos sutiles */
-  --color-brand-50: #e9f7ef;      /* Tu --heading-color */
+  --color-brand-25: #f2fbf5; /* Un verde muy muy claro para fondos sutiles */
+  --color-brand-50: #e9f7ef; /* Tu --heading-color */
   --color-brand-100: #d1f0e0;
   --color-brand-200: #a3e0c1;
-  --color-brand-300: #7bd69a;      /* Tu --nav-hover-color */
+  --color-brand-300: #7bd69a; /* Tu --nav-hover-color */
   --color-brand-400: #4fbb7a;
-  --color-brand-500: #2ea44f;      /* TU --accent-color PRINCIPAL */
+  --color-brand-500: #2ea44f; /* TU --accent-color PRINCIPAL */
   --color-brand-600: #258a41;
   --color-brand-700: #1e6f35;
   --color-brand-800: #175429;
-  --color-brand-900: #113225;      /* Tu --surface-color */
-  --color-brand-950: #042016;      /* Tu --background-color */
+  --color-brand-900: #113225; /* Tu --surface-color */
+  --color-brand-950: #042016; /* Tu --background-color */
 
   /* --- PALETA DE GRISES (GRAY) - AJUSTADA PARA COMBINAR CON VERDE --- */
   /* Haremos los grises un poco más "teal" o desaturados para que no choquen */
   --color-gray-25: #fcfdfd;
-  --color-gray-50: #f8faf9;       /* Fondo general de la app, casi blanco */
+  --color-gray-50: #f8faf9; /* Fondo general de la app, casi blanco */
   --color-gray-100: #f1f5f3;
   --color-gray-200: #e3e8e6;
-  --color-gray-300: #d0d5dd;       /* Bordes y divisores */
+  --color-gray-300: #d0d5dd; /* Bordes y divisores */
   --color-gray-400: #98a2b3;
-  --color-gray-500: #667085;       /* Texto secundario */
+  --color-gray-500: #667085; /* Texto secundario */
   --color-gray-600: #475467;
-  --color-gray-700: #344054;       /* Texto principal */
+  --color-gray-700: #344054; /* Texto principal */
   --color-gray-800: #1d2939;
   --color-gray-900: #101828;
   --color-gray-950: #0c111d;
-  --color-gray-dark: #1a2231;      /* Fondo oscuro del dashboard */
-
+  --color-gray-dark: #1a2231; /* Fondo oscuro del dashboard */
 
   /* --- El resto de colores (success, error, warning) los puedes dejar o ajustar si quieres --- */
   --color-success-25: #f6fef9;
@@ -118,24 +117,22 @@ layer(base);
 
   --color-theme-purple-500: #7a5af8;
 
-  --shadow-theme-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1),
-    0px 2px 4px -2px rgba(16, 24, 40, 0.06);
-  --shadow-theme-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08),
-    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
-  --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1),
-    0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  --shadow-theme-md:
+    0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-theme-lg:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
   --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  --shadow-theme-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08),
-    0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+  --shadow-theme-xl:
+    0px 20px 24px -4px rgba(16, 24, 40, 0.08), 0px 8px 8px -4px rgba(16, 24, 40, 0.03);
   --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
   --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
-  --shadow-slider-navigation: 0px 1px 2px 0px rgba(16, 24, 40, 0.1),
-    0px 1px 3px 0px rgba(16, 24, 40, 0.1);
-  --shadow-tooltip: 0px 4px 6px -2px rgba(16, 24, 40, 0.05),
-    -8px 0px 20px 8px rgba(16, 24, 40, 0.05);
+  --shadow-slider-navigation:
+    0px 1px 2px 0px rgba(16, 24, 40, 0.1), 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
+  --shadow-tooltip:
+    0px 4px 6px -2px rgba(16, 24, 40, 0.05), -8px 0px 20px 8px rgba(16, 24, 40, 0.05);
 
-  --drop-shadow-4xl: 0 35px 35px rgba(0, 0, 0, 0.25),
-    0 45px 65px rgba(0, 0, 0, 0.15);
+  --drop-shadow-4xl: 0 35px 35px rgba(0, 0, 0, 0.25), 0 45px 65px rgba(0, 0, 0, 0.15);
 
   --z-index-1: 1;
   --z-index-9: 9;
@@ -163,7 +160,7 @@ layer(base);
     border-color: var(--color-gray-200, currentColor);
   }
   button:not(:disabled),
-  [role="button"]:not(:disabled) {
+  [role='button']:not(:disabled) {
     cursor: pointer;
   }
   body {
@@ -276,10 +273,10 @@ layer(base);
 
 @layer utilities {
   /* For Remove Date Icon */
-  input[type="date"]::-webkit-inner-spin-button,
-  input[type="time"]::-webkit-inner-spin-button,
-  input[type="date"]::-webkit-calendar-picker-indicator,
-  input[type="time"]::-webkit-calendar-picker-indicator {
+  input[type='date']::-webkit-inner-spin-button,
+  input[type='time']::-webkit-inner-spin-button,
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
     display: none;
     -webkit-appearance: none;
   }
@@ -439,9 +436,7 @@ layer(base);
   font-weight: 500;
 }
 
-.flatpickr-month
-  .flatpickr-current-month
-  .flatpickr-monthDropdown-months:focus {
+.flatpickr-month .flatpickr-current-month .flatpickr-monthDropdown-months:focus {
   outline: none !important;
   border: 0 !important;
 }
@@ -476,7 +471,9 @@ span.flatpickr-weekday,
   @apply !bg-none;
 }
 .flatpickr-day.inRange {
-  box-shadow: -5px 0 0 #f9fafb, 5px 0 0 #f9fafb !important;
+  box-shadow:
+    -5px 0 0 #f9fafb,
+    5px 0 0 #f9fafb !important;
   @apply dark:!shadow-datepicker;
 }
 .flatpickr-day.inRange,
@@ -598,9 +595,7 @@ span.flatpickr-weekday,
 .fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button {
   @apply !h-auto !w-auto rounded-md !border-0 bg-transparent !px-5 !py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:!shadow-none dark:text-gray-400;
 }
-.fc-header-toolbar.fc-toolbar
-  .fc-toolbar-chunk:last-child
-  .fc-button.fc-button-active {
+.fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button.fc-button-active {
   @apply text-gray-900 bg-white dark:bg-gray-800 dark:text-white;
 }
 .fc-theme-standard th {
@@ -755,7 +750,8 @@ span.flatpickr-weekday,
 
 .task {
   border-radius: 0.75rem;
-  box-shadow: 0px 1px 3px 0px rgba(16, 24, 40, 0.1),
+  box-shadow:
+    0px 1px 3px 0px rgba(16, 24, 40, 0.1),
     0px 1px 2px 0px rgba(16, 24, 40, 0.06);
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
@@ -782,8 +778,8 @@ span.flatpickr-weekday,
 }
 
 /* Code Editor */
-code[class*="language-"],
-pre[class*="language-"] {
+code[class*='language-'],
+pre[class*='language-'] {
   text-shadow: none;
   color: #344054;
   overflow: hidden !important;
@@ -795,15 +791,15 @@ pre[class*="language-"] {
   text-align: justify;
 }
 
-.dark code[class*="language-"],
-.dark pre[class*="language-"] {
+.dark code[class*='language-'],
+.dark pre[class*='language-'] {
   text-shadow: none;
   color: #98a2b3;
 }
-[data-theme="light"] .language-html {
+[data-theme='light'] .language-html {
   background-color: #ffffff !important;
 }
-[data-theme="dark"] .language-html {
+[data-theme='dark'] .language-html {
   background-color: #171f2e !important;
 }
 .token {
@@ -842,7 +838,7 @@ pre[class*="language-"] {
 .line-numbers .line-numbers-rows {
   border-right: 0 !important;
 }
-pre[class*="language-"].line-numbers {
+pre[class*='language-'].line-numbers {
   padding-left: 2.8em !important;
 }
 
@@ -855,7 +851,9 @@ pre[class*="language-"].line-numbers {
   max-height: calc(100vh - 2.5rem);
   overflow: auto;
 }
-.toast-item { pointer-events: auto; }
+.toast-item {
+  pointer-events: auto;
+}
 @media (max-width: 640px) {
   .toast-container {
     right: 0.75rem;
