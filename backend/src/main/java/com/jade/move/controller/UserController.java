@@ -14,17 +14,30 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller handling user-related operations.
+ *
+ * <p>Provides endpoints to manage application users in Keycloak. The
+ * controller delegates management operations to {@code KeycloakAdminService}.</p>
+ *
+ * @since 0.0.1
+ */
 @RestController
 @RequestMapping("/users")
 @Tag(name = "Usuarios", description = "Gestión de autenticación y usuarios / User and authentication management")
 public class UserController {
 
-    private final KeycloakAdminService keycloakAdminService;
+        private final KeycloakAdminService keycloakAdminService;
 
-    public UserController(KeycloakAdminService keycloakAdminService) {
-        this.keycloakAdminService = keycloakAdminService;
-    }
+        public UserController(KeycloakAdminService keycloakAdminService) {
+                this.keycloakAdminService = keycloakAdminService;
+        }
 
+    /**
+     * Lists all Keycloak users.
+     *
+     * @return list of user representations
+     */
     @Operation(
             summary = "Get all users / Obtener todos los usuarios",
             description = "Retrieves a complete list of all registered users from Keycloak. / Obtiene una lista completa de todos los usuarios registrados en Keycloak."
@@ -40,6 +53,12 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    /**
+     * Retrieves a user by Keycloak identifier.
+     *
+     * @param id user identifier
+     * @return user representation
+     */
     @Operation(
             summary = "Get user by ID / Obtener usuario por ID",
             description = "Retrieves a specific user by their Keycloak ID. / Obtiene un usuario específico por su ID de Keycloak."
@@ -54,6 +73,12 @@ public class UserController {
         return ResponseEntity.ok(keycloakAdminService.getUserById(id));
     }
 
+    /**
+     * Creates a new user in Keycloak.
+     *
+     * @param registrationRequest registration payload
+     * @return map containing creation details
+     */
     @Operation(
             summary = "Create a new user / Crear un nuevo usuario",
             description = "Public endpoint for registering a new user in Keycloak. / Endpoint público para registrar un nuevo usuario en Keycloak."
@@ -81,6 +106,13 @@ public class UserController {
         ));
     }
 
+    /**
+     * Updates an existing user's profile in Keycloak.
+     *
+     * @param id user identifier
+     * @param request updated user payload
+     * @return confirmation map
+     */
     @Operation(
             summary = "Update an existing user / Actualizar un usuario existente",
             description = "Updates user profile data (email, firstName, lastName) in Keycloak. / Actualiza datos de perfil del usuario en Keycloak."
@@ -100,6 +132,12 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User updated successfully"));
     }
 
+    /**
+     * Deletes a user from Keycloak.
+     *
+     * @param id user identifier
+     * @return confirmation map
+     */
     @Operation(
             summary = "Delete user by ID / Eliminar usuario por ID",
             description = "Permanently deletes a user from Keycloak. / Elimina permanentemente un usuario de Keycloak."

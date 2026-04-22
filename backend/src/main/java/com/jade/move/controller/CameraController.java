@@ -11,16 +11,24 @@ import com.jade.move.model.Camera;
 import com.jade.move.model.StreamType;
 import com.jade.move.service.CameraService;
 
+/**
+ * REST controller for camera management.
+ *
+ * <p>Provides endpoints to list, create, update and delete camera resources, and
+ * to query cameras by device or stream type.</p>
+ *
+ * @since 0.0.1
+ */
 @RestController
 @RequestMapping("/cameras")
 @Tag(name = "Cámaras", description = "Gestión de las cámaras en el sistema/Managing cameras in the system")
 public class CameraController {
 
-    private final CameraService cameraService;
+        private final CameraService cameraService;
 
-    public CameraController(CameraService cameraService) {
-        this.cameraService = cameraService;
-    }
+        public CameraController(CameraService cameraService) {
+                this.cameraService = cameraService;
+        }
 
     @Operation(
             summary = "Get all cameras / Obtener todas las cámaras",
@@ -30,11 +38,16 @@ public class CameraController {
             @ApiResponse(responseCode = "200", description = "Cameras retrieved successfully or no cameras found / Cámaras obtenidas correctamente o no se encontraron cámaras"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
-    @GetMapping
-    public ResponseEntity<List<Camera>> getAllCameras() {
-        List<Camera> cameras = cameraService.getAllCameras();
-        return ResponseEntity.ok(cameras);
-    }
+        /**
+         * Retrieves all registered cameras.
+         *
+         * @return ResponseEntity with a list of cameras (may be empty)
+         */
+        @GetMapping
+        public ResponseEntity<List<Camera>> getAllCameras() {
+                List<Camera> cameras = cameraService.getAllCameras();
+                return ResponseEntity.ok(cameras);
+        }
 
     @Operation(
             summary = "Get a camera by ID / Obtener una cámara por ID",
@@ -46,10 +59,16 @@ public class CameraController {
             @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
-    @GetMapping("/{id}")
-    public ResponseEntity<Camera> getCameraById(@PathVariable Integer id) {
-        return ResponseEntity.ok(cameraService.getCameraById(id));
-    }
+        /**
+         * Retrieves a camera by its ID.
+         *
+         * @param id camera identifier
+         * @return ResponseEntity with the camera details
+         */
+        @GetMapping("/{id}")
+        public ResponseEntity<Camera> getCameraById(@PathVariable Integer id) {
+                return ResponseEntity.ok(cameraService.getCameraById(id));
+        }
 
     @Operation(
             summary = "Get a camera by device ID / Obtener una cámara por ID de dispositivo",
@@ -61,10 +80,16 @@ public class CameraController {
             @ApiResponse(responseCode = "400", description = "Invalid device ID format / Formato de ID de dispositivo inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
-    @GetMapping("/device/{deviceId}")
-    public ResponseEntity<Camera> getCameraByDeviceId(@PathVariable Integer deviceId) {
-        return ResponseEntity.ok(cameraService.getCameraByDeviceId(deviceId));
-    }
+        /**
+         * Retrieves the camera associated with a device.
+         *
+         * @param deviceId device identifier
+         * @return ResponseEntity with the camera associated to the device
+         */
+        @GetMapping("/device/{deviceId}")
+        public ResponseEntity<Camera> getCameraByDeviceId(@PathVariable Integer deviceId) {
+                return ResponseEntity.ok(cameraService.getCameraByDeviceId(deviceId));
+        }
 
     @Operation(
             summary = "Get cameras by stream type / Obtener cámaras por tipo de stream",
@@ -75,11 +100,17 @@ public class CameraController {
             @ApiResponse(responseCode = "400", description = "Invalid stream type / Tipo de stream inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
-    @GetMapping("/type/{streamType}")
-    public ResponseEntity<List<Camera>> getCamerasByStreamType(@PathVariable StreamType streamType) {
-        List<Camera> cameras = cameraService.getCamerasByStreamType(streamType);
-        return ResponseEntity.ok(cameras);
-    }
+        /**
+         * Retrieves cameras filtered by stream type.
+         *
+         * @param streamType stream type filter (e.g., USB, RTSP, URL, YOUTUBE)
+         * @return ResponseEntity with a list of matching cameras
+         */
+        @GetMapping("/type/{streamType}")
+        public ResponseEntity<List<Camera>> getCamerasByStreamType(@PathVariable StreamType streamType) {
+                List<Camera> cameras = cameraService.getCamerasByStreamType(streamType);
+                return ResponseEntity.ok(cameras);
+        }
 
     @Operation(
             summary = "Create a new camera / Crear una nueva cámara",
@@ -91,11 +122,17 @@ public class CameraController {
             @ApiResponse(responseCode = "409", description = "Camera already exists for this device / La cámara ya existe para este dispositivo"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
-    @PostMapping
-    public ResponseEntity<?> createCamera(@RequestBody Camera camera) {
-        Camera createdCamera = cameraService.createCamera(camera);
-        return ResponseEntity.ok("Camera created successfully with id: " + createdCamera.getId());
-    }
+        /**
+         * Creates a new camera.
+         *
+         * @param camera camera payload
+         * @return ResponseEntity confirming creation with generated id
+         */
+        @PostMapping
+        public ResponseEntity<?> createCamera(@RequestBody Camera camera) {
+                Camera createdCamera = cameraService.createCamera(camera);
+                return ResponseEntity.ok("Camera created successfully with id: " + createdCamera.getId());
+        }
 
     @Operation(
             summary = "Update an existing camera / Actualizar una cámara existente",
@@ -107,11 +144,17 @@ public class CameraController {
             @ApiResponse(responseCode = "404", description = "Camera not found / Cámara no encontrada"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
-    @PutMapping
-    public ResponseEntity<?> updateCamera(@RequestBody Camera camera) {
-        Camera updatedCamera = cameraService.updateCamera(camera);
-        return ResponseEntity.ok("Camera updated successfully with id: " + updatedCamera.getId());
-    }
+        /**
+         * Updates an existing camera.
+         *
+         * @param camera camera payload containing the id to update
+         * @return ResponseEntity confirming update with id
+         */
+        @PutMapping
+        public ResponseEntity<?> updateCamera(@RequestBody Camera camera) {
+                Camera updatedCamera = cameraService.updateCamera(camera);
+                return ResponseEntity.ok("Camera updated successfully with id: " + updatedCamera.getId());
+        }
 
     @Operation(
             summary = "Delete a camera by ID / Eliminar una cámara por ID",
@@ -123,9 +166,15 @@ public class CameraController {
             @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
     })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCamera(@PathVariable Integer id) {
-        cameraService.deleteCamera(id);
-        return ResponseEntity.ok("Camera deleted successfully with id: " + id);
-    }
+        /**
+         * Deletes a camera by id.
+         *
+         * @param id camera id to delete
+         * @return ResponseEntity confirming deletion
+         */
+        @DeleteMapping("/{id}")
+        public ResponseEntity<?> deleteCamera(@PathVariable Integer id) {
+                cameraService.deleteCamera(id);
+                return ResponseEntity.ok("Camera deleted successfully with id: " + id);
+        }
 }

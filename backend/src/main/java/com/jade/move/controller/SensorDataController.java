@@ -14,6 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Controller for managing sensor data records.
+ *
+ * <p>Provides endpoints to create, search, update, and delete sensor data
+ * records. Supports bulk ingestion and range-based deletions.</p>
+ *
+ * @since 0.0.1
+ */
 @RestController
 @RequestMapping("/sensordata")
 @Tag(name = "Datos de Sensores", description = "Gestión y consulta de datos recogidos por los sensores / Managing and querying sensor-collected data")
@@ -26,6 +34,11 @@ public class SensorDataController {
         this.sensorDataService = sensorDataService;
     }
 
+    /**
+     * Retrieves all sensor data records.
+     *
+     * @return list of all sensor data records
+     */
     @Operation(
             summary = "Get all sensor data / Obtener todos los datos de sensores",
             description = "Retrieves all sensor data records from the system. Returns an informative message if no sensor data is found. / Obtiene todos los registros de datos de sensores del sistema. Devuelve un mensaje informativo si no se encuentran datos de sensores."
@@ -40,6 +53,12 @@ public class SensorDataController {
         return ResponseEntity.ok(sensorDataList);
     }
 
+    /**
+     * Retrieves a sensor data record by identifier.
+     *
+     * @param id sensor data identifier
+     * @return the requested sensor data record
+     */
     @Operation(
             summary = "Get sensor data by ID / Obtener datos de sensor por ID",
             description = "Retrieves a specific sensor data record by its unique identifier. / Obtiene un registro específico de datos de sensor por su identificador único."
@@ -55,6 +74,12 @@ public class SensorDataController {
         return ResponseEntity.ok(sensorDataService.getSensorDataById(id));
     }
 
+    /**
+     * Retrieves all sensor data for a given device.
+     *
+     * @param deviceId device identifier
+     * @return list of sensor data for the device
+     */
     @Operation(
             summary = "Get sensor data by device ID / Obtener datos de sensor por ID de dispositivo",
             description = "Retrieves all sensor data records associated with a specific device ID. Useful for analyzing data from a particular device. / Obtiene todos los registros de datos de sensores asociados con un ID de dispositivo específico. Útil para analizar datos de un dispositivo particular."
@@ -70,6 +95,33 @@ public class SensorDataController {
         return ResponseEntity.ok(sensorDataList);
     }
 
+    /**
+     * Searches sensor data using multiple optional criteria.
+     *
+     * @param minTemperature optional minimum temperature
+     * @param maxTemperature optional maximum temperature
+     * @param minHumidity optional minimum humidity
+     * @param maxHumidity optional maximum humidity
+     * @param minCo2 optional minimum CO2 value
+     * @param maxCo2 optional maximum CO2 value
+     * @param minPm25 optional min PM2.5
+     * @param maxPm25 optional max PM2.5
+     * @param minPm10 optional min PM10
+     * @param maxPm10 optional max PM10
+     * @param deviceId optional device id to filter
+     * @param locationId optional location id to filter
+     * @param start optional start timestamp for range
+     * @param end optional end timestamp for range
+     * @param minCo optional min CO
+     * @param maxCo optional max CO
+     * @param minNo2 optional min NO2
+     * @param maxNo2 optional max NO2
+     * @param minNh3 optional min NH3
+     * @param maxNh3 optional max NH3
+     * @param page optional pagination page
+     * @param size optional pagination size
+     * @return list of sensor data matching criteria
+     */
     @Operation(
             summary = "Search sensor data with criteria / Buscar datos de sensores con criterios",
             description = "Searches sensor data using multiple criteria including temperature, humidity, CO2, PM2.5, PM10 ranges, device/location IDs, and date ranges. All parameters are optional and can be combined for precise filtering. / Busca datos de sensores usando múltiples criterios incluyendo rangos de temperatura, humedad, CO2, PM2.5, PM10, IDs de dispositivo/ubicación y rangos de fechas. Todos los parámetros son opcionales y pueden combinarse para filtrado preciso."
@@ -132,6 +184,12 @@ public class SensorDataController {
         return ResponseEntity.ok(result);
     }
 
+    /**
+     * Creates a new sensor data record.
+     *
+     * @param sensorData sensor data payload to create
+     * @return confirmation message with created id
+     */
     @Operation(
             summary = "Create new sensor data / Crear nuevos datos de sensor",
             description = "Creates a new sensor data record in the system with environmental measurements. All required sensor readings must be provided. / Crea un nuevo registro de datos de sensor en el sistema con mediciones ambientales. Todas las lecturas de sensor requeridas deben proporcionarse."
@@ -148,23 +206,35 @@ public class SensorDataController {
         return ResponseEntity.ok("Sensor data created successfully with id: " + created.getId());
     }
 
-        @Operation(
-                        summary = "Bulk create sensor data / Crear lote de datos de sensores",
-                        description = "Accepts a JSON array of SensorData objects and persists them in a single bulk operation. / Acepta un array JSON de objetos SensorData y los persiste en una única operación.")
-        @ApiResponses({
-                        @ApiResponse(responseCode = "200", description = "Sensor data bulk persisted successfully / Datos de sensores persistidos correctamente"),
-                        @ApiResponse(responseCode = "400", description = "Invalid request body / Cuerpo de petición inválido"),
-                        @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
-        })
-        @PostMapping("/bulk")
-        public ResponseEntity<?> createSensorDataBulk(@RequestBody List<SensorData> sensorDataList) {
-                if (sensorDataList == null || sensorDataList.isEmpty()) {
-                        return ResponseEntity.badRequest().body("Request must be a non-empty JSON array of SensorData");
-                }
-                List<SensorData> saved = sensorDataService.createBulkSensorData(sensorDataList);
-                return ResponseEntity.ok(saved);
+    /**
+     * Bulk inserts a list of sensor data records.
+     *
+     * @param sensorDataList non-empty list of sensor data to persist
+     * @return list of saved sensor data records
+     */
+    @Operation(
+            summary = "Bulk create sensor data / Crear lote de datos de sensores",
+            description = "Accepts a JSON array of SensorData objects and persists them in a single bulk operation. / Acepta un array JSON de objetos SensorData y los persiste en una única operación.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sensor data bulk persisted successfully / Datos de sensores persistidos correctamente"),
+            @ApiResponse(responseCode = "400", description = "Invalid request body / Cuerpo de petición inválido"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+    @PostMapping("/bulk")
+    public ResponseEntity<?> createSensorDataBulk(@RequestBody List<SensorData> sensorDataList) {
+        if (sensorDataList == null || sensorDataList.isEmpty()) {
+            return ResponseEntity.badRequest().body("Request must be a non-empty JSON array of SensorData");
         }
+        List<SensorData> saved = sensorDataService.createBulkSensorData(sensorDataList);
+        return ResponseEntity.ok(saved);
+    }
 
+    /**
+     * Updates an existing sensor data record.
+     *
+     * @param sensorData payload with updated sensor data (must contain id)
+     * @return confirmation message with updated id
+     */
     @Operation(
             summary = "Update existing sensor data / Actualizar datos de sensor existentes",
             description = "Updates an existing sensor data record with new measurements. The sensor data ID must be provided in the request body. / Actualiza un registro existente de datos de sensor con nuevas mediciones. El ID de los datos del sensor debe proporcionarse en el cuerpo de la petición."
@@ -181,6 +251,12 @@ public class SensorDataController {
         return ResponseEntity.ok("Sensor data updated successfully with id: " + updated.getId());
     }
 
+    /**
+     * Deletes a sensor data record by identifier.
+     *
+     * @param id sensor data identifier to delete
+     * @return confirmation message
+     */
     @Operation(
             summary = "Delete sensor data by ID / Eliminar datos de sensor por ID",
             description = "Permanently deletes a sensor data record from the system using its unique identifier. This action cannot be undone. / Elimina permanentemente un registro de datos de sensor del sistema usando su identificador único. Esta acción no se puede deshacer."
@@ -197,27 +273,49 @@ public class SensorDataController {
         return ResponseEntity.ok("Sensor data deleted successfully with id: " + id);
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> deleteAllSensorData() {
-        sensorDataService.deleteAllSensorData();
-        return ResponseEntity.ok("All sensor data deleted successfully");
-    }
+        /**
+         * Deletes all sensor data records from the system.
+         *
+         * @return confirmation message
+         */
+        @DeleteMapping
+        public ResponseEntity<?> deleteAllSensorData() {
+                sensorDataService.deleteAllSensorData();
+                return ResponseEntity.ok("All sensor data deleted successfully");
+        }
 
-    @DeleteMapping("/range")
-    public ResponseEntity<?> deleteSensorDataByRange(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        sensorDataService.deleteSensorDataByDateRange(start, end);
-        return ResponseEntity.ok("Sensor data deleted for range " + start + " - " + end);
-    }
+        /**
+         * Deletes sensor data records within a date-time range.
+         *
+         * @param start start timestamp (inclusive)
+         * @param end end timestamp (inclusive)
+         * @return confirmation message
+         */
+        @DeleteMapping("/range")
+        public ResponseEntity<?> deleteSensorDataByRange(
+                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+                sensorDataService.deleteSensorDataByDateRange(start, end);
+                return ResponseEntity.ok("Sensor data deleted for range " + start + " - " + end);
+        }
 
-    @GetMapping("/first")
-    public ResponseEntity<?> getFirstSensorData() {
-        return ResponseEntity.ok(sensorDataService.getFirstRecord());
-    }
+        /**
+         * Returns the earliest sensor data record.
+         *
+         * @return first sensor data record
+         */
+        @GetMapping("/first")
+        public ResponseEntity<?> getFirstSensorData() {
+                return ResponseEntity.ok(sensorDataService.getFirstRecord());
+        }
 
-    @GetMapping("/last")
-    public ResponseEntity<?> getLastSensorData() {
-        return ResponseEntity.ok(sensorDataService.getLastRecord());
-    }
+        /**
+         * Returns the latest sensor data record.
+         *
+         * @return last sensor data record
+         */
+        @GetMapping("/last")
+        public ResponseEntity<?> getLastSensorData() {
+                return ResponseEntity.ok(sensorDataService.getLastRecord());
+        }
 }

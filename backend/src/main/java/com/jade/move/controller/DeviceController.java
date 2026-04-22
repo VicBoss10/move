@@ -19,6 +19,15 @@ import com.jade.move.model.DeviceState;
 import com.jade.move.model.DeviceType;
 import com.jade.move.service.DeviceService;
 
+/**
+ * REST controller for device management.
+ *
+ * <p>Provides endpoints to list, retrieve, register, update and delete
+ * devices. Device provisioning requests are validated using a factory token
+ * when coming from the physical device.</p>
+ *
+ * @since 0.0.1
+ */
 @RestController
 @RequestMapping("/devices")
 @Tag(name = "Dispositivos", description = "Gestión de los dispositivos en el sistema/Managing devices in the system")
@@ -34,6 +43,11 @@ public class DeviceController {
         this.deviceService = deviceService;
     }
 
+    /**
+     * Returns a list of all registered devices.
+     *
+     * @return list of devices; an empty list if none exist
+     */
     @Operation(
             summary = "Get all devices / Obtener todos los dispositivos",
             description = "Retrieves a list of all registered devices in the system. Returns a message if no devices are found. / Obtiene una lista de todos los dispositivos registrados en el sistema. Devuelve un mensaje si no se encuentran dispositivos."
@@ -48,6 +62,12 @@ public class DeviceController {
         return ResponseEntity.ok(devices);
     }
 
+    /**
+     * Retrieves a device by its identifier.
+     *
+     * @param id device identifier
+     * @return device data
+     */
     @Operation(
             summary = "Get a device by ID / Obtener un dispositivo por ID",
             description = "Retrieves a specific device by its unique identifier. / Obtiene un dispositivo específico por su identificador único."
@@ -63,6 +83,12 @@ public class DeviceController {
         return ResponseEntity.ok(deviceService.getDeviceById(id));
     }
 
+    /**
+     * Retrieves a device by its unique name.
+     *
+     * @param name device name
+     * @return device data
+     */
     @Operation(
             summary = "Get a device by name / Obtener un dispositivo por nombre",
             description = "Retrieves a specific device by its name. Device names should be unique in the system. / Obtiene un dispositivo específico por su nombre. Los nombres de dispositivos deben ser únicos en el sistema."
@@ -78,6 +104,14 @@ public class DeviceController {
         return ResponseEntity.ok(deviceService.getDeviceByName(name));
     }
 
+    /**
+     * Searches devices using optional criteria such as type, state and location.
+     *
+     * @param type optional device type
+     * @param state optional device state
+     * @param locationId optional location identifier
+     * @return list of matching devices
+     */
     @Operation(
             summary = "Search devices with criteria / Buscar dispositivos con criterios",
             description = "Searches for devices based on multiple criteria including type, state, and location. All parameters are optional. / Busca dispositivos basándose en múltiples criterios incluyendo tipo, estado y ubicación. Todos los parámetros son opcionales."
@@ -102,6 +136,12 @@ public class DeviceController {
         return ResponseEntity.ok(devices);
     }
 
+    /**
+     * Creates a new device (administrative flow).
+     *
+     * @param request registration request payload
+     * @return registration response with device id and details
+     */
     @Operation(
             summary = "Create a new device / Crear un nuevo dispositivo",
             description = "Creates a new device in the system with the provided information. All required fields must be included in the request body. / Crea un nuevo dispositivo en el sistema con la información proporcionada. Todos los campos requeridos deben incluirse en el cuerpo de la petición."
@@ -118,6 +158,16 @@ public class DeviceController {
                 return ResponseEntity.ok(response);
         }
 
+            /**
+             * Registers a device during provisioning (device-initiated).
+             *
+             * <p>This endpoint validates the X-Factory-Token header and marks the
+             * created device as provisional.</p>
+             *
+             * @param factoryToken factory-provided token header
+             * @param request registration payload
+             * @return registration response or 401 when token is invalid
+             */
             @Operation(
                     summary = "Register device from device (provisioning) / Registrar dispositivo desde el dispositivo",
                     description = "Endpoint usado por dispositivos en modo provisioning (SoftAP). Valida X-Factory-Token y registra el dispositivo en el sistema."
@@ -133,24 +183,25 @@ public class DeviceController {
                     @RequestHeader(value = "X-Factory-Token", required = false) String factoryToken,
                     @RequestBody RegisterDeviceRequest request
             ) {
-                // Basic validation of factory token
-                if (provisioningFactoryToken == null || provisioningFactoryToken.isBlank()) {
-                    // If no provisioning token configured, deny by default
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Provisioning not enabled");
-                }
+                                if (provisioningFactoryToken == null || provisioningFactoryToken.isBlank()) {
+                                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Provisioning not enabled");
+                                }
 
-                if (factoryToken == null || !factoryToken.equals(provisioningFactoryToken)) {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid factory token");
-                }
+                                if (factoryToken == null || !factoryToken.equals(provisioningFactoryToken)) {
+                                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid factory token");
+                                }
 
-                                // Mark request as provisional provisioning so service treats it accordingly
                                 request.setState(DeviceState.PROVISIONAL);
-
-                                // Reuse existing service logic to register the device
                                 RegisterDeviceResponse response = deviceService.registerDevice(request);
                 return ResponseEntity.ok(response);
             }
 
+    /**
+     * Updates an existing device.
+     *
+     * @param device device payload containing updated values
+     * @return confirmation message with updated id
+     */
     @Operation(
             summary = "Update an existing device / Actualizar un dispositivo existente",
             description = "Updates an existing device with new information. The device ID must be provided in the request body. / Actualiza un dispositivo existente con nueva información. El ID del dispositivo debe proporcionarse en el cuerpo de la petición."
@@ -167,6 +218,12 @@ public class DeviceController {
         return ResponseEntity.ok("Device updated successfully with id: " + updatedDevice.getId());
     }
 
+    /**
+     * Deletes a device by identifier.
+     *
+     * @param id device identifier to delete
+     * @return confirmation message
+     */
     @Operation(
             summary = "Delete a device by ID / Eliminar un dispositivo por ID",
             description = "Permanently deletes a device from the system using its unique identifier. This action cannot be undone. / Elimina permanentemente un dispositivo del sistema usando su identificador único. Esta acción no se puede deshacer."

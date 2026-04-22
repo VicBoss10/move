@@ -18,16 +18,25 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Controller responsible for streaming-related operations.
+ *
+ * <p>Manages starting and stopping streams, proxying MJPEG feeds and snapshots
+ * from the external detection service, and exposing health checks for the
+ * vehicle detection service.</p>
+ *
+ * @since 0.0.1
+ */
 @RestController
 @RequestMapping("/streams")
 @Tag(name = "Streaming", description = "Gestión de streaming de video con detección de vehículos / Managing video streaming with vehicle detection")
 public class StreamController {
 
-    private final StreamService streamService;
+        private final StreamService streamService;
 
-    public StreamController(StreamService streamService) {
-        this.streamService = streamService;
-    }
+        public StreamController(StreamService streamService) {
+                this.streamService = streamService;
+        }
 
     @Operation(
             summary = "Start a video stream / Iniciar un stream de video",
@@ -39,10 +48,16 @@ public class StreamController {
             @ApiResponse(responseCode = "409", description = "Device is not active or not a camera type / El dispositivo no está activo o no es tipo cámara"),
             @ApiResponse(responseCode = "500", description = "Internal server error or Python service unavailable / Error interno del servidor o servicio Python no disponible")
     })
-    @PostMapping("/start")
-    public ResponseEntity<StreamResponse> startStream(@Valid @RequestBody StreamStartRequest request) {
-        return ResponseEntity.ok(streamService.startStream(request.getCameraId()));
-    }
+        /**
+         * Starts a video streaming session with vehicle detection for a camera.
+         *
+         * @param request request containing the camera id to start streaming
+         * @return StreamResponse with stream URL and session information
+         */
+        @PostMapping("/start")
+        public ResponseEntity<StreamResponse> startStream(@Valid @RequestBody StreamStartRequest request) {
+                return ResponseEntity.ok(streamService.startStream(request.getCameraId()));
+        }
 
     @Operation(
             summary = "Stop a video stream / Detener un stream de video",
@@ -54,10 +69,16 @@ public class StreamController {
             @ApiResponse(responseCode = "400", description = "Invalid session ID / ID de sesión inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error or Python service unavailable / Error interno del servidor o servicio Python no disponible")
     })
-    @PostMapping("/stop/{sessionId}")
-    public ResponseEntity<StreamStopResponse> stopStream(@PathVariable String sessionId) {
-        return ResponseEntity.ok(streamService.stopStream(sessionId));
-    }
+        /**
+         * Stops an active streaming session by session id.
+         *
+         * @param sessionId streaming session identifier
+         * @return StreamStopResponse acknowledging stop
+         */
+        @PostMapping("/stop/{sessionId}")
+        public ResponseEntity<StreamStopResponse> stopStream(@PathVariable String sessionId) {
+                return ResponseEntity.ok(streamService.stopStream(sessionId));
+        }
 
     @Operation(
             summary = "Get stream status / Obtener estado del stream",
@@ -69,10 +90,16 @@ public class StreamController {
             @ApiResponse(responseCode = "400", description = "Invalid session ID / ID de sesión inválido"),
             @ApiResponse(responseCode = "500", description = "Internal server error or Python service unavailable / Error interno del servidor o servicio Python no disponible")
     })
-    @GetMapping("/status/{sessionId}")
-    public ResponseEntity<StreamResponse> getStreamStatus(@PathVariable String sessionId) {
-        return ResponseEntity.ok(streamService.getStreamStatus(sessionId));
-    }
+        /**
+         * Retrieves status for a streaming session, including detection counts.
+         *
+         * @param sessionId streaming session identifier
+         * @return StreamResponse with current session status
+         */
+        @GetMapping("/status/{sessionId}")
+        public ResponseEntity<StreamResponse> getStreamStatus(@PathVariable String sessionId) {
+                return ResponseEntity.ok(streamService.getStreamStatus(sessionId));
+        }
 
     @Operation(
             summary = "Get active stream by device / Obtener stream activo por dispositivo",
@@ -82,42 +109,65 @@ public class StreamController {
             @ApiResponse(responseCode = "200", description = "Active stream found / Stream activo encontrado"),
             @ApiResponse(responseCode = "404", description = "Active stream not found / Stream activo no encontrado")
     })
-    @GetMapping("/active/device/{deviceId}")
-    public ResponseEntity<StreamResponse> getActiveStreamByDevice(@PathVariable Integer deviceId) {
-        return ResponseEntity.ok(streamService.getActiveStreamByDevice(deviceId));
-    }
+        /**
+         * Returns the persisted active stream session for a device.
+         *
+         * @param deviceId device identifier
+         * @return StreamResponse for the active session
+         */
+        @GetMapping("/active/device/{deviceId}")
+        public ResponseEntity<StreamResponse> getActiveStreamByDevice(@PathVariable Integer deviceId) {
+                return ResponseEntity.ok(streamService.getActiveStreamByDevice(deviceId));
+        }
 
     @Operation(
             summary = "Proxy stream feed / Proxyear feed del stream",
             description = "Relays the MJPEG feed from the Python detection service through the main backend so clients do not access the internal service directly. / Reenvía el feed MJPEG desde el servicio Python a través del backend principal para que los clientes no accedan directamente al servicio interno."
     )
-    @GetMapping(value = "/feed/{sessionId}", produces = "multipart/x-mixed-replace; boundary=frame")
-    public ResponseEntity<StreamingResponseBody> proxyStreamFeed(@PathVariable String sessionId) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("multipart/x-mixed-replace; boundary=frame"));
-        headers.setCacheControl("no-store, no-cache, must-revalidate, max-age=0");
-        headers.add("X-Accel-Buffering", "no");
-        headers.add("Connection", "keep-alive");
-        return ResponseEntity.ok().headers(headers).body(streamService.proxyStreamFeed(sessionId));
-    }
+        /**
+         * Proxies an MJPEG stream feed from the detection service.
+         *
+         * <p>This endpoint relays the multipart MJPEG feed so clients access streams
+         * through the backend rather than directly connecting to the internal service.</p>
+         *
+         * @param sessionId streaming session identifier
+         * @return StreamingResponseBody producing multipart MJPEG frames
+         */
+        @GetMapping(value = "/feed/{sessionId}", produces = "multipart/x-mixed-replace; boundary=frame")
+        public ResponseEntity<StreamingResponseBody> proxyStreamFeed(@PathVariable String sessionId) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.parseMediaType("multipart/x-mixed-replace; boundary=frame"));
+                headers.setCacheControl("no-store, no-cache, must-revalidate, max-age=0");
+                headers.add("X-Accel-Buffering", "no");
+                headers.add("Connection", "keep-alive");
+                return ResponseEntity.ok().headers(headers).body(streamService.proxyStreamFeed(sessionId));
+        }
 
     @Operation(
             summary = "Proxy stream snapshot / Proxyear snapshot del stream",
             description = "Relays a single JPEG frame from the Python detection service. Used by Safari/iOS fallback mode. / Reenvía un frame JPEG del servicio Python. Usado por el fallback de Safari/iOS."
     )
-    @GetMapping(value = "/snapshot/{sessionId}", produces = MediaType.IMAGE_JPEG_VALUE)
-    public ResponseEntity<byte[]> proxyStreamSnapshot(
-            @PathVariable String sessionId,
-            @RequestParam(required = false, name = "w") Integer width,
-            @RequestParam(required = false, name = "q") Integer quality
-    ) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_JPEG);
-        headers.setCacheControl("no-store, no-cache, must-revalidate, max-age=0");
-        headers.add("Pragma", "no-cache");
-        headers.add("Expires", "0");
-        return ResponseEntity.ok().headers(headers).body(streamService.proxySnapshot(sessionId, width, quality));
-    }
+        /**
+         * Proxies a single JPEG snapshot from the detection service.
+         *
+         * @param sessionId streaming session identifier
+         * @param width optional width for the returned image
+         * @param quality optional JPEG quality parameter
+         * @return JPEG bytes for the requested snapshot
+         */
+        @GetMapping(value = "/snapshot/{sessionId}", produces = MediaType.IMAGE_JPEG_VALUE)
+        public ResponseEntity<byte[]> proxyStreamSnapshot(
+                        @PathVariable String sessionId,
+                        @RequestParam(required = false, name = "w") Integer width,
+                        @RequestParam(required = false, name = "q") Integer quality
+        ) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.IMAGE_JPEG);
+                headers.setCacheControl("no-store, no-cache, must-revalidate, max-age=0");
+                headers.add("Pragma", "no-cache");
+                headers.add("Expires", "0");
+                return ResponseEntity.ok().headers(headers).body(streamService.proxySnapshot(sessionId, width, quality));
+        }
 
     @Operation(
             summary = "Check detection service health / Verificar salud del servicio de detección",
@@ -126,14 +176,21 @@ public class StreamController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Health check completed / Verificación completada")
     })
-    @GetMapping("/health/detection-service")
-    public ResponseEntity<Map<String, String>> checkDetectionServiceHealth() {
-        boolean isHealthy = streamService.isDetectionServiceHealthy();
-        Map<String, String> response = new HashMap<>();
-        response.put("status", isHealthy ? "HEALTHY" : "UNAVAILABLE");
-        response.put("service", "vehicle-detection");
+        /**
+         * Health check for the vehicle detection service.
+         *
+         * <p>Returns a JSON object with the service status. This endpoint always responds
+         * with HTTP 200; the actual health is expressed in the returned JSON.</p>
+         *
+         * @return JSON map containing {@code status} and {@code service} keys
+         */
+        @GetMapping("/health/detection-service")
+        public ResponseEntity<Map<String, String>> checkDetectionServiceHealth() {
+                boolean isHealthy = streamService.isDetectionServiceHealthy();
+                Map<String, String> response = new HashMap<>();
+                response.put("status", isHealthy ? "HEALTHY" : "UNAVAILABLE");
+                response.put("service", "vehicle-detection");
 
-        // Siempre retornar 200 OK - el estado está en el JSON
-        return ResponseEntity.ok(response);
-    }
+                return ResponseEntity.ok(response);
+        }
 }

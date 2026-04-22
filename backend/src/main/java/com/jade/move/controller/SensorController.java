@@ -10,17 +10,30 @@ import org.springframework.web.bind.annotation.*;
 import com.jade.move.model.Sensor;
 import com.jade.move.service.SensorService;
 
+/**
+ * Controller responsible for sensor management.
+ *
+ * <p>Exposes endpoints to list, retrieve, update and delete sensors. Note that
+ * sensor creation is performed through the device registration flow.</p>
+ *
+ * @since 0.0.1
+ */
 @RestController
 @RequestMapping("/sensors")
 @Tag(name = "Sensores", description = "Gestión de los sensores en el sistema/Managing sensors in the system")
 public class SensorController {
 
-    private final SensorService sensorService;
+        private final SensorService sensorService;
 
-    public SensorController(SensorService sensorService) {
-        this.sensorService = sensorService;
-    }
+        public SensorController(SensorService sensorService) {
+                this.sensorService = sensorService;
+        }
 
+    /**
+     * Retrieves all registered sensors.
+     *
+     * @return list of sensors
+     */
     @Operation(
             summary = "Get all sensors / Obtener todos los sensores",
             description = "Retrieves a list of all registered sensors in the system. / Obtiene una lista de todos los sensores registrados en el sistema."
@@ -35,6 +48,12 @@ public class SensorController {
         return ResponseEntity.ok(sensors);
     }
 
+    /**
+     * Retrieves a sensor by its identifier.
+     *
+     * @param id sensor identifier
+     * @return sensor data
+     */
     @Operation(
             summary = "Get a sensor by ID / Obtener un sensor por ID",
             description = "Retrieves a specific sensor by its unique identifier. / Obtiene un sensor específico por su identificador único."
@@ -50,6 +69,12 @@ public class SensorController {
         return ResponseEntity.ok(sensorService.getSensorById(id));
     }
 
+    /**
+     * Retrieves the sensor associated with a given device identifier.
+     *
+     * @param deviceId device identifier
+     * @return associated sensor
+     */
     @Operation(
             summary = "Get a sensor by device ID / Obtener un sensor por ID de dispositivo",
             description = "Retrieves a specific sensor associated with a device. / Obtiene un sensor específico asociado con un dispositivo."
@@ -64,8 +89,6 @@ public class SensorController {
     public ResponseEntity<Sensor> getSensorByDeviceId(@PathVariable Integer deviceId) {
         return ResponseEntity.ok(sensorService.getSensorByDeviceId(deviceId));
     }
-
-    // Creation of sensors is handled via POST /devices using RegisterDeviceRequest (DeviceService)
 
     @Operation(
             summary = "Update an existing sensor / Actualizar un sensor existente",
@@ -83,6 +106,12 @@ public class SensorController {
         return ResponseEntity.ok("Sensor updated successfully with id: " + updatedSensor.getId());
     }
 
+    /**
+     * Deletes a sensor by its identifier.
+     *
+     * @param id sensor identifier to delete
+     * @return confirmation message
+     */
     @Operation(
             summary = "Delete a sensor by ID / Eliminar un sensor por ID",
             description = "Permanently deletes a sensor from the system using its unique identifier. This action cannot be undone. / Elimina permanentemente un sensor del sistema usando su identificador único."

@@ -14,6 +14,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for managing locations.
+ *
+ * <p>Provides endpoints to create, read, update and delete location entities
+ * and to perform searches using flexible criteria.</p>
+ *
+ * @since 0.0.1
+ */
 @RestController
 @RequestMapping("/locations")
 @Tag(name = "Ubicaciones", description = "Gestión de ubicaciones / locations management")
@@ -26,6 +34,11 @@ public class LocationController {
         this.locationService = locationService;
     }
 
+    /**
+     * Returns all registered locations.
+     *
+     * @return list of locations; empty list when none exist
+     */
     @Operation(
             summary = "Get all locations / Obtener todas las ubicaciones",
             description = "Returns a complete list of all registered locations in the system. If no locations exist, returns an informative message. / Devuelve una lista completa de todas las ubicaciones registradas en el sistema. Si no existen ubicaciones, devuelve un mensaje informativo."
@@ -40,6 +53,12 @@ public class LocationController {
         return ResponseEntity.ok(locations);
     }
 
+    /**
+     * Retrieves a location by its identifier.
+     *
+     * @param id location identifier
+     * @return the requested location
+     */
     @Operation(
             summary = "Get location by ID / Obtener ubicación por ID",
             description = "Returns the location that matches the given unique identifier. Useful for retrieving specific location details. / Devuelve la ubicación que coincide con el identificador único proporcionado. Útil para obtener detalles específicos de una ubicación."
@@ -55,6 +74,16 @@ public class LocationController {
         return ResponseEntity.ok(locationService.getLocationById(id));
     }
 
+    /**
+     * Searches locations using optional criteria.
+     *
+     * @param description optional description text to match
+     * @param keyword optional keyword filter
+     * @param latitude optional latitude for proximity searches
+     * @param longitude optional longitude for proximity searches
+     * @param radiusKm optional radius in kilometers for proximity searches
+     * @return list of locations matching criteria
+     */
     @Operation(
             summary = "Search locations / Buscar ubicaciones",
             description = "Searches locations using flexible criteria including description text, keywords, and geographic coordinates with radius. All parameters are optional and can be combined for more precise results. / Busca ubicaciones usando criterios flexibles incluyendo texto de descripción, palabras clave y coordenadas geográficas con radio. Todos los parámetros son opcionales y pueden combinarse para resultados más precisos."
@@ -83,6 +112,12 @@ public class LocationController {
         return ResponseEntity.ok(locations);
     }
 
+    /**
+     * Creates a new location.
+     *
+     * @param location location payload to create
+     * @return confirmation message with the created id
+     */
     @Operation(
             summary = "Create a new location / Crear una nueva ubicación",
             description = "Creates a new location in the system and returns confirmation with the generated ID. All required fields must be provided in the request body. / Crea una nueva ubicación en el sistema y devuelve confirmación con el ID generado. Todos los campos requeridos deben proporcionarse en el cuerpo de la petición."
@@ -99,6 +134,12 @@ public class LocationController {
         return ResponseEntity.ok("Location created successfully with id: " + createdLocation.getId());
     }
 
+    /**
+     * Updates an existing location.
+     *
+     * @param location location payload with updated fields
+     * @return confirmation message with the updated id
+     */
     @Operation(
             summary = "Update an existing location / Actualizar una ubicación existente",
             description = "Updates an existing location with the provided data and returns confirmation with the location ID. The location must exist in the system. / Actualiza una ubicación existente con los datos proporcionados y devuelve confirmación con el ID de la ubicación. La ubicación debe existir en el sistema."
@@ -115,6 +156,12 @@ public class LocationController {
         return ResponseEntity.ok("Location updated successfully with id: " + updatedLocation.getId());
     }
 
+    /**
+     * Deletes a location by its identifier.
+     *
+     * @param id location identifier to delete
+     * @return confirmation message
+     */
     @Operation(
             summary = "Delete location by ID / Eliminar ubicación por ID",
             description = "Permanently deletes the location with the specified ID from the system. This operation cannot be undone and may affect related entities. / Elimina permanentemente la ubicación con el ID especificado del sistema. Esta operación no se puede deshacer y puede afectar entidades relacionadas."
