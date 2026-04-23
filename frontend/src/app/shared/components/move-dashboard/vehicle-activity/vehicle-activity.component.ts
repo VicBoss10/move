@@ -243,10 +243,18 @@ export class VehicleActivityComponent {
    * @returns {number[]} Array de conteos [carros, motos, buses, camiones, bicicletas]
    */
   private calculateVehicleCounts(vehicles: VehicleDetected[]): number[] {
-    const carCount = vehicles.filter((v: VehicleDetected) => v.vehicleType === VehicleType.CAR).length;
-    const motorcycleCount = vehicles.filter((v: VehicleDetected) => v.vehicleType === VehicleType.MOTORCYCLE).length;
-    const busCount = vehicles.filter((v: VehicleDetected) => v.vehicleType === VehicleType.BUS).length;
-    const truckCount = vehicles.filter((v: VehicleDetected) => v.vehicleType === VehicleType.TRUCK).length;
+    const carCount = vehicles.filter(
+      (v: VehicleDetected) => v.vehicleType === VehicleType.CAR,
+    ).length;
+    const motorcycleCount = vehicles.filter(
+      (v: VehicleDetected) => v.vehicleType === VehicleType.MOTORCYCLE,
+    ).length;
+    const busCount = vehicles.filter(
+      (v: VehicleDetected) => v.vehicleType === VehicleType.BUS,
+    ).length;
+    const truckCount = vehicles.filter(
+      (v: VehicleDetected) => v.vehicleType === VehicleType.TRUCK,
+    ).length;
     const bicycleCount = 0; // Bicicletas no disponible en VehicleType
 
     return [carCount, motorcycleCount, busCount, truckCount, bicycleCount];

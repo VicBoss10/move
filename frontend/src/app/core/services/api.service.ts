@@ -21,7 +21,7 @@ export class ApiService implements OnInit {
    */
   // Prefer runtime-injected value (set by main.ts from /assets/config.json), fall back to localhost
   private readonly apiUrl: string =
-    ((window as unknown) as { __API_BASE_URL__?: string }).__API_BASE_URL__ ??
+    (window as unknown as { __API_BASE_URL__?: string }).__API_BASE_URL__ ??
     'http://localhost:8080';
 
   /** Último error HTTP detectado por el servicio. */

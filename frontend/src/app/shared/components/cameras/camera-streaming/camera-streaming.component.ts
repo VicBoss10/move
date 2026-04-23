@@ -380,7 +380,9 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       return url;
     }
 
-    const apiBase: string = (window as unknown as { __API_BASE_URL__?: string }).__API_BASE_URL__ || 'http://localhost:8080';
+    const apiBase: string =
+      (window as unknown as { __API_BASE_URL__?: string }).__API_BASE_URL__ ||
+      'http://localhost:8080';
     const normalizedPath = url.startsWith('/') ? url : `/${url}`;
     return `${apiBase.replace(/\/$/, '')}${normalizedPath}`;
   }

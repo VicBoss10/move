@@ -162,11 +162,15 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   getFirstRecord(): Observable<SensorData> {
-    return this.apiService.get<SensorData>(`/${this.endpoint}/first`).pipe(map((d) => this.parseSensorData(d)));
+    return this.apiService
+      .get<SensorData>(`/${this.endpoint}/first`)
+      .pipe(map((d) => this.parseSensorData(d)));
   }
 
   getLastRecord(): Observable<SensorData> {
-    return this.apiService.get<SensorData>(`/${this.endpoint}/last`).pipe(map((d) => this.parseSensorData(d)));
+    return this.apiService
+      .get<SensorData>(`/${this.endpoint}/last`)
+      .pipe(map((d) => this.parseSensorData(d)));
   }
 
   /** Convierte un objeto (posible timestamp string) a `SensorData` con `timestamp: Date`. */

@@ -87,7 +87,8 @@ export class DeviceService extends BaseDataService<Device> {
   register(deviceData: unknown): Observable<RegisterDeviceResponse> {
     // Aceptamos `unknown` para facilitar llamadas desde formularios; se castea
     // a `RegisterDevicePayload` al enviar al backend.
-    return this.apiService.post<RegisterDeviceResponse>(`/${this.endpoint}`, deviceData as RegisterDevicePayload)
+    return this.apiService
+      .post<RegisterDeviceResponse>(`/${this.endpoint}`, deviceData as RegisterDevicePayload)
       .pipe(
         tap(() => {
           // Invalidar caché para forzar recarga

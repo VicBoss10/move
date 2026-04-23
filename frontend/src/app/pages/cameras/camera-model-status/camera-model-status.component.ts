@@ -3,9 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of, BehaviorSubject, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay, tap, switchMap, timeout } from 'rxjs/operators';
 import { CameraModelStatusComponent as CameraModelStatusSharedComponent } from '../../../shared/components/cameras/camera-model-status/camera-model-status.component';
-import {
-  CameraStats,
-} from '../../../shared/components/cameras/camera-status-cards/camera-status-cards.component';
+import { CameraStats } from '../../../shared/components/cameras/camera-status-cards/camera-status-cards.component';
 import { CameraFiltersTableComponent } from '../../../shared/components/cameras/camera-filters-table/camera-filters-table.component';
 import { CameraService } from '../../../core/services/camera.service';
 import { VehicleDetectedService } from '../../../core/services/vehicle-detected.service';

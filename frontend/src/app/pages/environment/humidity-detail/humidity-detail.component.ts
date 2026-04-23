@@ -19,9 +19,7 @@ import { HumidityGaugeComponent } from '../../../shared/components/environment-d
 import { HumidityStatsTableComponent } from '../../../shared/components/environment-detail-charts/humidity-stats-table/humidity-stats-table.component';
 import { SensorDataService } from '../../../core/services/sensor-data.service';
 import { SensorData } from '../../../core/models/sensor-data.model';
-import {
-  getEnvironmentStatus,
-} from '../../../core/config/environment-thresholds.config';
+import { getEnvironmentStatus } from '../../../core/config/environment-thresholds.config';
 
 ChartJS.register(
   LineController,

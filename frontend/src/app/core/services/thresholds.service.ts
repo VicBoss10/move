@@ -93,6 +93,8 @@ export class ThresholdsService {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
-    this.store$.next({ ...(ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>) });
+    this.store$.next({
+      ...(ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>),
+    });
   }
 }

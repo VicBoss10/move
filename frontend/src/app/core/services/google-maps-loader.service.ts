@@ -79,7 +79,7 @@ export class GoogleMapsLoaderService {
         const bootstrap = (): Promise<void> => {
           return (
             (d['__promise'] as Promise<void> | undefined) ||
-            ((d['__promise'] = new Promise<void>((res, rej) => {
+            (d['__promise'] = new Promise<void>((res, rej) => {
               const script = document.createElement('script');
               const params = new URLSearchParams({
                 key: apiKey,
@@ -96,7 +96,7 @@ export class GoogleMapsLoaderService {
                 rej(new Error('Google Maps API could not load.'));
               };
               document.head.appendChild(script);
-            }) as Promise<void>))
+            }) as Promise<void>)
           );
         };
 

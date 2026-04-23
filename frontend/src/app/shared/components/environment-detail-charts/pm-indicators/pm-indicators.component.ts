@@ -4,9 +4,7 @@ import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { ThresholdsService } from '../../../../core/services/thresholds.service';
-import {
-  getEnvironmentStatusFromConfig,
-} from '../../../../core/config/environment-thresholds.config';
+import { getEnvironmentStatusFromConfig } from '../../../../core/config/environment-thresholds.config';
 
 /**
  * Interface para indicador de partículas

@@ -146,7 +146,11 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
    * @param {any[]} sensors - Array de detecciones de sensores
    * @returns {void}
    */
-  private processDetectionData(locations: Location[], vehicles: VehicleDetected[], sensors: SensorData[]): void {
+  private processDetectionData(
+    locations: Location[],
+    vehicles: VehicleDetected[],
+    sensors: SensorData[],
+  ): void {
     const locationMap = new Map<number, DetectionRecord>();
 
     // Inicializar mapa con todas las ubicaciones

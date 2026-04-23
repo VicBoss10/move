@@ -205,9 +205,17 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
           const sensorCount = related.filter(
             (d) => d.type === DeviceType.SENSOR || String(d.type).toLowerCase().includes('sensor'),
           ).length;
-          const rawLast = (loc as unknown as Partial<{ lastActivity?: string | Date }>).lastActivity;
+          const rawLast = (loc as unknown as Partial<{ lastActivity?: string | Date }>)
+            .lastActivity;
           const lastActivity = rawLast ? new Date(rawLast) : null;
-          return { ...(loc as AppLocation), devices: related, deviceCount, cameraCount, sensorCount, lastActivity } as LocationView;
+          return {
+            ...(loc as AppLocation),
+            devices: related,
+            deviceCount,
+            cameraCount,
+            sensorCount,
+            lastActivity,
+          } as LocationView;
         });
 
         this.locations = enriched;
@@ -267,10 +275,12 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
             sel.devices = related;
             sel.deviceCount = related.length;
             sel.cameraCount = related.filter(
-              (d) => d.type === DeviceType.CAMERA || String(d.type).toLowerCase().includes('camera'),
+              (d) =>
+                d.type === DeviceType.CAMERA || String(d.type).toLowerCase().includes('camera'),
             ).length;
             sel.sensorCount = related.filter(
-              (d) => d.type === DeviceType.SENSOR || String(d.type).toLowerCase().includes('sensor'),
+              (d) =>
+                d.type === DeviceType.SENSOR || String(d.type).toLowerCase().includes('sensor'),
             ).length;
           }
           this.cdr.markForCheck();
@@ -312,9 +322,13 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * Return a small label object to show emoji indicators for camera/sensor
    */
   getMarkerLabel(location: LocationView | AppLocation): google.maps.MarkerLabel | null {
-    const devices = ((location as unknown as Partial<LocationView>)?.devices) ?? [];
-    const hasCamera = ((location as unknown as Partial<LocationView>)?.cameraCount ?? 0) > 0 || devices.some((d) => (String(d.type) || '').toLowerCase().includes('camera'));
-    const hasSensor = ((location as unknown as Partial<LocationView>)?.sensorCount ?? 0) > 0 || devices.some((d) => (String(d.type) || '').toLowerCase().includes('sensor'));
+    const devices = (location as unknown as Partial<LocationView>)?.devices ?? [];
+    const hasCamera =
+      ((location as unknown as Partial<LocationView>)?.cameraCount ?? 0) > 0 ||
+      devices.some((d) => (String(d.type) || '').toLowerCase().includes('camera'));
+    const hasSensor =
+      ((location as unknown as Partial<LocationView>)?.sensorCount ?? 0) > 0 ||
+      devices.some((d) => (String(d.type) || '').toLowerCase().includes('sensor'));
 
     let text = '';
     if (hasCamera && hasSensor) text = 'C/S';
@@ -331,7 +345,8 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     const loc = location as Partial<LocationView>;
     if (loc.cameraCount != null) return loc.cameraCount as number;
     const devices = (loc.devices ?? []) as Device[];
-    return devices.filter((d: Device) => (String(d.type) || '').toLowerCase().includes('camera')).length;
+    return devices.filter((d: Device) => (String(d.type) || '').toLowerCase().includes('camera'))
+      .length;
   }
 
   getSensorCount(location: LocationView | AppLocation | null): number {
@@ -339,7 +354,8 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     const loc = location as Partial<LocationView>;
     if (loc.sensorCount != null) return loc.sensorCount as number;
     const devices = (loc.devices ?? []) as Device[];
-    return devices.filter((d: Device) => (String(d.type) || '').toLowerCase().includes('sensor')).length;
+    return devices.filter((d: Device) => (String(d.type) || '').toLowerCase().includes('sensor'))
+      .length;
   }
 
   /** Devuelve el listado de dispositivos de la ubicación seleccionada (evita casts en plantilla) */

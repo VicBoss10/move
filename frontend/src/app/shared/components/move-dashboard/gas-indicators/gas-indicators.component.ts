@@ -118,7 +118,7 @@ export class GasIndicatorsComponent {
 
         const indicators: GasIndicator[] = gasConfigs.map((cfg) => {
           const config = allThresholds[cfg.key];
-          const value = (latest as SensorData)?.[cfg.field as keyof SensorData] as number || 0;
+          const value = ((latest as SensorData)?.[cfg.field as keyof SensorData] as number) || 0;
           const status = getEnvironmentStatusFromConfig(config, value);
           return {
             label: config.label,

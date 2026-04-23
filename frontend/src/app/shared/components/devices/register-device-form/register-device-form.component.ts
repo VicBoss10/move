@@ -16,10 +16,7 @@ import { map, catchError, shareReplay, takeUntil } from 'rxjs/operators';
 import { LocationService } from '../../../../core/services/location.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { ApiService } from '../../../../core/services/api.service';
-import {
-  DeviceState,
-  DeviceType,
-} from '../../../../core/models/device.model';
+import { DeviceState, DeviceType } from '../../../../core/models/device.model';
 import { Location as AppLocation } from '../../../../core/models/location.model';
 import { ToastService } from '../../../../core/services/toast.service';
 
@@ -231,7 +228,8 @@ export class RegisterDeviceFormComponent implements OnDestroy {
         },
         error: (error: unknown) => {
           this.isLoading$.next(false);
-          const errorMsg = (error as { message?: string })?.message || 'Error al registrar el dispositivo';
+          const errorMsg =
+            (error as { message?: string })?.message || 'Error al registrar el dispositivo';
           this.errorMessage$.next(errorMsg);
           this.toastService.error(errorMsg, 'Error');
           console.error('Error registering device:', error);

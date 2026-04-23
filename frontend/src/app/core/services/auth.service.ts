@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 export class AuthService {
   // Prefer runtime-injected value from /assets/config.json (set by main.ts before bootstrap)
   private readonly keycloakUrl: string =
-    ((window as unknown) as { __AUTH_BASE_URL__?: string }).__AUTH_BASE_URL__ ??
+    (window as unknown as { __AUTH_BASE_URL__?: string }).__AUTH_BASE_URL__ ??
     'http://localhost:8081';
   private readonly realm = 'move';
   private readonly clientId = 'move-frontend';
