@@ -101,7 +101,7 @@ export class DeleteDataFormComponent implements OnInit {
     });
   }
 
-  private toDateString(timestamp: any): string {
+  private toDateString(timestamp: string | number | Date | null | undefined): string {
     if (!timestamp) return '';
     const d = new Date(timestamp);
     return d.toISOString().split('T')[0];

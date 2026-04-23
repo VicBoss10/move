@@ -71,7 +71,7 @@ export class TemperatureGaugeComponent {
       this.thresholds.getAll(),
     ]).pipe(
       map(([latestData, allThresholds]) => {
-        const temperature = Math.round(((latestData as any)?.temperature || 0) * 10) / 10;
+        const temperature = Math.round((latestData?.temperature || 0) * 10) / 10;
         const config = allThresholds['temperature'];
         const envStatus = getEnvironmentStatusFromConfig(config, temperature, false);
         return {

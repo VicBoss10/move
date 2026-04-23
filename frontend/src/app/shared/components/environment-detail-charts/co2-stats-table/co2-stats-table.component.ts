@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 
 /**
  * Interface para estadísticas de CO₂
@@ -48,7 +49,7 @@ export class Co2StatsTableComponent {
    */
   private initializeStats(): void {
     this.stats$ = this.sensorDataService.getAll().pipe(
-      map((sensorData: any[]) => {
+      map((sensorData: SensorData[]) => {
         if (!sensorData || sensorData.length === 0) {
           return this.getEmptyStats();
         }
@@ -68,7 +69,7 @@ export class Co2StatsTableComponent {
    * @param sensorData - Array de datos de sensores
    * @returns Objeto con estadísticas calculadas
    */
-  private calculateStats(sensorData: any[]): Co2Stats {
+  private calculateStats(sensorData: SensorData[]): Co2Stats {
     // Obtener valores de CO₂, filtrando los nulos/undefined
     const co2Values = sensorData
       .map((d) => d.co2)

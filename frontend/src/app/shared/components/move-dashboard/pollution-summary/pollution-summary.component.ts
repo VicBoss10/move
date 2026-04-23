@@ -113,8 +113,10 @@ export class PollutionSummaryComponent {
 
         return pollutantConfigs.map((cfg) => {
           const config = ENV_THRESHOLDS[cfg.key];
-          const values = todayData.map((d: any) => d[cfg.field]).filter((v: any) => v != null);
-          const current = values[values.length - 1] || 0;
+          const values = todayData
+            .map((d: SensorData) => d[cfg.field as keyof SensorData] as number | null)
+            .filter((v): v is number => v != null);
+          const current = values[values.length - 1] ?? 0;
           const average =
             values.length > 0
               ? values.reduce((a: number, b: number) => a + b, 0) / values.length

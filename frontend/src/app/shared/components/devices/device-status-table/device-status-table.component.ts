@@ -150,7 +150,7 @@ export class DeviceStatusTableComponent {
     };
 
     const deviceName = name;
-    const saveOp$: Observable<any> = this.editingCamera
+    const saveOp$: Observable<unknown> = this.editingCamera
       ? this.deviceService.update(devicePayload).pipe(
           switchMap(() => {
             const cameraPayload: Camera = {

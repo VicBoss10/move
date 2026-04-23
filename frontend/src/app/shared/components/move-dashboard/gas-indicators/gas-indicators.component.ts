@@ -8,6 +8,7 @@ import {
   EnvironmentMetricKey,
 } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of, combineLatest } from 'rxjs';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
 /**
@@ -117,7 +118,7 @@ export class GasIndicatorsComponent {
 
         const indicators: GasIndicator[] = gasConfigs.map((cfg) => {
           const config = allThresholds[cfg.key];
-          const value = (latest as any)?.[cfg.field] || 0;
+          const value = (latest as SensorData)?.[cfg.field as keyof SensorData] as number || 0;
           const status = getEnvironmentStatusFromConfig(config, value);
           return {
             label: config.label,
@@ -130,7 +131,7 @@ export class GasIndicatorsComponent {
               moderate: config.levels[1].max,
               poor: config.levels[2].max,
             },
-            status: status.key as any,
+            status: status.key as GasIndicator['status'],
             statusLabel: status.label,
             statusBgClass: status.bgClass,
             statusTextClass: status.textClass,

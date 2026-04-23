@@ -79,7 +79,7 @@ export class MultiGasIndicatorsComponent {
         ];
 
         return gasConfigs.map((cfg) => {
-          const value = Math.round(((latestData as any)?.[cfg.field] || 0) * 10) / 10;
+          const value = Math.round((latestData?.[cfg.field as keyof typeof latestData] as number || 0) * 10) / 10;
           const config = allThresholds[cfg.key];
           const status = getEnvironmentStatusFromConfig(config, value);
           return {

@@ -438,7 +438,7 @@ export class DataExportComponent implements OnDestroy {
       },
       options: {
         responsive: false,
-        animation: false as any,
+        animation: false,
         plugins: {
           legend: { display: true, position: 'top', labels: { font: { size: 14 }, padding: 16 } },
         },
@@ -461,7 +461,7 @@ export class DataExportComponent implements OnDestroy {
           },
         },
       },
-    } as any);
+    });
   }
 
   /** Matriz de correlación 9×9 dibujada a mano en un canvas */
@@ -595,7 +595,7 @@ export class DataExportComponent implements OnDestroy {
       },
       options: {
         responsive: false,
-        animation: false as any,
+        animation: false,
         plugins: { legend: { display: true, position: 'top', labels: { font: { size: 13 } } } },
         scales: {
           x: {
@@ -611,7 +611,7 @@ export class DataExportComponent implements OnDestroy {
           },
         },
       },
-    } as any);
+    });
   }
 
   /** Barras agrupadas por ubicación: contaminante + vehículos */
@@ -644,7 +644,7 @@ export class DataExportComponent implements OnDestroy {
       },
       options: {
         responsive: false,
-        animation: false as any,
+        animation: false,
         plugins: { legend: { display: true, position: 'top', labels: { font: { size: 13 } } } },
         scales: {
           x: { display: true, ticks: { font: { size: 11 }, maxRotation: 30 } },
@@ -665,7 +665,7 @@ export class DataExportComponent implements OnDestroy {
           },
         },
       },
-    } as any);
+    });
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1241,7 +1241,7 @@ export class DataExportComponent implements OnDestroy {
     canvas.height = h;
     const chart = new ChartJS(canvas, {
       ...cfg,
-      options: { ...cfg.options, responsive: false, animation: false as any },
+      options: { ...cfg.options, responsive: false, animation: false },
     });
     const url = canvas.toDataURL('image/png');
     chart.destroy();

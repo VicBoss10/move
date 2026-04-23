@@ -12,7 +12,7 @@ import {
   Legend,
 } from 'chart.js';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
-import { VehicleDetected } from '../../../../core/models/vehicle.model';
+import { VehicleDetected, VehicleType } from '../../../../core/models/vehicle.model';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
@@ -141,8 +141,8 @@ export class VehicleActivityComponent {
         ticks: {
           color: '#6B7280',
           font: {
-            size: 12,
-            weight: '500' as any,
+            size: 11,
+            weight: 500,
           },
         },
       },
@@ -189,7 +189,7 @@ export class VehicleActivityComponent {
    */
   private initializeChartData(): void {
     this.chartData$ = this.vehicleData$.pipe(
-      map((vehicles: any[]) => {
+      map((vehicles: VehicleDetected[]) => {
         if (!vehicles || vehicles.length === 0) {
           return this.defaultChartData;
         }
@@ -226,7 +226,7 @@ export class VehicleActivityComponent {
    */
   private initializeVehicleCounts(): void {
     this.vehicleCounts$ = this.vehicleData$.pipe(
-      map((vehicles: any[]) => {
+      map((vehicles: VehicleDetected[]) => {
         if (!vehicles || vehicles.length === 0) {
           return [];
         }
@@ -242,12 +242,12 @@ export class VehicleActivityComponent {
    * @param {any[]} vehicles - Array de vehículos detectados
    * @returns {number[]} Array de conteos [carros, motos, buses, camiones, bicicletas]
    */
-  private calculateVehicleCounts(vehicles: any[]): number[] {
-    const carCount = vehicles.filter((v: any) => v.vehicleType === 'CAR').length;
-    const motorcycleCount = vehicles.filter((v: any) => v.vehicleType === 'MOTORCYCLE').length;
-    const busCount = vehicles.filter((v: any) => v.vehicleType === 'BUS').length;
-    const truckCount = vehicles.filter((v: any) => v.vehicleType === 'TRUCK').length;
-    const bicycleCount = vehicles.filter((v: any) => v.vehicleType === 'BICYCLE').length;
+  private calculateVehicleCounts(vehicles: VehicleDetected[]): number[] {
+    const carCount = vehicles.filter((v: VehicleDetected) => v.vehicleType === VehicleType.CAR).length;
+    const motorcycleCount = vehicles.filter((v: VehicleDetected) => v.vehicleType === VehicleType.MOTORCYCLE).length;
+    const busCount = vehicles.filter((v: VehicleDetected) => v.vehicleType === VehicleType.BUS).length;
+    const truckCount = vehicles.filter((v: VehicleDetected) => v.vehicleType === VehicleType.TRUCK).length;
+    const bicycleCount = 0; // Bicicletas no disponible en VehicleType
 
     return [carCount, motorcycleCount, busCount, truckCount, bicycleCount];
   }

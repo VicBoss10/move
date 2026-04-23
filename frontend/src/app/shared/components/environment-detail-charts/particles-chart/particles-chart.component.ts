@@ -16,6 +16,7 @@ import {
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 
 // Registrar los scales y elementos
 ChartJS.register(
@@ -68,7 +69,7 @@ export class ParticlesChartComponent {
   /**
    * Observable compartido de datos del sensor (últimas 24h)
    */
-  private sensorData$!: Observable<any[]>;
+  private sensorData$!: Observable<SensorData[]>;
 
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
@@ -189,7 +190,7 @@ export class ParticlesChartComponent {
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) {
           return this.defaultChartData;
         }
@@ -285,7 +286,7 @@ export class ParticlesChartComponent {
    */
   private initializePMValues(): void {
     this.pmValues$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: any) => ({
+      map((latestData: SensorData) => ({
         pm25: Math.round((latestData?.pm25 || 0) * 10) / 10,
         pm10: Math.round((latestData?.pm10 || 0) * 10) / 10,
       })),

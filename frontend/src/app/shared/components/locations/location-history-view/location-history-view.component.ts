@@ -10,6 +10,8 @@ import { Subject, forkJoin, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { VehicleDetected } from '../../../../core/models/vehicle.model';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 import { LocationService } from '../../../../core/services/location.service';
 import { Location } from '../../../../core/models/location.model';
 
@@ -144,7 +146,7 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
    * @param {any[]} sensors - Array de detecciones de sensores
    * @returns {void}
    */
-  private processDetectionData(locations: Location[], vehicles: any[], sensors: any[]): void {
+  private processDetectionData(locations: Location[], vehicles: VehicleDetected[], sensors: SensorData[]): void {
     const locationMap = new Map<number, DetectionRecord>();
 
     // Inicializar mapa con todas las ubicaciones
@@ -163,8 +165,7 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
     // Contar detecciones de vehículos por ubicación y actualizar último timestamp
     vehicles.forEach((vehicle) => {
       // Try multiple paths where a vehicle's location can be stored
-      const locationId =
-        vehicle.location?.id ?? vehicle.device?.location?.id ?? vehicle.device?.locationId ?? null;
+      const locationId = vehicle.location?.id ?? vehicle.device?.location?.id ?? null;
       if (locationId) {
         if (!locationMap.has(locationId)) {
           // create placeholder entry if vehicle references a location not in the locations list

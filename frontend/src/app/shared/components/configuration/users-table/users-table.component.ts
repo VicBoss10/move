@@ -6,6 +6,15 @@ import { ApiService } from '../../../../core/services/api.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ModalComponent } from '../../ui/modal/modal.component';
 
+interface KeycloakUser {
+  id: number | string;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  realmRoles?: string[];
+}
+
 /**
  * UsersTableComponent
  *
@@ -25,15 +34,15 @@ import { ModalComponent } from '../../ui/modal/modal.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UsersTableComponent {
-  users: any[] = [];
+  users: KeycloakUser[] = [];
 
   // Edit state
-  editingUser: any | null = null;
+  editingUser: KeycloakUser | null = null;
   editForm: FormGroup;
   editSaving = false;
 
   // Delete state
-  deleteTarget: any | null = null;
+  deleteTarget: KeycloakUser | null = null;
   deleteSaving = false;
 
   constructor(
@@ -58,13 +67,13 @@ export class UsersTableComponent {
    * Realiza un subscribe simple y marca para check cuando llegan los datos.
    */
   loadUsers(): void {
-    this.userService.getAll().subscribe((list: any[]) => {
+    this.userService.getAll().subscribe((list: KeycloakUser[]) => {
       this.users = list || [];
       this.cdr.markForCheck();
     });
   }
 
-  openEdit(user: any): void {
+  openEdit(user: KeycloakUser): void {
     this.editingUser = user;
     const currentRole = (user.realmRoles || []).includes('admin') ? 'admin' : 'user';
     this.editForm.patchValue({
@@ -108,7 +117,7 @@ export class UsersTableComponent {
     });
   }
 
-  openDelete(user: any): void {
+  openDelete(user: KeycloakUser): void {
     this.deleteTarget = user;
     this.deleteSaving = false;
   }

@@ -16,6 +16,7 @@ import {
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 
 // Registrar los scales y elementos
 ChartJS.register(
@@ -69,7 +70,7 @@ export class GasesComparisonChartComponent {
   /**
    * Observable compartido de datos del sensor (últimas 12h)
    */
-  private sensorData$!: Observable<any[]>;
+  private sensorData$!: Observable<SensorData[]>;
 
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
@@ -190,7 +191,7 @@ export class GasesComparisonChartComponent {
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) {
           return this.defaultChartData;
         }
@@ -302,7 +303,7 @@ export class GasesComparisonChartComponent {
    */
   private initializeGasValues(): void {
     this.gasValues$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: any) => ({
+      map((latestData: SensorData) => ({
         co: Math.round((latestData?.co || 0) * 10) / 10,
         no2: Math.round(latestData?.no2 || 0),
         nh3: Math.round((latestData?.nh3 || 0) * 10) / 10,

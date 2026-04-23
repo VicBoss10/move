@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { CameraService } from '../../../../core/services/camera.service';
-import { Camera } from '../../../../core/models/camera.model';
+import { Camera, StreamResponse } from '../../../../core/models/camera.model';
 import { DeviceState } from '../../../../core/models/device.model';
 
 /**
@@ -191,10 +191,10 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
         .getActiveStreamByDevice(camera.device.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          next: (res) => {
+          next: (res: StreamResponse) => {
             // El backend devuelve sessionId y streamUrl/snapshotUrl
-            this.sessionId = (res as any)?.sessionId || null;
-            this.feedUrl = this.toAbsoluteApiUrl((res as any)?.streamUrl || null);
+            this.sessionId = res?.sessionId || null;
+            this.feedUrl = this.toAbsoluteApiUrl(res?.streamUrl || null);
             this.isLoading = false;
             this.changeDetectorRef.markForCheck();
           },
@@ -380,7 +380,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       return url;
     }
 
-    const apiBase: string = (window as any).__API_BASE_URL__ || 'http://localhost:8080';
+    const apiBase: string = (window as unknown as { __API_BASE_URL__?: string }).__API_BASE_URL__ || 'http://localhost:8080';
     const normalizedPath = url.startsWith('/') ? url : `/${url}`;
     return `${apiBase.replace(/\/$/, '')}${normalizedPath}`;
   }

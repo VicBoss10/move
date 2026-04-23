@@ -12,10 +12,12 @@ import {
   Tooltip,
   Legend,
   Filler,
+  Point,
 } from 'chart.js';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 
 // Registrar los scales y elementos
 ChartJS.register(
@@ -81,7 +83,7 @@ export class HumidityChartComponent {
   /**
    * Observable compartido de datos del sensor (últimas 24h)
    */
-  private sensorData$!: Observable<any[]>;
+  private sensorData$!: Observable<SensorData[]>;
 
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
@@ -107,7 +109,7 @@ export class HumidityChartComponent {
           boxWidth: 12,
           font: {
             size: 12,
-            weight: 500 as any,
+            weight: 500,
           },
           color: '#6b7280',
           usePointStyle: true,
@@ -211,7 +213,7 @@ export class HumidityChartComponent {
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) {
           return this.defaultChartData;
         }
@@ -287,29 +289,29 @@ export class HumidityChartComponent {
    */
   private initializeHumidityValue(): void {
     this.humidityValue$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: any) => Math.round((latestData?.humidity || 0) * 10) / 10),
+      map((latestData: SensorData) => Math.round((latestData?.humidity || 0) * 10) / 10),
       catchError(() => of(0)),
       shareReplay(1),
     );
   }
 
-  getMinValue(values: any[]): number {
+  getMinValue(values: (number | Point | null)[]): number {
     if (!values || values.length === 0) return 0;
-    const numValues = values.filter((v) => typeof v === 'number');
+    const numValues = values.filter((v): v is number => typeof v === 'number');
     return numValues.length > 0 ? Math.min(...numValues) : 0;
   }
 
-  getAvgValue(values: any[]): number {
+  getAvgValue(values: (number | Point | null)[]): number {
     if (!values || values.length === 0) return 0;
-    const numValues = values.filter((v) => typeof v === 'number');
+    const numValues = values.filter((v): v is number => typeof v === 'number');
     if (numValues.length === 0) return 0;
     const sum = numValues.reduce((acc, val) => acc + val, 0);
     return Math.round((sum / numValues.length) * 10) / 10;
   }
 
-  getMaxValue(values: any[]): number {
+  getMaxValue(values: (number | Point | null)[]): number {
     if (!values || values.length === 0) return 0;
-    const numValues = values.filter((v) => typeof v === 'number');
+    const numValues = values.filter((v): v is number => typeof v === 'number');
     return numValues.length > 0 ? Math.max(...numValues) : 0;
   }
 }

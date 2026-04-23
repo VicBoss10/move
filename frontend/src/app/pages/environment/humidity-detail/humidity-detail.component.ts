@@ -159,7 +159,7 @@ export class HumidityDetailComponent implements OnInit {
 
   private initializeGaugeData(): void {
     this.gaugeData$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: any) => {
+      map((latestData: SensorData) => {
         const humidity = Math.round((latestData?.humidity || 0) * 10) / 10;
         return {
           humidity,
@@ -178,7 +178,7 @@ export class HumidityDetailComponent implements OnInit {
 
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) return this.defaultChartData;
 
         const parsedData = data
@@ -247,7 +247,7 @@ export class HumidityDetailComponent implements OnInit {
 
   private initializeStats(): void {
     this.stats$ = this.sensorDataService.getAll().pipe(
-      map((sensorData: any[]) => {
+      map((sensorData: SensorData[]) => {
         if (!sensorData || sensorData.length === 0) return this.defaultStats;
 
         const humidityValues = sensorData.map((d) => d.humidity || 0);

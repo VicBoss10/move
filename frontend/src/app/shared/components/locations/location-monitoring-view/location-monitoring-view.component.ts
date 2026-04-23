@@ -16,8 +16,18 @@ import { DeviceService } from '../../../../core/services/device.service';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { Location as AppLocation } from '../../../../core/models/location.model';
+import { Device, DeviceType } from '../../../../core/models/device.model';
 import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
 import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
+
+// Local view model: extiende `AppLocation` con propiedades calculadas usadas sólo en este componente
+interface LocationView extends AppLocation {
+  devices?: Device[];
+  deviceCount?: number;
+  cameraCount?: number;
+  sensorCount?: number;
+  lastActivity?: Date | string | null;
+}
 
 /**
  * LocationMonitoringViewComponent
@@ -52,10 +62,8 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   /** Referencia al InfoWindow del mapa */
   @ViewChild(MapInfoWindow) infoWindow!: MapInfoWindow;
 
-  /**
-   * Array de ubicaciones para binding en el template
-   */
-  locations: AppLocation[] = [];
+  /** Array de ubicaciones para binding en el template */
+  locations: LocationView[] = [];
 
   /**
    * Información general del sistema (calculada dinámicamente)
@@ -89,7 +97,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   isApiLoaded = false;
 
   /** Ubicación seleccionada en el info window */
-  selectedInfoLocation: AppLocation | null = null;
+  selectedInfoLocation: LocationView | null = null;
 
   /**
    * Constructor e inyección de dependencias
@@ -149,7 +157,7 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     const devices$ = this.deviceService.getAll().pipe(
       catchError((err) => {
         console.error('Error loading devices:', err);
-        return of([] as any[]);
+        return of([] as Device[]);
       }),
     );
 
@@ -185,8 +193,24 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe((values) => {
-        const [locations, devices, lastDetection] = values as [AppLocation[], any[], Date];
-        this.locations = locations;
+        const [locations, devices, lastDetection] = values as [AppLocation[], Device[], Date];
+
+        // Normalize locations adding computed properties to simplify template logic
+        const enriched = locations.map((loc) => {
+          const related = (devices || []).filter((d) => d?.location?.id === loc.id);
+          const deviceCount = related.length;
+          const cameraCount = related.filter(
+            (d) => d.type === DeviceType.CAMERA || String(d.type).toLowerCase().includes('camera'),
+          ).length;
+          const sensorCount = related.filter(
+            (d) => d.type === DeviceType.SENSOR || String(d.type).toLowerCase().includes('sensor'),
+          ).length;
+          const rawLast = (loc as unknown as Partial<{ lastActivity?: string | Date }>).lastActivity;
+          const lastActivity = rawLast ? new Date(rawLast) : null;
+          return { ...(loc as AppLocation), devices: related, deviceCount, cameraCount, sensorCount, lastActivity } as LocationView;
+        });
+
+        this.locations = enriched;
         this.updateSystemInfo(devices, lastDetection);
         this.fitMapToLocations();
         this.cdr.markForCheck();
@@ -200,11 +224,11 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * @param {Date} lastDetection - Fecha de la última detección
    * @returns {void}
    */
-  private updateSystemInfo(devices: any[], lastDetection: Date): void {
+  private updateSystemInfo(devices: Device[], lastDetection: Date): void {
     this.systemInfo.totalLocations = this.locations.length;
     // Contar cuántas ubicaciones tienen al menos un dispositivo en estado ACTIVE
     const activeLocationIds = new Set<number>();
-    (devices || []).forEach((d: any) => {
+    (devices || []).forEach((d: Device) => {
       if (d && d.location && d.location.id != null && d.state === 'ACTIVE') {
         activeLocationIds.add(d.location.id);
       }
@@ -225,9 +249,9 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * @param marker - Referencia al MapAdvancedMarker
    * @param location - Datos de la ubicación
    */
-  onMarkerClick(marker: MapMarker | any, location: AppLocation): void {
+  onMarkerClick(marker: MapMarker, location: AppLocation): void {
     // First set shallow location so info window can open quickly
-    this.selectedInfoLocation = location;
+    this.selectedInfoLocation = location as LocationView;
     if (this.infoWindow) this.infoWindow.open(marker);
     this.cdr.markForCheck();
 
@@ -236,9 +260,19 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
       .getAll()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (devices) => {
-          const related = (devices || []).filter((d) => (d as any).location?.id === location.id);
-          (this.selectedInfoLocation as any).devices = related;
+        next: (devices: Device[]) => {
+          const related = (devices || []).filter((d) => d.location?.id === location.id);
+          if (this.selectedInfoLocation) {
+            const sel = this.selectedInfoLocation as LocationView;
+            sel.devices = related;
+            sel.deviceCount = related.length;
+            sel.cameraCount = related.filter(
+              (d) => d.type === DeviceType.CAMERA || String(d.type).toLowerCase().includes('camera'),
+            ).length;
+            sel.sensorCount = related.filter(
+              (d) => d.type === DeviceType.SENSOR || String(d.type).toLowerCase().includes('sensor'),
+            ).length;
+          }
           this.cdr.markForCheck();
         },
         error: (err) => {
@@ -251,16 +285,15 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * Genera un icono SVG como data-URL para usar como marcador
    * Color y estilo se calculan según actividad/estado de la ubicación
    */
-  getMarkerIcon(location: AppLocation): string | google.maps.Icon {
-    const lastActivity = (location as any).lastActivity
-      ? new Date((location as any).lastActivity).getTime()
-      : 0;
+  getMarkerIcon(location: LocationView | AppLocation): string | google.maps.Icon {
+    const rawLast = (location as unknown as Partial<{ lastActivity?: string | Date }>).lastActivity;
+    const lastActivity = rawLast ? new Date(rawLast).getTime() : 0;
     const isRecent = lastActivity && Date.now() - lastActivity < 24 * 60 * 60 * 1000; // 24h
     const color = isRecent ? '#10B981' : '#14d83f'; // green or blue
 
     // Determine device count to adjust marker visual size
-    const deviceCount = ((location as any).deviceCount ||
-      ((location as any).devices || []).length) as number;
+    const locPartial = location as Partial<LocationView>;
+    const deviceCount = (locPartial.deviceCount ?? (locPartial.devices ?? []).length) as number;
     const baseSize = isRecent ? 36 : 48; // px
     const size = baseSize + Math.min(24, (deviceCount || 0) * 6);
 
@@ -278,17 +311,10 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   /**
    * Return a small label object to show emoji indicators for camera/sensor
    */
-  getMarkerLabel(location: AppLocation): google.maps.MarkerLabel | null {
-    const hasCamera =
-      ((location as any).cameraCount && (location as any).cameraCount > 0) ||
-      (((location as any).devices || []) as any[]).some((d) =>
-        (d.type || '').toLowerCase().includes('camera'),
-      );
-    const hasSensor =
-      ((location as any).sensorCount && (location as any).sensorCount > 0) ||
-      (((location as any).devices || []) as any[]).some((d) =>
-        (d.type || '').toLowerCase().includes('sensor'),
-      );
+  getMarkerLabel(location: LocationView | AppLocation): google.maps.MarkerLabel | null {
+    const devices = ((location as unknown as Partial<LocationView>)?.devices) ?? [];
+    const hasCamera = ((location as unknown as Partial<LocationView>)?.cameraCount ?? 0) > 0 || devices.some((d) => (String(d.type) || '').toLowerCase().includes('camera'));
+    const hasSensor = ((location as unknown as Partial<LocationView>)?.sensorCount ?? 0) > 0 || devices.some((d) => (String(d.type) || '').toLowerCase().includes('sensor'));
 
     let text = '';
     if (hasCamera && hasSensor) text = 'C/S';
@@ -296,27 +322,29 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     else if (hasSensor) text = 'S';
     else return null;
 
-    return { text, color: '#ffffff', fontSize: '12px' } as any;
+    return { text, color: '#ffffff', fontSize: '12px' } as google.maps.MarkerLabel;
   }
 
   /** helper used in info window */
-  getCameraCount(location: AppLocation | null): number {
+  getCameraCount(location: LocationView | AppLocation | null): number {
     if (!location) return 0;
-    if ((location as any).cameraCount != null) return (location as any).cameraCount;
-    const devices = (location as any).devices || [];
-    return devices.filter((d: any) => (d.type || '').toLowerCase().includes('camera')).length;
+    const loc = location as Partial<LocationView>;
+    if (loc.cameraCount != null) return loc.cameraCount as number;
+    const devices = (loc.devices ?? []) as Device[];
+    return devices.filter((d: Device) => (String(d.type) || '').toLowerCase().includes('camera')).length;
   }
 
-  getSensorCount(location: AppLocation | null): number {
+  getSensorCount(location: LocationView | AppLocation | null): number {
     if (!location) return 0;
-    if ((location as any).sensorCount != null) return (location as any).sensorCount;
-    const devices = (location as any).devices || [];
-    return devices.filter((d: any) => (d.type || '').toLowerCase().includes('sensor')).length;
+    const loc = location as Partial<LocationView>;
+    if (loc.sensorCount != null) return loc.sensorCount as number;
+    const devices = (loc.devices ?? []) as Device[];
+    return devices.filter((d: Device) => (String(d.type) || '').toLowerCase().includes('sensor')).length;
   }
 
   /** Devuelve el listado de dispositivos de la ubicación seleccionada (evita casts en plantilla) */
-  getSelectedDevices(): any[] {
-    return (this.selectedInfoLocation as any)?.devices || [];
+  getSelectedDevices(): Device[] {
+    return (this.selectedInfoLocation?.devices ?? []) as Device[];
   }
 
   /**

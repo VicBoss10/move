@@ -16,6 +16,7 @@ import {
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 
 // Registrar los scales y elementos
 ChartJS.register(
@@ -68,7 +69,7 @@ export class Co2ChartComponent {
   /**
    * Observable compartido de datos del sensor (últimas 12h)
    */
-  private sensorData$!: Observable<any[]>;
+  private sensorData$!: Observable<SensorData[]>;
 
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
@@ -189,7 +190,7 @@ export class Co2ChartComponent {
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) {
           return this.defaultChartData;
         }
@@ -266,11 +267,11 @@ export class Co2ChartComponent {
    */
   private initializeStats(): void {
     this.stats$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) {
           return { min: 0, avg: 0, max: 0 };
         }
-        const co2Values = data.map((d) => d.co2).filter((v: any) => v != null && v > 0);
+        const co2Values = data.map((d) => d.co2).filter((v): v is number => v != null && v > 0);
         if (co2Values.length === 0) {
           return { min: 0, avg: 0, max: 0 };
         }

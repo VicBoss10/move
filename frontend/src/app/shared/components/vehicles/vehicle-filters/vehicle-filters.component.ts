@@ -95,7 +95,7 @@ export class VehicleFiltersComponent {
     );
     // Derivar lista de ubicaciones únicas por location.id
     this.locations$ = this.devices$.pipe(
-      map((devices) => {
+      map((devices: Device[]) => {
         const map = new Map<number | string, { deviceId: number; label: string }>();
         for (const d of devices) {
           const locId = d.location?.id ?? `no_loc_${d.id}`;
@@ -118,7 +118,7 @@ export class VehicleFiltersComponent {
     const criteria: VehicleSearchCriteria = {};
 
     if (this.selectedType) {
-      criteria.type = this.selectedType as any;
+      criteria.type = this.selectedType as VehicleSearchCriteria['type'];
     }
     if (this.selectedDeviceId) {
       criteria.deviceId = this.selectedDeviceId;

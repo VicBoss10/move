@@ -16,6 +16,7 @@ import { VehicleChartComponent } from '../../../shared/components/vehicles/vehic
 import { VehicleTypeChartComponent } from '../../../shared/components/vehicles/vehicle-type-chart/vehicle-type-chart.component';
 import { VehicleHeatmapComponent } from '../../../shared/components/vehicles/vehicle-heatmap/vehicle-heatmap.component';
 import { VehicleDetectedService } from '../../../core/services/vehicle-detected.service';
+import { VehicleDetected } from '../../../core/models/vehicle.model';
 
 /**
  * VehiclesStatsComponent
@@ -128,7 +129,7 @@ export class VehiclesStatsComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       }),
       switchMap(() => this.vehicleService.getAll()),
-      map((vehicles: any[]) => ({
+      map((vehicles: VehicleDetected[]) => ({
         totalDetected: vehicles.length,
         carCount: vehicles.filter((v) => v.vehicleType === 'CAR').length,
         motorcycleCount: vehicles.filter((v) => v.vehicleType === 'MOTORCYCLE').length,

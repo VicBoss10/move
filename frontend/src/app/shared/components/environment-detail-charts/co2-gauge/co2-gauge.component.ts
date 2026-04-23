@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 import { ThresholdsService } from '../../../../core/services/thresholds.service';
 import {
   getEnvironmentStatusFromConfig,
@@ -55,7 +56,7 @@ export class Co2GaugeComponent {
       this.thresholds.getAll(),
     ]).pipe(
       map(([latestData, allThresholds]) => {
-        const co2Value = (latestData as any)?.co2 || 0;
+        const co2Value = (latestData as SensorData)?.co2 || 0;
         const config = allThresholds['co2'];
         const envStatus = getEnvironmentStatusFromConfig(config, co2Value, false);
         return {

@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Location } from '../../../../core/models/location.model';
+import { Device } from '../../../../core/models/device.model';
 import { LocationService } from '../../../../core/services/location.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { ToastService } from '../../../../core/services/toast.service';
@@ -76,9 +77,9 @@ export class LocationTableComponent {
       longitude: ['', Validators.required],
     });
 
-    this.deviceService.getAll().subscribe((devices: any[]) => {
+    this.deviceService.getAll().subscribe((devices: Device[]) => {
       const map: Record<number, number> = {};
-      devices.forEach((d: any) => {
+      devices.forEach((d: Device) => {
         const locId = d.location?.id;
         if (!locId) return;
         map[locId] = (map[locId] || 0) + 1;

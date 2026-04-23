@@ -50,7 +50,7 @@ export class HumidityGaugeComponent {
       this.thresholds.getAll(),
     ]).pipe(
       map(([latestData, allThresholds]) => {
-        const humidity = Math.round(((latestData as any)?.humidity || 0) * 10) / 10;
+        const humidity = Math.round((latestData?.humidity || 0) * 10) / 10;
         const config = allThresholds['humidity'];
         const envStatus = getEnvironmentStatusFromConfig(config, humidity, false);
         return {

@@ -20,6 +20,7 @@ import {
   DeviceState,
   DeviceType,
 } from '../../../../core/models/device.model';
+import { Location as AppLocation } from '../../../../core/models/location.model';
 import { ToastService } from '../../../../core/services/toast.service';
 
 /**
@@ -49,9 +50,9 @@ export class RegisterDeviceFormComponent implements OnDestroy {
   // Captive portal LED simulation
   captiveLedSrc = '/images/device-conection/LEDR.png';
   private _captiveLedToggle = false;
-  private captiveLedInterval: any = null;
+  private captiveLedInterval: ReturnType<typeof setInterval> | null = null;
 
-  locations$: Observable<any[]>;
+  locations$: Observable<AppLocation[]>;
 
   deviceTypes = [
     { id: 'CAMERA', label: 'Cámara/Video' },
@@ -101,7 +102,7 @@ export class RegisterDeviceFormComponent implements OnDestroy {
       map((locations) => locations),
       catchError((error) => {
         console.error('Error loading locations:', error);
-        return of([] as any[]);
+        return of([] as AppLocation[]);
       }),
       shareReplay(1),
     );
@@ -217,7 +218,7 @@ export class RegisterDeviceFormComponent implements OnDestroy {
       .register(payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
+        next: (_response) => {
           this.isLoading$.next(false);
           const typeName = 'Cámara';
           const guidance = 'Para iniciar la detección dirígete a Cámara → Streaming.';
@@ -228,9 +229,9 @@ export class RegisterDeviceFormComponent implements OnDestroy {
             this.router.navigate(['/dashboard/devices/device-status']);
           }, 1400);
         },
-        error: (error: any) => {
+        error: (error: unknown) => {
           this.isLoading$.next(false);
-          const errorMsg = error?.message || 'Error al registrar el dispositivo';
+          const errorMsg = (error as { message?: string })?.message || 'Error al registrar el dispositivo';
           this.errorMessage$.next(errorMsg);
           this.toastService.error(errorMsg, 'Error');
           console.error('Error registering device:', error);

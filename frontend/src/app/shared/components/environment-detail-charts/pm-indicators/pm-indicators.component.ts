@@ -69,8 +69,8 @@ export class PmIndicatorsComponent {
       map(([latestData, allThresholds]) => {
         const pm25Config = allThresholds['pm25'];
         const pm10Config = allThresholds['pm10'];
-        const pm25Value = Math.round(((latestData as any)?.pm25 || 0) * 10) / 10;
-        const pm10Value = Math.round(((latestData as any)?.pm10 || 0) * 10) / 10;
+        const pm25Value = Math.round((latestData?.pm25 || 0) * 10) / 10;
+        const pm10Value = Math.round((latestData?.pm10 || 0) * 10) / 10;
         const pm25Status = getEnvironmentStatusFromConfig(pm25Config, pm25Value);
         const pm10Status = getEnvironmentStatusFromConfig(pm10Config, pm10Value);
         return [

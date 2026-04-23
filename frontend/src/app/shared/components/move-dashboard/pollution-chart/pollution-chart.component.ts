@@ -14,6 +14,7 @@ import {
   Filler,
 } from 'chart.js';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 
@@ -80,7 +81,7 @@ export class PollutionChartComponent {
    * Observable compartido para los datos del sensor
    * @private
    */
-  private sensorData$!: Observable<any[]>;
+  private sensorData$!: Observable<SensorData[]>;
 
   /**
    * Datos por defecto del gráfico cuando no hay datos disponibles
@@ -232,7 +233,7 @@ export class PollutionChartComponent {
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) {
           return this.defaultChartData;
         }
@@ -334,7 +335,7 @@ export class PollutionChartComponent {
    */
   private initializeAverages(): void {
     this.avgPm25$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) return 0;
         const values = data.filter((d) => d.pm25 != null).map((d) => d.pm25);
         if (values.length === 0) return 0;
@@ -344,7 +345,7 @@ export class PollutionChartComponent {
     );
 
     this.avgPm10$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) return 0;
         const values = data.filter((d) => d.pm10 != null).map((d) => d.pm10);
         if (values.length === 0) return 0;

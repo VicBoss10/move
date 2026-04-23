@@ -97,7 +97,7 @@ export class EnvironmentMetricsComponent {
       this.sensorDataService.getLast(),
       this.vehicleService.getAll(),
     ]).pipe(
-      map(([latestSensor, vehicles]) => {
+      map(([latestSensor, _vehicles]) => {
         const stats = this.vehicleService.getStats();
 
         const co2Status = getEnvironmentStatus('co2', latestSensor?.co2, false);

@@ -118,7 +118,7 @@ export class AirQualityCardComponent {
             icon: this.icons.pm25Icon,
             value: pm25,
             unit: 'µg/m³',
-            status: pm25Status.key as any,
+            status: pm25Status.key as AirQualityMetric['status'],
             statusLabel: pm25Status.label,
           },
           {
@@ -126,7 +126,7 @@ export class AirQualityCardComponent {
             icon: this.icons.pm10Icon,
             value: pm10,
             unit: 'µg/m³',
-            status: pm10Status.key as any,
+            status: pm10Status.key as AirQualityMetric['status'],
             statusLabel: pm10Status.label,
           },
         ] as AirQualityMetric[];

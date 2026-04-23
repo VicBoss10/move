@@ -12,10 +12,12 @@ import {
   Tooltip,
   Legend,
   Filler,
+  Point,
 } from 'chart.js';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 
 // Registrar los scales y elementos
 ChartJS.register(
@@ -65,7 +67,7 @@ export class TemperatureChartComponent {
   /**
    * Observable compartido de datos del sensor (últimas 24h)
    */
-  private sensorData$!: Observable<any[]>;
+  private sensorData$!: Observable<SensorData[]>;
 
   /**
    * Opciones de configuración del gráfico
@@ -89,7 +91,7 @@ export class TemperatureChartComponent {
           boxWidth: 12,
           font: {
             size: 12,
-            weight: 500 as any,
+            weight: 500,
           },
           color: '#6b7280',
           usePointStyle: true,
@@ -197,7 +199,7 @@ export class TemperatureChartComponent {
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
-      map((data: any[]) => {
+      map((data: SensorData[]) => {
         if (!data || data.length === 0) {
           return this.defaultChartData;
         }
@@ -275,7 +277,7 @@ export class TemperatureChartComponent {
    */
   private initializeTempValue(): void {
     this.tempValue$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: any) => Math.round((latestData?.temperature || 0) * 10) / 10),
+      map((latestData: SensorData) => Math.round((latestData?.temperature || 0) * 10) / 10),
       catchError(() => of(0)),
       shareReplay(1),
     );
@@ -284,16 +286,16 @@ export class TemperatureChartComponent {
   /**
    * Calcula el valor mínimo de un array de datos
    */
-  getMinValue(data: any[]): number {
-    const validData = data.filter((d) => d !== null && typeof d === 'number') as number[];
+  getMinValue(data: (number | Point | null)[]): number {
+    const validData = data.filter((d): d is number => typeof d === 'number');
     return validData.length > 0 ? Math.min(...validData) : 0;
   }
 
   /**
    * Calcula el valor promedio de un array de datos
    */
-  getAvgValue(data: any[]): number {
-    const validData = data.filter((d) => d !== null && typeof d === 'number') as number[];
+  getAvgValue(data: (number | Point | null)[]): number {
+    const validData = data.filter((d): d is number => typeof d === 'number');
     if (validData.length === 0) return 0;
     const sum = validData.reduce((acc, val) => acc + val, 0);
     return sum / validData.length;
@@ -302,8 +304,8 @@ export class TemperatureChartComponent {
   /**
    * Calcula el valor máximo de un array de datos
    */
-  getMaxValue(data: any[]): number {
-    const validData = data.filter((d) => d !== null && typeof d === 'number') as number[];
+  getMaxValue(data: (number | Point | null)[]): number {
+    const validData = data.filter((d): d is number => typeof d === 'number');
     return validData.length > 0 ? Math.max(...validData) : 0;
   }
 }

@@ -58,7 +58,7 @@ export class AlertThresholdsFormComponent implements OnInit {
     const cfg = this.thresholds.getMetric(metric) as MetricThresholdConfig;
     this.form = this.fb.group({
       metric: [metric, Validators.required],
-      levels: this.fb.array(cfg.levels.map((l: any) => this.levelGroup(l))),
+      levels: this.fb.array(cfg.levels.map((l: ThresholdLevel) => this.levelGroup(l))),
     });
     this.selected = metric;
     this.cdr.markForCheck();
@@ -130,11 +130,11 @@ export class AlertThresholdsFormComponent implements OnInit {
         key: c.get('key')?.value,
         label: c.get('label')?.value,
         max: isLast ? Infinity : Number(c.get('max')?.value),
-        color: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.color || '#999',
-        textClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.textClass || '',
-        bgClass: cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.bgClass || '',
+        color: cfg.levels.find((l: ThresholdLevel) => l.key === c.get('key')?.value)?.color || '#999',
+        textClass: cfg.levels.find((l: ThresholdLevel) => l.key === c.get('key')?.value)?.textClass || '',
+        bgClass: cfg.levels.find((l: ThresholdLevel) => l.key === c.get('key')?.value)?.bgClass || '',
         gaugeGradient:
-          cfg.levels.find((l: any) => l.key === c.get('key')?.value)?.gaugeGradient || '',
+          cfg.levels.find((l: ThresholdLevel) => l.key === c.get('key')?.value)?.gaugeGradient || '',
       } as ThresholdLevel;
     });
 

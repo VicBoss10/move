@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { SensorData } from '../../../../core/models/sensor-data.model';
 
 /**
  * Interface para estadísticas de partículas
@@ -77,7 +78,7 @@ export class PmStatsTableComponent {
    */
   private initializePMStats(): void {
     this.pmStats$ = this.sensorDataService.getAll().pipe(
-      map((sensorData: any[]) => {
+      map((sensorData: SensorData[]) => {
         if (!sensorData || sensorData.length === 0) {
           return this.defaultStats;
         }
