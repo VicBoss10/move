@@ -7,6 +7,10 @@ import {
   Device,
   DeviceSearchCriteria,
   DeviceStats,
+  RegisterDevicePayload,
+  RegisterDeviceResponse,
+  DeviceType,
+  DeviceState,
 } from '../models/device.model';
 import { QueryParamsBuilder } from '../utils/query-params.builder';
 
@@ -64,12 +68,12 @@ export class DeviceService extends BaseDataService<Device> {
     const devices = this.getCachedData();
     return {
       total: devices.length,
-      active: devices.filter((d) => d.state === 'ACTIVE').length,
-      inactive: devices.filter((d) => d.state === 'INACTIVE').length,
+      active: devices.filter((d) => d.state === DeviceState.ACTIVE).length,
+      inactive: devices.filter((d) => d.state === DeviceState.INACTIVE).length,
       byType: {
-        camera: devices.filter((d) => d.type === 'CAMERA').length,
-        sensor: devices.filter((d) => d.type === 'SENSOR').length,
-        thermal: devices.filter((d) => d.type === 'THERMAL').length,
+        camera: devices.filter((d) => d.type === DeviceType.CAMERA).length,
+        sensor: devices.filter((d) => d.type === DeviceType.SENSOR).length,
+        thermal: devices.filter((d) => d.type === DeviceType.THERMAL).length,
       },
       lastUpdated: new Date(),
     };
@@ -80,11 +84,10 @@ export class DeviceService extends BaseDataService<Device> {
    * @param deviceData - Datos del dispositivo a registrar
    * @returns Observable<string> con mensaje de confirmación
    */
-  register(deviceData: any): Observable<import('../models/device.model').RegisterDeviceResponse> {
-    return this.apiService
-      .post<
-        import('../models/device.model').RegisterDeviceResponse
-      >(`/${this.endpoint}`, deviceData)
+  register(deviceData: unknown): Observable<RegisterDeviceResponse> {
+    // Aceptamos `unknown` para facilitar llamadas desde formularios; se castea
+    // a `RegisterDevicePayload` al enviar al backend.
+    return this.apiService.post<RegisterDeviceResponse>(`/${this.endpoint}`, deviceData as RegisterDevicePayload)
       .pipe(
         tap(() => {
           // Invalidar caché para forzar recarga

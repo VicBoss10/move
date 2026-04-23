@@ -175,8 +175,8 @@ export abstract class BaseDataService<T> {
    * @param id - ID del elemento
    * @returns Observable
    */
-  delete(id: number): Observable<any> {
-    return this.apiService.delete(`/${this.endpoint}/${id}`).pipe(
+  delete(id: number): Observable<void> {
+    return this.apiService.delete<void>(`/${this.endpoint}/${id}`).pipe(
       tap(() => {
         this.invalidateCache();
         this.clearServiceError();

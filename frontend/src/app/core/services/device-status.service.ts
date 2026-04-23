@@ -133,10 +133,10 @@ export class DeviceStatusService {
    * Los datos específicos de sensores se mostrarán en otra vista
    */
   private calculateDeviceMetrics(
-    device: Device,
-    sensorData: SensorData[],
-    vehiclesDetected: VehicleDetected[],
-    last24Hours: Date,
+    _device: Device,
+    _sensorData: SensorData[],
+    _vehiclesDetected: VehicleDetected[],
+    _last24Hours: Date,
   ): Partial<DeviceStatusInfo> {
     // Las tarjetas de estado muestran solo información de estado
     // Los datos de sensores/cámaras se mostrarán en vistas específicas

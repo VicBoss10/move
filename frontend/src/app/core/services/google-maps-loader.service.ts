@@ -70,15 +70,16 @@ export class GoogleMapsLoaderService {
     // antes de cargar el script, requerido por @angular/google-maps v20+
     this.loadPromise = new Promise<boolean>((resolve) => {
       try {
-        const w = window as any;
-        const g = w.google || (w.google = {});
-        const d = g.maps || (g.maps = {});
+        type GoogleObj = { [k: string]: unknown };
+        const w = window as unknown as { google?: GoogleObj };
+        const g = w.google ?? (w.google = {} as GoogleObj);
+        const d = (g['maps'] ?? (g['maps'] = {} as GoogleObj)) as GoogleObj;
         const loaded = new Set<string>();
 
         const bootstrap = (): Promise<void> => {
           return (
-            d.__promise ||
-            (d.__promise = new Promise<void>((res, rej) => {
+            (d['__promise'] as Promise<void> | undefined) ||
+            ((d['__promise'] = new Promise<void>((res, rej) => {
               const script = document.createElement('script');
               const params = new URLSearchParams({
                 key: apiKey,
@@ -89,20 +90,24 @@ export class GoogleMapsLoaderService {
               script.src = `https://maps.googleapis.com/maps/api/js?${params}`;
               script.async = true;
               script.defer = true;
-              d.__ib__ = res;
+              d['__ib__'] = res;
               script.onerror = () => {
-                d.__promise = null;
+                delete d['__promise'];
                 rej(new Error('Google Maps API could not load.'));
               };
               document.head.appendChild(script);
-            }))
+            }) as Promise<void>))
           );
         };
 
-        if (!d.importLibrary) {
-          d.importLibrary = (lib: string, ...args: any[]) => {
+        type MapsWithImport = GoogleObj & {
+          importLibrary?: (lib: string, ...args: unknown[]) => unknown;
+        };
+        const dTyped = d as MapsWithImport;
+        if (!dTyped.importLibrary) {
+          dTyped.importLibrary = (lib: string, ...args: unknown[]) => {
             loaded.add(lib);
-            return bootstrap().then(() => d.importLibrary(lib, ...args));
+            return bootstrap().then(() => dTyped.importLibrary!(lib, ...args));
           };
         }
 

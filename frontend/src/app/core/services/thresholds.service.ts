@@ -25,17 +25,20 @@ export class ThresholdsService {
   private load(): Record<EnvironmentMetricKey, MetricThresholdConfig> {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      const overrides = raw ? JSON.parse(raw) : {};
+      const overrides = (raw ? JSON.parse(raw) : {}) as Partial<
+        Record<EnvironmentMetricKey, Partial<MetricThresholdConfig>>
+      >;
       // shallow merge of each metric
       const merged: Record<EnvironmentMetricKey, MetricThresholdConfig> = {
-        ...ENV_THRESHOLDS,
-      } as any;
+        ...(ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>),
+      };
       for (const k of Object.keys(overrides)) {
-        (merged as any)[k] = { ...(merged as any)[k], ...(overrides as any)[k] };
+        const key = k as EnvironmentMetricKey;
+        merged[key] = { ...merged[key], ...(overrides[key] as Partial<MetricThresholdConfig>) };
       }
       return merged;
-    } catch (e) {
-      return { ...ENV_THRESHOLDS } as any;
+    } catch {
+      return { ...(ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>) };
     }
   }
 
@@ -63,20 +66,24 @@ export class ThresholdsService {
    */
   updateMetric(metric: EnvironmentMetricKey, cfg: MetricThresholdConfig) {
     const current = this.store$.getValue();
-    const next = { ...current, [metric]: cfg } as any;
+    const next: Record<EnvironmentMetricKey, MetricThresholdConfig> = {
+      ...current,
+      [metric]: cfg,
+    } as Record<EnvironmentMetricKey, MetricThresholdConfig>;
     // persist overrides (only differences from default)
-    const overrides: any = {};
+    const overrides: Partial<Record<EnvironmentMetricKey, MetricThresholdConfig>> = {};
+    const defaults = ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>;
     for (const k of Object.keys(next)) {
       const key = k as EnvironmentMetricKey;
-      const def = (ENV_THRESHOLDS as any)[key];
+      const def = defaults[key];
       if (JSON.stringify(def) !== JSON.stringify(next[key])) {
         overrides[key] = next[key];
       }
     }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
-    } catch (e) {}
-    this.store$.next(next as any);
+    } catch {}
+    this.store$.next(next);
   }
 
   /**
@@ -85,7 +92,7 @@ export class ThresholdsService {
   reset() {
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch (e) {}
-    this.store$.next({ ...(ENV_THRESHOLDS as any) });
+    } catch {}
+    this.store$.next({ ...(ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>) });
   }
 }

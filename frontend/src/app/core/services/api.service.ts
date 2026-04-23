@@ -1,5 +1,5 @@
 import { Injectable, OnInit } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -20,7 +20,9 @@ export class ApiService implements OnInit {
    * En producción: https://api.moveiot.online
    */
   // Prefer runtime-injected value (set by main.ts from /assets/config.json), fall back to localhost
-  private readonly apiUrl: string = (window as any).__API_BASE_URL__ || 'http://localhost:8080';
+  private readonly apiUrl: string =
+    ((window as unknown) as { __API_BASE_URL__?: string }).__API_BASE_URL__ ??
+    'http://localhost:8080';
 
   /** Último error HTTP detectado por el servicio. */
   private readonly errorSubject = new BehaviorSubject<string | null>(null);
@@ -58,7 +60,7 @@ export class ApiService implements OnInit {
    * @param body - Datos a enviar
    * @returns Observable con la respuesta del servidor
    */
-  post<T>(endpoint: string, body: any): Observable<T> {
+  post<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http
       .post<T>(`${this.apiUrl}${endpoint}`, body)
       .pipe(catchError((error) => this.handleError(error)));
@@ -71,7 +73,7 @@ export class ApiService implements OnInit {
    * @param body - Datos a enviar
    * @returns Observable<string> con la respuesta del servidor
    */
-  postText(endpoint: string, body: any): Observable<string> {
+  postText(endpoint: string, body: unknown): Observable<string> {
     return this.http
       .post(`${this.apiUrl}${endpoint}`, body, { responseType: 'text' })
       .pipe(catchError((error) => this.handleError(error)));
@@ -96,7 +98,7 @@ export class ApiService implements OnInit {
    * PUT que espera respuesta en texto plano (no JSON)
    * Útil para endpoints del backend que retornan strings como "Updated successfully..."
    */
-  putText(endpoint: string, body: any): Observable<string> {
+  putText(endpoint: string, body: unknown): Observable<string> {
     return this.http
       .put(`${this.apiUrl}${endpoint}`, body, { responseType: 'text' })
       .pipe(catchError((error) => this.handleError(error)));
@@ -108,7 +110,7 @@ export class ApiService implements OnInit {
    * @param body - Datos a actualizar
    * @returns Observable con la respuesta del servidor
    */
-  put<T>(endpoint: string, body: any): Observable<T> {
+  put<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http
       .put<T>(`${this.apiUrl}${endpoint}`, body)
       .pipe(catchError((error) => this.handleError(error)));
@@ -140,17 +142,24 @@ export class ApiService implements OnInit {
    * @param error - Error capturado por HttpClient
    * @returns Observable que emite el error procesado
    */
-  private handleError(error: any) {
+  private handleError(error: unknown) {
     let errorMessage = 'Error desconocido';
 
-    if (error.error instanceof ErrorEvent) {
-      // Error del cliente o de red
-      errorMessage = `Error: ${error.error.message}`;
-      console.error('Error en el cliente:', error.error);
+    if (error instanceof HttpErrorResponse) {
+      if (error.error instanceof ErrorEvent) {
+        // Error del cliente o de red
+        errorMessage = `Error: ${error.error.message}`;
+        console.error('Error en el cliente:', error.error);
+      } else {
+        // Error del servidor
+        errorMessage = `Error ${error.status}: ${error.message || 'Error del servidor'}`;
+        console.error('Error del servidor:', error);
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+      console.error('Error inesperado:', error);
     } else {
-      // Error del servidor
-      errorMessage = `Error ${error.status}: ${error.message || 'Error del servidor'}`;
-      console.error('Error del servidor:', error);
+      console.error('Error desconocido:', error);
     }
 
     console.error('❌ ApiService Error:', errorMessage);
@@ -182,7 +191,7 @@ export class ApiService implements OnInit {
    * POST a una URL absoluta (no concatena `apiUrl`).
    * Útil para servicios externos o microservicios con base distinta.
    */
-  postAbsolute<T>(fullUrl: string, body: any): Observable<T> {
+  postAbsolute<T>(fullUrl: string, body: unknown): Observable<T> {
     return this.http.post<T>(fullUrl, body).pipe(catchError((error) => this.handleError(error)));
   }
 }

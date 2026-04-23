@@ -1,15 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { AuthToken } from '../models/api.models';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, map, catchError, finalize, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
-interface TokenResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
-}
+// Use shared `AuthToken` model for token responses
 
 @Injectable({
   providedIn: 'root',
@@ -17,7 +13,8 @@ interface TokenResponse {
 export class AuthService {
   // Prefer runtime-injected value from /assets/config.json (set by main.ts before bootstrap)
   private readonly keycloakUrl: string =
-    (window as any).__AUTH_BASE_URL__ || 'http://localhost:8081';
+    ((window as unknown) as { __AUTH_BASE_URL__?: string }).__AUTH_BASE_URL__ ??
+    'http://localhost:8081';
   private readonly realm = 'move';
   private readonly clientId = 'move-frontend';
   // If your Keycloak client is confidential, set the secret here or
@@ -68,17 +65,20 @@ export class AuthService {
     }
   }
 
-  private storeTokens(response: TokenResponse): void {
-    const expiry = Date.now() + response.expires_in * 1000;
+  private storeTokens(response: AuthToken): void {
+    const expiresIn = response.expires_in ?? 3600;
+    const expiry = Date.now() + expiresIn * 1000;
     this.accessToken = response.access_token;
-    this.refreshToken = response.refresh_token;
+    this.refreshToken = response.refresh_token ?? null;
     this.tokenExpiry = expiry;
     sessionStorage.setItem('kc_access_token', response.access_token);
-    sessionStorage.setItem('kc_refresh_token', response.refresh_token);
+    if (response.refresh_token) {
+      sessionStorage.setItem('kc_refresh_token', response.refresh_token);
+    }
     sessionStorage.setItem('kc_token_expiry', String(expiry));
     this._isLoggedIn$.next(true);
     // Schedule next proactive refresh using the reported expires_in value
-    this.scheduleSilentRefresh(response.expires_in);
+    this.scheduleSilentRefresh(expiresIn);
   }
 
   private clearTokens(): void {
@@ -126,7 +126,7 @@ export class AuthService {
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
     const finalBody = this.clientSecret ? body.set('client_secret', this.clientSecret) : body;
 
-    return this.http.post<TokenResponse>(this.tokenUrl, finalBody.toString(), { headers }).pipe(
+    return this.http.post<AuthToken>(this.tokenUrl, finalBody.toString(), { headers }).pipe(
       tap((response) => this.storeTokens(response)),
       map(() => undefined),
     );
@@ -187,7 +187,7 @@ export class AuthService {
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
 
     this.refresh$ = this.http
-      .post<TokenResponse>(this.tokenUrl, finalBody.toString(), { headers })
+      .post<AuthToken>(this.tokenUrl, finalBody.toString(), { headers })
       .pipe(
         tap((response) => this.storeTokens(response)),
         map((response) => response.access_token),
@@ -221,7 +221,10 @@ export class AuthService {
       const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
       const raw = atob(padded);
       const bytes = Uint8Array.from(raw.split('').map((c) => c.charCodeAt(0)));
-      let payload: any;
+      let payload: unknown;
+      const isRecord = (v: unknown): v is Record<string, unknown> =>
+        typeof v === 'object' && v !== null;
+
       try {
         // Use TextDecoder when available to correctly decode UTF-8
         const decoder = new TextDecoder('utf-8');
@@ -234,13 +237,26 @@ export class AuthService {
           .join('');
         payload = JSON.parse(decodeURIComponent(escaped));
       }
-      return {
-        username: payload['preferred_username'],
-        email: payload['email'],
-        firstName: payload['given_name'],
-        lastName: payload['family_name'],
-        roles: payload['realm_access']?.['roles'] ?? [],
-      };
+      if (!isRecord(payload)) return { roles: [] };
+
+      const getString = (obj: Record<string, unknown>, key: string) =>
+        typeof obj[key] === 'string' ? (obj[key] as string) : undefined;
+
+      const username = getString(payload, 'preferred_username');
+      const email = getString(payload, 'email');
+      const firstName = getString(payload, 'given_name');
+      const lastName = getString(payload, 'family_name');
+
+      let roles: string[] = [];
+      const realmAccess = payload['realm_access'];
+      if (isRecord(realmAccess)) {
+        const maybeRoles = realmAccess['roles'];
+        if (Array.isArray(maybeRoles)) {
+          roles = maybeRoles.filter((r) => typeof r === 'string') as string[];
+        }
+      }
+
+      return { username, email, firstName, lastName, roles };
     } catch {
       return { roles: [] };
     }

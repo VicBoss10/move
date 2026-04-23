@@ -2,11 +2,16 @@ import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { map, shareReplay, catchError, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { HttpParams } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { SensorData, SensorDataSearchCriteria, SensorStats } from '../models/sensor-data.model';
 import { QueryParamsBuilder } from '../utils/query-params.builder';
+
+/**
+ * Helpers para normalizar respuestas del backend a `SensorData` tipado.
+ * El backend puede devolver timestamps como string; estos helpers
+ * convierten `timestamp` a `Date` cuando corresponde.
+ */
 
 /**
  * Servicio para gestionar Datos de Sensores
@@ -55,13 +60,10 @@ export class SensorDataService extends BaseDataService<SensorData> {
 
     return this.apiService.get<SensorData[]>(`/${this.endpoint}/search`, queryParams).pipe(
       map((data) => {
-        // Si data es un array, mapear los timestamps
+        // Normalizar a SensorData[] (convierte timestamp strings a Date)
         if (Array.isArray(data)) {
           this.clearServiceError();
-          return data.map((d) => ({
-            ...d,
-            timestamp: new Date(d.timestamp),
-          }));
+          return this.parseSensorDataArray(data);
         }
         // Si no es array (backend retornó mensaje de texto), retornar array vacío
         console.warn('Backend retornó respuesta no-JSON:', data);
@@ -94,7 +96,7 @@ export class SensorDataService extends BaseDataService<SensorData> {
    */
   getLast(): Observable<SensorData> {
     return this.apiService.get<SensorData>(`/${this.endpoint}/last`).pipe(
-      map((data) => ({ ...data, timestamp: new Date((data as any).timestamp) })),
+      map((data) => this.parseSensorData(data)),
       shareReplay(1),
       catchError((error) => {
         this.setServiceError(error, 'Error al obtener el último registro de sensor');
@@ -151,7 +153,6 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   deleteByDateRange(start: Date, end: Date): Observable<void> {
-    const params = new HttpParams().set('start', start.toISOString()).set('end', end.toISOString());
     return this.apiService
       .delete(`/${this.endpoint}/range?start=${start.toISOString()}&end=${end.toISOString()}`)
       .pipe(
@@ -161,11 +162,31 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   getFirstRecord(): Observable<SensorData> {
-    return this.apiService.get<SensorData>(`/${this.endpoint}/first`);
+    return this.apiService.get<SensorData>(`/${this.endpoint}/first`).pipe(map((d) => this.parseSensorData(d)));
   }
 
   getLastRecord(): Observable<SensorData> {
-    return this.apiService.get<SensorData>(`/${this.endpoint}/last`);
+    return this.apiService.get<SensorData>(`/${this.endpoint}/last`).pipe(map((d) => this.parseSensorData(d)));
+  }
+
+  /** Convierte un objeto (posible timestamp string) a `SensorData` con `timestamp: Date`. */
+  private parseSensorData(d: unknown): SensorData {
+    if (!d || typeof d !== 'object' || d === null) return d as SensorData;
+    const record = d as Record<string, unknown>;
+    let ts: unknown = record['timestamp'];
+    if (typeof ts === 'string' || typeof ts === 'number') {
+      const parsed = new Date(ts);
+      if (!isNaN(parsed.getTime())) {
+        ts = parsed;
+      }
+    }
+    return { ...(record as object), timestamp: ts as Date } as SensorData;
+  }
+
+  /** Normaliza un array de respuestas a `SensorData[]`. */
+  private parseSensorDataArray(arr: unknown): SensorData[] {
+    if (!Array.isArray(arr)) return [];
+    return arr.map((x) => this.parseSensorData(x));
   }
 
   /**

@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { tap, map, catchError } from 'rxjs/operators';
-import { HttpParams } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { BaseDataService } from './base-data.service';
 import { VehicleDetected, VehicleSearchCriteria, VehicleStats } from '../models/vehicle.model';
@@ -106,9 +105,8 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
   }
 
   deleteByDateRange(start: Date, end: Date): Observable<void> {
-    const params = new HttpParams().set('start', start.toISOString()).set('end', end.toISOString());
     return this.apiService
-      .delete(`/${this.endpoint}/range?start=${start.toISOString()}&end=${end.toISOString()}`)
+      .delete<void>(`/${this.endpoint}/range?start=${start.toISOString()}&end=${end.toISOString()}`)
       .pipe(
         tap(() => this.invalidateCache()),
         map(() => undefined),

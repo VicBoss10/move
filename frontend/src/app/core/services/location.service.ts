@@ -42,7 +42,7 @@ export class LocationService extends BaseDataService<Location> {
 
     if (this.cacheData.length > 0 && now - this.lastFetch < this.cacheDuration) {
       return new Observable((observer) => {
-        observer.next(this.cacheData as Location[]);
+        observer.next(this.cacheData);
         observer.complete();
       });
     }
@@ -50,7 +50,7 @@ export class LocationService extends BaseDataService<Location> {
     return this.apiService.get<Location[]>(`/${this.endpoint}`).pipe(
       map((data) => (data || []).filter((loc) => loc.id !== 0)),
       tap((filtered) => {
-        this.cacheData = filtered as any;
+        this.cacheData = filtered;
         this.lastFetch = now;
         this.dataSubject.next(this.cacheData);
         this.clearServiceError();
@@ -116,7 +116,7 @@ export class LocationService extends BaseDataService<Location> {
    * Incluye conteo de detecciones de vehículos desde VehicleDetectedService
    */
   getStats(): LocationStats {
-    const locations = this.getCachedData().filter((l) => (l as any).id !== 0);
+    const locations = this.getCachedData().filter((l) => l.id !== 0);
     const vehicleStats = this.vehicleService.getStats();
 
     return {
