@@ -144,8 +144,12 @@ export class ApiService implements OnInit {
    */
   private handleError(error: unknown) {
     let errorMessage = 'Error desconocido';
+    let errorStatus: number | undefined;
+    let errorDetails: unknown;
 
     if (error instanceof HttpErrorResponse) {
+      errorStatus = error.status;
+      errorDetails = error.error;
       if (error.error instanceof ErrorEvent) {
         // Error del cliente o de red
         errorMessage = `Error: ${error.error.message}`;
@@ -164,7 +168,15 @@ export class ApiService implements OnInit {
 
     console.error('❌ ApiService Error:', errorMessage);
     this.errorSubject.next(errorMessage);
-    return throwError(() => new Error(errorMessage));
+
+    const propagatedError = new Error(errorMessage) as Error & {
+      status?: number;
+      details?: unknown;
+    };
+    propagatedError.status = errorStatus;
+    propagatedError.details = errorDetails;
+
+    return throwError(() => propagatedError);
   }
 
   /**

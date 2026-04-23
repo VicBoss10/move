@@ -2,12 +2,14 @@ package com.jade.move.service;
 
 import com.jade.move.dto.StreamResponse;
 import com.jade.move.dto.StreamStopResponse;
+import com.jade.move.exception.ConflictException;
 import com.jade.move.exception.EntityNotFoundException;
 import com.jade.move.model.Camera;
 import com.jade.move.model.Device;
 import com.jade.move.model.DeviceState;
 import com.jade.move.model.StreamSession;
 import com.jade.move.model.DeviceType;
+import com.jade.move.repository.DeviceRepository;
 import com.jade.move.repository.StreamSessionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -43,6 +45,7 @@ public class StreamService {
     private static final String STATUS_STOPPED = "stopped";
 
     private final CameraService cameraService;
+    private final DeviceRepository deviceRepository;
     private final RestTemplate restTemplate;
     private final StreamSessionRepository streamSessionRepository;
 
@@ -51,10 +54,12 @@ public class StreamService {
 
     public StreamService(
             CameraService cameraService,
+            DeviceRepository deviceRepository,
             RestTemplate restTemplate,
             StreamSessionRepository streamSessionRepository
     ) {
         this.cameraService = cameraService;
+        this.deviceRepository = deviceRepository;
         this.restTemplate = restTemplate;
         this.streamSessionRepository = streamSessionRepository;
     }
@@ -81,18 +86,27 @@ public class StreamService {
             throw new IllegalStateException("Camera has no associated device");
         }
 
-        if (device.getType() != DeviceType.CAMERA) {
+        Device lockedDevice = deviceRepository.findByIdForUpdate(device.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Device not found with id: " + device.getId()));
+
+        if (lockedDevice.getType() != DeviceType.CAMERA) {
             throw new IllegalArgumentException("Device is not a camera type");
         }
 
-        if (device.getState() != DeviceState.ACTIVE) {
-            throw new IllegalStateException("Device is not active. Current state: " + device.getState());
+        if (lockedDevice.getState() != DeviceState.ACTIVE) {
+            throw new IllegalStateException("Device is not active. Current state: " + lockedDevice.getState());
         }
+
+        // Con el device bloqueado, esta validación se vuelve atómica entre requests concurrentes.
+        streamSessionRepository.findFirstByDeviceIdAndStatusOrderByCreatedAtDesc(lockedDevice.getId(), STATUS_ACTIVE)
+                .ifPresent(activeSession -> {
+                    throw new ConflictException("Stream already active for this camera");
+                });
 
         Map<String, Object> pythonRequest = new HashMap<>();
         pythonRequest.put("streamType", camera.getStreamType().name());
         pythonRequest.put("source", camera.getSource());
-        pythonRequest.put("device_id", device.getId());
+        pythonRequest.put("device_id", lockedDevice.getId());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -118,10 +132,8 @@ public class StreamService {
                     throw new RuntimeException("Python service did not return session ID");
                 }
 
-                closeActiveSessionsForDevice(device.getId());
-
                 StreamSession streamSession = new StreamSession();
-                streamSession.setDevice(device);
+                streamSession.setDevice(lockedDevice);
                 streamSession.setSessionId(sessionId);
                 streamSession.setStreamUrl(buildProxyStreamUrl(sessionId));
                 streamSession.setStatus(status);

@@ -22,6 +22,7 @@ import {
 import { CameraService } from '../../../../core/services/camera.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { ApiService } from '../../../../core/services/api.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { Camera } from '../../../../core/models/camera.model';
 import { Device, DeviceState } from '../../../../core/models/device.model';
 
@@ -89,6 +90,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
     private cameraService: CameraService,
     private deviceService: DeviceService,
     private apiService: ApiService,
+    private toastService: ToastService,
     private changeDetectorRef: ChangeDetectorRef,
   ) {
     // Tabla reactiva que filtra cuando el formControl cambia
@@ -266,6 +268,11 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error starting detection for camera', camera.id, error);
           this.loadingStates.set(camera.id, false);
+          if (error?.status === 409) {
+            this.toastService.error('Sesión ya activa para la cámara, reinicie la página', 'Conflicto');
+          } else {
+            this.toastService.error('Error al iniciar la detección. Por favor, inténtalo de nuevo.', 'Error');
+          }
           const revertUpdate: Partial<Device> = {
             id: camera.device.id,
             state: DeviceState.INACTIVE,
