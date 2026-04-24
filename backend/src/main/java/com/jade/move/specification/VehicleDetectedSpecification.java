@@ -6,7 +6,9 @@ import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VehicleDetectedSpecification {
 
@@ -18,8 +20,12 @@ public class VehicleDetectedSpecification {
                 predicates.add(criteriaBuilder.equal(root.get("vehicleType"), criteria.getType()));
             }
 
-            if (criteria.getDeviceId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("device").get("id"), criteria.getDeviceId()));
+            if (criteria.getDeviceIds() != null && !criteria.getDeviceIds().isEmpty()) {
+                List<Integer> deviceIds = Arrays.stream(criteria.getDeviceIds().split(","))
+                        .map(String::trim)
+                        .map(Integer::parseInt)
+                        .collect(Collectors.toList());
+                predicates.add(root.get("device").get("id").in(deviceIds));
             }
 
             if (criteria.getStart() != null) {

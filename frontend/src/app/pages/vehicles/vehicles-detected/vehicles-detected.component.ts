@@ -70,11 +70,14 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
         this.errorMessage = '';
         this.cdr.markForCheck();
       }),
-      switchMap((criteria) =>
-        criteria
-          ? this.vehicleDetectedService.search(criteria)
-          : this.vehicleDetectedService.getAll(),
-      ),
+      switchMap((criteria) => {
+        const hasFilters =
+          criteria !== null &&
+          (criteria.type || criteria.deviceIds?.length || criteria.start || criteria.end);
+        return hasFilters
+          ? this.vehicleDetectedService.search(criteria!)
+          : this.vehicleDetectedService.getAll();
+      }),
       map((data) => {
         if (!Array.isArray(data)) {
           console.warn('Backend retornó respuesta no-JSON:', data);
@@ -140,7 +143,7 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
    * Maneja el cambio de filtros desde VehicleFiltersComponent
    * @param criteria - Criterios de búsqueda
    */
-  handleFilterChange(criteria: VehicleSearchCriteria): void {
+  handleFilterChange(criteria: VehicleSearchCriteria | null): void {
     this.searchTrigger$.next(criteria);
   }
 

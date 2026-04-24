@@ -38,7 +38,7 @@ export interface VehicleDetected {
  */
 export interface VehicleSearchCriteria {
   type?: VehicleType;
-  deviceId?: number;
+  deviceIds?: number[];
   start?: Date;
   end?: Date;
 }

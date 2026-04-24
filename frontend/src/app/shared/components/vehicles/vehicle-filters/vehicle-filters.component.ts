@@ -37,22 +37,21 @@ import { Device } from '../../../../core/models/device.model';
 })
 export class VehicleFiltersComponent {
   /**
-   * Observable stream de ubicaciones desde el backend
+   * Observable stream de dispositivos desde el backend
    * Cargado al inicializar el componente
    */
   devices$!: Observable<Device[]>;
+
   /**
-   * Observable con ubicaciones únicas derivadas de los dispositivos.
-   * Cada entrada contiene el `deviceId` asociado (primer dispositivo encontrado)
-   * y la `label` para mostrar en el select.
+   * Observable con ubicaciones únicas y sus dispositivos asociados
    */
-  locations$!: Observable<{ deviceId: number; label: string }[]>;
+  locations$!: Observable<{ locationId: number; label: string; deviceIds: number[] }[]>;
 
   /**
    * Evento que emite cuando cambian los filtros
    * Emite VehicleSearchCriteria
    */
-  @Output() filterChange = new EventEmitter<VehicleSearchCriteria>();
+  @Output() filterChange = new EventEmitter<VehicleSearchCriteria | null>();
 
   /**
    * Tipos de vehículos disponibles (del Enum del backend)
@@ -70,9 +69,14 @@ export class VehicleFiltersComponent {
    * Filtros actuales
    */
   selectedType: string = '';
-  selectedDeviceId: number | null = null;
+  selectedLocationId: string = '';
   startDate: string = '';
   endDate: string = '';
+
+  /**
+   * Mapeo de locationId → deviceIds
+   */
+  private locationDeviceMap = new Map<number, number[]>();
 
   /**
    * Constructor e inyección de dependencias
@@ -82,7 +86,7 @@ export class VehicleFiltersComponent {
   }
 
   /**
-   * Inicializa las ubicaciones desde el backend
+   * Inicializa los dispositivos desde el backend y agrupa por ubicación
    * @private
    */
   private initializeDevices(): void {
@@ -93,20 +97,34 @@ export class VehicleFiltersComponent {
       }),
       shareReplay(1),
     );
-    // Derivar lista de ubicaciones únicas por location.id
+
     this.locations$ = this.devices$.pipe(
       map((devices: Device[]) => {
-        const map = new Map<number | string, { deviceId: number; label: string }>();
-        for (const d of devices) {
-          const locId = d.location?.id ?? `no_loc_${d.id}`;
-          if (!map.has(locId)) {
-            const label = d.location?.description || d.name || `Dispositivo ${d.id}`;
-            map.set(locId, { deviceId: d.id, label });
+        const locationMap = new Map<number, { label: string; deviceIds: number[] }>();
+
+        for (const device of devices) {
+          const locId = device.location.id;
+          if (!locationMap.has(locId)) {
+            const label =
+              device.location.description || `Ubicación ${locId}`;
+            locationMap.set(locId, { label, deviceIds: [] });
           }
+          locationMap.get(locId)!.deviceIds.push(device.id);
         }
-        return Array.from(map.values());
+
+        // Guardar mapeo para usar en applyFilters
+        this.locationDeviceMap.clear();
+        locationMap.forEach((value, key) => {
+          this.locationDeviceMap.set(key, value.deviceIds);
+        });
+
+        return Array.from(locationMap.entries()).map(([locationId, { label, deviceIds }]) => ({
+          locationId,
+          label,
+          deviceIds,
+        }));
       }),
-      shareReplay(1),
+      shareReplay({ bufferSize: 1, refCount: false }),
     );
   }
 
@@ -120,9 +138,15 @@ export class VehicleFiltersComponent {
     if (this.selectedType) {
       criteria.type = this.selectedType as VehicleSearchCriteria['type'];
     }
-    if (this.selectedDeviceId) {
-      criteria.deviceId = this.selectedDeviceId;
+
+    if (this.selectedLocationId) {
+      const parsedLocationId = Number(this.selectedLocationId);
+      if (!isNaN(parsedLocationId) && this.locationDeviceMap.has(parsedLocationId)) {
+        // Enviar todos los deviceIds de esa ubicación
+        criteria.deviceIds = this.locationDeviceMap.get(parsedLocationId);
+      }
     }
+
     if (this.startDate) {
       criteria.start = new Date(this.startDate);
     }
@@ -141,9 +165,9 @@ export class VehicleFiltersComponent {
    */
   clearFilters(): void {
     this.selectedType = '';
-    this.selectedDeviceId = null;
+    this.selectedLocationId = '';
     this.startDate = '';
     this.endDate = '';
-    this.filterChange.emit({});
+    this.filterChange.emit(null);
   }
 }

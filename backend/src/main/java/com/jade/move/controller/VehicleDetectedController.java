@@ -80,14 +80,14 @@ public class VehicleDetectedController {
      * Searches vehicle detections using optional criteria.
      *
      * @param type optional vehicle type to filter
-     * @param deviceId optional device id to filter
+     * @param deviceIds optional comma-separated device ids to filter
      * @param start optional start timestamp for range
      * @param end optional end timestamp for range
      * @return list of matching vehicle detections
      */
     @Operation(
             summary = "Search detected vehicles with criteria / Buscar vehículos detectados con criterios",
-            description = "Searches vehicle detection records using multiple criteria including vehicle type, location, and time range. All parameters are optional and can be combined for precise filtering. Useful for traffic analysis and monitoring. / Busca registros de detección de vehículos usando múltiples criterios incluyendo tipo de vehículo, ubicación y rango de tiempo. Todos los parámetros son opcionales y pueden combinarse para filtrado preciso. Útil para análisis de tráfico y monitoreo."
+            description = "Searches vehicle detection records using multiple criteria including vehicle type, devices, and time range. All parameters are optional and can be combined for precise filtering. Useful for traffic analysis and monitoring. / Busca registros de detección de vehículos usando múltiples criterios incluyendo tipo de vehículo, dispositivos y rango de tiempo. Todos los parámetros son opcionales y pueden combinarse para filtrado preciso. Útil para análisis de tráfico y monitoreo."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Search completed successfully, vehicles found or no matches / Búsqueda completada exitosamente, vehículos encontrados o sin coincidencias"),
@@ -97,13 +97,13 @@ public class VehicleDetectedController {
     @GetMapping("/search")
     public ResponseEntity<?> searchVehicles(
             @RequestParam(required = false) VehicleType type,
-            @RequestParam(required = false) Integer deviceId,
+            @RequestParam(required = false) String deviceIds,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
 
         VehicleSearchCriteria criteria = new VehicleSearchCriteria();
         criteria.setType(type);
-        criteria.setDeviceId(deviceId);
+        criteria.setDeviceIds(deviceIds);
         criteria.setStart(start);
         criteria.setEnd(end);
 

@@ -32,19 +32,19 @@
         </select>
       </div>
 
-      <!-- Dispositivo / Ubicación -->
+      <!-- Ubicación -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Ubicación (Dispositivo)
+          Ubicación
         </label>
         <select
-          [(ngModel)]="selectedDeviceId"
+          [(ngModel)]="selectedLocationId"
           class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
         >
-          <option [value]="null">Todas las ubicaciones</option>
-          @for (loc of locations$ | async; track loc) {
-            <option [value]="loc.deviceId">
-              {{ loc.label }}
+          <option value="">Todas las ubicaciones</option>
+          @for (location of locations$ | async; track location.locationId) {
+            <option [value]="location!.locationId">
+              {{ location!.label }}
             </option>
           }
         </select>
