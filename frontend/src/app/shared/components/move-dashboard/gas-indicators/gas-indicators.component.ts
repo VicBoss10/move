@@ -151,68 +151,16 @@ export class GasIndicatorsComponent {
     );
   }
 
-  /**
-   * Devuelve el porcentaje de gauge precomputado desde el indicador
-   * @param {GasIndicator} gas - Indicador de gas
-   * @returns {number} Porcentaje 0-100
-   */
   getPercentage(gas: GasIndicator): number {
     return gas.gaugePercentage;
   }
 
-  /**
-   * Calcula el ángulo del gauge SVG (-180° a +180° para semicírculo)
-   * @param {number} percentage - Porcentaje 0-100
-   * @returns {number} Ángulo en grados
-   * @private
-   */
-  getGaugeAngle(percentage: number): number {
-    // 0% = -180°, 100% = 180° (semicírculo)
-    return (percentage / 100) * 360 - 180;
+  getCircumference(radius: number = 45): number {
+    return 2 * Math.PI * radius;
   }
 
-  /**
-   * Genera el path SVG para el arco del gauge
-   * @param {number} angle - Ángulo final en grados
-   * @param {number} [radius=45] - Radio del arco
-   * @returns {string} Path SVG válido para <path d="..."/>
-   * @private
-   */
-  getArcPath(angle: number, radius: number = 45): string {
-    const startAngle = -180;
-    const endAngle = angle;
-
-    const startRad = (startAngle * Math.PI) / 180;
-    const endRad = (endAngle * Math.PI) / 180;
-
-    const x1 = 50 + radius * Math.cos(startRad);
-    const y1 = 50 + radius * Math.sin(startRad);
-    const x2 = 50 + radius * Math.cos(endRad);
-    const y2 = 50 + radius * Math.sin(endRad);
-
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-
-    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
-  }
-
-  /**
-   * Genera el path SVG para el arco de fondo del gauge (semicírculo)
-   * @param {number} [radius=45] - Radio del arco
-   * @returns {string} Path SVG válido para <path d="..."/>
-   * @private
-   */
-  getBackgroundArcPath(radius: number = 45): string {
-    const startAngle = -180;
-    const endAngle = 180;
-
-    const startRad = (startAngle * Math.PI) / 180;
-    const endRad = (endAngle * Math.PI) / 180;
-
-    const x1 = 50 + radius * Math.cos(startRad);
-    const y1 = 50 + radius * Math.sin(startRad);
-    const x2 = 50 + radius * Math.cos(endRad);
-    const y2 = 50 + radius * Math.sin(endRad);
-
-    return `M ${x1} ${y1} A ${radius} ${radius} 0 1 1 ${x2} ${y2}`;
+  getStrokeDashoffset(percentage: number, radius: number = 45): number {
+    const circumference = 2 * Math.PI * radius;
+    return circumference * (1 - Math.max(0, Math.min(100, percentage)) / 100);
   }
 }
