@@ -417,20 +417,6 @@ public class StreamService {
         });
     }
 
-    private void closeActiveSessionsForDevice(Integer deviceId) {
-        List<StreamSession> activeSessions = new ArrayList<>(streamSessionRepository.findByDeviceIdAndStatus(deviceId, STATUS_ACTIVE));
-        if (activeSessions.isEmpty()) {
-            return;
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        for (StreamSession session : activeSessions) {
-            session.setStatus(STATUS_STOPPED);
-            session.setStoppedAt(now);
-        }
-        streamSessionRepository.saveAll(activeSessions);
-    }
-
     private void markSessionStopped(String sessionId) {
         streamSessionRepository.findBySessionId(sessionId).ifPresent(session -> {
             session.setStatus(STATUS_STOPPED);

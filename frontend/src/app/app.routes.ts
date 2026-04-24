@@ -304,7 +304,7 @@ const DASHBOARD_ROUTES: Routes = [
     path: 'blank',
     loadComponent: () => import('./pages/blank/blank.component').then((m) => m.BlankComponent),
     title: 'Página en Blanco',
-  }
+  },
 ];
 
 // Rutas limpias que redirigen al dashboard
