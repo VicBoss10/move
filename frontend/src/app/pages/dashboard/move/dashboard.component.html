@@ -4,23 +4,28 @@
     <app-system-status />
   </div>
 
-  <!-- Sección 1: Ambiente (Gráfica + Métricas) -->
-  <div class="col-span-12 space-y-6 xl:col-span-7">
-    <div><app-environment-chart /></div>
-    <div><app-vehicle-activity /></div>
+  <!-- Sección 1: Ambiente (Fila 1) -->
+  <div class="col-span-12 xl:col-span-7">
+    <app-environment-chart />
   </div>
 
-  <div class="col-span-12 space-y-6 xl:col-span-5">
+  <!-- Sección 1 Derecha: Gases y Métricas Ambientales (apiladas) -->
+  <div class="col-span-12 xl:col-span-5 flex flex-col gap-6 md:gap-8">
     <div><app-gas-indicators /></div>
     <div><app-environment-metrics /></div>
   </div>
 
-  <!-- Sección 2: Contaminantes (Gráfica + Tabla) -->
-  <div class="col-span-12 space-y-6 xl:col-span-7">
-    <div><app-pollution-chart /></div>
+  <!-- Sección 2: Actividad Vehicular (Fila 2) -->
+  <div class="col-span-12 xl:col-span-7">
+    <app-vehicle-activity />
   </div>
 
   <div class="col-span-12 xl:col-span-5">
     <app-pollution-summary />
+  </div>
+
+  <!-- Sección 3: Contaminantes (Fila 3) -->
+  <div class="col-span-12 xl:col-span-7">
+    <app-pollution-chart />
   </div>
 </div>

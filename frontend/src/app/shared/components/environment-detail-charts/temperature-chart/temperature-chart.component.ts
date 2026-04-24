@@ -59,22 +59,23 @@ export class TemperatureChartComponent {
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-  /**
-   * Observable que emite valor actual de temperatura
-   */
-  tempValue$!: Observable<number>;
 
   /**
    * Observable compartido de datos del sensor (últimas 24h)
    */
   private sensorData$!: Observable<SensorData[]>;
 
-  /**
-   * Opciones de configuración del gráfico
-   */
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
+    animation: {
+      duration: 750,
+      easing: 'easeInOutQuart',
+    },
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     layout: {
       padding: {
         left: 20,
@@ -86,29 +87,34 @@ export class TemperatureChartComponent {
     plugins: {
       legend: {
         display: true,
-        position: 'bottom',
+        position: 'top',
         labels: {
-          boxWidth: 12,
-          font: {
-            size: 12,
-            weight: 500,
-          },
-          color: '#6b7280',
           usePointStyle: true,
-          padding: 16,
+          padding: 20,
+          font: {
+            size: 13,
+            weight: 600,
+          },
+          color: '#374151',
         },
       },
       tooltip: {
-        enabled: true,
-        mode: 'index',
-        intersect: false,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#ffffff',
-        bodyColor: '#ffffff',
-        borderColor: '#f97316',
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        titleColor: '#fff',
+        bodyColor: '#f1f5f9',
+        borderColor: '#64748b',
         borderWidth: 1,
-        padding: 12,
+        padding: 16,
         displayColors: true,
+        usePointStyle: true,
+        boxPadding: 8,
+        titleFont: {
+          size: 14,
+          weight: 600,
+        },
+        bodyFont: {
+          size: 13,
+        },
         callbacks: {
           label: function (context) {
             const value = context.parsed.y ?? 0;
@@ -124,12 +130,14 @@ export class TemperatureChartComponent {
           display: true,
           drawOnChartArea: true,
           drawTicks: false,
-          color: 'rgba(107, 114, 128, 0.1)',
+          color: 'rgba(203, 213, 225, 0.2)',
+          lineWidth: 1,
         },
         ticks: {
-          color: '#6B7280',
+          color: '#64748b',
           font: {
-            size: 11,
+            size: 12,
+            weight: 500,
           },
           maxTicksLimit: 12,
         },
@@ -143,21 +151,25 @@ export class TemperatureChartComponent {
           text: 'Temperatura (°C)',
           color: '#f97316',
           font: {
-            weight: 'bold',
+            weight: 700,
+            size: 13,
           },
-        },
-        ticks: {
-          color: '#f97316',
-          font: {
-            size: 11,
-          },
-          callback: function (value) {
-            return value + '°C';
-          },
+          padding: 12,
         },
         grid: {
-          color: 'rgba(107, 114, 128, 0.1)',
           display: true,
+          drawOnChartArea: true,
+          drawTicks: false,
+          color: 'rgba(203, 213, 225, 0.15)',
+          lineWidth: 1,
+        },
+        ticks: {
+          color: '#64748b',
+          font: {
+            size: 12,
+            weight: 500,
+          },
+          padding: 8,
         },
         beginAtZero: false,
       },
@@ -172,7 +184,6 @@ export class TemperatureChartComponent {
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
-    this.initializeTempValue();
   }
 
   /**
@@ -254,16 +265,26 @@ export class TemperatureChartComponent {
               label: 'Temperatura (°C)',
               data: tempData,
               borderColor: '#f97316',
-              backgroundColor: 'rgba(249, 115, 22, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
+              backgroundColor: 'rgba(249, 115, 22, 0.08)',
+              borderWidth: 3,
+              tension: 0.5,
               fill: true,
               pointBackgroundColor: '#f97316',
               pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6,
+              pointBorderWidth: 3,
+              pointRadius: 5,
+              pointHoverRadius: 8,
+              pointHoverBackgroundColor: '#b45309',
+              pointHoverBorderWidth: 3,
               yAxisID: 'y',
+              segment: {
+                borderColor: (ctx: any) => {
+                  if (ctx.p0DataIndex !== undefined && ctx.p1DataIndex !== undefined) {
+                    return '#f97316';
+                  }
+                  return 'rgba(249, 115, 22, 0.5)';
+                },
+              },
             },
           ],
         };
@@ -272,40 +293,4 @@ export class TemperatureChartComponent {
     );
   }
 
-  /**
-   * Inicializa el valor actual de temperatura (desde el último registro)
-   */
-  private initializeTempValue(): void {
-    this.tempValue$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: SensorData) => Math.round((latestData?.temperature || 0) * 10) / 10),
-      catchError(() => of(0)),
-      shareReplay(1),
-    );
-  }
-
-  /**
-   * Calcula el valor mínimo de un array de datos
-   */
-  getMinValue(data: (number | Point | null)[]): number {
-    const validData = data.filter((d): d is number => typeof d === 'number');
-    return validData.length > 0 ? Math.min(...validData) : 0;
-  }
-
-  /**
-   * Calcula el valor promedio de un array de datos
-   */
-  getAvgValue(data: (number | Point | null)[]): number {
-    const validData = data.filter((d): d is number => typeof d === 'number');
-    if (validData.length === 0) return 0;
-    const sum = validData.reduce((acc, val) => acc + val, 0);
-    return sum / validData.length;
-  }
-
-  /**
-   * Calcula el valor máximo de un array de datos
-   */
-  getMaxValue(data: (number | Point | null)[]): number {
-    const validData = data.filter((d): d is number => typeof d === 'number');
-    return validData.length > 0 ? Math.max(...validData) : 0;
-  }
 }

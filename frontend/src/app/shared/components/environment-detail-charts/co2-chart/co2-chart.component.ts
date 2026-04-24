@@ -61,10 +61,6 @@ export class Co2ChartComponent {
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-  /**
-   * Observable con estadísticas de CO₂
-   */
-  stats$!: Observable<{ min: number; avg: number; max: number }>;
 
   /**
    * Observable compartido de datos del sensor (últimas 12h)
@@ -163,7 +159,6 @@ export class Co2ChartComponent {
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
-    this.initializeStats();
   }
 
   /**
@@ -262,26 +257,4 @@ export class Co2ChartComponent {
     );
   }
 
-  /**
-   * Calcula estadísticas (min, avg, max) sobre todos los datos de las 12h.
-   */
-  private initializeStats(): void {
-    this.stats$ = this.sensorData$.pipe(
-      map((data: SensorData[]) => {
-        if (!data || data.length === 0) {
-          return { min: 0, avg: 0, max: 0 };
-        }
-        const co2Values = data.map((d) => d.co2).filter((v): v is number => v != null && v > 0);
-        if (co2Values.length === 0) {
-          return { min: 0, avg: 0, max: 0 };
-        }
-        const min = Math.min(...co2Values);
-        const max = Math.max(...co2Values);
-        const avg = co2Values.reduce((a: number, b: number) => a + b, 0) / co2Values.length;
-        return { min: Math.round(min), avg: Math.round(avg), max: Math.round(max) };
-      }),
-      catchError(() => of({ min: 0, avg: 0, max: 0 })),
-      shareReplay(1),
-    );
-  }
 }

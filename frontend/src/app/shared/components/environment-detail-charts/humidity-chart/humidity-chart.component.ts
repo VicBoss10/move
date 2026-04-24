@@ -12,7 +12,6 @@ import {
   Tooltip,
   Legend,
   Filler,
-  Point,
 } from 'chart.js';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
@@ -75,10 +74,6 @@ export class HumidityChartComponent {
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-  /**
-   * Observable que emite valor actual de humedad
-   */
-  humidityValue$!: Observable<number>;
 
   /**
    * Observable compartido de datos del sensor (últimas 24h)
@@ -93,6 +88,14 @@ export class HumidityChartComponent {
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
+    animation: {
+      duration: 750,
+      easing: 'easeInOutQuart',
+    },
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     layout: {
       padding: {
         left: 20,
@@ -104,29 +107,34 @@ export class HumidityChartComponent {
     plugins: {
       legend: {
         display: true,
-        position: 'bottom',
+        position: 'top',
         labels: {
-          boxWidth: 12,
-          font: {
-            size: 12,
-            weight: 500,
-          },
-          color: '#6b7280',
           usePointStyle: true,
-          padding: 16,
+          padding: 20,
+          font: {
+            size: 13,
+            weight: 600,
+          },
+          color: '#374151',
         },
       },
       tooltip: {
-        enabled: true,
-        mode: 'index',
-        intersect: false,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#ffffff',
-        bodyColor: '#ffffff',
-        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        titleColor: '#fff',
+        bodyColor: '#f1f5f9',
+        borderColor: '#64748b',
         borderWidth: 1,
-        padding: 12,
+        padding: 16,
         displayColors: true,
+        usePointStyle: true,
+        boxPadding: 8,
+        titleFont: {
+          size: 14,
+          weight: 600,
+        },
+        bodyFont: {
+          size: 13,
+        },
         callbacks: {
           label: function (context) {
             const value = context.parsed.y ?? 0;
@@ -142,12 +150,14 @@ export class HumidityChartComponent {
           display: true,
           drawOnChartArea: true,
           drawTicks: false,
-          color: 'rgba(107, 114, 128, 0.1)',
+          color: 'rgba(203, 213, 225, 0.2)',
+          lineWidth: 1,
         },
         ticks: {
-          color: '#6B7280',
+          color: '#64748b',
           font: {
-            size: 11,
+            size: 12,
+            weight: 500,
           },
           maxTicksLimit: 12,
         },
@@ -161,23 +171,30 @@ export class HumidityChartComponent {
           text: 'Humedad (%)',
           color: '#3b82f6',
           font: {
-            weight: 'bold',
+            weight: 700,
+            size: 13,
           },
+          padding: 12,
         },
         min: 0,
         max: 100,
+        grid: {
+          display: true,
+          drawOnChartArea: true,
+          drawTicks: false,
+          color: 'rgba(203, 213, 225, 0.15)',
+          lineWidth: 1,
+        },
         ticks: {
-          color: '#3b82f6',
+          color: '#64748b',
           font: {
-            size: 11,
+            size: 12,
+            weight: 500,
           },
+          padding: 8,
           callback: function (value) {
             return value + '%';
           },
-        },
-        grid: {
-          color: 'rgba(107, 114, 128, 0.1)',
-          display: true,
         },
       },
     },
@@ -186,7 +203,6 @@ export class HumidityChartComponent {
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
-    this.initializeHumidityValue();
   }
 
   /**
@@ -267,15 +283,26 @@ export class HumidityChartComponent {
               label: 'Humedad Relativa (%)',
               data: humidityData,
               borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              backgroundColor: 'rgba(59, 130, 246, 0.08)',
               borderWidth: 3,
               fill: true,
-              tension: 0.4,
-              pointRadius: 0,
+              tension: 0.5,
+              pointRadius: 5,
               pointHoverRadius: 8,
               pointBackgroundColor: '#3b82f6',
               pointBorderColor: '#ffffff',
-              pointBorderWidth: 2,
+              pointBorderWidth: 3,
+              pointHoverBackgroundColor: '#1e40af',
+              pointHoverBorderWidth: 3,
+              yAxisID: 'y',
+              segment: {
+                borderColor: (ctx: any) => {
+                  if (ctx.p0DataIndex !== undefined && ctx.p1DataIndex !== undefined) {
+                    return '#3b82f6';
+                  }
+                  return 'rgba(59, 130, 246, 0.5)';
+                },
+              },
             },
           ],
         };
@@ -284,34 +311,4 @@ export class HumidityChartComponent {
     );
   }
 
-  /**
-   * Inicializa el valor actual de humedad (desde el último registro)
-   */
-  private initializeHumidityValue(): void {
-    this.humidityValue$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: SensorData) => Math.round((latestData?.humidity || 0) * 10) / 10),
-      catchError(() => of(0)),
-      shareReplay(1),
-    );
-  }
-
-  getMinValue(values: (number | Point | null)[]): number {
-    if (!values || values.length === 0) return 0;
-    const numValues = values.filter((v): v is number => typeof v === 'number');
-    return numValues.length > 0 ? Math.min(...numValues) : 0;
-  }
-
-  getAvgValue(values: (number | Point | null)[]): number {
-    if (!values || values.length === 0) return 0;
-    const numValues = values.filter((v): v is number => typeof v === 'number');
-    if (numValues.length === 0) return 0;
-    const sum = numValues.reduce((acc, val) => acc + val, 0);
-    return Math.round((sum / numValues.length) * 10) / 10;
-  }
-
-  getMaxValue(values: (number | Point | null)[]): number {
-    if (!values || values.length === 0) return 0;
-    const numValues = values.filter((v): v is number => typeof v === 'number');
-    return numValues.length > 0 ? Math.max(...numValues) : 0;
-  }
 }
