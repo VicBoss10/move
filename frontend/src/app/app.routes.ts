@@ -301,82 +301,10 @@ const DASHBOARD_ROUTES: Routes = [
     title: 'Perfil',
   },
   {
-    path: 'form-elements',
-    loadComponent: () =>
-      import('./pages/forms/form-elements/form-elements.component').then(
-        (m) => m.FormElementsComponent,
-      ),
-    title: 'Elementos de Formulario',
-  },
-  {
-    path: 'basic-tables',
-    loadComponent: () =>
-      import('./pages/tables/basic-tables/basic-tables.component').then(
-        (m) => m.BasicTablesComponent,
-      ),
-    title: 'Tablas Básicas',
-  },
-  {
     path: 'blank',
     loadComponent: () => import('./pages/blank/blank.component').then((m) => m.BlankComponent),
     title: 'Página en Blanco',
-  },
-  {
-    path: 'invoice',
-    loadComponent: () =>
-      import('./pages/invoices/invoices.component').then((m) => m.InvoicesComponent),
-    title: 'Facturas',
-  },
-  {
-    path: 'line-chart',
-    loadComponent: () =>
-      import('./pages/charts/line-chart/line-chart.component').then((m) => m.LineChartComponent),
-    title: 'Gráfico de Líneas',
-  },
-  {
-    path: 'bar-chart',
-    loadComponent: () =>
-      import('./pages/charts/bar-chart/bar-chart.component').then((m) => m.BarChartComponent),
-    title: 'Gráfico de Barras',
-  },
-  {
-    path: 'alerts',
-    loadComponent: () =>
-      import('./pages/ui-elements/alerts/alerts.component').then((m) => m.AlertsComponent),
-    title: 'Alertas',
-  },
-  {
-    path: 'avatars',
-    loadComponent: () =>
-      import('./pages/ui-elements/avatar-element/avatar-element.component').then(
-        (m) => m.AvatarElementComponent,
-      ),
-    title: 'Avatares',
-  },
-  {
-    path: 'badge',
-    loadComponent: () =>
-      import('./pages/ui-elements/badges/badges.component').then((m) => m.BadgesComponent),
-    title: 'Insignias',
-  },
-  {
-    path: 'buttons',
-    loadComponent: () =>
-      import('./pages/ui-elements/buttons/buttons.component').then((m) => m.ButtonsComponent),
-    title: 'Botones',
-  },
-  {
-    path: 'images',
-    loadComponent: () =>
-      import('./pages/ui-elements/images/images.component').then((m) => m.ImagesComponent),
-    title: 'Imágenes',
-  },
-  {
-    path: 'videos',
-    loadComponent: () =>
-      import('./pages/ui-elements/videos/videos.component').then((m) => m.VideosComponent),
-    title: 'Videos',
-  },
+  }
 ];
 
 // Rutas limpias que redirigen al dashboard
