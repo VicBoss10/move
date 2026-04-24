@@ -12,8 +12,8 @@
   </div>
 
   <!-- Chart Container -->
-  <ng-container *ngIf="chartData$ | async as chartData">
-    <ng-container *ngIf="chartData.datasets && chartData.datasets.length > 0; else noData">
+  @if (chartData$ | async; as chartData) {
+    @if (chartData.datasets && chartData.datasets.length > 0) {
       <div class="max-w-full overflow-x-auto custom-scrollbar">
         <div class="-ml-5 min-w-[650px] xl:min-w-full pl-2">
           <canvas
@@ -46,8 +46,7 @@
           </p>
         </div>
       </div>
-    </ng-container>
-    <ng-template #noData>
+    } @else {
       <div class="py-12 flex items-center justify-center">
         <div class="text-center">
           <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
@@ -56,6 +55,6 @@
           </p>
         </div>
       </div>
-    </ng-template>
-  </ng-container>
+    }
+  }
 </div>

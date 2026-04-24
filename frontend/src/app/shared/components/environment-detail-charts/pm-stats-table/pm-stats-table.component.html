@@ -47,7 +47,7 @@
         </tr>
       </thead>
       <tbody>
-        <ng-container *ngIf="pmStats$ | async as stats">
+        @if (pmStats$ | async; as stats) {
           @for (pm of stats; track pm.symbol) {
             <tr
               class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50"
@@ -86,7 +86,7 @@
               </td>
             </tr>
           }
-        </ng-container>
+        }
       </tbody>
     </table>
   </div>

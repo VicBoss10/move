@@ -1,5 +1,4 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 /**
  * Interfaz para cada tarjeta de estadística
@@ -29,24 +28,25 @@ export interface StatCard {
 @Component({
   selector: 'app-generic-stats-cards',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      <div
-        *ngFor="let card of cards"
-        [class]="
-          'rounded-lg border-l-4 border-' +
-          getBorderColor(card.borderColor) +
-          ' bg-white p-4 dark:bg-gray-800'
-        "
-      >
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-          {{ card.label }}
-        </p>
-        <p class="mt-2 text-2xl font-bold" [class]="'text-' + card.textColor">
-          {{ card.value }}
-        </p>
-      </div>
+      @for (card of cards; track card) {
+        <div
+          [class]="
+            'rounded-lg border-l-4 border-' +
+            getBorderColor(card.borderColor) +
+            ' bg-white p-4 dark:bg-gray-800'
+          "
+        >
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+            {{ card.label }}
+          </p>
+          <p class="mt-2 text-2xl font-bold" [class]="'text-' + card.textColor">
+            {{ card.value }}
+          </p>
+        </div>
+      }
     </div>
   `,
 })

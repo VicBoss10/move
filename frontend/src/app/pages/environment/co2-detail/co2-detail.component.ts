@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Co2ChartComponent } from '../../../shared/components/environment-detail-charts/co2-chart/co2-chart.component';
 import { Co2GaugeComponent } from '../../../shared/components/environment-detail-charts/co2-gauge/co2-gauge.component';
 import { Co2StatsTableComponent } from '../../../shared/components/environment-detail-charts/co2-stats-table/co2-stats-table.component';
@@ -16,7 +16,7 @@ import { Co2StatsTableComponent } from '../../../shared/components/environment-d
 @Component({
   selector: 'app-co2-detail',
   standalone: true,
-  imports: [CommonModule, Co2ChartComponent, Co2GaugeComponent, Co2StatsTableComponent],
+  imports: [Co2ChartComponent, Co2GaugeComponent, Co2StatsTableComponent],
   templateUrl: './co2-detail.component.html',
 })
 export class Co2DetailComponent {}

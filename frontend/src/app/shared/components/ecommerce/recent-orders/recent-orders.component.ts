@@ -11,7 +11,6 @@
 
 // }
 
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 // import { TableComponent } from '../../ui/table/table.component';
 // import { TableBodyComponent } from '../../ui/table/table-body.component';
@@ -32,15 +31,7 @@ interface Product {
 
 @Component({
   selector: 'app-recent-orders',
-  imports: [
-    CommonModule,
-    // TableComponent,
-    // TableBodyComponent,
-    // TableCellComponent,
-    // TableHeaderComponent,
-    // TableRowComponent,
-    BadgeComponent,
-  ],
+  imports: [BadgeComponent],
   templateUrl: './recent-orders.component.html',
 })
 export class RecentOrdersComponent {

@@ -20,7 +20,7 @@
       <!-- Period selector -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="mr-1 text-sm font-medium text-gray-600 dark:text-gray-400">Período:</span>
-        <ng-container *ngFor="let p of periods">
+        @for (p of periods; track p) {
           <button
             (click)="setPeriod(p.key)"
             [ngClass]="
@@ -32,7 +32,7 @@
           >
             {{ p.label }}
           </button>
-        </ng-container>
+        }
       </div>
 
       <!-- Metric selector -->
@@ -43,7 +43,9 @@
           (ngModelChange)="setMetric($event)"
           class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
         >
-          <option *ngFor="let m of metrics" [value]="m.key">{{ m.label }} ({{ m.unit }})</option>
+          @for (m of metrics; track m) {
+            <option [value]="m.key">{{ m.label }} ({{ m.unit }})</option>
+          }
         </select>
       </div>
     </div>
@@ -66,131 +68,134 @@
         </p>
       </div>
       <!-- Loading badge -->
-      <div *ngIf="isLoading" class="flex items-center gap-1.5 text-xs text-gray-400">
-        <svg class="h-4 w-4 animate-spin text-brand-500" viewBox="0 0 24 24" fill="none">
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          ></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-        </svg>
-        Cargando…
-      </div>
+      @if (isLoading) {
+        <div class="flex items-center gap-1.5 text-xs text-gray-400">
+          <svg class="h-4 w-4 animate-spin text-brand-500" viewBox="0 0 24 24" fill="none">
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          Cargando…
+        </div>
+      }
     </div>
 
     <div class="p-5 sm:p-6">
       <!-- Error state -->
-      <div
-        *ngIf="hasError && !isLoading"
-        class="flex flex-col items-center justify-center gap-3 py-16 text-center"
-      >
-        <svg class="h-10 w-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 9v2m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0z"
-          />
-        </svg>
-        <p class="text-sm text-red-500">{{ errorMsg }}</p>
-      </div>
+      @if (hasError && !isLoading) {
+        <div class="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <svg class="h-10 w-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0z"
+            />
+          </svg>
+          <p class="text-sm text-red-500">{{ errorMsg }}</p>
+        </div>
+      }
 
       <!-- Empty state -->
-      <div
-        *ngIf="
-          !isLoading && !hasError && chartData.datasets.length > 0 && chartData.labels?.length === 0
-        "
-        class="flex flex-col items-center justify-center gap-3 py-16 text-center"
-      >
-        <svg
-          class="h-10 w-10 text-gray-300 dark:text-gray-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <polyline
-            points="4 17 10 11 14 15 20 9"
-            stroke="currentColor"
-            stroke-width="1.5"
+      @if (
+        !isLoading && !hasError && chartData.datasets.length > 0 && chartData.labels?.length === 0
+      ) {
+        <div class="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <svg
+            class="h-10 w-10 text-gray-300 dark:text-gray-600"
             fill="none"
-          />
-        </svg>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Sin datos para el período seleccionado
-        </p>
-      </div>
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <polyline
+              points="4 17 10 11 14 15 20 9"
+              stroke="currentColor"
+              stroke-width="1.5"
+              fill="none"
+            />
+          </svg>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Sin datos para el período seleccionado
+          </p>
+        </div>
+      }
 
       <!-- Chart -->
-      <div *ngIf="!isLoading && !hasError" class="max-w-full overflow-x-auto custom-scrollbar">
-        <div class="min-w-[600px]" style="height: 380px; position: relative">
-          <canvas
-            baseChart
-            type="line"
-            [data]="chartData"
-            [options]="chartOptions"
-            style="height: 100%; width: 100%"
-          ></canvas>
+      @if (!isLoading && !hasError) {
+        <div class="max-w-full overflow-x-auto custom-scrollbar">
+          <div class="min-w-[600px]" style="height: 380px; position: relative">
+            <canvas
+              baseChart
+              type="line"
+              [data]="chartData"
+              [options]="chartOptions"
+              style="height: 100%; width: 100%"
+            ></canvas>
+          </div>
         </div>
-      </div>
+      }
     </div>
   </div>
 
   <!-- ── Stats summary ────────────────────────────────────────────────────── -->
-  <div *ngIf="stats && !isLoading" class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-    <!-- Min -->
-    <div
-      class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
-    >
-      <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-        Mínimo · {{ stats.metricOption.label }}
-      </p>
-      <p class="mt-2 text-2xl font-bold text-gray-800 dark:text-white">
-        {{ stats.metricMin }}
-      </p>
-      <p class="mt-0.5 text-xs text-gray-400">{{ stats.metricOption.unit }}</p>
+  @if (stats && !isLoading) {
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <!-- Min -->
+      <div
+        class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          Mínimo · {{ stats.metricOption.label }}
+        </p>
+        <p class="mt-2 text-2xl font-bold text-gray-800 dark:text-white">
+          {{ stats.metricMin }}
+        </p>
+        <p class="mt-0.5 text-xs text-gray-400">{{ stats.metricOption.unit }}</p>
+      </div>
+      <!-- Avg -->
+      <div
+        class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          Promedio · {{ stats.metricOption.label }}
+        </p>
+        <p class="mt-2 text-2xl font-bold text-gray-800 dark:text-white">
+          {{ stats.metricAvg }}
+        </p>
+        <p class="mt-0.5 text-xs text-gray-400">{{ stats.metricOption.unit }}</p>
+      </div>
+      <!-- Max -->
+      <div
+        class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          Máximo · {{ stats.metricOption.label }}
+        </p>
+        <p class="mt-2 text-2xl font-bold text-gray-800 dark:text-white">
+          {{ stats.metricMax }}
+        </p>
+        <p class="mt-0.5 text-xs text-gray-400">{{ stats.metricOption.unit }}</p>
+      </div>
+      <!-- Vehicles total -->
+      <div
+        class="overflow-hidden rounded-2xl border border-indigo-100 bg-indigo-50 p-5 dark:border-indigo-900/40 dark:bg-indigo-900/10"
+      >
+        <p
+          class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400"
+        >
+          Vehículos detectados
+        </p>
+        <p class="mt-2 text-2xl font-bold text-indigo-700 dark:text-indigo-300">
+          {{ stats.vehicleTotal }}
+        </p>
+        <p class="mt-0.5 text-xs text-indigo-400">en el período</p>
+      </div>
     </div>
-
-    <!-- Avg -->
-    <div
-      class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
-    >
-      <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-        Promedio · {{ stats.metricOption.label }}
-      </p>
-      <p class="mt-2 text-2xl font-bold text-gray-800 dark:text-white">
-        {{ stats.metricAvg }}
-      </p>
-      <p class="mt-0.5 text-xs text-gray-400">{{ stats.metricOption.unit }}</p>
-    </div>
-
-    <!-- Max -->
-    <div
-      class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
-    >
-      <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-        Máximo · {{ stats.metricOption.label }}
-      </p>
-      <p class="mt-2 text-2xl font-bold text-gray-800 dark:text-white">
-        {{ stats.metricMax }}
-      </p>
-      <p class="mt-0.5 text-xs text-gray-400">{{ stats.metricOption.unit }}</p>
-    </div>
-
-    <!-- Vehicles total -->
-    <div
-      class="overflow-hidden rounded-2xl border border-indigo-100 bg-indigo-50 p-5 dark:border-indigo-900/40 dark:bg-indigo-900/10"
-    >
-      <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
-        Vehículos detectados
-      </p>
-      <p class="mt-2 text-2xl font-bold text-indigo-700 dark:text-indigo-300">
-        {{ stats.vehicleTotal }}
-      </p>
-      <p class="mt-0.5 text-xs text-indigo-400">en el período</p>
-    </div>
-  </div>
+  }
 </div>

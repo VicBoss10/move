@@ -1,74 +1,81 @@
 <!-- Mapa Google Maps para seleccionar ubicación -->
 <div class="w-full rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
   <!-- Mapa disponible -->
-  <div *ngIf="isApiLoaded; else noApiTemplate">
-    <google-map
-      [center]="center"
-      [zoom]="zoom"
-      [options]="mapOptions"
-      [height]="mapHeight"
-      width="100%"
-      (mapClick)="onMapClick($event)"
-    >
-      <!-- Marcador de ubicación actual del usuario (punto azul) -->
-      <map-advanced-marker
-        *ngIf="userLocation"
-        [position]="userLocation"
-        [content]="userLocationContent"
-        [zIndex]="1"
-        title="Tu ubicación actual"
-      />
-
-      <!-- Marcador de la ubicación seleccionada -->
-      <map-advanced-marker
-        *ngIf="markerPosition"
-        #marker="mapAdvancedMarker"
-        [position]="markerPosition"
-        [gmpDraggable]="!readonly"
-        (mapClick)="onMarkerClick(marker)"
-      />
-
-      <!-- Ventana de información -->
-      <map-info-window>
-        <div class="p-2 text-sm text-gray-800">
-          <p class="font-semibold">Ubicación seleccionada</p>
-          <p class="text-xs text-gray-600 mt-1">{{ infoContent }}</p>
+  @if (isApiLoaded) {
+    <div>
+      <google-map
+        [center]="center"
+        [zoom]="zoom"
+        [options]="mapOptions"
+        [height]="mapHeight"
+        width="100%"
+        (mapClick)="onMapClick($event)"
+      >
+        <!-- Marcador de ubicación actual del usuario (punto azul) -->
+        @if (userLocation) {
+          <map-advanced-marker
+            [position]="userLocation"
+            [content]="userLocationContent"
+            [zIndex]="1"
+            title="Tu ubicación actual"
+          />
+        }
+        <!-- Marcador de la ubicación seleccionada -->
+        @if (markerPosition) {
+          <map-advanced-marker
+            #marker="mapAdvancedMarker"
+            [position]="markerPosition"
+            [gmpDraggable]="!readonly"
+            (mapClick)="onMarkerClick(marker)"
+          />
+        }
+        <!-- Ventana de información -->
+        <map-info-window>
+          <div class="p-2 text-sm text-gray-800">
+            <p class="font-semibold">Ubicación seleccionada</p>
+            <p class="text-xs text-gray-600 mt-1">{{ infoContent }}</p>
+          </div>
+        </map-info-window>
+      </google-map>
+      <!-- Instrucciones -->
+      @if (!readonly) {
+        <div
+          class="px-4 py-2 text-xs flex items-center gap-2"
+          [ngClass]="
+            gpsAccurate
+              ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+              : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+          "
+        >
+          <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          @if (gpsAccurate) {
+            <span
+              >GPS obtenido (~{{ gpsAccuracy }}m). Haz clic en el mapa para seleccionar el
+              punto.</span
+            >
+          }
+          @if (gpsObtained && !gpsAccurate) {
+            <span
+              >GPS impreciso (~{{ gpsAccuracy / 1000 | number: '1.0-0' }}km). Navega en el mapa y
+              haz clic para seleccionar.</span
+            >
+          }
+          @if (!gpsObtained) {
+            <span
+              >Navega en el mapa y haz clic para seleccionar la ubicación del punto de
+              monitoreo.</span
+            >
+          }
         </div>
-      </map-info-window>
-    </google-map>
-
-    <!-- Instrucciones -->
-    <div
-      *ngIf="!readonly"
-      class="px-4 py-2 text-xs flex items-center gap-2"
-      [ngClass]="
-        gpsAccurate
-          ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
-          : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
-      "
-    >
-      <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-        <path
-          fill-rule="evenodd"
-          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-          clip-rule="evenodd"
-        />
-      </svg>
-      <span *ngIf="gpsAccurate"
-        >GPS obtenido (~{{ gpsAccuracy }}m). Haz clic en el mapa para seleccionar el punto.</span
-      >
-      <span *ngIf="gpsObtained && !gpsAccurate"
-        >GPS impreciso (~{{ gpsAccuracy / 1000 | number: '1.0-0' }}km). Navega en el mapa y haz clic
-        para seleccionar.</span
-      >
-      <span *ngIf="!gpsObtained"
-        >Navega en el mapa y haz clic para seleccionar la ubicación del punto de monitoreo.</span
-      >
+      }
     </div>
-  </div>
-
-  <!-- Fallback: API no cargada -->
-  <ng-template #noApiTemplate>
+  } @else {
     <div
       class="flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
       [style.height]="mapHeight"
@@ -96,5 +103,7 @@
       <p class="text-xs mt-1">Configura la API Key de Google Maps para habilitar el mapa</p>
       <p class="text-xs mt-2 text-gray-400">Puedes ingresar las coordenadas manualmente</p>
     </div>
-  </ng-template>
+  }
+
+  <!-- Fallback: API no cargada -->
 </div>

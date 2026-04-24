@@ -1,5 +1,4 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 /**
  * VehicleTableComponent
@@ -25,7 +24,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-vehicle-table',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './vehicle-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ConnectedSensorsListComponent } from '../../../shared/components/devices/connected-sensors-list/connected-sensors-list.component';
 
 /**
@@ -14,7 +14,7 @@ import { ConnectedSensorsListComponent } from '../../../shared/components/device
 @Component({
   selector: 'app-connected-sensors',
   standalone: true,
-  imports: [CommonModule, ConnectedSensorsListComponent],
+  imports: [ConnectedSensorsListComponent],
   templateUrl: './connected-sensors.component.html',
 })
 export class ConnectedSensorsComponent {}

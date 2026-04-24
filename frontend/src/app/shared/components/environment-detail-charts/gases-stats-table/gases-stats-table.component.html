@@ -40,7 +40,7 @@
         </tr>
       </thead>
       <tbody>
-        <ng-container *ngIf="gasesStats$ | async as gases">
+        @if (gasesStats$ | async; as gases) {
           @for (gas of gases; track gas.symbol) {
             <tr
               class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50"
@@ -73,7 +73,7 @@
               </td>
             </tr>
           }
-        </ng-container>
+        }
       </tbody>
     </table>
   </div>

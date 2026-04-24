@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 /**
  * ArchitectureComponent
@@ -10,7 +9,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-architecture',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './architecture.component.html',
 })
 export class ArchitectureComponent {}

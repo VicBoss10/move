@@ -74,130 +74,95 @@
           </thead>
           <tbody>
             <!-- Loading state -->
-            <tr *ngIf="isLoading">
-              <td colspan="11" class="px-5 py-4 text-center text-sm text-gray-500">
-                Cargando datos...
-              </td>
-            </tr>
+            @if (isLoading) {
+              <tr>
+                <td colspan="11" class="px-5 py-4 text-center text-sm text-gray-500">
+                  Cargando datos...
+                </td>
+              </tr>
+            }
 
             <!-- Error state -->
-            <tr *ngIf="errorMessage && !isLoading">
-              <td colspan="11" class="px-5 py-4 text-center text-sm text-red-600">
-                {{ errorMessage }}
-              </td>
-            </tr>
+            @if (errorMessage && !isLoading) {
+              <tr>
+                <td colspan="11" class="px-5 py-4 text-center text-sm text-red-600">
+                  {{ errorMessage }}
+                </td>
+              </tr>
+            }
 
             <!-- Empty state -->
-            <tr *ngIf="!isLoading && filteredRecords.length === 0 && !errorMessage">
-              <td colspan="11" class="px-5 py-4 text-center text-sm text-gray-500">
-                No hay datos disponibles
-              </td>
-            </tr>
+            @if (!isLoading && filteredRecords.length === 0 && !errorMessage) {
+              <tr>
+                <td colspan="11" class="px-5 py-4 text-center text-sm text-gray-500">
+                  No hay datos disponibles
+                </td>
+              </tr>
+            }
 
             <!-- Data rows -->
-            <tr
-              *ngFor="let record of filteredRecords"
-              class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50"
-            >
-              <td
-                class="whitespace-nowrap px-5 py-4 text-sm text-gray-700 dark:text-gray-300 sm:px-6"
+            @for (record of filteredRecords; track record) {
+              <tr
+                class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50"
               >
-                {{ record.timestamp | date: 'short' }}
-              </td>
-              <td
-                class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
-              >
-                {{ record.co2 | number: '1.1-1' }}
-              </td>
-              <td
-                class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
-              >
-                {{ record.temperature | number: '1.1-1' }}
-              </td>
-              <td
-                class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
-              >
-                {{ record.humidity | number: '1.1-1' }}
-              </td>
-              <td
-                class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
-              >
-                {{ record.pm25 | number: '1.1-1' }}
-              </td>
-              <td
-                class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
-              >
-                {{ record.pm10 | number: '1.1-1' }}
-              </td>
-              <td
-                class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
-              >
-                {{ record.co | number: '1.1-1' }}
-              </td>
-              <td
-                class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
-              >
-                {{ record.no2 | number: '1.1-1' }}
-              </td>
-              <td
-                class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
-              >
-                {{ record.nh3 | number: '1.1-1' }}
-              </td>
-            </tr>
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-sm text-gray-700 dark:text-gray-300 sm:px-6"
+                >
+                  {{ record.timestamp | date: 'short' }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
+                >
+                  {{ record.co2 | number: '1.1-1' }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
+                >
+                  {{ record.temperature | number: '1.1-1' }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
+                >
+                  {{ record.humidity | number: '1.1-1' }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
+                >
+                  {{ record.pm25 | number: '1.1-1' }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
+                >
+                  {{ record.pm10 | number: '1.1-1' }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
+                >
+                  {{ record.co | number: '1.1-1' }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
+                >
+                  {{ record.no2 | number: '1.1-1' }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-gray-900 dark:text-white sm:px-6"
+                >
+                  {{ record.nh3 | number: '1.1-1' }}
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>
 
       <!-- Empty state -->
-      <div
-        *ngIf="!isLoading && filteredRecords.length === 0 && !errorMessage"
-        class="flex flex-col items-center justify-center border-t border-gray-200 px-5 py-12 text-center dark:border-gray-800 sm:px-6"
-      >
-        <svg
-          class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      @if (!isLoading && filteredRecords.length === 0 && !errorMessage) {
+        <div
+          class="flex flex-col items-center justify-center border-t border-gray-200 px-5 py-12 text-center dark:border-gray-800 sm:px-6"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <p class="text-gray-500 dark:text-gray-400">No hay registros disponibles</p>
-      </div>
-
-      <!-- Load More Button -->
-      <div
-        *ngIf="filteredRecords.length > 0 && hasMoreData && !errorMessage"
-        class="border-t border-gray-200 px-5 py-4 text-center dark:border-gray-800 sm:px-6"
-      >
-        <button
-          (click)="onLoadMore()"
-          [disabled]="isLoading"
-          class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-brand-600 dark:hover:bg-brand-700"
-        >
-          <svg *ngIf="isLoading" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
           <svg
-            *ngIf="!isLoading"
-            class="h-4 w-4"
+            class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-700"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -206,25 +171,64 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M19 9l-7 7-7-7"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          {{ isLoading ? 'Cargando...' : 'Ver más registros' }}
-        </button>
-        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Mostrando {{ filteredRecords.length }} registros ({{ pageSize }} por carga)
-        </p>
-      </div>
+          <p class="text-gray-500 dark:text-gray-400">No hay registros disponibles</p>
+        </div>
+      }
+
+      <!-- Load More Button -->
+      @if (filteredRecords.length > 0 && hasMoreData && !errorMessage) {
+        <div class="border-t border-gray-200 px-5 py-4 text-center dark:border-gray-800 sm:px-6">
+          <button
+            (click)="onLoadMore()"
+            [disabled]="isLoading"
+            class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-brand-600 dark:hover:bg-brand-700"
+          >
+            @if (isLoading) {
+              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            }
+            @if (!isLoading) {
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            }
+            {{ isLoading ? 'Cargando...' : 'Ver más registros' }}
+          </button>
+          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Mostrando {{ filteredRecords.length }} registros ({{ pageSize }} por carga)
+          </p>
+        </div>
+      }
 
       <!-- No More Data Message -->
-      <div
-        *ngIf="filteredRecords.length > 0 && !hasMoreData && !isLoading"
-        class="border-t border-gray-200 px-5 py-4 text-center dark:border-gray-800 sm:px-6"
-      >
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          No hay más registros disponibles · Total: {{ filteredRecords.length }}
-        </p>
-      </div>
+      @if (filteredRecords.length > 0 && !hasMoreData && !isLoading) {
+        <div class="border-t border-gray-200 px-5 py-4 text-center dark:border-gray-800 sm:px-6">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            No hay más registros disponibles · Total: {{ filteredRecords.length }}
+          </p>
+        </div>
+      }
     </div>
   </div>
 </div>

@@ -1,10 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../../../core/services/auth.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-user-info-card',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './user-info-card.component.html',
   styles: ``,
 })

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { GasesComparisonChartComponent } from '../../../shared/components/environment-detail-charts/gases-comparison-chart/gases-comparison-chart.component';
 import { MultiGasIndicatorsComponent } from '../../../shared/components/environment-detail-charts/multi-gas-indicators/multi-gas-indicators.component';
 import { GasesStatsTableComponent } from '../../../shared/components/environment-detail-charts/gases-stats-table/gases-stats-table.component';
@@ -17,12 +17,7 @@ import { GasesStatsTableComponent } from '../../../shared/components/environment
 @Component({
   selector: 'app-gases-detail',
   standalone: true,
-  imports: [
-    CommonModule,
-    GasesComparisonChartComponent,
-    MultiGasIndicatorsComponent,
-    GasesStatsTableComponent,
-  ],
+  imports: [GasesComparisonChartComponent, MultiGasIndicatorsComponent, GasesStatsTableComponent],
   templateUrl: './gases-detail.component.html',
 })
 export class GasesDetailComponent {}

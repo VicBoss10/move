@@ -1,4 +1,4 @@
-<ng-container *ngIf="stats$ | async as stats">
+@if (stats$ | async; as stats) {
   <div
     class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
   >
@@ -7,7 +7,6 @@
       <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Estadísticas de CO₂</h3>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Últimas 24 horas</p>
     </div>
-
     <!-- Stats Grid -->
     <div class="grid grid-cols-2 gap-4 p-5 sm:grid-cols-5 sm:p-6">
       <!-- Actual -->
@@ -18,7 +17,6 @@
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ppm</p>
       </div>
-
       <!-- Mínimo -->
       <div class="text-center">
         <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Mínimo</p>
@@ -27,7 +25,6 @@
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ppm</p>
       </div>
-
       <!-- Máximo -->
       <div class="text-center">
         <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Máximo</p>
@@ -36,7 +33,6 @@
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ppm</p>
       </div>
-
       <!-- Promedio -->
       <div class="text-center">
         <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Promedio</p>
@@ -45,7 +41,6 @@
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ppm</p>
       </div>
-
       <!-- Variación -->
       <div class="text-center">
         <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Variación</p>
@@ -56,4 +51,4 @@
       </div>
     </div>
   </div>
-</ng-container>
+}

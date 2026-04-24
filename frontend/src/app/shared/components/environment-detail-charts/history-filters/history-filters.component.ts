@@ -1,5 +1,5 @@
 import { Component, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { SensorDataSearchCriteria } from '../../../../core/models/sensor-data.model';
 
@@ -23,7 +23,7 @@ import { SensorDataSearchCriteria } from '../../../../core/models/sensor-data.mo
 @Component({
   selector: 'app-history-filters',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './history-filters.component.html',
 })
 export class HistoryFiltersComponent {

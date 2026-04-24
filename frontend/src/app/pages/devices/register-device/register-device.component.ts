@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RegisterDeviceFormComponent } from '../../../shared/components/devices/register-device-form/register-device-form.component';
 
 /**
@@ -14,7 +14,7 @@ import { RegisterDeviceFormComponent } from '../../../shared/components/devices/
 @Component({
   selector: 'app-register-device',
   standalone: true,
-  imports: [CommonModule, RegisterDeviceFormComponent],
+  imports: [RegisterDeviceFormComponent],
   templateUrl: './register-device.component.html',
 })
 export class RegisterDeviceComponent {}

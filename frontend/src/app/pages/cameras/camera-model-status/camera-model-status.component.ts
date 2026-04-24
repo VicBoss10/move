@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Observable, of, BehaviorSubject, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay, tap, switchMap, timeout } from 'rxjs/operators';
 import { CameraModelStatusComponent as CameraModelStatusSharedComponent } from '../../../shared/components/cameras/camera-model-status/camera-model-status.component';
@@ -30,7 +30,7 @@ interface ModelInfo {
 @Component({
   selector: 'app-camera-model-status',
   standalone: true,
-  imports: [CommonModule, CameraModelStatusSharedComponent, CameraFiltersTableComponent],
+  imports: [CameraModelStatusSharedComponent, CameraFiltersTableComponent],
   templateUrl: './camera-model-status.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LabelComponent } from '../../form/label/label.component';
@@ -9,14 +9,7 @@ import { ButtonComponent } from '../../ui/button/button.component';
 
 @Component({
   selector: 'app-signin-form',
-  imports: [
-    RouterModule,
-    CommonModule,
-    FormsModule,
-    LabelComponent,
-    InputFieldComponent,
-    ButtonComponent,
-  ],
+  imports: [RouterModule, FormsModule, LabelComponent, InputFieldComponent, ButtonComponent],
   templateUrl: './signin-form.component.html',
   styles: ``,
 })

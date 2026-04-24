@@ -21,7 +21,7 @@
         <div class="flex flex-col">
           <span class="text-sm text-gray-600 dark:text-gray-400">Estado del Modelo</span>
           <span class="mt-1 text-lg font-medium">
-            <ng-container *ngIf="modelInfo$ | async as info">
+            @if (modelInfo$ | async; as info) {
               <span
                 [ngClass]="
                   info.isRunning
@@ -31,37 +31,38 @@
               >
                 {{ info.isRunning ? '🟢 En Ejecución' : '🔴 Detenido' }}
               </span>
-            </ng-container>
+            }
           </span>
         </div>
 
         <div class="flex flex-col">
           <span class="text-sm text-gray-600 dark:text-gray-400">Framework</span>
           <span class="mt-1 text-lg font-medium text-gray-900 dark:text-white">
-            <ng-container *ngIf="modelInfo$ | async as info">{{ info.streamType }}</ng-container>
+            @if (modelInfo$ | async; as info) {
+              {{ info.streamType }}
+            }
           </span>
         </div>
 
         <div class="flex flex-col">
           <span class="text-sm text-gray-600 dark:text-gray-400">Cámaras Activas</span>
           <span class="mt-1 text-lg font-medium text-gray-900 dark:text-white">
-            <ng-container *ngIf="cameraStats$ | async as stats">{{
-              stats.activeCameras
-            }}</ng-container>
+            @if (cameraStats$ | async; as stats) {
+              {{ stats.activeCameras }}
+            }
           </span>
         </div>
 
         <div class="flex flex-col">
           <span class="text-sm text-gray-600 dark:text-gray-400">Última Actualización</span>
           <span class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-            <ng-container *ngIf="lastVehicleDetection$ | async as last; else fromModel">{{
-              last | date: 'short'
-            }}</ng-container>
-            <ng-template #fromModel>
-              <ng-container *ngIf="modelInfo$ | async as info">{{
-                info.lastUpdate | date: 'short'
-              }}</ng-container>
-            </ng-template>
+            @if (lastVehicleDetection$ | async; as last) {
+              {{ last | date: 'short' }}
+            } @else {
+              @if (modelInfo$ | async; as info) {
+                {{ info.lastUpdate | date: 'short' }}
+              }
+            }
           </span>
         </div>
       </div>

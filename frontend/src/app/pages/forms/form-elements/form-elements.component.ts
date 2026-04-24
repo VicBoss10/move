@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { PageBreadcrumbComponent } from '../../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { DefaultInputsComponent } from '../../../shared/components/form/form-elements/default-inputs/default-inputs.component';
@@ -15,7 +14,6 @@ import { DropzoneComponent } from '../../../shared/components/form/form-elements
 @Component({
   selector: 'app-form-elements',
   imports: [
-    CommonModule,
     PageBreadcrumbComponent,
     DefaultInputsComponent,
     SelectInputsComponent,

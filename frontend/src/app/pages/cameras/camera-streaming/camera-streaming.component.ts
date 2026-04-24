@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CameraStreamingComponent as CameraStreamingSharedComponent } from '../../../shared/components/cameras/camera-streaming/camera-streaming.component';
 
 /**
@@ -14,7 +14,7 @@ import { CameraStreamingComponent as CameraStreamingSharedComponent } from '../.
 @Component({
   selector: 'app-camera-streaming',
   standalone: true,
-  imports: [CommonModule, CameraStreamingSharedComponent],
+  imports: [CameraStreamingSharedComponent],
   templateUrl: './camera-streaming.component.html',
 })
 export class CameraStreamingComponent {}

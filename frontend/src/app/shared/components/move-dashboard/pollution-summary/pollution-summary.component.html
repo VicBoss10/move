@@ -10,8 +10,8 @@
   </div>
 
   <!-- Table -->
-  <ng-container *ngIf="pollutionData$ | async as rows">
-    <ng-container *ngIf="rows && rows.length > 0; else noData">
+  @if (pollutionData$ | async; as rows) {
+    @if (rows && rows.length > 0) {
       <div class="max-w-full overflow-x-auto custom-scrollbar">
         <table class="w-full text-sm">
           <thead>
@@ -37,51 +37,51 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              *ngFor="let row of rows"
-              class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-            >
-              <td class="px-3 py-4">
-                <div class="font-semibold text-gray-900 dark:text-white">{{ row.name }}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ row.unit }}</div>
-              </td>
-              <td class="px-3 py-4 text-right">
-                <span class="font-bold text-gray-900 dark:text-white">{{
-                  row.current | number: '1.1-2'
-                }}</span>
-              </td>
-              <td class="px-3 py-4 text-right">
-                <span class="text-gray-700 dark:text-gray-300">{{
-                  row.average | number: '1.1-2'
-                }}</span>
-                <span [class]="'ml-1 font-semibold ' + getTrendColor(row.current, row.average)">
-                  {{ getTrendIcon(row.current, row.average) }}
-                </span>
-              </td>
-              <td class="px-3 py-4 text-right text-gray-600 dark:text-gray-400">
-                {{ row.min | number: '1.1-2' }}
-              </td>
-              <td class="px-3 py-4 text-right text-gray-600 dark:text-gray-400">
-                {{ row.max | number: '1.1-2' }}
-              </td>
-              <td class="px-3 py-4 text-center">
-                <span
-                  [class]="
-                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ' +
-                    row.statusBgClass +
-                    ' ' +
-                    row.statusTextClass
-                  "
-                >
-                  {{ row.statusLabel }}
-                </span>
-              </td>
-            </tr>
+            @for (row of rows; track row) {
+              <tr
+                class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
+                <td class="px-3 py-4">
+                  <div class="font-semibold text-gray-900 dark:text-white">{{ row.name }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ row.unit }}</div>
+                </td>
+                <td class="px-3 py-4 text-right">
+                  <span class="font-bold text-gray-900 dark:text-white">{{
+                    row.current | number: '1.1-2'
+                  }}</span>
+                </td>
+                <td class="px-3 py-4 text-right">
+                  <span class="text-gray-700 dark:text-gray-300">{{
+                    row.average | number: '1.1-2'
+                  }}</span>
+                  <span [class]="'ml-1 font-semibold ' + getTrendColor(row.current, row.average)">
+                    {{ getTrendIcon(row.current, row.average) }}
+                  </span>
+                </td>
+                <td class="px-3 py-4 text-right text-gray-600 dark:text-gray-400">
+                  {{ row.min | number: '1.1-2' }}
+                </td>
+                <td class="px-3 py-4 text-right text-gray-600 dark:text-gray-400">
+                  {{ row.max | number: '1.1-2' }}
+                </td>
+                <td class="px-3 py-4 text-center">
+                  <span
+                    [class]="
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ' +
+                      row.statusBgClass +
+                      ' ' +
+                      row.statusTextClass
+                    "
+                  >
+                    {{ row.statusLabel }}
+                  </span>
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>
-    </ng-container>
-    <ng-template #noData>
+    } @else {
       <div class="py-8 flex items-center justify-center">
         <div class="text-center">
           <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
@@ -90,8 +90,8 @@
           </p>
         </div>
       </div>
-    </ng-template>
-  </ng-container>
+    }
+  }
 
   <!-- Footer info -->
   <div

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { AlertThresholdsFormComponent } from '../../../shared/components/configuration/alert-thresholds-form/alert-thresholds-form.component';
 
 /**
@@ -13,7 +13,7 @@ import { AlertThresholdsFormComponent } from '../../../shared/components/configu
 @Component({
   selector: 'app-alert-thresholds',
   standalone: true,
-  imports: [CommonModule, AlertThresholdsFormComponent],
+  imports: [AlertThresholdsFormComponent],
   templateUrl: './alert-thresholds.component.html',
 })
 export class AlertThresholdsComponent {}

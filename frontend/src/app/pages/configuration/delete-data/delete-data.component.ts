@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { DeleteDataFormComponent } from '../../../shared/components/configuration/delete-data-form/delete-data-form.component';
 
 /**
@@ -12,7 +12,7 @@ import { DeleteDataFormComponent } from '../../../shared/components/configuratio
 @Component({
   selector: 'app-delete-data',
   standalone: true,
-  imports: [CommonModule, DeleteDataFormComponent],
+  imports: [DeleteDataFormComponent],
   templateUrl: './delete-data.component.html',
 })
 export class DeleteDataComponent {}

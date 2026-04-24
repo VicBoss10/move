@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import {
   Component,
   Input,
@@ -15,7 +14,7 @@ import 'flatpickr/dist/flatpickr.css';
 
 @Component({
   selector: 'app-date-picker',
-  imports: [CommonModule, LabelComponent],
+  imports: [LabelComponent],
   templateUrl: './date-picker.component.html',
   styles: ``,
 })

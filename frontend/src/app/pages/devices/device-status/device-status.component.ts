@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { DeviceStatusTableComponent } from '../../../shared/components/devices/device-status-table/device-status-table.component';
 
 /**
@@ -14,7 +14,7 @@ import { DeviceStatusTableComponent } from '../../../shared/components/devices/d
 @Component({
   selector: 'app-device-status',
   standalone: true,
-  imports: [CommonModule, DeviceStatusTableComponent],
+  imports: [DeviceStatusTableComponent],
   templateUrl: './device-status.component.html',
 })
 export class DeviceStatusComponent {}

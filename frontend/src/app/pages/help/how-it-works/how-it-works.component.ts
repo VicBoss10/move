@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { HowItWorksComponent } from '../../../shared/components/help/how-it-works/how-it-works.component';
 
 /**
@@ -11,7 +11,7 @@ import { HowItWorksComponent } from '../../../shared/components/help/how-it-work
 @Component({
   selector: 'app-how-it-works-page',
   standalone: true,
-  imports: [CommonModule, HowItWorksComponent],
+  imports: [HowItWorksComponent],
   templateUrl: './how-it-works.component.html',
 })
 export class HowItWorksPageComponent {}

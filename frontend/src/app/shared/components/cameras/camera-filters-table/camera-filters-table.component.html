@@ -40,23 +40,58 @@
       </thead>
       <!-- Body -->
       <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-        <tr
-          *ngFor="let camera of cameras$ | async"
-          class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
-        >
-          <!-- ID -->
-          <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-            #{{ camera.id }}
-          </td>
-
-          <!-- Nombre -->
-          <td class="px-6 py-4">
-            <div class="flex items-center gap-3">
-              <div
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900"
+        @for (camera of cameras$ | async; track camera) {
+          <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+            <!-- ID -->
+            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+              #{{ camera.id }}
+            </td>
+            <!-- Nombre -->
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900"
+                >
+                  <svg
+                    class="h-5 w-5 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.219A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </div>
+                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {{ camera.device.name }}
+                </span>
+              </div>
+            </td>
+            <!-- Estado -->
+            <td class="px-6 py-4">
+              <span
+                [ngClass]="getStateColor(camera.device.state)"
+                class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
               >
+                {{ getStateIcon(camera.device.state) }}
+                {{ getStateLabel(camera.device.state) }}
+              </span>
+            </td>
+            <!-- Tipo de Stream -->
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
                 <svg
-                  class="h-5 w-5 text-blue-600 dark:text-blue-400"
+                  class="h-4 w-4 text-gray-400 dark:text-gray-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -65,121 +100,81 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.219A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                    d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"
                   />
                 </svg>
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                  {{ camera.streamType }}
+                </span>
               </div>
-              <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {{ camera.device.name }}
-              </span>
-            </div>
-          </td>
-
-          <!-- Estado -->
-          <td class="px-6 py-4">
-            <span
-              [ngClass]="getStateColor(camera.device.state)"
-              class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-            >
-              {{ getStateIcon(camera.device.state) }}
-              {{ getStateLabel(camera.device.state) }}
-            </span>
-          </td>
-
-          <!-- Tipo de Stream -->
-          <td class="px-6 py-4">
-            <div class="flex items-center gap-2">
-              <svg
-                class="h-4 w-4 text-gray-400 dark:text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"
-                />
-              </svg>
-              <span class="text-sm text-gray-600 dark:text-gray-400">
-                {{ camera.streamType }}
-              </span>
-            </div>
-          </td>
-
-          <!-- Acciones -->
-          <td class="px-6 py-4">
-            <div class="flex gap-2 flex-wrap">
-              @if (camera.device.state !== 'ACTIVE') {
-                <button
-                  (click)="startDetectionForCamera(camera)"
-                  [disabled]="isLoading(camera.id) || !isServiceHealthyLatest"
-                  class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
-                  [title]="
-                    isServiceHealthyLatest
-                      ? 'Activar detección'
-                      : 'Servicio de detección no disponible'
-                  "
-                >
-                  @if (isLoading(camera.id)) {
-                    <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                      <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"
-                      ></circle>
-                      <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Iniciando...
-                  } @else {
-                    ▶ Activar
-                  }
-                </button>
-              } @else {
-                <button
-                  (click)="stopDetectionForCamera(camera)"
-                  [disabled]="isLoading(camera.id)"
-                  class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
-                >
-                  @if (isLoading(camera.id)) {
-                    <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                      <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"
-                      ></circle>
-                      <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Deteniendo...
-                  } @else {
-                    ■ Desactivar
-                  }
-                </button>
-              }
-            </div>
-          </td>
-        </tr>
+            </td>
+            <!-- Acciones -->
+            <td class="px-6 py-4">
+              <div class="flex gap-2 flex-wrap">
+                @if (camera.device.state !== 'ACTIVE') {
+                  <button
+                    (click)="startDetectionForCamera(camera)"
+                    [disabled]="isLoading(camera.id) || !isServiceHealthyLatest"
+                    class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
+                    [title]="
+                      isServiceHealthyLatest
+                        ? 'Activar detección'
+                        : 'Servicio de detección no disponible'
+                    "
+                  >
+                    @if (isLoading(camera.id)) {
+                      <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Iniciando...
+                    } @else {
+                      ▶ Activar
+                    }
+                  </button>
+                } @else {
+                  <button
+                    (click)="stopDetectionForCamera(camera)"
+                    [disabled]="isLoading(camera.id)"
+                    class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
+                  >
+                    @if (isLoading(camera.id)) {
+                      <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Deteniendo...
+                    } @else {
+                      ■ Desactivar
+                    }
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        }
       </tbody>
     </table>
   </div>

@@ -1,11 +1,10 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { ComponentCardComponent } from '../../../common/component-card/component-card.component';
 import { CheckboxComponent } from '../../input/checkbox.component';
 
 @Component({
   selector: 'app-checkbox-components',
-  imports: [CommonModule, ComponentCardComponent, CheckboxComponent],
+  imports: [ComponentCardComponent, CheckboxComponent],
   templateUrl: './checkbox-components.component.html',
   styles: ``,
 })

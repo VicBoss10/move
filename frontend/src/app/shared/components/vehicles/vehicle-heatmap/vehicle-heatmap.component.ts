@@ -5,7 +5,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { GoogleMapsModule } from '@angular/google-maps';
 import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
@@ -40,7 +40,7 @@ interface HeatPoint {
 @Component({
   selector: 'app-vehicle-heatmap',
   standalone: true,
-  imports: [CommonModule, GoogleMapsModule],
+  imports: [GoogleMapsModule],
   templateUrl: './vehicle-heatmap.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

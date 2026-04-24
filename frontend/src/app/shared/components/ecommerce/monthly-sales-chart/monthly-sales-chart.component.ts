@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import {
   NgApexchartsModule,
@@ -20,7 +19,7 @@ import { DropdownItemComponent } from '../../ui/dropdown/dropdown-item/dropdown-
 @Component({
   selector: 'app-monthly-sales-chart',
   standalone: true,
-  imports: [CommonModule, NgApexchartsModule, DropdownComponent, DropdownItemComponent],
+  imports: [NgApexchartsModule, DropdownComponent, DropdownItemComponent],
   templateUrl: './monthly-sales-chart.component.html',
 })
 export class MonthlySalesChartComponent {

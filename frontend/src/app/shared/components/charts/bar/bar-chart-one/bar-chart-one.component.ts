@@ -13,11 +13,10 @@ import {
   ApexTooltip,
 } from 'ng-apexcharts';
 import { NgApexchartsModule } from 'ng-apexcharts';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-bar-chart-one',
-  imports: [CommonModule, NgApexchartsModule],
+  imports: [NgApexchartsModule],
   templateUrl: './bar-chart-one.component.html',
   styles: ``,
 })

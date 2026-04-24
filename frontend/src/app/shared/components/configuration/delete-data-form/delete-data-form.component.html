@@ -36,18 +36,16 @@
             <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
               Datos de Sensores
             </h3>
-            <p
-              *ngIf="sensorMinDate && sensorMaxDate"
-              class="mt-0.5 text-xs text-gray-500 dark:text-gray-400"
-            >
-              Registros desde {{ sensorMinDate }} hasta {{ sensorMaxDate }}
-            </p>
-            <p
-              *ngIf="!sensorMinDate || !sensorMaxDate"
-              class="mt-0.5 text-xs text-gray-400 dark:text-gray-500"
-            >
-              Sin registros disponibles
-            </p>
+            @if (sensorMinDate && sensorMaxDate) {
+              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                Registros desde {{ sensorMinDate }} hasta {{ sensorMaxDate }}
+              </p>
+            }
+            @if (!sensorMinDate || !sensorMaxDate) {
+              <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                Sin registros disponibles
+              </p>
+            }
           </div>
         </div>
       </div>
@@ -67,7 +65,7 @@
             [disabled]="(sensorLoading$ | async) || !sensorMinDate"
             class="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-600 dark:hover:bg-red-700"
           >
-            <ng-container *ngIf="sensorLoading$ | async; else sensorNotLoading">
+            @if (sensorLoading$ | async) {
               <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle
                   class="opacity-25"
@@ -80,8 +78,7 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
               Eliminando...
-            </ng-container>
-            <ng-template #sensorNotLoading>
+            } @else {
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
@@ -91,7 +88,7 @@
                 />
               </svg>
               Eliminar todos los datos
-            </ng-template>
+            }
           </button>
         </div>
 
@@ -178,18 +175,16 @@
             <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
               Detecciones de Vehículos
             </h3>
-            <p
-              *ngIf="vehicleMinDate && vehicleMaxDate"
-              class="mt-0.5 text-xs text-gray-500 dark:text-gray-400"
-            >
-              Registros desde {{ vehicleMinDate }} hasta {{ vehicleMaxDate }}
-            </p>
-            <p
-              *ngIf="!vehicleMinDate || !vehicleMaxDate"
-              class="mt-0.5 text-xs text-gray-400 dark:text-gray-500"
-            >
-              Sin registros disponibles
-            </p>
+            @if (vehicleMinDate && vehicleMaxDate) {
+              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                Registros desde {{ vehicleMinDate }} hasta {{ vehicleMaxDate }}
+              </p>
+            }
+            @if (!vehicleMinDate || !vehicleMaxDate) {
+              <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                Sin registros disponibles
+              </p>
+            }
           </div>
         </div>
       </div>
@@ -209,7 +204,7 @@
             [disabled]="(vehicleLoading$ | async) || !vehicleMinDate"
             class="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-600 dark:hover:bg-red-700"
           >
-            <ng-container *ngIf="vehicleLoading$ | async; else vehicleNotLoading">
+            @if (vehicleLoading$ | async) {
               <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle
                   class="opacity-25"
@@ -222,8 +217,7 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
               Eliminando...
-            </ng-container>
-            <ng-template #vehicleNotLoading>
+            } @else {
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
@@ -233,7 +227,7 @@
                 />
               </svg>
               Eliminar todas las detecciones
-            </ng-template>
+            }
           </button>
         </div>
 

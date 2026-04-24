@@ -1,5 +1,5 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   GenericStatsCardsComponent,
   StatCard,
@@ -45,7 +45,7 @@ export interface VehicleStats {
 @Component({
   selector: 'app-vehicle-stats-cards',
   standalone: true,
-  imports: [CommonModule, GenericStatsCardsComponent],
+  imports: [GenericStatsCardsComponent],
   template: ` <app-generic-stats-cards [cards]="getStatCards()" /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

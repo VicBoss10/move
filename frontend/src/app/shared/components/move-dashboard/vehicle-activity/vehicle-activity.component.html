@@ -10,8 +10,8 @@
   <!-- Chart Container -->
   <div class="max-w-full overflow-x-auto custom-scrollbar">
     <div class="-ml-5 min-w-[650px] xl:min-w-full pl-2">
-      <ng-container *ngIf="chartData$ | async as data">
-        <ng-container *ngIf="data.datasets && data.datasets.length > 0; else noData">
+      @if (chartData$ | async; as data) {
+        @if (data.datasets && data.datasets.length > 0) {
           <canvas
             baseChart
             type="bar"
@@ -19,8 +19,7 @@
             [options]="chartOptions"
             style="max-height: 300px; position: relative"
           ></canvas>
-        </ng-container>
-        <ng-template #noData>
+        } @else {
           <div class="py-12 flex items-center justify-center">
             <div class="text-center">
               <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
@@ -29,14 +28,14 @@
               </p>
             </div>
           </div>
-        </ng-template>
-      </ng-container>
+        }
+      }
     </div>
   </div>
 
   <!-- Stats Footer -->
   <div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-800">
-    <ng-container *ngIf="vehicleCounts$ | async as counts">
+    @if (vehicleCounts$ | async; as counts) {
       <div class="grid grid-cols-5 gap-3">
         <div class="text-center">
           <div
@@ -84,7 +83,6 @@
           <p class="text-sm font-bold text-purple-600 dark:text-purple-400">{{ counts[4] }}</p>
         </div>
       </div>
-
       <!-- Total -->
       <div
         class="mt-4 flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50"
@@ -94,6 +92,6 @@
           >{{ counts[0] + counts[1] + counts[2] + counts[3] + counts[4] }} vehículos</span
         >
       </div>
-    </ng-container>
+    }
   </div>
 </div>

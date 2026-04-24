@@ -1,10 +1,9 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { BadgeComponent } from '../../../ui/badge/badge.component';
 
 @Component({
   selector: 'app-basic-table-one',
-  imports: [CommonModule, BadgeComponent],
+  imports: [BadgeComponent],
   templateUrl: './basic-table-one.component.html',
   styles: ``,
 })

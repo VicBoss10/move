@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import {
   ApexAxisChartSeries,
@@ -17,7 +16,7 @@ import {
 
 @Component({
   selector: 'app-line-chart-one',
-  imports: [CommonModule, NgApexchartsModule],
+  imports: [NgApexchartsModule],
   templateUrl: './line-chart-one.component.html',
   styles: ``,
 })

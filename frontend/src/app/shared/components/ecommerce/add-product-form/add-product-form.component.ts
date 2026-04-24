@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { LabelComponent } from '../../form/label/label.component';
 import { InputFieldComponent } from '../../form/input/input-field.component';
 import { SelectComponent } from '../../form/select/select.component';
@@ -9,7 +9,6 @@ import { ButtonComponent } from '../../ui/button/button.component';
 @Component({
   selector: 'app-add-product-form',
   imports: [
-    CommonModule,
     LabelComponent,
     InputFieldComponent,
     SelectComponent,

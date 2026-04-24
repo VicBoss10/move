@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import {
@@ -55,12 +55,7 @@ interface HumidityStats {
 @Component({
   selector: 'app-humidity-detail',
   standalone: true,
-  imports: [
-    CommonModule,
-    HumidityChartComponent,
-    HumidityGaugeComponent,
-    HumidityStatsTableComponent,
-  ],
+  imports: [HumidityChartComponent, HumidityGaugeComponent, HumidityStatsTableComponent],
   templateUrl: './humidity-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

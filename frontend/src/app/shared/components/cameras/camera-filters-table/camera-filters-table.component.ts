@@ -269,9 +269,15 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
           console.error('Error starting detection for camera', camera.id, error);
           this.loadingStates.set(camera.id, false);
           if (error?.status === 409) {
-            this.toastService.error('Sesión ya activa para la cámara, reinicie la página', 'Conflicto');
+            this.toastService.error(
+              'Sesión ya activa para la cámara, reinicie la página',
+              'Conflicto',
+            );
           } else {
-            this.toastService.error('Error al iniciar la detección. Por favor, inténtalo de nuevo.', 'Error');
+            this.toastService.error(
+              'Error al iniciar la detección. Por favor, inténtalo de nuevo.',
+              'Error',
+            );
           }
           const revertUpdate: Partial<Device> = {
             id: camera.device.id,

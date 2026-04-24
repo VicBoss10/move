@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ModalService } from '../../../services/modal.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-user-meta-card',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './user-meta-card.component.html',
   styles: ``,
 })

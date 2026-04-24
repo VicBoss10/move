@@ -24,9 +24,11 @@
           class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
         >
           <option value="">Todos los tipos</option>
-          <option *ngFor="let type of vehicleTypes" [value]="type.value">
-            {{ type.label }}
-          </option>
+          @for (type of vehicleTypes; track type) {
+            <option [value]="type.value">
+              {{ type.label }}
+            </option>
+          }
         </select>
       </div>
 
@@ -40,9 +42,11 @@
           class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
         >
           <option [value]="null">Todas las ubicaciones</option>
-          <option *ngFor="let loc of locations$ | async" [value]="loc.deviceId">
-            {{ loc.label }}
-          </option>
+          @for (loc of locations$ | async; track loc) {
+            <option [value]="loc.deviceId">
+              {{ loc.label }}
+            </option>
+          }
         </select>
       </div>
 

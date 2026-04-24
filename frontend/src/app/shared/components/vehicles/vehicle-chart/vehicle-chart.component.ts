@@ -5,7 +5,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 import { Subject } from 'rxjs';
@@ -40,7 +40,7 @@ import { VehicleDetected } from '../../../../core/models/vehicle.model';
 @Component({
   selector: 'app-vehicle-chart',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [BaseChartDirective],
   templateUrl: './vehicle-chart.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

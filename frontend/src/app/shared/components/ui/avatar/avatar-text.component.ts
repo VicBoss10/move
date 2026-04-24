@@ -1,9 +1,8 @@
-import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-avatar-text',
-  imports: [CommonModule],
+  imports: [],
   template: `<div
     class="flex h-10 w-10 items-center justify-center rounded-full 
     {{ colorClass }} {{ className }}"

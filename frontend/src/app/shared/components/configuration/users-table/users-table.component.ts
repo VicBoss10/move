@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../../../core/services/user.service';
 import { ApiService } from '../../../../core/services/api.service';
@@ -29,7 +29,7 @@ interface KeycloakUser {
 @Component({
   selector: 'app-users-table',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ModalComponent],
+  imports: [ReactiveFormsModule, ModalComponent],
   templateUrl: './users-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

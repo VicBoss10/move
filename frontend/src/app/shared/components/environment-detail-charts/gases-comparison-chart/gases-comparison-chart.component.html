@@ -14,7 +14,7 @@
   <!-- Chart Container -->
   <div class="max-w-full overflow-x-auto custom-scrollbar">
     <div class="-ml-5 min-w-[650px] xl:min-w-full pl-2">
-      <ng-container *ngIf="chartData$ | async as data">
+      @if (chartData$ | async; as data) {
         <canvas
           baseChart
           type="line"
@@ -22,14 +22,14 @@
           [options]="chartOptions"
           style="max-height: 350px; position: relative"
         ></canvas>
-      </ng-container>
+      }
     </div>
   </div>
 
   <!-- Stats Footer -->
   <div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-800">
     <p class="mb-3 text-xs font-semibold text-gray-500 dark:text-gray-400">RANGOS ACTUALES</p>
-    <ng-container *ngIf="gasValues$ | async as values">
+    @if (gasValues$ | async; as values) {
       <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400">CO</p>
@@ -50,6 +50,6 @@
           </p>
         </div>
       </div>
-    </ng-container>
+    }
   </div>
 </div>

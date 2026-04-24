@@ -5,7 +5,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { HistoryFiltersComponent } from '../../../shared/components/environment-detail-charts/history-filters/history-filters.component';
 import { SensorDataTableComponent } from '../../../shared/components/environment-detail-charts/sensor-data-table/sensor-data-table.component';
 import { SensorDataService } from '../../../core/services/sensor-data.service';
@@ -27,7 +27,7 @@ import { catchError, finalize, takeUntil } from 'rxjs/operators';
 @Component({
   selector: 'app-environmental-history',
   standalone: true,
-  imports: [CommonModule, HistoryFiltersComponent, SensorDataTableComponent],
+  imports: [HistoryFiltersComponent, SensorDataTableComponent],
   templateUrl: './environmental-history.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

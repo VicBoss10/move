@@ -1,32 +1,32 @@
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
   <!-- Status Card Item Start -->
-  <ng-container *ngIf="statusCards$ | async as cards">
-    <div
-      *ngFor="let card of cards"
-      [class]="'rounded-2xl border p-5 md:p-6 ' + getStatusColor(card.status)"
-    >
-      <!-- Icon Container -->
-      <div
-        class="flex items-center justify-center w-12 h-12 rounded-xl"
-        [class.bg-green-100]="card.status === 'online' || card.status === 'active'"
-        [class.dark:bg-green-800]="card.status === 'online' || card.status === 'active'"
-        [class.bg-red-100]="card.status === 'offline' || card.status === 'inactive'"
-        [class.dark:bg-red-800]="card.status === 'offline' || card.status === 'inactive'"
-      >
-        <span [innerHTML]="card.icon | safeHtml" [class]="getTextColor(card.status)"></span>
+  @if (statusCards$ | async; as cards) {
+    @for (card of cards; track card) {
+      <div [class]="'rounded-2xl border p-5 md:p-6 ' + getStatusColor(card.status)">
+        <!-- Icon Container -->
+        <div
+          class="flex items-center justify-center w-12 h-12 rounded-xl"
+          [class.bg-green-100]="card.status === 'online' || card.status === 'active'"
+          [class.dark:bg-green-800]="card.status === 'online' || card.status === 'active'"
+          [class.bg-red-100]="card.status === 'offline' || card.status === 'inactive'"
+          [class.dark:bg-red-800]="card.status === 'offline' || card.status === 'inactive'"
+        >
+          <span [innerHTML]="card.icon | safeHtml" [class]="getTextColor(card.status)"></span>
+        </div>
+        <!-- Content -->
+        <div class="mt-5">
+          <span class="text-sm text-gray-500 dark:text-gray-400">{{ card.label }}</span>
+          <h4 [class]="'mt-2 font-bold text-title-sm ' + getTextColor(card.status)">
+            {{ card.primary }}
+          </h4>
+          @if (card.secondary) {
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {{ card.secondary }}
+            </p>
+          }
+        </div>
       </div>
-
-      <!-- Content -->
-      <div class="mt-5">
-        <span class="text-sm text-gray-500 dark:text-gray-400">{{ card.label }}</span>
-        <h4 [class]="'mt-2 font-bold text-title-sm ' + getTextColor(card.status)">
-          {{ card.primary }}
-        </h4>
-        <p *ngIf="card.secondary" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {{ card.secondary }}
-        </p>
-      </div>
-    </div>
-  </ng-container>
+    }
+  }
   <!-- Status Card Item End -->
 </div>

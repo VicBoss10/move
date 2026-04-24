@@ -7,26 +7,30 @@
   <!-- Tabla de Vehículos -->
   <div class="col-span-12">
     <!-- Loading state -->
-    <div *ngIf="isLoading" class="flex justify-center items-center py-12">
-      <div class="text-gray-500">Cargando vehículos...</div>
-    </div>
+    @if (isLoading) {
+      <div class="flex justify-center items-center py-12">
+        <div class="text-gray-500">Cargando vehículos...</div>
+      </div>
+    }
 
     <!-- Error state -->
-    <div *ngIf="errorMessage && !isLoading" class="bg-red-50 border border-red-200 rounded-lg p-4">
-      <p class="text-red-600">{{ errorMessage }}</p>
-    </div>
+    @if (errorMessage && !isLoading) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p class="text-red-600">{{ errorMessage }}</p>
+      </div>
+    }
 
     <!-- Stats view: rows por tipo -->
-    <ng-container *ngIf="stats$ | async as stats">
-      <app-vehicle-table [stats]="stats" *ngIf="!isLoading && !errorMessage" />
-
+    @if (stats$ | async; as stats) {
+      @if (!isLoading && !errorMessage) {
+        <app-vehicle-table [stats]="stats" />
+      }
       <!-- Empty state -->
-      <div
-        *ngIf="!isLoading && (!stats || stats.length === 0) && !errorMessage"
-        class="flex flex-col items-center justify-center py-12 text-gray-500"
-      >
-        <p>No hay vehículos detectados</p>
-      </div>
-    </ng-container>
+      @if (!isLoading && (!stats || stats.length === 0) && !errorMessage) {
+        <div class="flex flex-col items-center justify-center py-12 text-gray-500">
+          <p>No hay vehículos detectados</p>
+        </div>
+      }
+    }
   </div>
 </div>

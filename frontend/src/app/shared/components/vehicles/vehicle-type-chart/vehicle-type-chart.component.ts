@@ -6,7 +6,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { BaseChartDirective } from 'ng2-charts';
 import {
   ChartConfiguration,
@@ -34,7 +34,7 @@ Chart.register(DoughnutController, ArcElement, Tooltip, Legend);
 @Component({
   selector: 'app-vehicle-type-chart',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [BaseChartDirective],
   templateUrl: './vehicle-type-chart.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ParticlesChartComponent } from '../../../shared/components/environment-detail-charts/particles-chart/particles-chart.component';
 import { PmIndicatorsComponent } from '../../../shared/components/environment-detail-charts/pm-indicators/pm-indicators.component';
 import { PmStatsTableComponent } from '../../../shared/components/environment-detail-charts/pm-stats-table/pm-stats-table.component';
@@ -17,7 +17,7 @@ import { PmStatsTableComponent } from '../../../shared/components/environment-de
 @Component({
   selector: 'app-particles-detail',
   standalone: true,
-  imports: [CommonModule, ParticlesChartComponent, PmIndicatorsComponent, PmStatsTableComponent],
+  imports: [ParticlesChartComponent, PmIndicatorsComponent, PmStatsTableComponent],
   templateUrl: './particles-detail.component.html',
 })
 export class ParticlesDetailComponent {}

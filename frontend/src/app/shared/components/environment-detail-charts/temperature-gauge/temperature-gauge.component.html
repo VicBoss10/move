@@ -1,4 +1,4 @@
-<ng-container *ngIf="gaugeData$ | async as data">
+@if (gaugeData$ | async; as data) {
   <div
     class="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br dark:border-gray-800 dark:bg-gradient-to-br dark:from-white/[0.03] dark:to-white/[0.02] min-h-[480px] flex flex-col"
     [ngClass]="'bg-gradient-to-br ' + data.bgColor"
@@ -8,7 +8,6 @@
       <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Temperatura Actual</h3>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Indicador de temperatura</p>
     </div>
-
     <!-- Gauge Container -->
     <div class="flex flex-col items-center justify-center px-5 py-8 sm:px-6 flex-1">
       <!-- SVG Gauge -->
@@ -24,7 +23,6 @@
             stroke-width="12"
             class="text-gray-200 dark:text-gray-700"
           />
-
           <!-- Progress circle -->
           <circle
             cx="100"
@@ -37,7 +35,6 @@
             stroke-linecap="round"
             [ngClass]="'origin-center -rotate-90 transition-all duration-500 ' + data.gaugeColor"
           />
-
           <!-- Center text -->
           <text
             x="100"
@@ -58,7 +55,6 @@
           </text>
         </svg>
       </div>
-
       <!-- Status -->
       <div class="mt-6 text-center">
         <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Estado</p>
@@ -66,7 +62,6 @@
           {{ data.status }}
         </p>
       </div>
-
       <!-- Temperature Scale -->
       <div class="mt-8 w-full">
         <div
@@ -85,4 +80,4 @@
       </div>
     </div>
   </div>
-</ng-container>
+}

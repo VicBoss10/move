@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TemperatureChartComponent } from '../../../shared/components/environment-detail-charts/temperature-chart/temperature-chart.component';
 import { TemperatureGaugeComponent } from '../../../shared/components/environment-detail-charts/temperature-gauge/temperature-gauge.component';
 import { TemperatureStatsTableComponent } from '../../../shared/components/environment-detail-charts/temperature-stats-table/temperature-stats-table.component';
@@ -16,12 +16,7 @@ import { TemperatureStatsTableComponent } from '../../../shared/components/envir
 @Component({
   selector: 'app-temperature-detail',
   standalone: true,
-  imports: [
-    CommonModule,
-    TemperatureChartComponent,
-    TemperatureGaugeComponent,
-    TemperatureStatsTableComponent,
-  ],
+  imports: [TemperatureChartComponent, TemperatureGaugeComponent, TemperatureStatsTableComponent],
   templateUrl: './temperature-detail.component.html',
 })
 export class TemperatureDetailComponent {}

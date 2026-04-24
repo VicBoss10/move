@@ -6,7 +6,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Location } from '../../../../core/models/location.model';
 import { Device } from '../../../../core/models/device.model';
@@ -44,7 +44,7 @@ import {
 @Component({
   selector: 'app-location-table',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ModalComponent, LocationMapPickerComponent],
+  imports: [ReactiveFormsModule, ModalComponent, LocationMapPickerComponent],
   templateUrl: './location-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
