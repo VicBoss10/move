@@ -8,6 +8,9 @@ keycloak/*-import*.json
 #docs
 docs/*
 
+#claude
+CLAUDE.md
+
 #tests
 test/
 tools/*
