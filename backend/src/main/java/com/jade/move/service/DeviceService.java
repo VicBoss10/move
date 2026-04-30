@@ -31,10 +31,8 @@ public class DeviceService {
     private final KeycloakAdminService keycloakAdminService;
     private final SensorDataService sensorDataService;
 
-    // Scheduler for provisioning rollback checks
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-    // TTL in seconds to wait for first sensor data
     private final int provisioningTtlSeconds;
 
     public DeviceService(DeviceRepository deviceRepository,
@@ -51,7 +49,6 @@ public class DeviceService {
         this.keycloakAdminService = keycloakAdminService;
         this.sensorDataService = sensorDataService;
 
-        // Read TTL config (default 60)
         String ttlProp = env.getProperty("provisioning.ttl-seconds", "60");
         int ttl = 60;
         try {
@@ -185,7 +182,6 @@ public class DeviceService {
             throw new IllegalArgumentException("RegisterDeviceRequest cannot be null");
         }
 
-        // Validar campos requeridos
         if (request.getName() == null || request.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Device name is required");
         }
@@ -196,10 +192,8 @@ public class DeviceService {
             throw new IllegalArgumentException("Location ID is required");
         }
 
-        // Obtener Location
         Location location = locationService.getLocationById(request.getLocationId());
 
-        // Crear Device
         Device device = new Device();
         device.setName(request.getName());
         device.setType(request.getType());
@@ -208,7 +202,6 @@ public class DeviceService {
 
         Device savedDevice = deviceRepository.save(device);
 
-        // Si es cámara, crear también la entidad Camera
         if (request.getType() == DeviceType.CAMERA) {
             if (request.getStreamType() == null) {
                 throw new IllegalArgumentException("StreamType is required for cameras");
@@ -225,9 +218,7 @@ public class DeviceService {
             cameraService.createCamera(camera);
         }
 
-        // Si es sensor, crear también la entidad Sensor (similar a Camera)
         if (request.getType() == DeviceType.SENSOR) {
-            // Leer campos específicos desde el mismo DTO RegisterDeviceRequest
             if (request.getMacAddress() == null || request.getMacAddress().trim().isEmpty()) {
                 throw new IllegalArgumentException("macAddress is required for sensors");
             }
@@ -242,18 +233,15 @@ public class DeviceService {
             sensor.setRegisteredAt(LocalDateTime.now());
 
             Sensor savedSensor = sensorService.createSensor(sensor);
-            // Para sensors: crear client en Keycloak y devolver credenciales en la respuesta (sin persistir)
             try {
                 String baseClientName = "sensor-device-" + savedDevice.getId();
                 KeycloakClientInfo clientInfo = keycloakAdminService.createClientForDevice(baseClientName);
 
-                // Persist internal id for potential revocation
                 if (clientInfo != null && clientInfo.getInternalId() != null) {
                     savedSensor.setKeycloakInternalId(clientInfo.getInternalId());
                     sensorService.updateSensor(savedSensor);
                 }
 
-                // If device was created as PROVISIONAL, schedule rollback check
                 if (savedDevice.getState() == DeviceState.PROVISIONAL) {
                     scheduleProvisioningRollback(savedDevice.getId(), savedSensor.getId(), clientInfo != null ? clientInfo.getInternalId() : null);
                 }
@@ -264,8 +252,6 @@ public class DeviceService {
             } catch (Exception e) {
                 throw new RuntimeException("Failed to create Keycloak client for sensor: " + e.getMessage(), e);
             }
-            // Nota: request.getWifiPassword() / getWifiSsid() están disponibles pero no se persisten;
-            // se usan para provisioning transaccional desde frontend hacia ESP32 si corresponde.
         }
 
         RegisterDeviceResponse resp = new RegisterDeviceResponse(savedDevice.getId(), "Device registered successfully");
@@ -273,9 +259,9 @@ public class DeviceService {
     }
 
     /**
-     * Programa una tarea que espera el TTL y verifica si llegó al menos un dato
-     * de sensor para el dispositivo provisionado. Si no llega, realiza rollback
-     * (elimina sensor, dispositivo y revoca client en Keycloak).
+     * Schedules a task to wait for the TTL and verify if at least one sensor data
+     * point arrived for the provisioned device. If not, performs rollback
+     * (deletes sensor, device, and revokes Keycloak client).
      */
     private void scheduleProvisioningRollback(Integer deviceId, Integer sensorId, String keycloakInternalId) {
         if (deviceId == null || sensorId == null) return;

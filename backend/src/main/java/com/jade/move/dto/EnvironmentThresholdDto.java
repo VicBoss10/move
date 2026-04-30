@@ -4,33 +4,19 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 /**
- * DTO (Data Transfer Object) para transferencia de datos de umbrales ambientales.
+ * Data Transfer Object for environment threshold data exchange.
  *
- * <p>Transporta información sobre umbrales de métricas ambientales entre el cliente
- * y el servidor. Incluye todos los campos necesarios para crear, actualizar y
- * consultar umbrales personalizados.</p>
- *
- * @since 0.0.1
+ * <p>Carries environment metric threshold information between client and server.
+ * Includes all fields needed to create, update, and retrieve custom thresholds.</p>
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class EnvironmentThresholdDto {
-    /** Identificador único del umbral. */
     private Integer id;
-
-    /** Nombre de la métrica ambiental (co2, pm25, temperatura, etc.). */
     private String metric;
-
-    /** Nivel del umbral (good, moderate, poor, critical). */
     private String level;
-
-    /** Valor máximo del umbral. Nulo para el nivel crítico. */
     private Double maxValue;
-
-    /** Marca de tiempo de creación del registro. */
     private LocalDateTime createdAt;
-
-    /** Marca de tiempo de la última actualización del registro. */
     private LocalDateTime updatedAt;
 }

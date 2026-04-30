@@ -8,45 +8,43 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repositorio para la gestión de persistencia de umbrales ambientales.
+ * Repository for persistence management of environment thresholds.
  *
- * <p>Proporciona métodos especializados para acceder, crear, actualizar y eliminar
- * registros de umbrales de métricas ambientales en la base de datos.</p>
- *
- * @since 0.0.1
+ * <p>Provides specialized methods to access, create, update, and delete
+ * environment metric threshold records in the database.</p>
  */
 @Repository
 public interface EnvironmentThresholdRepository extends JpaRepository<EnvironmentThreshold, Integer> {
 
     /**
-     * Obtiene todos los umbrales para una métrica específica, ordenados por nivel.
+     * Retrieves all thresholds for a specific metric, ordered by level.
      *
-     * @param metric nombre de la métrica (co2, pm25, temperatura, etc.)
-     * @return lista de umbrales ordenada por nivel
+     * @param metric metric name (co2, pm25, temperature, etc.)
+     * @return list of thresholds ordered by level
      */
     List<EnvironmentThreshold> findByMetricOrderByLevel(String metric);
 
     /**
-     * Obtiene un umbral específico por métrica y nivel.
+     * Retrieves a specific threshold by metric and level.
      *
-     * @param metric nombre de la métrica
-     * @param level nivel del umbral (good, moderate, poor, critical)
-     * @return Optional con el umbral encontrado, vacío si no existe
+     * @param metric metric name
+     * @param level threshold level (good, moderate, poor, critical)
+     * @return Optional with the found threshold, empty if not exists
      */
     Optional<EnvironmentThreshold> findByMetricAndLevel(String metric, String level);
 
     /**
-     * Obtiene todos los umbrales registrados en la base de datos.
+     * Retrieves all registered thresholds in the database.
      *
-     * @return lista completa de umbrales
+     * @return complete list of thresholds
      */
     @Override
     List<EnvironmentThreshold> findAll();
 
     /**
-     * Elimina todos los umbrales asociados a una métrica específica.
+     * Deletes all thresholds associated with a specific metric.
      *
-     * @param metric nombre de la métrica cuyos umbrales serán eliminados
+     * @param metric metric name whose thresholds will be deleted
      */
     void deleteByMetric(String metric);
 }

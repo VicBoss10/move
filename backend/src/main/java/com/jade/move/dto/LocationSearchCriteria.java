@@ -8,5 +8,5 @@ public class LocationSearchCriteria {
     private String keyword;
     private Double latitude;
     private Double longitude;
-    private Double radiusKm; // Para búsqueda por proximidad
+    private Double radiusKm;
 }

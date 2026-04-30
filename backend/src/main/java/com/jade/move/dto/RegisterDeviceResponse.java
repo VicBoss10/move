@@ -3,8 +3,7 @@ package com.jade.move.dto;
 public class RegisterDeviceResponse {
     private Integer deviceId;
     private String message;
-    private KeycloakClientInfo keycloakClientInfo; // null unless device is SENSOR
-
+    private KeycloakClientInfo keycloakClientInfo;
     public RegisterDeviceResponse() {}
 
     public RegisterDeviceResponse(Integer deviceId, String message) {

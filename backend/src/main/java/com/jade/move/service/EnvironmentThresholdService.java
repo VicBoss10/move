@@ -11,13 +11,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Servicio para la gestión de umbrales ambientales.
+ * Service for managing environment thresholds.
  *
- * <p>Proporciona operaciones CRUD y lógica de negocio para los umbrales personalizables
- * de métricas ambientales. Maneja la conversión entre entidades y DTOs, y coordina
- * las operaciones de persistencia a través del repositorio.</p>
- *
- * @since 0.0.1
+ * <p>Provides CRUD operations and business logic for customizable environment
+ * metric thresholds. Handles entity-to-DTO conversion and coordinates
+ * persistence operations through the repository.</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -26,9 +24,9 @@ public class EnvironmentThresholdService {
     private final EnvironmentThresholdRepository thresholdRepository;
 
     /**
-     * Obtiene todos los umbrales registrados en el sistema.
+     * Retrieves all registered thresholds in the system.
      *
-     * @return lista de todos los umbrales como DTOs
+     * @return list of all thresholds as DTOs
      */
     @Transactional(readOnly = true)
     public List<EnvironmentThresholdDto> getAllThresholds() {
@@ -39,10 +37,10 @@ public class EnvironmentThresholdService {
     }
 
     /**
-     * Obtiene los umbrales para una métrica específica.
+     * Retrieves thresholds for a specific metric.
      *
-     * @param metric nombre de la métrica ambiental
-     * @return lista de umbrales para esa métrica
+     * @param metric environmental metric name
+     * @return list of thresholds for that metric
      */
     @Transactional(readOnly = true)
     public List<EnvironmentThresholdDto> getThresholdsForMetric(String metric) {
@@ -53,9 +51,9 @@ public class EnvironmentThresholdService {
     }
 
     /**
-     * Obtiene todos los umbrales agrupados por métrica.
+     * Retrieves all thresholds grouped by metric.
      *
-     * @return mapa con métricas como claves y listas de umbrales como valores
+     * @return map with metrics as keys and threshold lists as values
      */
     @Transactional(readOnly = true)
     public Map<String, List<EnvironmentThresholdDto>> getThresholdsGroupedByMetric() {
@@ -68,10 +66,10 @@ public class EnvironmentThresholdService {
     }
 
     /**
-     * Crea un nuevo umbral en el sistema.
+     * Creates a new threshold in the system.
      *
-     * @param dto datos del umbral a crear
-     * @return DTO del umbral creado con su identificador asignado
+     * @param dto threshold data to create
+     * @return DTO of the created threshold with assigned ID
      */
     @Transactional
     public EnvironmentThresholdDto createThreshold(EnvironmentThresholdDto dto) {
@@ -85,12 +83,12 @@ public class EnvironmentThresholdService {
     }
 
     /**
-     * Actualiza un umbral existente.
+     * Updates an existing threshold.
      *
-     * @param id identificador del umbral a actualizar
-     * @param dto nuevos datos del umbral
-     * @return DTO del umbral actualizado
-     * @throws RuntimeException si el umbral no existe
+     * @param id threshold ID to update
+     * @param dto new threshold data
+     * @return DTO of the updated threshold
+     * @throws RuntimeException if threshold not found
      */
     @Transactional
     public EnvironmentThresholdDto updateThreshold(Integer id, EnvironmentThresholdDto dto) {
@@ -104,9 +102,9 @@ public class EnvironmentThresholdService {
     }
 
     /**
-     * Elimina un umbral específico por su identificador.
+     * Deletes a specific threshold by ID.
      *
-     * @param id identificador del umbral a eliminar
+     * @param id threshold ID to delete
      */
     @Transactional
     public void deleteThreshold(Integer id) {
@@ -114,9 +112,9 @@ public class EnvironmentThresholdService {
     }
 
     /**
-     * Elimina todos los umbrales asociados a una métrica específica.
+     * Deletes all thresholds associated with a specific metric.
      *
-     * @param metric nombre de la métrica cuyos umbrales serán eliminados
+     * @param metric metric name whose thresholds will be deleted
      */
     @Transactional
     public void deleteThresholdsForMetric(String metric) {
@@ -124,13 +122,13 @@ public class EnvironmentThresholdService {
     }
 
     /**
-     * Actualiza todos los umbrales de una métrica en una sola operación.
+     * Updates all thresholds for a metric in a single operation.
      *
-     * <p>Elimina todos los umbrales existentes para la métrica y crea nuevos registros
-     * con los valores proporcionados. El nivel crítico se calcula automáticamente y no se persiste.</p>
+     * <p>Deletes all existing thresholds for the metric and creates new records
+     * with provided values. Critical level is calculated automatically and not persisted.</p>
      *
-     * @param metric nombre de la métrica a actualizar
-     * @param thresholds lista de nuevos umbrales para esa métrica (excluyendo crítico)
+     * @param metric metric name to update
+     * @param thresholds list of new thresholds for that metric (excluding critical)
      */
     @Transactional
     public void updateMetricThresholds(String metric, List<EnvironmentThresholdDto> thresholds) {
@@ -143,10 +141,10 @@ public class EnvironmentThresholdService {
     }
 
     /**
-     * Convierte una entidad EnvironmentThreshold a su DTO correspondiente.
+     * Converts an EnvironmentThreshold entity to its DTO.
      *
-     * @param entity la entidad a convertir
-     * @return DTO con los datos de la entidad
+     * @param entity entity to convert
+     * @return DTO with entity data
      */
     private EnvironmentThresholdDto toDto(EnvironmentThreshold entity) {
         return new EnvironmentThresholdDto(
