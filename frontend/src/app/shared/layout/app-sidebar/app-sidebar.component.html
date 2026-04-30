@@ -4,7 +4,7 @@
     'w-[290px]': (isExpanded$ | async) || (isMobileOpen$ | async) || (isHovered$ | async),
     'w-[90px]': !((isExpanded$ | async) || (isMobileOpen$ | async) || (isHovered$ | async)),
     'translate-x-0': isMobileOpen$ | async,
-    '-translate-x-full': !(isMobileOpen$ | async),
+    '-translate-x-full': (isMobileOpen$ | async) === false,
     'xl:translate-x-0': true,
   }"
   (mouseenter)="onSidebarMouseEnter()"
