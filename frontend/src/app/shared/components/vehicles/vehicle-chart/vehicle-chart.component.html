@@ -1,33 +1,82 @@
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
   <!-- Detecciones por Hora -->
   <div
-    class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]"
+    class="group overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 px-5 pt-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-slate-300 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800/50 dark:hover:border-slate-600 sm:px-6 sm:pt-6"
   >
-    <h3 class="mb-6 text-lg font-semibold text-gray-800 dark:text-white/90">
-      Detecciones por Hora
-    </h3>
-    <div class="relative h-80">
-      <canvas
-        baseChart
-        [type]="lineChartConfig.type"
-        [data]="lineChartConfig.data"
-        [options]="lineChartConfig.options"
-      ></canvas>
+    <!-- Header -->
+    <div class="mb-6">
+      <h3
+        class="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-200"
+      >
+        Detecciones por Hora
+      </h3>
+      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+        Tendencia de detecciones en las últimas 12 horas
+      </p>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="relative max-w-full overflow-x-auto custom-scrollbar pb-4">
+      <div class="animate-fadeIn -ml-5 min-w-[650px] xl:min-w-full pl-2">
+        @if (lineChartData$ | async; as data) {
+          <canvas
+            baseChart
+            type="line"
+            [data]="data"
+            [options]="lineChartOptions"
+            style="max-height: 380px; position: relative"
+          ></canvas>
+        }
+      </div>
     </div>
   </div>
 
   <!-- Tipos de Vehículos -->
   <div
-    class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]"
+    class="group overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 px-5 pt-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-slate-300 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800/50 dark:hover:border-slate-600 sm:px-6 sm:pt-6"
   >
-    <h3 class="mb-6 text-lg font-semibold text-gray-800 dark:text-white/90">Vehículos por Tipo</h3>
-    <div class="relative h-80">
-      <canvas
-        baseChart
-        [type]="barChartConfig.type"
-        [data]="barChartConfig.data"
-        [options]="barChartConfig.options"
-      ></canvas>
+    <!-- Header -->
+    <div class="mb-6">
+      <h3
+        class="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-200"
+      >
+        Vehículos por Tipo
+      </h3>
+      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+        Distribución de tipos de vehículos detectados
+      </p>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="relative max-w-full overflow-x-auto custom-scrollbar pb-4">
+      <div class="animate-fadeIn -ml-5 min-w-[650px] xl:min-w-full pl-2">
+        @if (barChartData$ | async; as data) {
+          <canvas
+            baseChart
+            type="bar"
+            [data]="data"
+            [options]="barChartOptions"
+            style="max-height: 380px; position: relative"
+          ></canvas>
+        }
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.6s ease-out;
+  }
+</style>

@@ -7,6 +7,7 @@ export enum VehicleType {
   TRUCK = 'TRUCK',
   BUS = 'BUS',
   MOTORCYCLE = 'MOTORCYCLE',
+  BICYCLE = 'BICYCLE',
 }
 
 export interface VehicleDetected {

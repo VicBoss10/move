@@ -41,7 +41,7 @@
         Total: <span class="text-gray-900 dark:text-white">{{ stats.totalDetected }}</span>
       </p>
       <!-- Tarjetas de resumen por tipo -->
-      <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
         <div class="flex flex-col items-center rounded-xl bg-blue-50 px-3 py-3 dark:bg-blue-900/20">
           <span class="text-xs font-medium text-blue-600 dark:text-blue-400"> Auto</span>
           <span class="mt-1 text-2xl font-bold text-blue-700 dark:text-blue-300">{{
@@ -68,6 +68,14 @@
           <span class="text-xs font-medium text-red-600 dark:text-red-400"> Camión</span>
           <span class="mt-1 text-2xl font-bold text-red-700 dark:text-red-300">{{
             stats.truckCount
+          }}</span>
+        </div>
+        <div
+          class="flex flex-col items-center rounded-xl bg-green-50 px-3 py-3 dark:bg-green-900/20"
+        >
+          <span class="text-xs font-medium text-green-600 dark:text-green-400"> Bicicleta</span>
+          <span class="mt-1 text-2xl font-bold text-green-700 dark:text-green-300">{{
+            stats.bicycleCount
           }}</span>
         </div>
       </div>

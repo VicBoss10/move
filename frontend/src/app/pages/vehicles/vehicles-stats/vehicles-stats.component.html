@@ -38,9 +38,11 @@
           <app-vehicle-heatmap />
         </div>
         <!-- Gráfico de línea temporal -->
-        <div class="col-span-12">
-          <app-vehicle-chart />
-        </div>
+        @if (vehicles$ | async; as vehicles) {
+          <div class="col-span-12">
+            <app-vehicle-chart [vehicles]="vehicles" />
+          </div>
+        }
       </div>
     }
   </div>

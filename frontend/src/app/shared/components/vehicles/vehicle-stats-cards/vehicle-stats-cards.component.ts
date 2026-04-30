@@ -13,6 +13,7 @@ import {
  * @property {number} motorcycleCount - Total de Motos detectadas
  * @property {number} busCount - Total de Buses detectados
  * @property {number} truckCount - Total de Camiones detectados
+ * @property {number} bicycleCount - Total de Bicicletas detectadas
  */
 export interface VehicleStats {
   totalDetected: number;
@@ -20,6 +21,7 @@ export interface VehicleStats {
   motorcycleCount: number;
   busCount: number;
   truckCount: number;
+  bicycleCount: number;
 }
 
 /**
@@ -60,6 +62,7 @@ export class VehicleStatsCardsComponent {
     motorcycleCount: 0,
     busCount: 0,
     truckCount: 0,
+    bicycleCount: 0,
   };
 
   /**
@@ -96,6 +99,12 @@ export class VehicleStatsCardsComponent {
         value: this.stats.truckCount,
         borderColor: 'yellow',
         textColor: 'text-yellow-600 dark:text-yellow-400',
+      },
+      {
+        label: 'Bicicletas',
+        value: this.stats.bicycleCount,
+        borderColor: 'green',
+        textColor: 'text-green-600 dark:text-green-400',
       },
     ];
   }

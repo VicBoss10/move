@@ -255,7 +255,9 @@ export class VehicleActivityComponent {
     const truckCount = vehicles.filter(
       (v: VehicleDetected) => v.vehicleType === VehicleType.TRUCK,
     ).length;
-    const bicycleCount = 0; // Bicicletas no disponible en VehicleType
+    const bicycleCount = vehicles.filter(
+      (v: VehicleDetected) => v.vehicleType === VehicleType.BICYCLE,
+    ).length;
 
     return [carCount, motorcycleCount, busCount, truckCount, bicycleCount];
   }

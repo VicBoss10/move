@@ -65,6 +65,11 @@ export class VehiclesStatsComponent implements OnInit, OnDestroy {
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
 
   /**
+   * Observable stream de vehículos desde el backend
+   */
+  vehicles$!: Observable<VehicleDetected[]>;
+
+  /**
    * Observable stream de estadísticas desde el backend
    */
   stats$!: Observable<VehicleStats>;
@@ -88,6 +93,7 @@ export class VehiclesStatsComponent implements OnInit, OnDestroy {
     motorcycleCount: 0,
     busCount: 0,
     truckCount: 0,
+    bicycleCount: 0,
   };
 
   /**
@@ -118,33 +124,42 @@ export class VehiclesStatsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Inicializa el observable de estadísticas con patrón reactivo
+   * Inicializa los observables de vehículos y estadísticas con patrón reactivo
    * @private
    */
   private initializeStats(): void {
-    this.stats$ = this.refreshTrigger$.pipe(
+    this.vehicles$ = this.refreshTrigger$.pipe(
       tap(() => {
         this.isLoading = true;
         this.errorMessage = null;
         this.cdr.markForCheck();
       }),
       switchMap(() => this.vehicleService.getAll()),
+      tap(() => {
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }),
+      catchError((error) => {
+        console.error('Error loading vehicles:', error);
+        this.errorMessage = 'Error al cargar vehículos';
+        this.isLoading = false;
+        this.cdr.markForCheck();
+        return of([]);
+      }),
+      shareReplay(1),
+    );
+
+    this.stats$ = this.vehicles$.pipe(
       map((vehicles: VehicleDetected[]) => ({
         totalDetected: vehicles.length,
         carCount: vehicles.filter((v) => v.vehicleType === 'CAR').length,
         motorcycleCount: vehicles.filter((v) => v.vehicleType === 'MOTORCYCLE').length,
         busCount: vehicles.filter((v) => v.vehicleType === 'BUS').length,
         truckCount: vehicles.filter((v) => v.vehicleType === 'TRUCK').length,
+        bicycleCount: vehicles.filter((v) => v.vehicleType === 'BICYCLE').length,
       })),
-      tap(() => {
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      }),
       catchError((error) => {
-        console.error('Error loading vehicle stats:', error);
-        this.errorMessage = 'Error al cargar estadísticas de vehículos';
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        console.error('Error calculating stats:', error);
         return of(this.defaultStats);
       }),
       shareReplay(1),

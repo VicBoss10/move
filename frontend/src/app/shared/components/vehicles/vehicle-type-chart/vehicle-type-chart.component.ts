@@ -46,16 +46,17 @@ export class VehicleTypeChartComponent implements OnChanges {
     motorcycleCount: 0,
     busCount: 0,
     truckCount: 0,
+    bicycleCount: 0,
   };
 
   /** Datos del gráfico, actualizados en ngOnChanges */
   donutData: ChartData<'doughnut'> = {
-    labels: ['Auto', 'Moto', 'Bus', 'Camión'],
+    labels: ['Auto', 'Moto', 'Bus', 'Camión', 'Bicicleta'],
     datasets: [
       {
-        data: [0, 0, 0, 0],
-        backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'],
-        hoverBackgroundColor: ['#2563eb', '#7c3aed', '#d97706', '#dc2626'],
+        data: [0, 0, 0, 0, 0],
+        backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981'],
+        hoverBackgroundColor: ['#2563eb', '#7c3aed', '#d97706', '#dc2626', '#059669'],
         borderWidth: 2,
         borderColor: 'transparent',
         hoverOffset: 6,
@@ -103,6 +104,7 @@ export class VehicleTypeChartComponent implements OnChanges {
               this.stats.motorcycleCount,
               this.stats.busCount,
               this.stats.truckCount,
+              this.stats.bicycleCount,
             ],
           },
         ],
