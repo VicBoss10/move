@@ -15,7 +15,7 @@
     <div
       class="flex flex-wrap gap-2 p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"
     >
-      @for (m of metrics; track m) {
+      @for (m of metrics; track trackByMetric(m)) {
         <button
           (click)="selectMetric(m)"
           [class.bg-brand-500]="m === selected"
@@ -82,7 +82,7 @@
 
         <!-- Niveles de umbral -->
         <div class="space-y-4" formArrayName="levels">
-          @for (lvl of levels.controls; track lvl; let i = $index) {
+          @for (lvl of levels.controls; track trackByIndex($index); let i = $index) {
             <div
               [formGroupName]="i"
               class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"

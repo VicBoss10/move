@@ -34,7 +34,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 export class AlertThresholdsFormComponent implements OnInit {
   metrics: EnvironmentMetricKey[] = Object.keys(ENV_THRESHOLDS) as EnvironmentMetricKey[];
   selected: EnvironmentMetricKey = 'co2';
-  form!: FormGroup;
+  form: FormGroup;
   public envThresholds = ENV_THRESHOLDS;
 
   constructor(
@@ -42,10 +42,27 @@ export class AlertThresholdsFormComponent implements OnInit {
     private thresholds: ThresholdsService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.form = this.createEmptyForm();
+  }
 
   ngOnInit(): void {
     this.buildFormFor(this.selected);
+  }
+
+  private createEmptyForm(): FormGroup {
+    return this.fb.group({
+      metric: ['co2', Validators.required],
+      levels: this.fb.array([]),
+    });
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  trackByMetric(metric: EnvironmentMetricKey): string {
+    return metric;
   }
 
   /**

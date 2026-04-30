@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import {
   ENV_THRESHOLDS,
   MetricThresholdConfig,
   EnvironmentMetricKey,
 } from '../config/environment-thresholds.config';
+import { ApiThresholdsService } from './api-thresholds.service';
 
 const STORAGE_KEY = 'env_thresholds_overrides_v1';
 
@@ -12,23 +13,25 @@ const STORAGE_KEY = 'env_thresholds_overrides_v1';
 export class ThresholdsService {
   /** Almacén reactivo con la configuración actual (incluye overrides). */
   private store$ = new BehaviorSubject<Record<EnvironmentMetricKey, MetricThresholdConfig>>(
-    this.load(),
+    this.loadSync(),
   );
 
-  constructor() {}
+  private initialized = false;
+
+  constructor(private apiThresholds: ApiThresholdsService) {
+    this.initializeFromApi();
+  }
 
   /**
-   * Carga la configuración desde `localStorage` y la mergea con los valores
-   * por defecto definidos en `ENV_THRESHOLDS`.
-   * @returns Mapa de metric key -> MetricThresholdConfig
+   * Carga desde localStorage de forma síncrona para inicialización rápida.
+   * Se actualiza desde la API cuando esté disponible.
    */
-  private load(): Record<EnvironmentMetricKey, MetricThresholdConfig> {
+  private loadSync(): Record<EnvironmentMetricKey, MetricThresholdConfig> {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const overrides = (raw ? JSON.parse(raw) : {}) as Partial<
         Record<EnvironmentMetricKey, Partial<MetricThresholdConfig>>
       >;
-      // shallow merge of each metric
       const merged: Record<EnvironmentMetricKey, MetricThresholdConfig> = {
         ...(ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>),
       };
@@ -40,6 +43,33 @@ export class ThresholdsService {
     } catch {
       return { ...(ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>) };
     }
+  }
+
+  /**
+   * Intenta cargar los umbrales desde la API backend.
+   * Si falla, mantiene los valores por defecto.
+   */
+  private initializeFromApi(): void {
+    this.apiThresholds.getThresholdsGrouped().subscribe({
+      next: (grouped) => {
+        const current = this.store$.getValue();
+        const updated: Record<EnvironmentMetricKey, MetricThresholdConfig> = { ...current };
+
+        for (const [metric, dtos] of Object.entries(grouped)) {
+          const config = this.apiThresholds.convertApiToConfig(dtos);
+          if (config) {
+            updated[metric as EnvironmentMetricKey] = config;
+          }
+        }
+
+        this.store$.next(updated);
+        this.initialized = true;
+      },
+      error: () => {
+        // Si falla la API, seguimos con los valores por defecto
+        this.initialized = true;
+      },
+    });
   }
 
   /**
@@ -60,7 +90,8 @@ export class ThresholdsService {
   }
 
   /**
-   * Actualiza la configuración de una métrica y persiste sólo los overrides.
+   * Actualiza la configuración de una métrica.
+   * Persiste en el backend y luego en localStorage como fallback.
    * @param metric - Clave de la métrica
    * @param cfg - Nueva configuración completa de la métrica
    */
@@ -70,7 +101,19 @@ export class ThresholdsService {
       ...current,
       [metric]: cfg,
     } as Record<EnvironmentMetricKey, MetricThresholdConfig>;
-    // persist overrides (only differences from default)
+
+    // Intenta persistir en el backend
+    const apiDtos = this.apiThresholds.convertConfigToApi(metric, cfg);
+    this.apiThresholds.updateMetricThresholds(metric, apiDtos).subscribe({
+      next: () => {
+        // Success - umbrales actualizados en la BD
+      },
+      error: () => {
+        // Fallo en API, pero mantiene el valor en memoria
+      },
+    });
+
+    // Persiste en localStorage como fallback
     const overrides: Partial<Record<EnvironmentMetricKey, MetricThresholdConfig>> = {};
     const defaults = ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>;
     for (const k of Object.keys(next)) {
@@ -87,12 +130,26 @@ export class ThresholdsService {
   }
 
   /**
-   * Restaura los valores por defecto y limpia los overrides persistidos.
+   * Restaura los valores por defecto y limpia los overrides.
+   * Intenta restaurar en el backend primero.
    */
   reset() {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
+
+    // Intenta restaurar todos los umbrales al estado por defecto en la BD
+    const metrics = Object.keys(ENV_THRESHOLDS) as EnvironmentMetricKey[];
+    for (const metric of metrics) {
+      const defaultConfig = ENV_THRESHOLDS[metric];
+      const apiDtos = this.apiThresholds.convertConfigToApi(metric, defaultConfig);
+      this.apiThresholds.updateMetricThresholds(metric, apiDtos).subscribe({
+        error: () => {
+          // Silenciosamente falla si la API no está disponible
+        },
+      });
+    }
+
     this.store$.next({
       ...(ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>),
     });
