@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Subject, of, combineLatest } from 'rxjs';
 import { catchError, finalize, takeUntil, map } from 'rxjs/operators';
-import { GoogleMapsModule, MapInfoWindow, MapMarker } from '@angular/google-maps';
+import { GoogleMapsModule, MapInfoWindow, MapAdvancedMarker } from '@angular/google-maps';
 import { LocationFiltersComponent } from '../location-filters/location-filters.component';
 import { LocationService } from '../../../../core/services/location.service';
 import { DeviceService } from '../../../../core/services/device.service';
@@ -254,12 +254,12 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * Handles map marker click to display location info and load associated devices.
    * Sets selectedInfoLocation reference, opens InfoWindow, and asynchronously loads
    * device list for the location. Updates device counts (camera/sensor) on load.
-   * Called from [routerLink] directive with (markerClick) event in template.
-   * @param {MapMarker} marker - Google Maps marker element
+   * Called from map-advanced-marker click event in template.
+   * @param {MapAdvancedMarker} marker - Google Maps advanced marker element
    * @param {AppLocation} location - Location object associated with clicked marker
    * @returns {void}
    */
-  onMarkerClick(marker: MapMarker, location: AppLocation): void {
+  onMarkerClick(marker: MapAdvancedMarker, location: AppLocation): void {
     this.selectedInfoLocation = location as LocationView;
     if (this.infoWindow) this.infoWindow.open(marker);
     this.cdr.markForCheck();
@@ -295,11 +295,11 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
    * Generates custom SVG marker icon with dynamic color and size based on activity recency and device count.
    * Recent activity (last 24h) uses green (#10B981), older uses light green (#14d83f).
    * Base size is 36px for recent, 48px for older; increases by 6px per device (max +24px).
-   * Returns data URI with URL-encoded SVG string for use with google.maps.Marker.
+   * Returns HTML element with SVG for use with AdvancedMarkerElement.
    * @param {LocationView | AppLocation} location - Location object with lastActivity and device count
-   * @returns {string} Data URI string for SVG marker icon
+   * @returns {HTMLElement} HTML element containing SVG marker icon
    */
-  getMarkerIcon(location: LocationView | AppLocation): string | google.maps.Icon {
+  getMarkerIcon(location: LocationView | AppLocation): HTMLElement {
     const rawLast = (location as unknown as Partial<{ lastActivity?: string | Date }>).lastActivity;
     const lastActivity = rawLast ? new Date(rawLast).getTime() : 0;
     const isRecent = lastActivity && Date.now() - lastActivity < 24 * 60 * 60 * 1000;
@@ -311,13 +311,14 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     const size = baseSize + Math.min(24, (deviceCount || 0) * 6);
 
     const svg = `<?xml version='1.0' encoding='UTF-8'?>
-<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${Math.round(size * 1.3)}' viewBox='0 0 48 62'>
+<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${Math.round(size * 1.3)}' viewBox='0 0 48 62' style='cursor:pointer;'>
   <path d='M24 2C15.16 2 8 9.16 8 18c0 12 16 28 16 28s16-16 16-28c0-8.84-7.16-16-16-16z' fill='${color}' stroke='#ffffff' stroke-width='2'/>
   <circle cx='24' cy='18' r='6' fill='#ffffff'/>
 </svg>`;
 
-    const url = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
-    return url;
+    const div = document.createElement('div');
+    div.innerHTML = svg;
+    return div;
   }
 
   /**

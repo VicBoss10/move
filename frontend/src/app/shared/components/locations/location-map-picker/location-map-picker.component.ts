@@ -76,6 +76,7 @@ export class LocationMapPickerComponent implements OnInit {
   @Output() coordinatesSelected = new EventEmitter<MapCoordinates>();
 
   @ViewChild(MapInfoWindow) infoWindow!: MapInfoWindow;
+  @ViewChild(MapAdvancedMarker) advancedMarker!: MapAdvancedMarker;
 
   center: google.maps.LatLngLiteral = DEFAULT_MAP_CONFIG.center;
   zoom = DEFAULT_MAP_CONFIG.zoom;
@@ -209,13 +210,12 @@ export class LocationMapPickerComponent implements OnInit {
    * Updates infoContent with current marker position formatted to 6 decimal places,
    * then opens InfoWindow at marker location. Validates infoWindow and markerPosition
    * existence before proceeding.
-   * @param {MapAdvancedMarker} marker - Clicked map marker reference
    * @returns {void}
    */
-  onMarkerClick(marker: MapAdvancedMarker): void {
-    if (this.infoWindow && this.markerPosition) {
+  onMarkerClick(): void {
+    if (this.infoWindow && this.markerPosition && this.advancedMarker) {
       this.infoContent = `Lat: ${this.markerPosition.lat.toFixed(6)}, Lng: ${this.markerPosition.lng.toFixed(6)}`;
-      this.infoWindow.open(marker);
+      this.infoWindow.open(this.advancedMarker);
     }
   }
 }

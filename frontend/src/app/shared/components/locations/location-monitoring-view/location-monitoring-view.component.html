@@ -54,14 +54,14 @@
           height="400px"
           width="100%"
         >
-          @for (location of locations; track location) {
-            <map-marker
-              #markerRef="mapMarker"
+          @for (location of locations; track location.id) {
+            <map-advanced-marker
+              #markerRef="mapAdvancedMarker"
               [position]="{ lat: location.latitude, lng: location.longitude }"
               [title]="location.description || 'Punto de monitoreo'"
-              [icon]="getMarkerIcon(location)"
-              (mapClick)="onMarkerClick(markerRef, location)"
-            ></map-marker>
+              [content]="getMarkerIcon(location)"
+              (gmpClick)="onMarkerClick(markerRef, location)"
+            ></map-advanced-marker>
           }
           <map-info-window>
             @if (selectedInfoLocation) {
