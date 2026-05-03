@@ -107,6 +107,12 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
   heatmapData: google.maps.LatLng[] = [];
 
   /**
+   * Heat circles rendered on the map for gradient visualization
+   * @private
+   */
+  private heatCircles: google.maps.Circle[] = [];
+
+  /**
    * Heatmap layer rendering configuration (radius, opacity, dissipating animation)
    */
   heatmapOptions = {
@@ -138,6 +144,7 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
    * Lifecycle hook: cleans up subscriptions on destroy
    */
   ngOnDestroy(): void {
+    this.clearHeatCircles();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -228,10 +235,17 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
     this.locationCount = locationMap.size;
 
     const points: google.maps.LatLng[] = [];
+    const heatPoints: Array<{ lat: number; lng: number; weight: number }> = [];
+
     locationMap.forEach((point) => {
       for (let i = 0; i < point.count; i++) {
         points.push(new google.maps.LatLng(point.lat, point.lng));
       }
+      heatPoints.push({
+        lat: point.lat,
+        lng: point.lng,
+        weight: point.count,
+      });
     });
 
     this.heatmapData = points;
@@ -239,6 +253,65 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
     if (locationMap.size > 0) {
       const first = locationMap.values().next().value!;
       this.center = { lat: first.lat, lng: first.lng };
+      setTimeout(() => this.renderHeatGradient(heatPoints), 100);
     }
+  }
+
+  /**
+   * Renders heat circles on map with color gradient based on detection weight.
+   * Creates visual heatmap effect without using deprecated HeatmapLayer API.
+   * @param {Array} heatPoints - Array of coordinates with detection weights
+   * @private
+   */
+  private renderHeatGradient(
+    heatPoints: Array<{ lat: number; lng: number; weight: number }>,
+  ): void {
+    const mapElement = document.querySelector('google-map');
+    if (!mapElement) return;
+
+    setTimeout(() => {
+      const mapInstance = (mapElement as any).googleMap;
+      if (!mapInstance) return;
+
+      this.clearHeatCircles();
+      const maxWeight = Math.max(...heatPoints.map((p) => p.weight), 1);
+      const gradient = [
+        '#0d9488', // teal (cool)
+        '#16a34a', // green
+        '#eab308', // yellow
+        '#f97316', // orange
+        '#dc2626', // red (hot)
+      ];
+
+      heatPoints.forEach((point) => {
+        const normalized = point.weight / maxWeight;
+        const colorIndex = Math.min(
+          Math.floor(normalized * (gradient.length - 1)),
+          gradient.length - 1,
+        );
+        const color = gradient[colorIndex];
+
+        const circle = new google.maps.Circle({
+          center: { lat: point.lat, lng: point.lng },
+          radius: 200 + normalized * 500,
+          map: mapInstance,
+          fillColor: color,
+          fillOpacity: 0.6 - normalized * 0.3,
+          strokeColor: color,
+          strokeWeight: 0,
+        });
+
+        this.heatCircles.push(circle);
+      });
+    }, 50);
+  }
+
+  /**
+   * Clears all rendered heat circles from map.
+   * @private
+   */
+  private clearHeatCircles(): void {
+    this.heatCircles.forEach((circle) => circle.setMap(null));
+    this.heatCircles = [];
   }
 }
