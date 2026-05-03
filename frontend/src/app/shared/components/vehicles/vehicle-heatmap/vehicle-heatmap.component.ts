@@ -14,13 +14,6 @@ import { VehicleDetected } from '../../../../core/models/vehicle.model';
 import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
 import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
 
-interface HeatPoint {
-  lat: number;
-  lng: number;
-  count: number;
-  description: string;
-}
-
 /**
  * VehicleHeatmapComponent
  *
@@ -167,7 +160,8 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
     }
 
     try {
-      await (google.maps as any).importLibrary('visualization');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (window as any).google.maps.importLibrary('visualization');
     } catch {
       this.errorMessage = 'Failed to load visualization library.';
       this.isLoading = false;
@@ -182,7 +176,7 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
       .getAll()
       .pipe(
         takeUntil(this.destroy$),
-        catchError((error) => {
+        catchError((error: unknown) => {
           console.error('Error loading heatmap data:', error);
           this.errorMessage = 'Failed to load heatmap data.';
           return of([]);

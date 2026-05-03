@@ -1,6 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../../../core/services/auth.service';
 
+interface UserInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  bio: string;
+  social: Record<string, unknown>;
+}
+
 @Component({
   selector: 'app-user-info-card',
   imports: [],
@@ -10,7 +19,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class UserInfoCardComponent implements OnInit {
   constructor(private auth: AuthService) {}
 
-  user: any = {
+  user: UserInfo = {
     firstName: '',
     lastName: '',
     email: '',

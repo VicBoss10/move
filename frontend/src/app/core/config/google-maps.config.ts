@@ -31,9 +31,9 @@ export const GOOGLE_MAPS_API_KEY = new InjectionToken<string>('GOOGLE_MAPS_API_K
  * @returns {string} The Google Maps API key or empty string if not configured.
  */
 export function getGoogleMapsApiKey(): string {
-  const runtimeKey = (window as any).__GOOGLE_MAPS_API_KEY__;
+  const runtimeKey = (window as unknown as Record<string, unknown>)['__GOOGLE_MAPS_API_KEY__'];
   if (runtimeKey && runtimeKey !== '__GOOGLE_MAPS_KEY_PLACEHOLDER__') {
-    return runtimeKey;
+    return runtimeKey as string;
   }
   return '';
 }

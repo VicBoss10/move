@@ -2,6 +2,18 @@ import { Component, OnInit } from '@angular/core';
 import { ModalService } from '../../../services/modal.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
+interface UserMetaInfo {
+  firstName: string;
+  lastName: string;
+  role: string;
+  location: string;
+  avatar: string;
+  social: Record<string, unknown>;
+  email: string;
+  phone: string;
+  bio: string;
+}
+
 @Component({
   selector: 'app-user-meta-card',
   imports: [],
@@ -22,8 +34,7 @@ export class UserMetaCardComponent implements OnInit {
     this.isOpen = false;
   }
 
-  // User data sourced from token / AuthService
-  user: any = {
+  user: UserMetaInfo = {
     firstName: '',
     lastName: '',
     role: 'User',

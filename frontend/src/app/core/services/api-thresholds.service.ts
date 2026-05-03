@@ -14,22 +14,13 @@ interface ApiThresholdDto {
   /** Environmental metric name (e.g., 'co2', 'temperature'). */
   metric: string;
   /** Threshold level name (e.g., 'good', 'moderate', 'poor'). */
-  level: string;
+  level: 'good' | 'moderate' | 'poor' | 'critical';
   /** Maximum value for this threshold level. */
   maxValue: number | null;
   /** Timestamp when threshold was created. */
   createdAt?: string;
   /** Timestamp when threshold was last updated. */
   updatedAt?: string;
-}
-
-/**
- * API response structure for grouped thresholds.
- * @interface ThresholdResponse
- */
-interface ThresholdResponse {
-  /** Thresholds grouped by metric name. */
-  [metric: string]: ThresholdLevel[];
 }
 
 /**
@@ -143,7 +134,7 @@ export class ApiThresholdsService {
 
     const levels: ThresholdLevel[] = sortedByMax.map((dto) => ({
       max: dto.maxValue || 0,
-      key: dto.level as any,
+      key: dto.level,
       label: this.getLabelForLevel(dto.level),
       color: this.getColorForLevel(dto.level),
       textClass: this.getTextClassForLevel(dto.level),
@@ -175,7 +166,7 @@ export class ApiThresholdsService {
       .filter((level) => level.max !== Infinity)
       .map((level) => ({
         metric,
-        level: level.key,
+        level: level.key as 'good' | 'moderate' | 'poor' | 'critical',
         maxValue: level.max,
       }));
   }

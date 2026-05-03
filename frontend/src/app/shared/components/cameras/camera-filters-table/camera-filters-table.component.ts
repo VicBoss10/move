@@ -23,7 +23,7 @@ import { CameraService } from '../../../../core/services/camera.service';
 import { DeviceService } from '../../../../core/services/device.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { ToastService } from '../../../../core/services/toast.service';
-import { Camera } from '../../../../core/models/camera.model';
+import { Camera, StreamResponse } from '../../../../core/models/camera.model';
 import { Device, DeviceState } from '../../../../core/models/device.model';
 
 /**
@@ -125,7 +125,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
       switchMap(([searchTerm]) =>
         this.apiService.get<Camera[]>('/cameras').pipe(
           map((cameras: Camera[]) => this.filterCameras(cameras, searchTerm || '')),
-          catchError((error) => {
+          catchError(() => {
             this.changeDetectorRef.markForCheck();
             return of([] as Camera[]);
           }),
@@ -294,16 +294,16 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.loadingStates.set(camera.id, false);
           console.log(`Device ${camera.id} activated and stream started`);
           this.cameraService.triggerRefresh();
           this.changeDetectorRef.markForCheck();
         },
-        error: (error) => {
-          console.error('Error starting detection for camera', camera.id, error);
+        error: (_error) => {
+          console.error('Error starting detection for camera', camera.id, _error);
           this.loadingStates.set(camera.id, false);
-          if (error?.status === 409) {
+          if (_error?.status === 409) {
             this.toastService.error(
               'Sesión ya activa para la cámara, reinicie la página',
               'Conflicto',
@@ -350,8 +350,8 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
       .getActiveStreamByDevice(camera.device.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (res) => {
-          const sessionId = (res as any)?.sessionId;
+        next: (res: StreamResponse) => {
+          const sessionId = res.sessionId;
           if (sessionId) {
             this.cameraService
               .stopStream(sessionId)

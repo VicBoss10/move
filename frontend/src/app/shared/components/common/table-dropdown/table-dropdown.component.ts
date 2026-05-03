@@ -2,6 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { createPopper, Instance } from '@popperjs/core';
 
+interface DropdownButton {
+  // Define the structure of the dropdown button
+}
+
+interface DropdownContent {
+  // Define the structure of the dropdown content
+}
+
 @Component({
   selector: 'app-table-dropdown',
   imports: [CommonModule],
@@ -9,8 +17,8 @@ import { createPopper, Instance } from '@popperjs/core';
   styles: ``,
 })
 export class TableDropdownComponent implements AfterViewInit, OnDestroy {
-  @Input() dropdownButton: any;
-  @Input() dropdownContent: any;
+  @Input() dropdownButton!: DropdownButton;
+  @Input() dropdownContent!: DropdownContent;
   @ViewChild('buttonRef') buttonRef!: ElementRef<HTMLDivElement>;
   @ViewChild('contentRef') contentRef!: ElementRef<HTMLDivElement>;
 

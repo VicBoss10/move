@@ -22,7 +22,7 @@ export class QueryParamsBuilder {
    * @param {any} value - Parameter value to be converted to string.
    * @returns {QueryParamsBuilder} This instance for method chaining.
    */
-  addIfPresent(key: string, value: any): this {
+  addIfPresent(key: string, value: unknown): this {
     if (value !== null && value !== undefined && value !== '') {
       this.params[key] = this.convertToString(value);
     }
@@ -104,7 +104,7 @@ export class QueryParamsBuilder {
    * @param {any} value - Value to convert.
    * @returns {string} String representation of the value.
    */
-  private convertToString(value: any): string {
+  private convertToString(value: unknown): string {
     if (value instanceof Date) {
       return value.toISOString();
     }

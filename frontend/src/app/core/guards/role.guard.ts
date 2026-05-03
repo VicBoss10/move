@@ -26,7 +26,7 @@ import { ToastService } from '../services/toast.service';
  *   }
  * ];
  */
-export const roleGuard: CanActivateFn = async (route, state) => {
+export const roleGuard: CanActivateFn = async (route, _state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const toast = inject(ToastService);

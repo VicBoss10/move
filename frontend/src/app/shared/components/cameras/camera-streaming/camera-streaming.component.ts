@@ -413,7 +413,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
    */
   private isSafariOrIos(): boolean {
     const ua = navigator.userAgent;
-    return /iPad|iPhone|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/.test(ua));
+    return /iPad|iPhone|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/u.test(ua));
   }
 
   /**
@@ -421,7 +421,6 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
    * @returns {boolean} True if mobile browser detected
    */
   isMobile(): boolean {
-    // eslint-disable-next-line no-useless-escape
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent,
     );
@@ -432,8 +431,6 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
    * Converts MJPEG feed URL to snapshot endpoint and polls sequentially.
    * On mobile, requests smaller frames (640px, quality 50) for faster transfer.
    * Uses recursive scheduling with zero delay on success, 300ms on error.
-   * @param {string} mjpegUrl - MJPEG feed URL to convert to snapshot base
-   * @private
    */
   private startSnapshotPolling(mjpegUrl: string): void {
     const snapshotBase = mjpegUrl

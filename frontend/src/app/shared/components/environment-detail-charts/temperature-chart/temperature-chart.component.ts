@@ -308,13 +308,13 @@ export class TemperatureChartComponent {
               pointHoverBorderWidth: 3,
               yAxisID: 'y',
               segment: {
-                borderColor: (ctx: any) => {
-                  if (ctx.p0DataIndex !== undefined && ctx.p1DataIndex !== undefined) {
+                borderColor: (ctx: Record<string, unknown>) => {
+                  if ((ctx['p0DataIndex'] as number | undefined) !== undefined && (ctx['p1DataIndex'] as number | undefined) !== undefined) {
                     return '#f97316';
                   }
                   return 'rgba(249, 115, 22, 0.5)';
                 },
-              },
+              } as Record<string, unknown>,
             },
           ],
         };

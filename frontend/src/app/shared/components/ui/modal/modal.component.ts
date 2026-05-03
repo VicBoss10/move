@@ -40,18 +40,18 @@ export class ModalComponent implements OnChanges, OnInit, OnDestroy {
     document.body.style.overflow = this.isOpen ? 'hidden' : 'unset';
   }
 
-  onBackdropClick(event: MouseEvent) {
+  onBackdropClick(): void {
     if (!this.isFullscreen) {
       this.close.emit();
     }
   }
 
-  onContentClick(event: MouseEvent) {
+  onContentClick(event: MouseEvent): void {
     event.stopPropagation();
   }
 
-  @HostListener('document:keydown.escape', ['$event'])
-  onEscape(event: Event) {
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
     if (this.isOpen) {
       this.close.emit();
     }

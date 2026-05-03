@@ -460,10 +460,10 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
    * Builds chart options with metric-specific styling.
    *
    * @private
-   * @param {MetricOption} m - Metric for chart configuration.
+   * @param {MetricOption} _m - Metric for chart configuration.
    * @returns {ChartConfiguration<'bar'>['options']} Chart.js options object.
    */
-  private buildChartOptions(m: MetricOption): ChartConfiguration<'bar'>['options'] {
+  private buildChartOptions(_m: MetricOption): ChartConfiguration<'bar'>['options'] {
     return {
       responsive: true,
       maintainAspectRatio: false,

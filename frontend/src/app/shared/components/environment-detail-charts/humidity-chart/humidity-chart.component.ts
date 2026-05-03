@@ -329,13 +329,13 @@ export class HumidityChartComponent {
               pointHoverBorderWidth: 3,
               yAxisID: 'y',
               segment: {
-                borderColor: (ctx: any) => {
-                  if (ctx.p0DataIndex !== undefined && ctx.p1DataIndex !== undefined) {
+                borderColor: (ctx: Record<string, unknown>) => {
+                  if ((ctx['p0DataIndex'] as number | undefined) !== undefined && (ctx['p1DataIndex'] as number | undefined) !== undefined) {
                     return '#3b82f6';
                   }
                   return 'rgba(59, 130, 246, 0.5)';
                 },
-              },
+              } as Record<string, unknown>,
             },
           ],
         };
