@@ -4,15 +4,23 @@ import {
   OnDestroy,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  NgZone,
+  ViewChild,
 } from '@angular/core';
 
-import { GoogleMapsModule } from '@angular/google-maps';
+import { GoogleMap, GoogleMapsModule } from '@angular/google-maps';
 import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 import { VehicleDetected } from '../../../../core/models/vehicle.model';
 import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
 import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
+
+interface HeatPoint {
+  lat: number;
+  lng: number;
+  weight: number;
+}
 
 /**
  * VehicleHeatmapComponent
@@ -25,12 +33,12 @@ import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-l
  * 1. Loads all vehicle detections from backend via VehicleDetectedService
  * 2. Groups detections by location coordinate (latitude/longitude from device)
  * 3. Uses detection count as weight for heatmap intensity
- * 4. Renders weighted coordinates to Google Maps HeatmapLayer
+ * 4. Renders weighted coordinates with gradient circles to Google Maps
  *
  * Features:
- * - Google Maps heatmap layer with configurable radius, opacity, and dissipating animation
+ * - Custom gradient heatmap using google.maps.Circle (replaces deprecated HeatmapLayer)
  * - Loading state with spinner animation during API and data loading
- * - Error handling for API unavailability and visualization library loading failures
+ * - Error handling for API unavailability
  * - Empty state when no location data available (devices without GPS coordinates)
  * - Color gradient legend from cool (low activity) to hot (high activity)
  * - Auto-centering on first location with detection data
@@ -51,102 +59,72 @@ import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-l
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehicleHeatmapComponent implements OnInit, OnDestroy {
-  /**
-   * Subject for managing component lifecycle cleanup
-   * @private
-   */
   private destroy$ = new Subject<void>();
 
-  /**
-   * Map center coordinates, initialized to project default (Pasto, Nariño)
-   */
+  /** Reference to the GoogleMap component to access the underlying map instance */
+  @ViewChild(GoogleMap) private mapRef?: GoogleMap;
+
   center: google.maps.LatLngLiteral = DEFAULT_MAP_CONFIG.center;
 
-  /**
-   * Map zoom level (default 13 for city-level view)
-   */
   zoom = 13;
 
-  /**
-   * Google Maps configuration options with default styling and controls
-   */
   mapOptions: google.maps.MapOptions = {
     ...DEFAULT_MAP_CONFIG.options,
     mapTypeId: 'roadmap',
   };
 
-  /**
-   * Flag indicating if Google Maps API has been successfully loaded
-   */
   isApiLoaded = false;
 
-  /**
-   * Flag indicating if data or API loading is in progress
-   */
   isLoading = false;
 
-  /**
-   * Error message to display if API load or data fetch fails, null if no error
-   */
   errorMessage: string | null = null;
 
-  /**
-   * Total number of vehicle detections processed for heatmap
-   */
   totalDetections = 0;
 
-  /**
-   * Number of unique locations with detection data
-   */
   locationCount = 0;
 
-  /**
-   * Weighted array of LatLng points for heatmap visualization.
-   * Uses 'any' type to avoid strict typing dependency on dynamically-loaded google.maps.visualization
-   */
   heatmapData: google.maps.LatLng[] = [];
 
-  /**
-   * Heatmap layer rendering configuration (radius, opacity, dissipating animation)
-   */
+  private heatCircles: google.maps.Circle[] = [];
+
+  private heatPoints: HeatPoint[] = [];
+
+  /** Prevents rendering circles multiple times on repeated tilesloaded events */
+  private circlesRendered = false;
+
   heatmapOptions = {
     radius: 40,
     opacity: 0.75,
     dissipating: true,
   };
 
-  /**
-   * Initializes component with service dependencies.
-   * @param {VehicleDetectedService} vehicleService - Service for fetching vehicle detections
-   * @param {GoogleMapsLoaderService} mapsLoader - Service for loading Google Maps API
-   * @param {ChangeDetectorRef} cdr - Change detection reference for manual triggering in OnPush mode
-   */
   constructor(
     private vehicleService: VehicleDetectedService,
     private mapsLoader: GoogleMapsLoaderService,
     private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
   ) {}
 
-  /**
-   * Lifecycle hook: loads map data on initialization
-   */
   ngOnInit(): void {
     this.loadData();
   }
 
-  /**
-   * Lifecycle hook: cleans up subscriptions on destroy
-   */
   ngOnDestroy(): void {
+    this.clearHeatCircles();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   /**
-   * Asynchronously loads Google Maps API, visualization library, and vehicle detection data.
-   * Sets appropriate error messages and loading states. Calls processHeatmapData on successful load.
-   * @private
+   * Triggered when the map tiles finish loading — the map is fully usable at this point.
+   * Re-renders circles if data already arrived before the map was ready.
    */
+  onTilesLoaded(): void {
+    if (!this.circlesRendered && this.heatPoints.length > 0) {
+      this.renderHeatGradient();
+    }
+  }
+
   private async loadData(): Promise<void> {
     this.isLoading = true;
     this.cdr.markForCheck();
@@ -154,16 +132,6 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
     const mapsReady = await this.mapsLoader.load();
     if (!mapsReady) {
       this.errorMessage = 'Google Maps API unavailable. Check your API key.';
-      this.isLoading = false;
-      this.cdr.markForCheck();
-      return;
-    }
-
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (window as any).google.maps.importLibrary('visualization');
-    } catch {
-      this.errorMessage = 'Failed to load visualization library.';
       this.isLoading = false;
       this.cdr.markForCheck();
       return;
@@ -192,13 +160,6 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Groups vehicle detections by location coordinate and constructs weighted heatmap points.
-   * Each coordinate is repeated N times (where N = detection count) to create weight for heatmap intensity.
-   * Updates totalDetections, locationCount, and recalculates map center to first location with data.
-   * @param {VehicleDetected[]} vehicles - Array of vehicle detections from backend
-   * @private
-   */
   private processHeatmapData(vehicles: VehicleDetected[]): void {
     this.totalDetections = vehicles.length;
 
@@ -228,10 +189,14 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
     this.locationCount = locationMap.size;
 
     const points: google.maps.LatLng[] = [];
+    this.heatPoints = [];
+    this.circlesRendered = false;
+
     locationMap.forEach((point) => {
       for (let i = 0; i < point.count; i++) {
         points.push(new google.maps.LatLng(point.lat, point.lng));
       }
+      this.heatPoints.push({ lat: point.lat, lng: point.lng, weight: point.count });
     });
 
     this.heatmapData = points;
@@ -240,5 +205,44 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
       const first = locationMap.values().next().value!;
       this.center = { lat: first.lat, lng: first.lng };
     }
+  }
+
+  /**
+   * Renders a circle per location using color + radius scaled to detection weight.
+   * Color scale: teal (low) → green → yellow → orange → red (high).
+   */
+  private renderHeatGradient(): void {
+    const map = this.mapRef?.googleMap;
+    if (!map || this.heatPoints.length === 0) return;
+
+    this.clearHeatCircles();
+    this.circlesRendered = true;
+
+    const maxWeight = Math.max(...this.heatPoints.map((p) => p.weight), 1);
+    const gradient = ['#0d9488', '#16a34a', '#eab308', '#f97316', '#dc2626'];
+
+    this.heatPoints.forEach((point) => {
+      const normalized = point.weight / maxWeight;
+      const colorIndex = Math.min(
+        Math.floor(normalized * (gradient.length - 1)),
+        gradient.length - 1,
+      );
+
+      const circle = new google.maps.Circle({
+        center: { lat: point.lat, lng: point.lng },
+        radius: 200 + normalized * 500,
+        map,
+        fillColor: gradient[colorIndex],
+        fillOpacity: 0.55 - normalized * 0.2,
+        strokeWeight: 0,
+      });
+
+      this.heatCircles.push(circle);
+    });
+  }
+
+  private clearHeatCircles(): void {
+    this.heatCircles.forEach((c) => c.setMap(null));
+    this.heatCircles = [];
   }
 }

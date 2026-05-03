@@ -1,21 +1,20 @@
 <div class="grid grid-cols-12 gap-4 md:gap-6">
-  <!-- Estado del Sistema -->
+  <!-- System status banner -->
   <div class="col-span-12">
     <app-system-status />
   </div>
 
-  <!-- Sección 1: Ambiente (Fila 1) -->
+  <!-- Row 1: CO₂ heatmap + gas indicators / environment metrics -->
   <div class="col-span-12 xl:col-span-7">
-    <app-environment-chart />
+    <app-pollution-heatmap />
   </div>
 
-  <!-- Sección 1 Derecha: Gases y Métricas Ambientales (apiladas) -->
   <div class="col-span-12 xl:col-span-5 flex flex-col gap-6 md:gap-8">
     <div><app-gas-indicators /></div>
     <div><app-environment-metrics /></div>
   </div>
 
-  <!-- Sección 2: Actividad Vehicular (Fila 2) -->
+  <!-- Row 2: Vehicle activity + pollution summary -->
   <div class="col-span-12 xl:col-span-7">
     <app-vehicle-activity />
   </div>
@@ -24,8 +23,12 @@
     <app-pollution-summary />
   </div>
 
-  <!-- Sección 3: Contaminantes (Fila 3) -->
-  <div class="col-span-12 xl:col-span-7">
+  <!-- Row 3: Particle chart + temperature/humidity chart (equal halves) -->
+  <div class="col-span-12 xl:col-span-6">
     <app-pollution-chart />
+  </div>
+
+  <div class="col-span-12 xl:col-span-6">
+    <app-environment-chart />
   </div>
 </div>

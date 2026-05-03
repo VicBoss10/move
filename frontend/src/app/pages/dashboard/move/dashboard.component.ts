@@ -6,10 +6,11 @@ import { VehicleActivityComponent } from '../../../shared/components/move-dashbo
 import { GasIndicatorsComponent } from '../../../shared/components/move-dashboard/gas-indicators/gas-indicators.component';
 import { PollutionChartComponent } from '../../../shared/components/move-dashboard/pollution-chart/pollution-chart.component';
 import { PollutionSummaryComponent } from '../../../shared/components/move-dashboard/pollution-summary/pollution-summary.component';
+import { PollutionHeatmapComponent } from '../../../shared/components/move-dashboard/pollution-heatmap/pollution-heatmap.component';
 
 /**
  * Componente principal del dashboard MOVE (Observatorio Móvil de Emisiones Vehiculares).
- * Orquesta la visualización de 7 componentes que muestran métricas ambientales,
+ * Orquesta la visualización de componentes que muestran métricas ambientales,
  * calidad del aire, actividad vehicular y estado del sistema.
  *
  * @selector app-dashboard
@@ -26,6 +27,7 @@ import { PollutionSummaryComponent } from '../../../shared/components/move-dashb
     GasIndicatorsComponent,
     PollutionChartComponent,
     PollutionSummaryComponent,
+    PollutionHeatmapComponent,
   ],
   templateUrl: './dashboard.component.html',
 })

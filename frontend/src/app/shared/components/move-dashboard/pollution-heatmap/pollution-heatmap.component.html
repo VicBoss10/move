@@ -1,64 +1,66 @@
-<!-- Vehicle Heatmap Component
-     Displays Google Maps heatmap visualization of vehicle detection density across locations.
-     Shows concentration with color gradient: cool (low activity) to hot (high activity).
-     Includes loading, error, and empty states. -->
+<!-- Pollution Heatmap Component
+     Displays a Google Maps heatmap of CO₂ concentration by sensor location.
+     Ring color adapts to the CO₂ threshold level of each location:
+     good → green, moderate → yellow, poor → orange, critical → red. -->
 
 <div
   class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
 >
-  <!-- Page header with title and description -->
+  <!-- Header -->
   <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
     <div class="flex items-center justify-between">
       <div>
         <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Mapa de Calor — Detecciones por Zona
+          Mapa de Calor — CO₂ por Zona
         </h3>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Las zonas más cálidas (rojo/naranja) concentran más detecciones de vehículos
+          Las zonas rojas concentran mayor concentración de CO₂ · promedio última hora
         </p>
       </div>
-      <!-- Indicadores rápidos -->
-      @if (!isLoading && totalDetections > 0) {
+      <!-- Quick stats: average CO₂ and location count -->
+      @if (!isLoading && hasData) {
         <div class="hidden flex-col items-end gap-1 sm:flex">
           <span class="text-xs text-gray-500 dark:text-gray-400">
-            <span class="font-semibold text-gray-800 dark:text-white">{{ totalDetections }}</span>
-            detecciones
+            <span class="font-semibold text-gray-800 dark:text-white">
+              {{ avgCo2 | number: '1.0-0' }}
+            </span>
+            ppm promedio
           </span>
           <span class="text-xs text-gray-500 dark:text-gray-400">
             en
             <span class="font-semibold text-gray-800 dark:text-white">{{ locationCount }}</span>
-            ubicaciones
+            {{ locationCount === 1 ? 'ubicación' : 'ubicaciones' }}
           </span>
         </div>
       }
     </div>
   </div>
 
-  <!-- Loading state spinner and message -->
+  <!-- Loading spinner -->
   @if (isLoading) {
     <div class="flex items-center justify-center py-16">
       <div class="flex flex-col items-center gap-3">
         <div
           class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-brand-500 dark:border-gray-700 dark:border-t-brand-500"
         ></div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Cargando mapa de calor...</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Cargando mapa de contaminación...</p>
       </div>
     </div>
   }
 
-  <!-- Error message when API load or data fetch fails -->
+  <!-- Error state -->
   @if (errorMessage && !isLoading) {
     <div class="px-5 py-6 sm:px-6">
       <div
         class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800/30 dark:bg-red-900/20"
       >
-        <p class="text-sm text-red-700 dark:text-red-400">⚠️ {{ errorMessage }}</p>
+        <p class="text-sm text-red-700 dark:text-red-400"> {{ errorMessage }}</p>
       </div>
     </div>
   }
 
-  <!-- Empty state when no location data available -->
-  @if (!isLoading && !errorMessage && isApiLoaded && heatmapData.length === 0) {
+  <!-- Empty state: API loaded but no sensor readings with GPS in the last hour -->
+  @if (!isLoading && !errorMessage && isApiLoaded && !hasData) {
     <div class="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-6">
       <svg
         class="mb-4 h-12 w-12 text-gray-300 dark:text-gray-700"
@@ -79,37 +81,41 @@
           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
         />
       </svg>
-      <p class="text-gray-500 dark:text-gray-400">No hay datos de ubicación disponibles</p>
+      <p class="text-gray-500 dark:text-gray-400">No hay datos de contaminación disponibles</p>
       <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-        Verifica que los dispositivos tengan coordenadas GPS asignadas
+        Verifica que los dispositivos tengan coordenadas GPS y datos en la última hora
       </p>
     </div>
   }
 
-  <!-- Google Maps with gradient circle heatmap overlay -->
-  @if (!isLoading && !errorMessage && isApiLoaded && heatmapData.length > 0) {
+  <!-- Map with gradient circle overlay -->
+  @if (!isLoading && !errorMessage && isApiLoaded && hasData) {
     <div>
       <google-map
         [center]="center"
         [zoom]="zoom"
         [options]="mapOptions"
-        height="460px"
+        height="370px"
         width="100%"
         (tilesloaded)="onTilesLoaded()"
       />
-      <!-- Heatmap color legend from cool to hot colors -->
+      <!-- CO₂ level color legend -->
       <div class="border-t border-gray-200 px-5 py-3 dark:border-gray-800 sm:px-6">
         <div class="flex items-center justify-between">
-          <span class="text-xs text-gray-500 dark:text-gray-400">Baja actividad</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400">CO₂ bajo</span>
           <div class="mx-4 flex h-3 flex-1 overflow-hidden rounded-full">
             <div
               class="flex-1"
-              style="
-                background: linear-gradient(to right, #0d9488, #16a34a, #eab308, #f97316, #dc2626);
-              "
+              style="background: linear-gradient(to right, #10b981, #f59e0b, #f97316, #ef4444);"
             ></div>
           </div>
-          <span class="text-xs text-gray-500 dark:text-gray-400">Alta actividad</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400">CO₂ alto</span>
+        </div>
+        <div class="mt-1 flex justify-between text-xs text-gray-400 dark:text-gray-600">
+          <span>&lt;600 ppm</span>
+          <span>600–1000</span>
+          <span>1000–1500</span>
+          <span>&gt;1500 ppm</span>
         </div>
       </div>
     </div>
