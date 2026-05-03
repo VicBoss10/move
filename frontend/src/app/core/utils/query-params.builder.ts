@@ -1,17 +1,26 @@
 /**
- * Constructor de parámetros de query reutilizable
- * Reduce duplicación entre servicios al construir queryParams
+ * Builder utility for constructing HTTP query parameters in a fluent interface.
+ * Reduces code duplication across services by centralizing parameter construction logic.
+ * Supports chaining for concise, readable parameter building.
  *
- * @utility
+ * @class QueryParamsBuilder
+ * @example
+ * const params = new QueryParamsBuilder()
+ *   .addIfPresent('name', 'test')
+ *   .addRange('temperature', 15, 25)
+ *   .addDateRange(startDate, endDate)
+ *   .build();
  */
 export class QueryParamsBuilder {
   private params: { [key: string]: string } = {};
 
   /**
-   * Agrega un parámetro si el valor existe
-   * @param key - Nombre del parámetro
-   * @param value - Valor (se ignora si es null/undefined)
-   * @returns this para chainable pattern
+   * Adds a parameter to the query string if the value is present and non-empty.
+   * Ignores null, undefined, and empty string values.
+   *
+   * @param {string} key - Parameter name.
+   * @param {any} value - Parameter value to be converted to string.
+   * @returns {QueryParamsBuilder} This instance for method chaining.
    */
   addIfPresent(key: string, value: any): this {
     if (value !== null && value !== undefined && value !== '') {
@@ -21,11 +30,16 @@ export class QueryParamsBuilder {
   }
 
   /**
-   * Agrega un rango numérico (min/max)
-   * @param keyPrefix - Prefijo de las claves ("temperature" → "minTemperature", "maxTemperature")
-   * @param min - Valor mínimo
-   * @param max - Valor máximo
-   * @returns this para chainable pattern
+   * Adds minimum and maximum parameters for range-based filtering.
+   * Automatically capitalizes the prefix to create minTemperature/maxTemperature style keys.
+   * Only includes parameters where min or max values are provided.
+   *
+   * @param {string} keyPrefix - Base name for the range parameters (e.g., 'temperature').
+   * @param {number} [min] - Minimum value; ignored if null or undefined.
+   * @param {number} [max] - Maximum value; ignored if null or undefined.
+   * @returns {QueryParamsBuilder} This instance for method chaining.
+   * @example
+   * builder.addRange('temperature', 20, 30) // Creates minTemperature=20&maxTemperature=30
    */
   addRange(keyPrefix: string, min?: number, max?: number): this {
     if (min !== null && min !== undefined) {
@@ -38,11 +52,12 @@ export class QueryParamsBuilder {
   }
 
   /**
-   * Agrega un rango de fechas
-   * IMPORTANTE: Se envían como zona local, NO UTC, para coincidir con datos en BD
-   * @param start - Fecha inicial
-   * @param end - Fecha final
-   * @returns this para chainable pattern
+   * Adds start and end date parameters for date range filtering.
+   * Dates are formatted to local timezone (not UTC) to match database values stored in local time.
+   *
+   * @param {Date} [start] - Start date (inclusive); ignored if undefined.
+   * @param {Date} [end] - End date (inclusive); ignored if undefined.
+   * @returns {QueryParamsBuilder} This instance for method chaining.
    */
   addDateRange(start?: Date, end?: Date): this {
     if (start) {
@@ -55,11 +70,12 @@ export class QueryParamsBuilder {
   }
 
   /**
-   * Formatea una fecha como ISO 8601 en zona LOCAL (no UTC)
-   * Esto asegura que fechas coincidan con datos en BD que están en zona local
+   * Formats a date to local timezone ISO 8601 format (YYYY-MM-DDTHH:mm:ss).
+   * Uses local time components instead of UTC to ensure consistency with database values.
+   *
    * @private
-   * @param date - Fecha a formatear
-   * @returns Fecha en formato YYYY-MM-DDTHH:mm:ss
+   * @param {Date} date - Date to format.
+   * @returns {string} Formatted date string in local time.
    */
   private formatDateToLocal(date: Date): string {
     const year = date.getFullYear();
@@ -72,15 +88,21 @@ export class QueryParamsBuilder {
   }
 
   /**
-   * Construye el objeto de parámetros
-   * @returns Objeto con parámetros de query
+   * Builds and returns the accumulated query parameters object.
+   *
+   * @returns {Object} Plain object with string keys and values ready for HttpClient.
    */
   build(): { [key: string]: string } {
     return this.params;
   }
 
   /**
-   * Convierte valores a string para HttpClient
+   * Converts any value to a string suitable for query parameters.
+   * Handles Date objects by converting to ISO format, complex objects via JSON stringification.
+   *
+   * @private
+   * @param {any} value - Value to convert.
+   * @returns {string} String representation of the value.
    */
   private convertToString(value: any): string {
     if (value instanceof Date) {
@@ -93,7 +115,12 @@ export class QueryParamsBuilder {
   }
 
   /**
-   * Capitaliza la primera letra
+   * Capitalizes the first character of a string.
+   * Used for generating camelCase parameter names (e.g., 'minTemperature').
+   *
+   * @private
+   * @param {string} str - String to capitalize.
+   * @returns {string} Capitalized string.
    */
   private capitalize(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1);

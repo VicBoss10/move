@@ -8,19 +8,21 @@ import { VehicleDetectedService } from './vehicle-detected.service';
 import { QueryParamsBuilder } from '../utils/query-params.builder';
 
 /**
- * Servicio para gestionar Ubicaciones de monitoreo
- * Hereda funcionalidad CRUD base de BaseDataService
- * Agrega búsqueda avanzada y cálculo de estadísticas
+ * Location management service for monitoring sites.
+ * Extends BaseDataService for CRUD operations and adds advanced search and statistics.
+ * Filters out the provisional location (id=0) from normal queries.
  *
- * @service
- * @providedIn root
+ * @class LocationService
+ * @extends BaseDataService<Location>
+ * @injectable root
  */
 @Injectable({
   providedIn: 'root',
 })
 export class LocationService extends BaseDataService<Location> {
   /**
-   * Endpoint del API para ubicaciones
+   * API endpoint path for location resources.
+   * @protected
    */
   protected endpoint = 'locations';
 

@@ -9,15 +9,15 @@ import { Observable, of, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
 /**
- * Métrica ambiental con información de valor, unidad y estado
+ * EnvironmentMetric interface for environmental metric card display.
  * @interface EnvironmentMetric
- * @property {string} label - Nombre de la métrica
- * @property {string} icon - SVG del icono
- * @property {string} value - Valor formateado
- * @property {string} unit - Unidad de medida
- * @property {'normal' | 'warning' | 'critical'} status - Estado actual
- * @property {string} [trend] - Tendencia opcional
- * @property {string} [secondaryValue] - Valor secundario opcional
+ * @property {string} label - Metric name
+ * @property {string} icon - SVG icon as string
+ * @property {string} value - Formatted value text
+ * @property {string} unit - Unit of measurement
+ * @property {'normal' | 'warning' | 'critical'} status - Current status
+ * @property {string} [trend] - Optional trend indicator
+ * @property {string} [secondaryValue] - Optional secondary value
  */
 interface EnvironmentMetric {
   label: string;
@@ -32,20 +32,26 @@ interface EnvironmentMetric {
 /**
  * EnvironmentMetricsComponent
  *
- * Componente que muestra métricas ambientales clave: CO2, Temperatura/Humedad, Vehículos.
- * Conectado a SensorDataService y VehicleDetectedService para obtener datos reales.
+ * Displays three key environmental metric cards: CO₂/Gases, Temperature/Humidity, and Vehicle detections.
+ * Combines real-time data from SensorDataService and VehicleDetectedService with threshold-based
+ * color-coded status indicators. Each card shows current value, unit, and optional trend or secondary information.
  *
- * Características:
- * - Tarjetas de métricas con código de color
- * - Combina datos de múltiples servicios
- * - Dark mode support
- * - Responsivo
+ * Features:
+ * - Three metric cards with threshold-based color coding (normal/warning/critical)
+ * - CO₂ in ppm with gas icon; Temperature + Humidity combined in second card
+ * - Vehicle detection count (today's total) in third card
+ * - Combines data from multiple services via combineLatest
+ * - Real-time updates with reactive Observable pattern
+ * - Health status mapping via ColorUtility
+ * - Dark mode support with Tailwind dark: prefix
+ * - Responsive grid layout: 1 column mobile, 3 columns desktop
+ * - Error handling with fallback to default empty metrics
+ * - shareReplay pattern for subscription efficiency
+ * - OnPush change detection for performance
  *
  * @selector app-environment-metrics
  * @standalone true
  * @imports CommonModule, SafeHtmlPipe
- * @returns Tarjetas de métricas ambientales
- *
  * @example
  * <app-environment-metrics />
  */
@@ -58,7 +64,7 @@ interface EnvironmentMetric {
 })
 export class EnvironmentMetricsComponent {
   /**
-   * Iconos SVG para las métricas
+   * SVG icons for gas, temperature, and vehicle metrics
    */
   public readonly icons = {
     gasIcon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2C7.44772 2 7 2.44772 7 3V6C7 7.10457 7.89543 8 9 8H10V19C10 20.1046 10.8954 21 12 21C13.1046 21 14 20.1046 14 19V8H15C16.1046 8 17 7.10457 17 6V3C17 2.44772 16.5523 2 16 2H8ZM6 10C5.44772 10 5 10.4477 5 11V19C5 20.1046 5.89543 21 7 21C8.10457 21 9 20.1046 9 19V11C9 10.4477 8.55228 10 8 10H6ZM18 10C17.4477 10 17 10.4477 17 11V19C17 20.1046 17.8954 21 19 21C20.1046 21 21 20.1046 21 19V11C21 10.4477 20.5523 10 20 10H18Z" fill="currentColor"/></svg>`,
@@ -67,17 +73,18 @@ export class EnvironmentMetricsComponent {
   };
 
   /**
-   * Utility de colores expuesto para el template
+   * Color utility exposed for template use
    */
   ColorUtility = ComponentColorUtility;
 
   /**
-   * Observable que emite las métricas combinando datos de sensores y vehículos
+   * Observable emitting array of three environment metrics (CO2, Temp/Humidity, Vehicles)
    */
   metrics$!: Observable<EnvironmentMetric[]>;
 
   /**
-   * Métricas por defecto cuando no hay datos
+   * Default empty metrics array for error fallback
+   * @private
    */
   private readonly defaultMetrics: EnvironmentMetric[] = [];
 
@@ -89,7 +96,7 @@ export class EnvironmentMetricsComponent {
   }
 
   /**
-   * Inicializa las métricas combinando datos de sensores y vehículos
+   * Initializes metrics observable combining sensor data and vehicle statistics
    * @private
    */
   private initializeMetrics(): void {
@@ -130,16 +137,16 @@ export class EnvironmentMetricsComponent {
             secondaryValue: latestSensor?.humidity?.toFixed(0) + '%',
           },
           {
-            label: 'Vehículos',
+            label: 'Vehicles',
             icon: this.icons.vehicleIcon,
             value: stats?.todayDetections?.toString() || '0',
-            unit: 'hoy',
+            unit: 'today',
             status: 'normal' as const,
           },
         ];
       }),
       catchError((error) => {
-        console.error('Error cargando métricas ambientales:', error);
+        console.error('Error loading environment metrics:', error);
         return of(this.defaultMetrics);
       }),
       shareReplay(1),

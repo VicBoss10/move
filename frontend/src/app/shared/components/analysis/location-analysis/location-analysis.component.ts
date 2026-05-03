@@ -30,11 +30,28 @@ import { VehicleDetected } from '../../../../core/models/vehicle.model';
 
 ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend);
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
+/**
+ * Environmental metric key type for location analysis.
+ * Represents available air quality and weather parameters.
+ * @typedef {('co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3')} MetricKey
+ */
 type MetricKey = 'co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3';
+
+/**
+ * Time period key for data aggregation and analysis.
+ * @typedef {('24h' | '7d' | '30d')} PeriodKey
+ */
 type PeriodKey = '24h' | '7d' | '30d';
 
+/**
+ * Configuration and metadata for a single environmental metric.
+ * @interface MetricOption
+ * @property {MetricKey} key - Unique identifier for the metric
+ * @property {string} label - Human-readable display label (e.g., 'CO₂')
+ * @property {string} unit - Measurement unit (e.g., 'ppm', 'µg/m³')
+ * @property {string} color - Hex or named color for chart styling
+ * @property {string} bg - RGBA background color for chart bars
+ */
 interface MetricOption {
   key: MetricKey;
   label: string;
@@ -43,6 +60,17 @@ interface MetricOption {
   bg: string;
 }
 
+/**
+ * Aggregated environmental and traffic data for a single geographic location.
+ * @interface LocationRow
+ * @property {Location} location - Associated location entity with coordinates and description
+ * @property {number} sensorAvg - Average metric value across all measurements at this location
+ * @property {number} sensorMin - Minimum metric value recorded at this location
+ * @property {number} sensorMax - Maximum metric value recorded at this location
+ * @property {number} vehicleTotal - Total count of vehicles detected at this location
+ * @property {number} dataPoints - Number of sensor measurements available for this location
+ * @property {number} rank - Pollution ranking (1 = highest average metric value)
+ */
 interface LocationRow {
   location: Location;
   sensorAvg: number;
@@ -53,8 +81,12 @@ interface LocationRow {
   rank: number;
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
+/**
+ * Catalog of available environmental metrics.
+ * Each metric includes display label, unit, and color coding for charts.
+ * @type {MetricOption[]}
+ * @const
+ */
 const METRICS: MetricOption[] = [
   { key: 'co2', label: 'CO₂', unit: 'ppm', color: '#ef4444', bg: 'rgba(239,68,68,0.7)' },
   { key: 'pm25', label: 'PM2.5', unit: 'µg/m³', color: '#a855f7', bg: 'rgba(168,85,247,0.7)' },
@@ -72,12 +104,22 @@ const METRICS: MetricOption[] = [
   { key: 'nh3', label: 'NH₃', unit: 'ppb', color: '#14b8a6', bg: 'rgba(20,184,166,0.7)' },
 ];
 
+/**
+ * Available time periods for data aggregation and filtering.
+ * @type {{key: PeriodKey; label: string}[]}
+ * @const
+ */
 const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: '24h', label: 'Últimas 24h' },
   { key: '7d', label: 'Últimos 7 días' },
   { key: '30d', label: 'Últimos 30 días' },
 ];
 
+/**
+ * RGBA color value for vehicle detection bars in charts.
+ * @type {string}
+ * @const
+ */
 const VEHICLE_COLOR = 'rgba(99,102,241,0.7)';
 
 /**
@@ -115,32 +157,86 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
   readonly metrics = METRICS;
   readonly periods = PERIODS;
 
-  // ── State ──────────────────────────────────────────────────────────────────
-
+  /**
+   * Observable emitting current filter state (period and metric selection).
+   * @type {BehaviorSubject<{period: PeriodKey; metric: MetricKey}>}
+   * @private
+   */
   private readonly filter$ = new BehaviorSubject<{ period: PeriodKey; metric: MetricKey }>({
     period: '7d',
     metric: 'co2',
   });
+
+  /**
+   * Subject for managing subscriptions and cleanup on component destruction.
+   * @type {Subject<void>}
+   * @private
+   */
   private readonly destroy$ = new Subject<void>();
 
+  /**
+   * Loading state indicator.
+   * @type {boolean}
+   */
   isLoading = true;
+
+  /**
+   * Error flag for data loading failures.
+   * @type {boolean}
+   */
   hasError = false;
+
+  /**
+   * Error message displayed to user when hasError is true.
+   * @type {string}
+   */
   errorMsg = '';
 
+  /**
+   * Aggregated location data rows for display and ranking.
+   * @type {LocationRow[]}
+   */
   rows: LocationRow[] = [];
+
+  /**
+   * Chart.js data configuration for grouped bar chart.
+   * @type {ChartConfiguration<'bar'>['data']}
+   */
   chartData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [] };
+
+  /**
+   * Chart.js options configuration for responsive and styled bar chart.
+   * @type {ChartConfiguration<'bar'>['options']}
+   */
   chartOptions: ChartConfiguration<'bar'>['options'] = this.buildChartOptions(METRICS[0]);
+
+  /**
+   * Location with the highest average metric value (worst pollution).
+   * @type {LocationRow | null}
+   */
   worstLocation: LocationRow | null = null;
+
+  /**
+   * Location with the most detected vehicles (busiest traffic).
+   * @type {LocationRow | null}
+   */
   busiestLocation: LocationRow | null = null;
 
-  // ── Accessors ──────────────────────────────────────────────────────────────
-
+  /**
+   * Returns the current filter state (period and metric).
+   * @returns {{period: PeriodKey; metric: MetricKey}} Current filter values
+   */
   get currentFilter() {
     return this.filter$.value;
   }
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
-
+  /**
+   * Initializes the component with service dependencies.
+   * @param {LocationService} locationService - Location data service
+   * @param {SensorDataService} sensorDataService - Sensor measurement service
+   * @param {VehicleDetectedService} vehicleService - Vehicle detection service
+   * @param {ChangeDetectorRef} cdr - Angular change detection reference
+   */
   constructor(
     private readonly locationService: LocationService,
     private readonly sensorDataService: SensorDataService,
@@ -148,6 +244,10 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
+  /**
+   * Initializes data pipeline and subscriptions on component creation.
+   * Subscribes to filter changes and loads location data accordingly.
+   */
   ngOnInit(): void {
     this.filter$
       .pipe(
@@ -170,22 +270,39 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Cleanup lifecycle hook.
+   * Unsubscribes from all observables via destroy$ subject.
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  // ── User interactions ──────────────────────────────────────────────────────
-
+  /**
+   * Updates the period filter and triggers data reload.
+   * @param {PeriodKey} p - Time period ('24h', '7d', or '30d')
+   */
   setPeriod(p: PeriodKey): void {
     this.filter$.next({ ...this.filter$.value, period: p });
   }
+
+  /**
+   * Updates the metric filter and triggers data reload.
+   * @param {MetricKey} m - Environmental metric key
+   */
   setMetric(m: MetricKey): void {
     this.filter$.next({ ...this.filter$.value, metric: m });
   }
 
-  // ── Data pipeline ──────────────────────────────────────────────────────────
-
+  /**
+   * Loads all locations and aggregates sensor/vehicle data for the selected period and metric.
+   * Computes min/max/avg values per location and identifies worst pollution and busiest locations.
+   * @param {PeriodKey} period - Time period for data aggregation
+   * @param {MetricKey} metricKey - Environmental metric to analyze
+   * @returns {Observable<{rows: LocationRow[]; chartData: ChartConfiguration<'bar'>['data']; chartOptions: ChartConfiguration<'bar'>['options']; worstLocation: LocationRow | null; busiestLocation: LocationRow | null}>} Aggregated data with chart configuration
+   * @private
+   */
   private loadAndAggregate(period: PeriodKey, metricKey: MetricKey) {
     const end = new Date();
     const ms = { '24h': 24, '7d': 168, '30d': 720 }[period] * 3_600_000;
@@ -298,13 +415,21 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ── Utilities ──────────────────────────────────────────────────────────────
-
+  /**
+   * Extracts display label for a location, falling back to generic label if no description.
+   * @param {Location} loc - Location entity
+   * @returns {string} Human-readable location description
+   */
   locationLabel(loc: Location): string {
     return loc.description ?? `Ubicación ${loc.id}`;
   }
 
-  /** Color badge for pollution ranking */
+  /**
+   * Returns Tailwind CSS classes for pollution rank badge styling.
+   * Red for rank 1 (worst), orange for 2, yellow for 3, gray for others.
+   * @param {number} rank - Pollution ranking position (1 = worst)
+   * @returns {string} Tailwind CSS class string for badge appearance
+   */
   rankBadgeClass(rank: number): string {
     if (rank === 1) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
     if (rank === 2)
@@ -314,8 +439,13 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
     return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
   }
 
-  // ── Chart options ──────────────────────────────────────────────────────────
-
+  /**
+   * Builds and configures Chart.js options for grouped bar chart display.
+   * Includes dual Y-axes for metric values and vehicle counts, legend, tooltips, and responsive sizing.
+   * @param {MetricOption} m - Metric configuration for axis labeling and color
+   * @returns {ChartConfiguration<'bar'>['options']} Chart.js options object
+   * @private
+   */
   private buildChartOptions(m: MetricOption): ChartConfiguration<'bar'>['options'] {
     return {
       responsive: true,

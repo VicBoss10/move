@@ -6,7 +6,13 @@ import { SensorDataService } from '../../../../core/services/sensor-data.service
 import { SensorData } from '../../../../core/models/sensor-data.model';
 
 /**
- * Interface para estadísticas de temperatura
+ * TemperatureStats interface for temperature statistics aggregation.
+ * @interface TemperatureStats
+ * @property {number} actual - Latest temperature reading in Celsius
+ * @property {number} minimo - Minimum temperature value (lowercase preserved for template compatibility)
+ * @property {number} maximo - Maximum temperature value (lowercase preserved for template compatibility)
+ * @property {number} promedio - Average temperature value (lowercase preserved for template compatibility)
+ * @property {number} variacion - Temperature range (maximum - minimum) (lowercase preserved for template compatibility)
  */
 interface TemperatureStats {
   actual: number;
@@ -17,17 +23,37 @@ interface TemperatureStats {
 }
 
 /**
- * TemperatureStatsTableComponent
+ * TemperatureStatsTableComponent (Presentation Component)
  *
- * Componente que muestra tabla de estadísticas dinámicas de temperatura.
- * Incluye actual, mínimo, máximo, promedio y variación en °C.
- * Obtiene datos en tiempo real del backend.
+ * Displays a statistics summary table for temperature with five key metrics aggregated from historical sensor data.
+ *
+ * Features:
+ * - Five-column metric display: current (latest value), minimum, maximum, average, and variation (max-min range)
+ * - All values rounded to 1 decimal place and displayed in Celsius (°C)
+ * - Current value: shown at standard size, latest measurement from sensor data
+ * - Minimum value: blue text (#3b82f6), lowest temperature recorded
+ * - Maximum value: orange text (#f97316), highest temperature recorded
+ * - Average value: standard gray text, arithmetic mean of all temperature values
+ * - Variation: color-coded range indicator showing max-min difference:
+ *   - Green (<3°C): minimal temperature fluctuation
+ *   - Orange (3-5°C): moderate temperature swing
+ *   - Red (>5°C): large temperature variation
+ * - Responsive grid: 2 columns mobile, 5 columns desktop for metric cards
+ * - Data source: streaming from getAll() sensor data with automatic error recovery
+ * - Error handling: returns default zero-state on service failure with console logging
+ * - OnPush change detection with async pipe subscription
+ * - Fallback: displays zero values on data load error
+ *
+ * Interface TemperatureStats:
+ * - actual: number - latest temperature reading
+ * - minimo: number - minimum temperature
+ * - maximo: number - maximum temperature
+ * - promedio: number - average temperature
+ * - variacion: number - range (maximo - minimo)
  *
  * @selector app-temperature-stats-table
  * @standalone true
  * @imports CommonModule
- * @returns Tabla con estadísticas de temperatura
- *
  * @example
  * <app-temperature-stats-table />
  */
@@ -40,7 +66,8 @@ interface TemperatureStats {
 })
 export class TemperatureStatsTableComponent {
   /**
-   * Observable que emite estadísticas de temperatura
+   * Observable stream emitting aggregated temperature statistics from sensor data.
+   * @type {Observable<TemperatureStats>}
    */
   stats$!: Observable<TemperatureStats>;
 
@@ -57,7 +84,11 @@ export class TemperatureStatsTableComponent {
   }
 
   /**
-   * Inicializa estadísticas de temperatura desde el servicio
+   * Initializes statistics observable from all historical sensor data.
+   * Extracts temperature values, calculates min, max, average, and range (variation).
+   * Returns default zero-state on error with console logging.
+   * @private
+   * @returns {void}
    */
   private initializeStats(): void {
     this.stats$ = this.sensorDataService.getAll().pipe(
@@ -84,7 +115,7 @@ export class TemperatureStatsTableComponent {
         };
       }),
       catchError((error) => {
-        console.error('Error cargando estadísticas de temperatura:', error);
+        console.error('Error loading temperature statistics:', error);
         return of(this.defaultStats);
       }),
       shareReplay(1),
@@ -92,14 +123,20 @@ export class TemperatureStatsTableComponent {
   }
 
   /**
-   * Obtiene el último valor de un array
+   * Extracts the last value from a numeric array.
+   * @private
+   * @param {number[]} values - Array of numeric values
+   * @returns {number} Last value in array, or 0 if empty
    */
   private getLatestValue(values: number[]): number {
     return values.length > 0 ? values[values.length - 1] : 0;
   }
 
   /**
-   * Calcula el promedio de un array
+   * Computes arithmetic mean of numeric array.
+   * @private
+   * @param {number[]} values - Array of numeric values to average
+   * @returns {number} Mean value, or 0 if empty
    */
   private calculateAverage(values: number[]): number {
     if (values.length === 0) return 0;
@@ -108,7 +145,10 @@ export class TemperatureStatsTableComponent {
   }
 
   /**
-   * Obtiene clase de color para la variación
+   * Derives Tailwind color classes for variation indicator based on temperature range magnitude.
+   * Red: >5°C, orange: 3-5°C, green: <3°C to reflect volatility of temperature fluctuations.
+   * @param {number} variacion - Variation (max-min) value in Celsius to evaluate
+   * @returns {string} Tailwind CSS color classes for light and dark modes
    */
   getVariationColor(variacion: number): string {
     if (variacion > 5) return 'text-red-600 dark:text-red-400';

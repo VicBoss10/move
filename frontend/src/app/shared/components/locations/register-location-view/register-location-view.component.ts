@@ -19,20 +19,36 @@ import {
 } from '../location-map-picker/location-map-picker.component';
 
 /**
- * RegisterLocationViewComponent
+ * RegisterLocationViewComponent (Presentation Component)
  *
- * Componente de shared que contiene toda la lógica y UI para registrar
- * nuevas ubicaciones de monitoreo en el sistema.
+ * Provides a complete location registration form with interactive Google Map picker for GPS coordinates,
+ * reactive form validation, and automatic navigation on success. Uses BehaviorSubjects for reactive
+ * state management of form loading and feedback messages.
  *
- * Características:
- * - Formulario reactivo con validación
- * - Mapa interactivo para seleccionar coordenadas GPS
- * - Campos manuales de latitud/longitud
- * - Feedback visual de éxito/error
- * - Redirección automática tras registro exitoso
+ * Features:
+ * - Reactive form with FormBuilder: description, latitude, longitude fields
+ * - Description validation: required, minLength 3, maxLength 255
+ * - Latitude validation: regex pattern for valid lat values (-90 to 90 with up to 8 decimals)
+ * - Longitude validation: regex pattern for valid lng values (-180 to 180 with up to 8 decimals)
+ * - LocationMapPickerComponent integration: interactive map picker for coordinate selection
+ * - onMapCoordinatesSelected: auto-populates form latitude/longitude, marks fields as touched
+ * - Map picker: initialLatitude and initialLongitude bound to form values (updates reactively)
+ * - Success message alert: green background with checkmark, dismissed after auto-navigation
+ * - Error message alert: red background with X, cleared on form reset
+ * - Toast notifications: success toast shows location name, error toast generic message
+ * - Form submission: validates form, parses coordinates to float, calls LocationService.create()
+ * - Auto-redirect: navigates to /dashboard/locations/monitoring after 1.2s on success
+ * - Loading state: isLoading$ BehaviorSubject disables submit button during API call
+ * - Form reset: onReset() clears fields and feedback messages
+ * - Coordinate formatting: 6 decimals for display and storage
+ * - Dark mode support via dark: Tailwind prefix
+ * - OnPush change detection strategy
  *
  * @selector app-register-location-view
  * @standalone true
+ * @imports CommonModule, FormsModule, ReactiveFormsModule, LocationMapPickerComponent
+ * @example
+ * <app-register-location-view />
  */
 @Component({
   selector: 'app-register-location-view',
@@ -42,16 +58,9 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterLocationViewComponent {
-  /** Formulario reactivo para el registro de ubicación */
   locationForm: FormGroup;
-
-  /** Estado de carga del envío */
   isLoading$ = new BehaviorSubject<boolean>(false);
-
-  /** Mensaje de éxito tras registro */
   successMessage$ = new BehaviorSubject<string | null>(null);
-
-  /** Mensaje de error de validación o envío */
   errorMessage$ = new BehaviorSubject<string | null>(null);
 
   constructor(
@@ -74,11 +83,16 @@ export class RegisterLocationViewComponent {
   }
 
   /**
-   * Maneja el envío del formulario
+   * Submits location registration form to backend via LocationService.create().
+   * Validates form first, parses latitude/longitude to float, constructs Location object,
+   * calls API with finalize operator for loading state, and handles success/error responses.
+   * On success: shows toast notification and navigates to monitoring view after 1.2s delay.
+   * On error: displays error toast with generic message.
+   * @returns {void}
    */
   onSubmit(): void {
     if (!this.locationForm.valid) {
-      this.errorMessage$.next('Por favor, completa todos los campos correctamente');
+      this.errorMessage$.next('Please fill all fields correctly');
       return;
     }
 
@@ -100,26 +114,25 @@ export class RegisterLocationViewComponent {
         next: () => {
           this.successMessage$.next(null);
           this.toastService.success(
-            `Ubicación "${formValue.description}" registrada correctamente`,
-            'Éxito',
+            `Location "${formValue.description}" registered successfully`,
+            'Success',
           );
           setTimeout(() => {
             this.router.navigate(['/dashboard/locations/monitoring']);
           }, 1200);
         },
         error: (err) => {
-          console.error('Error al registrar ubicación:', err);
+          console.error('Error registering location:', err);
           this.errorMessage$.next(null);
-          this.toastService.error(
-            'Error al registrar la ubicación. Por favor, inténtalo de nuevo.',
-            'Error',
-          );
+          this.toastService.error('Failed to register location. Please try again.', 'Error');
         },
       });
   }
 
   /**
-   * Maneja el reseteo del formulario
+   * Resets form to pristine state and clears success/error feedback messages.
+   * Called from reset button in template. Clears BehaviorSubject values.
+   * @returns {void}
    */
   onReset(): void {
     this.locationForm.reset();
@@ -128,9 +141,12 @@ export class RegisterLocationViewComponent {
   }
 
   /**
-   * Maneja la selección de coordenadas desde el mapa
-   * Actualiza los campos del formulario con las coordenadas seleccionadas
-   * @param coords - Coordenadas seleccionadas en el mapa
+   * Updates form latitude and longitude fields when coordinates are selected from LocationMapPickerComponent.
+   * Formats coordinates to 6 decimal places, patches form values,
+   * and marks latitude/longitude fields as touched for validation display.
+   * Called from LocationMapPickerComponent (coordinatesSelected) output event.
+   * @param {MapCoordinates} coords - Coordinate object with latitude and longitude properties
+   * @returns {void}
    */
   onMapCoordinatesSelected(coords: MapCoordinates): void {
     this.locationForm.patchValue({
@@ -142,7 +158,10 @@ export class RegisterLocationViewComponent {
   }
 
   /**
-   * Obtiene el estado de validez del formulario
+   * Checks if location registration form is valid and ready for submission.
+   * Returns form.valid property from ReactiveFormsModule FormGroup.
+   * Used in template to enable/disable submit button.
+   * @returns {boolean} True if form passes all validators, false otherwise
    */
   isFormValid(): boolean {
     return this.locationForm.valid;

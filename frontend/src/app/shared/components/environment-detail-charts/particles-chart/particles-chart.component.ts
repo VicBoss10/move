@@ -31,12 +31,30 @@ ChartJS.register(
 );
 
 /**
- * Componente que muestra un gráfico dinámico de línea comparativo de partículas
- * PM2.5 y PM10 en las últimas 24 horas, promediando por hora.
- * Utiliza RxJS Observables y ChangeDetectionStrategy.OnPush.
+ * ParticlesChartComponent (Presentation Component)
+ *
+ * Displays a comparative line chart for PM2.5 and PM10 particle concentrations over a 24-hour sliding window with hourly aggregation.
+ *
+ * Features:
+ * - Dual-line chart: indigo line for PM2.5 (#6366f1), orange line for PM10 (#f97316)
+ * - Semi-transparent gradient fills (0.1 opacity) beneath each line for visual depth
+ * - 24-hour sliding window with hourly aggregation calculated from backend data
+ * - Enhanced point styling: 4px radius default, 6px on hover, white border, color-coded fill
+ * - Dynamic legend with point style symbols (usePointStyle: true)
+ * - Responsive grid layout with automatic overflow scrolling on small screens (min-width 650px)
+ * - Max-height 380px with responsive sizing
+ * - Tooltip with fixed 1 decimal format for both series
+ * - X-axis shows hourly labels (HH:00 format) with max 12 ticks
+ * - Y-axis displays "Partículas (µg/m³)" title with grid overlay
+ * - Fade-in animation on chart load (CSS @keyframes)
+ * - Chart.js Line controller with OnPush change detection and async pipe subscription
+ * - Fallback: displays zero-state on data load error
  *
  * @selector app-particles-chart
  * @standalone true
+ * @imports CommonModule, BaseChartDirective
+ * @example
+ * <app-particles-chart />
  */
 @Component({
   selector: 'app-particles-chart',
@@ -46,20 +64,28 @@ ChartJS.register(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ParticlesChartComponent {
+  /**
+   * Reference to ng2-charts BaseChartDirective for programmatic chart control.
+   * @type {BaseChartDirective | undefined}
+   */
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Ventana de horas a mostrar
+   * Time window in hours for chart data aggregation (24-hour sliding window).
+   * @type {number}
+   * @private
    */
   private readonly HOURS_WINDOW = 24;
 
   /**
-   * Observable que emite la configuración del gráfico con datos reactivos
+   * Observable stream of Chart.js line chart configuration data with PM2.5 and PM10 datasets.
+   * @type {Observable<ChartConfiguration<'line'>['data']>}
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
   /**
-   * Observable que emite valores actuales de partículas
+   * Observable stream of current PM2.5 and PM10 values from latest sensor reading.
+   * @type {Observable<{ pm25: number; pm10: number }>}
    */
   pmValues$!: Observable<{
     pm25: number;
@@ -67,10 +93,16 @@ export class ParticlesChartComponent {
   }>;
 
   /**
-   * Observable compartido de datos del sensor (últimas 24h)
+   * Shared Observable of historical sensor data for the 24-hour window with hourly aggregation.
+   * @type {Observable<SensorData[]>}
+   * @private
    */
   private sensorData$!: Observable<SensorData[]>;
 
+  /**
+   * Readonly Chart.js configuration object for line chart styling and interaction.
+   * @type {ChartConfiguration<'line'>['options']}
+   */
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
@@ -136,7 +168,7 @@ export class ParticlesChartComponent {
         position: 'left',
         title: {
           display: true,
-          text: 'Partículas (µg/m³)',
+          text: 'Particles (µg/m³)',
           color: '#6B7280',
           font: {
             weight: 'bold',
@@ -155,11 +187,21 @@ export class ParticlesChartComponent {
     },
   };
 
+  /**
+   * Default zero-state chart data returned on error.
+   * @type {ChartConfiguration<'line'>['data']}
+   * @private
+   */
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [],
   };
 
+  /**
+   * Initializes component with service dependency and sets up three data streams.
+   * Triggers initialization of sensor data, chart data, and current PM values observables.
+   * @param {SensorDataService} sensorDataService - Service for querying particle sensor data
+   */
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
@@ -167,8 +209,11 @@ export class ParticlesChartComponent {
   }
 
   /**
-   * Obtiene el último registro para determinar la ventana de tiempo
-   * y luego consulta solo las últimas 24 horas al backend.
+   * Retrieves latest sensor timestamp to establish time window, then queries backend for 24-hour range.
+   * Uses switchMap to switch to search observable once latest reading is obtained.
+   * Handles timestamp parsing errors with fallback to empty array.
+   * @private
+   * @returns {void}
    */
   private initializeSensorData(): void {
     this.sensorData$ = this.sensorDataService.getLatest().pipe(
@@ -178,7 +223,7 @@ export class ParticlesChartComponent {
         return this.sensorDataService.search({ start: startTime, end: endTime });
       }),
       catchError((error) => {
-        console.error('Error cargando datos de partículas:', error);
+        console.error('Error loading particle data:', error);
         return of([]);
       }),
       shareReplay(1),
@@ -186,7 +231,12 @@ export class ParticlesChartComponent {
   }
 
   /**
-   * Inicializa los datos del gráfico agrupando por hora y promediando.
+   * Transforms sensor data into Chart.js line chart configuration by grouping into hourly slots and averaging.
+   * Creates 24 hourly slots backward from latest timestamp hour.
+   * Calculates average PM2.5 and PM10 per slot; null for empty slots.
+   * Values rounded to 2 decimal places; returns zero-state on empty or invalid data.
+   * @private
+   * @returns {void}
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
@@ -215,7 +265,6 @@ export class ParticlesChartComponent {
           0,
         );
 
-        // Crear 24 slots horarios hacia atrás desde la hora más reciente
         const slots: { start: Date; end: Date; label: string }[] = [];
         for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
           const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
@@ -282,7 +331,10 @@ export class ParticlesChartComponent {
   }
 
   /**
-   * Inicializa los valores actuales de las partículas (desde el último registro)
+   * Initializes observable of current PM2.5 and PM10 values from latest sensor reading.
+   * Rounds values to 1 decimal place; returns zero-state on error.
+   * @private
+   * @returns {void}
    */
   private initializePMValues(): void {
     this.pmValues$ = this.sensorDataService.getLatest().pipe(

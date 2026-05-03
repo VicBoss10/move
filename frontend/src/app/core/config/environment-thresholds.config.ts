@@ -1,39 +1,39 @@
 /**
- * Configuración centralizada de umbrales ambientales
+ * Centralized environmental threshold configuration.
+ * Defines alert thresholds and styling for all monitored environmental metrics.
  *
- * Valores de referencia basados en estándares internacionales:
- * - CO₂: ASHRAE 62.1 / Norma para calidad de aire interior
- * - CO: OMS (Organización Mundial de la Salud) - exposición 8h
- * - NO₂: EPA (Environmental Protection Agency) - AQI breakpoints
- * - NH₃: Estándar OSHA para exposición laboral
- * - PM2.5: OMS Guías de Calidad del Aire 2021
- * - PM10: OMS Guías de Calidad del Aire 2021
- * - Temperatura: ISO 7730 / ASHRAE 55 (confort térmico)
- * - Humedad: ASHRAE 55 (confort térmico)
+ * Threshold references based on international standards:
+ * - CO₂: ASHRAE 62.1 (indoor air quality standard).
+ * - CO: WHO (World Health Organization) 8-hour exposure limits.
+ * - NO₂: EPA (Environmental Protection Agency) AQI breakpoints.
+ * - NH₃: OSHA (Occupational Safety and Health Administration) workplace exposure.
+ * - PM2.5: WHO 2021 Air Quality Guidelines.
+ * - PM10: WHO 2021 Air Quality Guidelines.
+ * - Temperature: ISO 7730 / ASHRAE 55 (thermal comfort).
+ * - Humidity: ASHRAE 55 (thermal comfort).
  *
- * Cada métrica tiene 4 niveles:
- * - good: Condición óptima / segura
- * - moderate: Aceptable pero con precaución
- * - poor: Nivel preocupante, acción sugerida
- * - critical: Nivel peligroso, acción requerida
+ * Each metric has 4 severity levels:
+ * - good: Optimal and safe conditions.
+ * - moderate: Acceptable but with caution.
+ * - poor: Concerning level, action recommended.
+ * - critical: Hazardous level, immediate action required.
  *
- * El valor numérico de cada nivel es el LÍMITE SUPERIOR (inclusive).
- * Si el valor supera el límite de 'poor', se considera 'critical'.
+ * Numeric threshold values are UPPER BOUNDS (inclusive).
+ * Values exceeding the 'poor' threshold are classified as 'critical'.
  *
  * @example
  * import { ENV_THRESHOLDS, getEnvironmentStatus } from './environment-thresholds.config';
- * const status = getEnvironmentStatus('co2', 1100); // → { key: 'moderate', label: 'Moderado', ... }
+ * const status = getEnvironmentStatus('co2', 1100);
+ * // → { key: 'moderate', label: 'Moderate', color: '#f59e0b', ... }
  */
 
-// ─── Tipos ───────────────────────────────────────────────────────
-
 /**
- * Claves de estado ambiental unificadas
+ * Environmental status keys unified across all metrics.
  */
 export type EnvironmentStatusKey = 'good' | 'moderate' | 'poor' | 'critical' | 'no-data';
 
 /**
- * Claves de métricas ambientales disponibles
+ * Environmental metric identifier keys.
  */
 export type EnvironmentMetricKey =
   | 'co2'
@@ -46,56 +46,51 @@ export type EnvironmentMetricKey =
   | 'humidity';
 
 /**
- * Definición de un nivel de umbral
+ * Single threshold level definition with styling information.
+ * @interface ThresholdLevel
  */
 export interface ThresholdLevel {
-  /** Límite superior (inclusive). Valores por encima pasan al siguiente nivel */
+  /** Upper bound value (inclusive) for this level. Values exceeding this pass to next level. */
   max: number;
-  /** Clave de estado */
+  /** Status key corresponding to this threshold level. */
   key: EnvironmentStatusKey;
-  /** Etiqueta en español para mostrar al usuario */
+  /** Human-readable label for user display. */
   label: string;
-  /** Color hexadecimal para gráficas y gauges */
+  /** Hexadecimal color code for charts and gauges. */
   color: string;
-  /** Clase Tailwind para texto */
+  /** Tailwind CSS classes for text styling. */
   textClass: string;
-  /** Clase Tailwind para fondo de badge */
+  /** Tailwind CSS classes for badge background styling. */
   bgClass: string;
-  /** Clase Tailwind para gradiente de gauge */
+  /** Tailwind CSS gradient classes for gauge visualization. */
   gaugeGradient: string;
 }
 
 /**
- * Configuración completa de una métrica ambiental
+ * Complete threshold configuration for an environmental metric.
+ * Includes display information, scale boundaries, and severity levels.
+ * @interface MetricThresholdConfig
  */
 export interface MetricThresholdConfig {
-  /** Nombre corto para mostrar (ej: 'CO₂') */
+  /** Short display name for the metric (e.g., 'CO₂'). */
   label: string;
-  /** Unidad de medida */
+  /** Unit of measurement for the metric. */
   unit: string;
-  /** Valor mínimo de la escala (para gauges) */
+  /** Minimum value of the display scale for gauges. */
   scaleMin: number;
-  /** Valor máximo de la escala (para gauges) */
+  /** Maximum value of the display scale for gauges. */
   scaleMax: number;
-  /** Niveles de umbral ordenados de menor a mayor */
+  /** Threshold levels ordered from lowest to highest. */
   levels: ThresholdLevel[];
 }
 
-// ─── Configuración de Umbrales ───────────────────────────────────
-
 /**
- * Umbrales centralizados para todas las métricas ambientales.
- *
- * Los valores se basan en normativas internacionales y son el punto
- * único de verdad para todos los componentes del frontend.
+ * Centralized threshold configuration for all environmental metrics.
+ * These values are the single source of truth across all frontend components.
+ * Based on international standards and guidelines.
+ * @constant ENV_THRESHOLDS
  */
 export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig> = {
-  // ── CO₂ (dióxido de carbono) ─────────────────────────
-  // Ref: ASHRAE 62.1 — Calidad de aire interior
-  // < 600 ppm: aire fresco exterior
-  // 600–1000: aceptable en interiores
-  // 1000–1500: aire viciado, ventilar
-  // > 1500: inadecuado, riesgo de somnolencia/malestar
   co2: {
     label: 'Dióxido de Carbono (CO₂)',
     unit: 'ppm',
@@ -141,9 +136,6 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
     ],
   },
 
-  // ── CO (monóxido de carbono) ──────────────────────────
-  // Ref: OMS — Límite 8h exposición: 9 ppm
-  // EPA AQI breakpoints: 0–4.4 bueno, 4.5–9.4 moderado, 9.5–12.4 Elevado, >12.5 peligroso
   co: {
     label: 'Monóxido de Carbono (CO)',
     unit: 'ppm',
@@ -189,9 +181,6 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
     ],
   },
 
-  // ── NO₂ (dióxido de nitrógeno) ────────────────────────
-  // Ref: EPA AQI breakpoints en ppb
-  // 0–53 bueno, 54–100 moderado, 101–360 Elevado, >360 peligroso
   no2: {
     label: 'Dióxido de Nitrógeno (NO₂)',
     unit: 'ppb',
@@ -237,9 +226,6 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
     ],
   },
 
-  // ── NH₃ (amoníaco) ───────────────────────────────────
-  // Ref: OSHA PEL 50 ppm (8h TWA), NIOSH REL 25 ppm (10h TWA)
-  // Adaptado a ppb para sensores ambientales de baja concentración
   nh3: {
     label: 'Amoníaco (NH₃)',
     unit: 'ppb',
@@ -285,9 +271,6 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
     ],
   },
 
-  // ── PM2.5 (partículas finas) ──────────────────────────
-  // Ref: OMS Guías 2021: media anual 5 µg/m³, 24h 15 µg/m³
-  // EPA AQI: 0–12 bueno, 12.1–35.4 moderado, 35.5–55.4 Elevado, >55.5 peligroso
   pm25: {
     label: 'Partículas PM₂.₅ (PM2.5)',
     unit: 'µg/m³',
@@ -333,9 +316,6 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
     ],
   },
 
-  // ── PM10 (partículas gruesas) ─────────────────────────
-  // Ref: OMS Guías 2021: media anual 15 µg/m³, 24h 45 µg/m³
-  // EPA AQI: 0–54 bueno, 55–154 moderado, 155–254 Elevado, >255 peligroso
   pm10: {
     label: 'Partículas PM₁₀ (PM10)',
     unit: 'µg/m³',
@@ -381,9 +361,6 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
     ],
   },
 
-  // ── Temperatura ───────────────────────────────────────
-  // Ref: ISO 7730 / ASHRAE 55 (confort térmico en interiores)
-  // 18–24°C zona de confort, <15 frío, >30 calor excesivo
   temperature: {
     label: 'Temperatura (°C)',
     unit: '°C',
@@ -429,9 +406,6 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
     ],
   },
 
-  // ── Humedad relativa ──────────────────────────────────
-  // Ref: ASHRAE 55 (30-60% zona de confort)
-  // <30% seco (irritación), 30-60% óptimo, 60-80% húmedo (moho), >80% muy húmedo
   humidity: {
     label: 'Humedad (%)',
     unit: '%',
@@ -478,24 +452,34 @@ export const ENV_THRESHOLDS: Record<EnvironmentMetricKey, MetricThresholdConfig>
   },
 };
 
-// ─── Funciones de utilidad ───────────────────────────────────────
-
 /**
- * Estado resultante tras evaluar un valor contra los umbrales
+ * Environment status result after evaluating a value against thresholds.
+ * Contains all styling information for displaying the status to users.
+ * @interface EnvironmentStatus
  */
 export interface EnvironmentStatus {
+  /** Status key corresponding to the threshold level. */
   key: EnvironmentStatusKey;
+  /** Human-readable label for the status. */
   label: string;
+  /** Hexadecimal color code for the status. */
   color: string;
+  /** Tailwind CSS classes for text styling. */
   textClass: string;
+  /** Tailwind CSS classes for background styling. */
   bgClass: string;
+  /** Tailwind CSS gradient classes for gauge visualization. */
   gaugeGradient: string;
 }
 
-/** Estado por defecto para valores nulos o 0 sin datos */
+/**
+ * Default status for null or zero values indicating no data available.
+ * @private
+ * @constant NO_DATA_STATUS
+ */
 const NO_DATA_STATUS: EnvironmentStatus = {
   key: 'no-data',
-  label: 'Sin datos',
+  label: 'No data',
   color: '#9ca3af',
   textClass: 'text-gray-500 dark:text-gray-400',
   bgClass: 'bg-gray-100 dark:bg-gray-500/20',
@@ -503,21 +487,21 @@ const NO_DATA_STATUS: EnvironmentStatus = {
 };
 
 /**
- * Evalúa un valor contra los umbrales de una métrica y devuelve su estado.
+ * Evaluates a value against metric thresholds and returns the environment status.
+ * Determines which severity level the value falls into and returns associated styling.
  *
- * @param metric - Clave de la métrica (ej: 'co2', 'pm25', 'temperature')
- * @param value - Valor numérico a evaluar
- * @param treatZeroAsNoData - Si true (default), tratar 0 como 'Sin datos'.
- *   Útil para CO/NO₂/NH₃ donde 0 indica que el sensor no reporta.
- *   Para temperatura/humedad, pasar false.
- * @returns EnvironmentStatus con label, color, clases CSS
- *
+ * @param {EnvironmentMetricKey} metric - Metric key (e.g., 'co2', 'pm25', 'temperature').
+ * @param {number | null | undefined} value - Numeric value to evaluate.
+ * @param {boolean} [treatZeroAsNoData=true] - If true, treat 0 as no data.
+ *   Recommended for CO/NO₂/NH₃ where 0 indicates sensor not reporting.
+ *   Use false for temperature/humidity where 0 is a valid value.
+ * @returns {EnvironmentStatus} Status with label, color, and CSS classes.
  * @example
  * getEnvironmentStatus('co2', 1100);
- * // → { key: 'moderate', label: 'Moderado', color: '#f59e0b', ... }
+ * // → { key: 'moderate', label: 'Moderate', color: '#f59e0b', ... }
  *
  * getEnvironmentStatus('temperature', 22, false);
- * // → { key: 'good', label: 'Óptimo', color: '#10b981', ... }
+ * // → { key: 'good', label: 'Optimal', color: '#10b981', ... }
  */
 export function getEnvironmentStatus(
   metric: EnvironmentMetricKey,
@@ -563,19 +547,22 @@ export function getEnvironmentStatus(
 }
 
 /**
- * Obtiene la configuración completa de una métrica
- * @param metric - Clave de la métrica
- * @returns MetricThresholdConfig o undefined
+ * Retrieves the complete threshold configuration for a metric.
+ *
+ * @param {EnvironmentMetricKey} metric - Metric key.
+ * @returns {MetricThresholdConfig | undefined} Threshold configuration or undefined if not found.
  */
 export function getMetricConfig(metric: EnvironmentMetricKey): MetricThresholdConfig | undefined {
   return ENV_THRESHOLDS[metric];
 }
 
 /**
- * Calcula el porcentaje de un valor dentro de la escala de una métrica (para gauges)
- * @param metric - Clave de la métrica
- * @param value - Valor numérico
- * @returns Porcentaje 0-100
+ * Calculates the percentage of a value within a metric's display scale.
+ * Used for rendering gauge visualizations with proper scaling.
+ *
+ * @param {EnvironmentMetricKey} metric - Metric key.
+ * @param {number} value - Numeric value to convert to percentage.
+ * @returns {number} Percentage between 0 and 100.
  */
 export function getMetricGaugePercentage(metric: EnvironmentMetricKey, value: number): number {
   const config = ENV_THRESHOLDS[metric];
@@ -587,9 +574,14 @@ export function getMetricGaugePercentage(metric: EnvironmentMetricKey, value: nu
 }
 
 /**
- * Variante de `getEnvironmentStatus` que acepta una configuración dinámica
- * (obtenida desde ThresholdsService) en lugar de leer ENV_THRESHOLDS directamente.
- * Usar este helper en componentes que quieran reaccionar a cambios de umbrales.
+ * Evaluates a value against dynamic threshold configuration instead of static defaults.
+ * Allows components to react to runtime threshold changes from ThresholdsService.
+ * Variant of getEnvironmentStatus that accepts dynamic configuration.
+ *
+ * @param {MetricThresholdConfig} config - Dynamic threshold configuration.
+ * @param {number | null | undefined} value - Numeric value to evaluate.
+ * @param {boolean} [treatZeroAsNoData=true] - Whether to treat 0 as no data.
+ * @returns {EnvironmentStatus} Status with label, color, and CSS classes.
  */
 export function getEnvironmentStatusFromConfig(
   config: MetricThresholdConfig,
@@ -599,7 +591,7 @@ export function getEnvironmentStatusFromConfig(
   if (value === null || value === undefined) {
     return {
       key: 'no-data',
-      label: 'Sin datos',
+      label: 'No data',
       color: '#9ca3af',
       textClass: 'text-gray-500 dark:text-gray-400',
       bgClass: 'bg-gray-100 dark:bg-gray-500/20',
@@ -609,7 +601,7 @@ export function getEnvironmentStatusFromConfig(
   if (treatZeroAsNoData && value === 0) {
     return {
       key: 'no-data',
-      label: 'Sin datos',
+      label: 'No data',
       color: '#9ca3af',
       textClass: 'text-gray-500 dark:text-gray-400',
       bgClass: 'bg-gray-100 dark:bg-gray-500/20',
@@ -640,7 +632,12 @@ export function getEnvironmentStatusFromConfig(
 }
 
 /**
- * Variante de `getMetricGaugePercentage` que acepta una configuración dinámica.
+ * Calculates gauge percentage using dynamic threshold configuration.
+ * Variant of getMetricGaugePercentage that accepts runtime configuration.
+ *
+ * @param {MetricThresholdConfig} config - Dynamic threshold configuration.
+ * @param {number} value - Numeric value to convert to percentage.
+ * @returns {number} Percentage between 0 and 100.
  */
 export function getMetricGaugePercentageFromConfig(
   config: MetricThresholdConfig,

@@ -1,5 +1,9 @@
+<!-- PDF Export Component
+     Generates professional PDF reports with environmental analysis data,
+     charts, statistics, and location-based rankings. -->
+
 <div class="space-y-6">
-  <!-- ── Page header ──────────────────────────────────────────────────────── -->
+  <!-- Page header with title and description -->
   <div class="flex flex-col gap-1">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Exportar Informe PDF</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -7,7 +11,7 @@
     </p>
   </div>
 
-  <!-- ── Filters card ─────────────────────────────────────────────────────── -->
+  <!-- Period and metric selector controls -->
   <div
     class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
   >
@@ -17,7 +21,6 @@
       </h3>
     </div>
     <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-      <!-- Period selector -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="mr-1 text-sm font-medium text-gray-600 dark:text-gray-400">Período:</span>
         @for (p of periods; track p.key) {
@@ -36,7 +39,6 @@
         }
       </div>
 
-      <!-- Metric selector -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="mr-1 text-sm font-medium text-gray-600 dark:text-gray-400">Contaminante:</span>
         <select
@@ -53,7 +55,7 @@
     </div>
   </div>
 
-  <!-- ── Contenido del informe ───────────────────────────────────────────── -->
+  <!-- Report contents description -->
   <div
     class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
   >
@@ -66,7 +68,6 @@
     </p>
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <!-- Sección 1 -->
       <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
         <span
           class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
@@ -78,7 +79,6 @@
         </div>
       </div>
 
-      <!-- Sección 2 -->
       <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
         <span
           class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400"
@@ -90,7 +90,6 @@
         </div>
       </div>
 
-      <!-- Sección 3 -->
       <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
         <span
           class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"
@@ -104,7 +103,6 @@
         </div>
       </div>
 
-      <!-- Sección 4 -->
       <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
         <span
           class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
@@ -120,7 +118,7 @@
     </div>
   </div>
 
-  <!-- ── Botón generar / Progreso ────────────────────────────────────────── -->
+  <!-- Generate button or progress indicator -->
   @if (!isGenerating) {
     <button
       (click)="generatePdf()"
@@ -153,7 +151,7 @@
     </div>
   }
 
-  <!-- ── Nota ────────────────────────────────────────────────────────────── -->
+  <!-- Information note -->
   <div
     class="rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40"
   >

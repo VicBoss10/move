@@ -8,30 +8,45 @@ import { Device, DeviceType } from '../models/device.model';
 import { SensorData } from '../models/sensor-data.model';
 import { VehicleDetected } from '../models/vehicle.model';
 
+/**
+ * Device status information including connectivity and activity metrics.
+ * @interface DeviceStatusInfo
+ */
 export interface DeviceStatusInfo {
+  /** Device identifier. */
   id: number;
+  /** Device display name. */
   name: string;
+  /** Device hardware type. */
   type: DeviceType;
+  /** Device operational status. */
   status: 'ACTIVE' | 'INACTIVE' | 'ERROR' | 'MAINTENANCE';
+  /** Geographic location of the device. */
   location: {
+    /** Location identifier. */
     id: number;
+    /** Latitude coordinate. */
     latitude: number;
+    /** Longitude coordinate. */
     longitude: number;
+    /** Location description. */
     description?: string | null;
   };
-  // Información de estado
+  /** Timestamp of the most recent device activity. */
   lastActivity: Date | null;
+  /** Whether the device is currently online. */
   isOnline: boolean;
+  /** Number of data points recorded by the device. */
   dataPoints: number;
 }
 
 /**
- * Servicio que proporciona información de estado de dispositivos
+ * Device status and connectivity service.
+ * Provides general status information (connectivity, location, activity) without device-specific data.
+ * Sensor-specific metrics and camera statistics are displayed in dedicated views.
  *
- * Responsabilidad: Mostrar información de estado general (conectividad, ubicación, actividad)
- * NO incluye: Datos específicos de sensores (temperatura, CO2, etc.) o estadísticas de cámaras
- *
- * Los datos específicos de cada dispositivo se muestran en vistas dedicadas.
+ * @class DeviceStatusService
+ * @injectable root
  */
 @Injectable({
   providedIn: 'root',
@@ -44,8 +59,10 @@ export class DeviceStatusService {
   ) {}
 
   /**
-   * Obtiene el estado completo de todos los dispositivos
-   * Combina datos de dispositivos con métricas reales
+   * Fetches the complete status of all devices.
+   * Combines device information with real-time metrics and activity data.
+   *
+   * @returns {Observable<DeviceStatusInfo[]>} Observable with all device statuses.
    */
   getDeviceStatuses(): Observable<DeviceStatusInfo[]> {
     return combineLatest([

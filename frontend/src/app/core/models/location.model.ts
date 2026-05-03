@@ -1,46 +1,60 @@
 /**
- * Modelo para Ubicaciones de monitoreo
- * Corresponde a Location en el backend
+ * Geographic monitoring location with coordinates and optional description.
+ * @interface Location
  */
 export interface Location {
+  /** Unique identifier for the location. */
   id: number;
+  /** Latitude coordinate. */
   latitude: number;
+  /** Longitude coordinate. */
   longitude: number;
-  /**
-   * Campo opcional; puede venir como null cuando no se registró descripción.
-   */
+  /** Human-readable location description, may be null if not provided. */
   description?: string | null;
 }
 
 /**
- * Criterios de búsqueda para ubicaciones
+ * Search criteria filter for location queries.
+ * @interface LocationSearchCriteria
  */
 export interface LocationSearchCriteria {
+  /** Filter locations by description text. */
   description?: string;
+  /** Search locations by keyword (matches description). */
   keyword?: string;
+  /** Filter by latitude coordinate. */
   latitude?: number;
+  /** Filter by longitude coordinate. */
   longitude?: number;
+  /** Filter locations within radius in kilometers. */
   radiusKm?: number;
 }
 
 /**
- * Ubicación con información extendida
+ * Extended location information with aggregated metrics.
+ * @interface LocationDetails
+ * @extends {Location}
  */
 export interface LocationDetails extends Location {
-  /** Cantidad opcional calculada en frontend o backend. */
+  /** Number of devices deployed at this location. */
   deviceCount?: number;
-  /** Cantidad opcional agregada desde detecciones. */
+  /** Number of vehicle detections recorded at this location. */
   vehicleDetectionCount?: number;
-  /** Puede no estar disponible para ubicaciones sin actividad. */
+  /** Timestamp of the most recent activity at this location. */
   lastActivity?: Date;
 }
 
 /**
- * Estadísticas de ubicaciones
+ * Aggregated location monitoring statistics.
+ * @interface LocationStats
  */
 export interface LocationStats {
+  /** Total number of locations in the system. */
   total: number;
+  /** Number of locations with active devices. */
   activeLocations: number;
+  /** Total vehicle detections across all locations. */
   totalVehicleDetections: number;
+  /** Timestamp when statistics were last calculated. */
   lastUpdated: Date;
 }

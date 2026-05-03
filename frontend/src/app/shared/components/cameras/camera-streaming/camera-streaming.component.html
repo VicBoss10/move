@@ -1,4 +1,9 @@
+<!-- Camera Streaming Component
+     Displays live MJPEG/snapshot video feeds from camera devices with controls.
+     Shows camera selection, stream playback, fullscreen view, and device statistics. -->
+
 <div class="space-y-6">
+  <!-- Page header and camera registration button -->
   <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
     <div>
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Streaming de Cámaras</h1>
@@ -17,11 +22,15 @@
     </button>
   </div>
 
+  <!-- Main content grid: stream + controls left, stats right -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Stream player and camera selection -->
     <div class="lg:col-span-2 space-y-4">
+      <!-- Video stream display with overlay controls -->
       <div
         class="group relative bg-white border border-gray-200 p-2 dark:border-gray-700 dark:bg-gray-800 transition-all hover:shadow-lg rounded-lg"
       >
+        <!-- Aspect-ratio container for stream with touch event handler -->
         <div
           class="aspect-video relative bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden"
           #streamContainer
@@ -61,7 +70,7 @@
             </div>
           }
 
-          <!-- Overlay Translucido (Estilo YouTube) -->
+          <!-- YouTube-style control overlay with auto-hide on mobile -->
           @if (selectedCamera) {
             <div
               class="absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300 sm:p-6"
@@ -164,6 +173,7 @@
         </div>
       </div>
 
+      <!-- Error message display -->
       @if (errorMessage) {
         <div
           class="rounded-lg bg-red-50 border border-red-200 p-4 dark:bg-red-900/20 dark:border-red-800"
@@ -172,6 +182,7 @@
         </div>
       }
 
+      <!-- Available cameras selection grid -->
       <div
         class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
       >
@@ -224,7 +235,9 @@
       </div>
     </div>
 
+    <!-- Sidebar statistics cards -->
     <div class="space-y-4">
+      <!-- Total cameras count -->
       <div
         class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
       >
@@ -255,6 +268,7 @@
         </div>
       </div>
 
+      <!-- Detection active status -->
       <div
         class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
       >
@@ -297,6 +311,7 @@
         </div>
       </div>
 
+      <!-- Active stream session ID display -->
       <div
         class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
       >

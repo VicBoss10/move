@@ -31,28 +31,31 @@ ChartJS.register(
 );
 
 /**
- * HumidityChartComponent
+ * HumidityChartComponent (Presentation Component)
  *
- * Componente especializado para mostrar la tendencia de humedad relativa en las últimas 24 horas,
- * promediando por hora. Utiliza Chart.js para visualizar datos de humedad con una línea de gráfico azul.
+ * Displays relative humidity trends over a 24-hour sliding window with hourly aggregation.
+ *
+ * Features:
+ * - Single-series line chart showing humidity percentage (0-100%) over 24 hours
+ * - 24-hour sliding window with hourly aggregation: calculates mean humidity per hour, null for empty slots
+ * - Fetches latest sensor timestamp to determine time window range
+ * - Query-based data loading from backend with start/end date filtering
+ * - Chart.js line configuration: blue line (#3b82f6) with light semi-transparent fill
+ * - Enhanced point styling: 5px radius, white border, blue hover state with larger radius
+ * - Responsive layout: scrollable container on mobile (min-width 650px), full width on XL screens
+ * - Legend display with point-style icons, positioned at top
+ * - Tooltip with dark background, formatted percentage units, enhanced styling
+ * - Grid styling: light blue-gray lines with reduced opacity, dark mode aware
+ * - Y-axis: locked range 0-100%, blue title "Humedad (%)", percentage suffix on ticks
+ * - X-axis: hourly labels (HH:00 format), max 12 ticks
+ * - OnPush change detection with async pipe for data subscription
+ * - Fallback: displays empty chart on data load error
  *
  * @selector app-humidity-chart
  * @standalone true
- * @imports [CommonModule, BaseChartDirective]
- * @returns {Component} Componente para mostrar tendencia de humedad
- *
+ * @imports CommonModule, BaseChartDirective
  * @example
- * // Uso en plantilla
  * <app-humidity-chart />
- *
- * @example
- * // Uso en componente
- * import { HumidityChartComponent } from '@shared/components/environment-detail-charts/humidity-chart/humidity-chart.component';
- *
- * @Component({
- *   imports: [HumidityChartComponent],
- * })
- * export class ParentComponent {}
  */
 @Component({
   selector: 'app-humidity-chart',
@@ -62,29 +65,47 @@ ChartJS.register(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HumidityChartComponent {
+  /**
+   * Reference to Chart.js canvas element for programmatic access.
+   * @type {BaseChartDirective | undefined}
+   */
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Ventana de horas a mostrar
+   * Time window in hours for data aggregation (24-hour sliding window).
+   * @type {number}
+   * @private
    */
   private readonly HOURS_WINDOW = 24;
 
   /**
-   * Observable que emite la configuración del gráfico con datos reactivos
+   * Observable stream of aggregated chart data with hourly labels and averaged humidity values.
+   * @type {Observable<ChartConfiguration<'line'>['data']>}
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-
   /**
-   * Observable compartido de datos del sensor (últimas 24h)
+   * Observable stream of raw sensor data for the 24-hour window, fetched from backend.
+   * @type {Observable<SensorData[]>}
+   * @private
    */
   private sensorData$!: Observable<SensorData[]>;
 
+  /**
+   * Default empty chart data returned when no sensor data is available.
+   * @type {ChartConfiguration<'line'>['data']}
+   * @private
+   */
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [],
   };
 
+  /**
+   * Chart.js configuration object for line chart styling and interactivity.
+   * Defines responsive layout, legend positioning, tooltip formatting, and axis labels.
+   * @type {ChartConfiguration<'line'>['options']}
+   */
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
@@ -200,14 +221,22 @@ export class HumidityChartComponent {
     },
   };
 
+  /**
+   * Initializes component with service dependency and sets up data streams.
+   * Triggers initialization of sensor data and chart data observables.
+   * @param {SensorDataService} sensorDataService - Service for querying historical humidity sensor data
+   */
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
   }
 
   /**
-   * Obtiene el último registro para determinar la ventana de tiempo
-   * y luego consulta solo las últimas 24 horas al backend.
+   * Fetches the latest sensor timestamp, then queries the backend for all sensor data
+   * within the 24-hour window ending at that timestamp.
+   * Errors are caught and return empty array for graceful fallback.
+   * @private
+   * @returns {void}
    */
   private initializeSensorData(): void {
     this.sensorData$ = this.sensorDataService.getLatest().pipe(
@@ -225,7 +254,12 @@ export class HumidityChartComponent {
   }
 
   /**
-   * Inicializa los datos del gráfico agrupando por hora y promediando.
+   * Transforms raw sensor data into hourly-aggregated chart data.
+   * Groups readings by hour, calculates average humidity per hour, and creates 24 hourly slots.
+   * Parses timestamps, filters invalid dates, and creates HH:00 format labels.
+   * Returns default empty chart on zero or invalid data.
+   * @private
+   * @returns {void}
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
@@ -254,7 +288,6 @@ export class HumidityChartComponent {
           0,
         );
 
-        // Crear 24 slots horarios hacia atrás desde la hora más reciente
         const slots: { start: Date; end: Date; label: string }[] = [];
         for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
           const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
@@ -310,5 +343,4 @@ export class HumidityChartComponent {
       shareReplay(1),
     );
   }
-
 }

@@ -4,21 +4,25 @@ import { FormsModule } from '@angular/forms';
 import { SensorDataSearchCriteria } from '../../../../core/models/sensor-data.model';
 
 /**
- * HistoryFiltersComponent
+ * HistoryFiltersComponent (Stateful Component)
  *
- * Componente de filtros para la página de historial ambiental.
- * Permite filtrar por rango de fechas, contaminante específico y rango de valores.
- * Emite eventos cuando los filtros cambien.
+ * Provides filtration panel for environmental data history with four filter dimensions.
+ *
+ * Features:
+ * - Date range filter: start and end dates (30-day lookback window enforced)
+ * - Parameter selection: dropdown with 7 options (all parameters, CO₂, temperature, humidity, PM2.5, PM10, gases)
+ * - Value range filter: min/max inputs that adapt based on selected parameter
+ * - Adaptive range constraints: CO₂ (300-2000 ppm), humidity (0-100%), temp (-10-50°C), gases (0-200 ppb/ppm)
+ * - Apply and Clear buttons: trigger filter events and reset state
+ * - Reactive two-way binding with [(ngModel)] on all inputs
+ * - Emits SensorDataSearchCriteria events on apply/clear
+ * - OnPush not used; standard change detection for stateful UI
  *
  * @selector app-history-filters
  * @standalone true
- * @imports CommonModule, FormsModule
- * @returns Panel de filtros para historial
- *
+ * @imports FormsModule
  * @example
- * <app-history-filters
- *   (onFilterChange)="handleFilterChange($event)"
- * />
+ * <app-history-filters (filterChange)="handleFilterChange($event)" />
  */
 @Component({
   selector: 'app-history-filters',
@@ -28,60 +32,60 @@ import { SensorDataSearchCriteria } from '../../../../core/models/sensor-data.mo
 })
 export class HistoryFiltersComponent {
   /**
-   * Fecha de inicio para filtro
+   * Start date string in YYYY-MM-DD format for date range filter.
    * @type {string}
    */
   startDate: string = '';
 
   /**
-   * Fecha de fin para filtro
+   * End date string in YYYY-MM-DD format for date range filter.
    * @type {string}
    */
   endDate: string = '';
 
   /**
-   * Parámetro seleccionado para filtrar
-   * Opciones: 'all', 'co2', 'temperature', 'humidity', 'pm25', 'pm10', 'gases'
+   * Selected parameter key for filtering ('all' | 'co2' | 'temperature' | 'humidity' | 'pm25' | 'pm10' | 'gases').
    * @type {string}
    */
   selectedParameter: string = 'all';
 
   /**
-   * Rango mínimo para filtro de valores
+   * Minimum value threshold for value range filter.
    * @type {number}
    */
   minValue: number = 0;
 
   /**
-   * Rango máximo para filtro de valores
+   * Maximum value threshold for value range filter.
    * @type {number}
    */
   maxValue: number = 100;
 
   /**
-   * Event emitter para cambios de filtro
-   * Emite SensorDataSearchCriteria
+   * Output event emitter that broadcasts SensorDataSearchCriteria when filters are applied or cleared.
+   * @type {EventEmitter<SensorDataSearchCriteria>}
    */
   @Output() filterChange = new EventEmitter<SensorDataSearchCriteria>();
 
   /**
-   * Array de parámetros disponibles
-   * @type {Array}
+   * Array of filterable parameter options with value keys and display labels.
+   * @type {Array<{value: string; label: string}>}
    */
   parameters = [
-    { value: 'all', label: 'Todos los parámetros' },
+    { value: 'all', label: 'All parameters' },
     { value: 'co2', label: 'CO₂' },
-    { value: 'temperature', label: 'Temperatura' },
-    { value: 'humidity', label: 'Humedad' },
+    { value: 'temperature', label: 'Temperature' },
+    { value: 'humidity', label: 'Humidity' },
     { value: 'pm25', label: 'PM2.5' },
     { value: 'pm10', label: 'PM10' },
     { value: 'gases', label: 'Gases' },
   ];
 
   /**
-   * Mapea el parámetro seleccionado a rangos de valores
+   * Maps selected parameter key to its valid min/max value range based on units.
+   * Ranges: temperature (-10 to 50°C), humidity (0-100%), CO₂ (300-2000 ppm), gases (0-200 ppb/ppm), PM (0-500 µg/m³).
    * @private
-   * @returns {Object} Objeto con min y max para el parámetro
+   * @returns {{min: number; max: number}} Min and max boundaries for current parameter
    */
   private getValueRangesForParameter(): { min: number; max: number } {
     switch (this.selectedParameter) {
@@ -107,24 +111,24 @@ export class HistoryFiltersComponent {
   }
 
   /**
-   * Convierte los filtros de UI a SensorDataSearchCriteria
+   * Transforms UI filter state into SensorDataSearchCriteria query object.
+   * Maps date inputs to ISO Date objects, sets 23:59:59.999 on end date for day-inclusive range.
+   * Conditionally includes min/max properties based on selected parameter (skipped if 'all').
    * @private
-   * @returns {SensorDataSearchCriteria} Criterios de búsqueda
+   * @returns {SensorDataSearchCriteria} Criteria object with optional start, end, and parameter-specific bounds
    */
   private buildSearchCriteria(): SensorDataSearchCriteria {
     const criteria: SensorDataSearchCriteria = {};
 
-    // Agregar rango de fechas si están configuradas
     if (this.startDate) {
       criteria.start = new Date(this.startDate);
     }
     if (this.endDate) {
       const end = new Date(this.endDate);
-      end.setHours(23, 59, 59, 999); // Incluir todo el día
+      end.setHours(23, 59, 59, 999);
       criteria.end = end;
     }
 
-    // Agregar rangos de valores según el parámetro seleccionado
     if (this.selectedParameter !== 'all') {
       const minVal = Math.min(this.minValue, this.maxValue);
       const maxVal = Math.max(this.minValue, this.maxValue);
@@ -169,7 +173,8 @@ export class HistoryFiltersComponent {
   }
 
   /**
-   * Actualiza los rangos cuando se cambia de parámetro
+   * Updates min/max value constraints when parameter selection changes.
+   * Fetches appropriate range from getValueRangesForParameter based on selected parameter units.
    * @returns {void}
    */
   onParameterChange(): void {
@@ -179,7 +184,8 @@ export class HistoryFiltersComponent {
   }
 
   /**
-   * Aplica los filtros y emite el evento
+   * Constructs and emits filter criteria based on current UI state.
+   * Logs criteria to console for debugging, emits filterChange event to parent.
    * @returns {void}
    */
   applyFilters(): void {
@@ -189,7 +195,8 @@ export class HistoryFiltersComponent {
   }
 
   /**
-   * Limpia todos los filtros
+   * Resets all filter fields to default state and emits empty criteria.
+   * Clears dates, resets parameter to 'all', recalculates ranges, then applies.
    * @returns {void}
    */
   clearFilters(): void {
@@ -201,8 +208,8 @@ export class HistoryFiltersComponent {
   }
 
   /**
-   * Obtiene la fecha mínima permitida (30 días atrás)
-   * @returns {string} Fecha en formato YYYY-MM-DD
+   * Returns minimum selectable date as YYYY-MM-DD string (30 days prior to today).
+   * @returns {string} ISO date string for 30-day lookback window start
    */
   getMinDate(): string {
     const date = new Date();
@@ -211,8 +218,8 @@ export class HistoryFiltersComponent {
   }
 
   /**
-   * Obtiene la fecha máxima permitida (hoy)
-   * @returns {string} Fecha en formato YYYY-MM-DD
+   * Returns maximum selectable date as YYYY-MM-DD string (today).
+   * @returns {string} ISO date string for current date
    */
   getMaxDate(): string {
     return new Date().toISOString().split('T')[0];

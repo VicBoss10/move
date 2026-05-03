@@ -19,17 +19,30 @@ import {
 } from 'chart.js';
 import { VehicleStats } from '../vehicle-stats-cards/vehicle-stats-cards.component';
 
-// Registrar los módulos necesarios de Chart.js para el gráfico Donut
 Chart.register(DoughnutController, ArcElement, Tooltip, Legend);
 
 /**
- * VehicleTypeChartComponent
+ * VehicleTypeChartComponent (Presentational Component)
  *
- * Muestra la distribución de detecciones de vehículos por tipo en un gráfico Donut.
- * Recibe las estadísticas del contenedor padre (vehicles-stats) evitando duplicar llamadas al API.
+ * Displays vehicle detection distribution by type as a doughnut chart visualization.
+ * Receives pre-calculated stats from parent component to avoid duplicate API calls.
+ * Includes summary cards showing individual vehicle type counts and percentages.
+ *
+ * Features:
+ * - Doughnut chart with five vehicle type segments: CAR (blue), MOTORCYCLE (purple), BUS (amber), TRUCK (red), BICYCLE (green)
+ * - Responsive doughnut with 68% cutout for center space
+ * - Hover offset animation for interactive feel
+ * - Tooltip showing count and percentage breakdown
+ * - Empty state when no detections available
+ * - Summary cards grid showing absolute counts per type with color coding
+ * - Total detection count centered display
+ * - OnPush change detection with manual ChangeDetectorRef triggers on input changes
  *
  * @selector app-vehicle-type-chart
  * @standalone true
+ * @imports BaseChartDirective
+ * @example
+ * <app-vehicle-type-chart [stats]="vehicleStats" />
  */
 @Component({
   selector: 'app-vehicle-type-chart',
@@ -39,7 +52,11 @@ Chart.register(DoughnutController, ArcElement, Tooltip, Legend);
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehicleTypeChartComponent implements OnChanges {
-  /** Estadísticas calculadas en el padre y pasadas por Input */
+  /**
+   * Input stats object containing vehicle detection counts by type.
+   * Calculated in parent component and passed down to avoid duplication.
+   * @type {VehicleStats}
+   */
   @Input() stats: VehicleStats = {
     totalDetected: 0,
     carCount: 0,
@@ -49,7 +66,10 @@ export class VehicleTypeChartComponent implements OnChanges {
     bicycleCount: 0,
   };
 
-  /** Datos del gráfico, actualizados en ngOnChanges */
+  /**
+   * Doughnut chart data object, updated in ngOnChanges when stats input changes
+   * @type {ChartData<'doughnut'>}
+   */
   donutData: ChartData<'doughnut'> = {
     labels: ['Auto', 'Moto', 'Bus', 'Camión', 'Bicicleta'],
     datasets: [
@@ -64,6 +84,10 @@ export class VehicleTypeChartComponent implements OnChanges {
     ],
   };
 
+  /**
+   * Doughnut chart configuration with legend, tooltips, and responsive behavior
+   * @type {ChartConfiguration<'doughnut'>['options']}
+   */
   donutOptions: ChartConfiguration<'doughnut'>['options'] = {
     responsive: true,
     cutout: '68%',
@@ -90,8 +114,17 @@ export class VehicleTypeChartComponent implements OnChanges {
     },
   };
 
+  /**
+   * Initializes component with change detection reference.
+   * @param {ChangeDetectorRef} cdr - Change detection reference for manual triggering in OnPush mode
+   */
   constructor(private cdr: ChangeDetectorRef) {}
 
+  /**
+   * Angular lifecycle hook triggered when @Input stats changes.
+   * Updates doughnut chart data with new stats values.
+   * @param {SimpleChanges} changes - Change detection object
+   */
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['stats']) {
       this.donutData = {

@@ -18,7 +18,6 @@ import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 
-// Registrar los scales y elementos
 ChartJS.register(
   LineController,
   LineElement,
@@ -31,15 +30,30 @@ ChartJS.register(
 );
 
 /**
- * Componente que muestra un gráfico dinámico de línea con la tendencia de CO₂
- * en las últimas 12 horas, promediando por hora. Utiliza RxJS Observables
- * y sigue el patrón reactivo con ChangeDetectionStrategy.OnPush.
+ * Co2ChartComponent (Presentation Component)
  *
- * Datos obtenidos de: SensorDataService
- * Unidad: ppm (partes por millón)
+ * Displays a dynamic line chart showing CO₂ concentration trends over the last 12 hours,
+ * with hourly averages. Uses Chart.js for rendering with responsive, dark-mode-aware styling.
+ *
+ * Features:
+ * - 12-hour sliding window of CO₂ data, grouped and averaged by hour
+ * - Fetches latest sensor timestamp to determine time window range
+ * - Query-based data loading from backend with start/end date filtering
+ * - Hourly slot aggregation: calculates mean CO₂ per hour, null for empty slots
+ * - Chart.js line configuration: red line (#ef4444) with semi-transparent fill, point markers
+ * - Responsive layout: scrollable container on mobile (min-width 650px), full width on XL screens
+ * - Legend display with point-style icons, positioned at top
+ * - Tooltip with formatted ppm units and black background with white text
+ * - Grid styling: light gray lines with reduced opacity, dark mode aware
+ * - Y-axis title: "CO₂ (ppm)" in red, X-axis: hourly labels (HH:00 format)
+ * - OnPush change detection with async pipe for data subscription
+ * - Fallback: displays empty chart on data load error
  *
  * @selector app-co2-chart
  * @standalone true
+ * @imports CommonModule, BaseChartDirective
+ * @example
+ * <app-co2-chart />
  */
 @Component({
   selector: 'app-co2-chart',
@@ -49,24 +63,37 @@ ChartJS.register(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Co2ChartComponent {
+  /**
+   * Reference to Chart.js canvas element for programmatic access.
+   * @type {BaseChartDirective | undefined}
+   */
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Ventana de horas a mostrar
+   * Time window in hours for data aggregation (12-hour sliding window).
+   * @type {number}
+   * @private
    */
   private readonly HOURS_WINDOW = 12;
 
   /**
-   * Observable con la configuración del gráfico
+   * Observable stream of aggregated chart data with hourly labels and averaged CO₂ values.
+   * @type {Observable<ChartConfiguration<'line'>['data']>}
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-
   /**
-   * Observable compartido de datos del sensor (últimas 12h)
+   * Observable stream of raw sensor data for the 12-hour window, fetched from backend.
+   * @type {Observable<SensorData[]>}
+   * @private
    */
   private sensorData$!: Observable<SensorData[]>;
 
+  /**
+   * Chart.js configuration object for line chart styling and interactivity.
+   * Defines responsive layout, legend positioning, tooltip formatting, and axis labels.
+   * @type {ChartConfiguration<'line'>['options']}
+   */
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
@@ -151,19 +178,31 @@ export class Co2ChartComponent {
     },
   };
 
+  /**
+   * Default empty chart data returned when no sensor data is available.
+   * @type {ChartConfiguration<'line'>['data']}
+   * @private
+   */
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [],
   };
 
+  /**
+   * Initializes component with service dependencies and sets up data streams.
+   * Triggers initialization of sensor data observable and chart data observable.
+   * @param {SensorDataService} sensorDataService - Service for querying historical CO₂ sensor data
+   */
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
   }
 
   /**
-   * Obtiene el último registro para determinar la ventana de tiempo
-   * y luego consulta solo las últimas 12 horas al backend.
+   * Fetches the latest sensor timestamp, then queries the backend for all sensor data
+   * within the 12-hour window ending at that timestamp.
+   * Errors are caught and return empty array for graceful fallback.
+   * @private
    */
   private initializeSensorData(): void {
     this.sensorData$ = this.sensorDataService.getLatest().pipe(
@@ -181,7 +220,11 @@ export class Co2ChartComponent {
   }
 
   /**
-   * Agrupa los datos por hora y los promedia para tener 12 puntos limpios.
+   * Transforms raw sensor data into hourly-aggregated chart data.
+   * Groups readings by hour, calculates average CO₂ per hour, and creates 12 hourly slots.
+   * Parses timestamps, filters invalid dates, and creates HH:00 format labels.
+   * Returns default empty chart on zero or invalid data.
+   * @private
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
@@ -210,7 +253,6 @@ export class Co2ChartComponent {
           0,
         );
 
-        // Crear 12 slots horarios hacia atrás desde la hora más reciente
         const slots: { start: Date; end: Date; label: string }[] = [];
         for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
           const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
@@ -256,5 +298,4 @@ export class Co2ChartComponent {
       shareReplay(1),
     );
   }
-
 }

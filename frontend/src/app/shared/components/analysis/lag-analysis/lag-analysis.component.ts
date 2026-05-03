@@ -28,11 +28,26 @@ import { VehicleDetected } from '../../../../core/models/vehicle.model';
 
 ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend);
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
+/**
+ * Environmental metric key type.
+ * @typedef {'co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3'} MetricKey
+ */
 type MetricKey = 'co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3';
+
+/**
+ * Time period key type.
+ * @typedef {'3d' | '7d' | '30d'} PeriodKey
+ */
 type PeriodKey = '3d' | '7d' | '30d';
 
+/**
+ * Metric display configuration.
+ * @interface MetricOption
+ * @property {MetricKey} key - Metric identifier.
+ * @property {string} label - Display label with Unicode.
+ * @property {string} unit - Measurement unit.
+ * @property {string} color - Hex color for charts.
+ */
 interface MetricOption {
   key: MetricKey;
   label: string;
@@ -40,20 +55,37 @@ interface MetricOption {
   color: string;
 }
 
+/**
+ * Cross-correlation result at a specific lag.
+ * @interface LagResult
+ * @property {number} lag - Lag in time slots (negative = vehicles lead).
+ * @property {number} lagHours - Lag in hours.
+ * @property {number} r - Pearson correlation coefficient.
+ */
 interface LagResult {
-  lag: number; // shift in slots (negative = vehicles lead pollutant)
-  lagHours: number; // human-readable lag in hours
-  r: number; // cross-correlation at this lag
+  lag: number;
+  lagHours: number;
+  r: number;
 }
 
+/**
+ * Summary of lag analysis with best result and interpretation.
+ * @interface LagSummary
+ * @property {LagResult} bestLag - Lag with highest |r|.
+ * @property {string} interpretation - Human-readable interpretation.
+ * @property {LagResult[]} results - All lag results.
+ */
 interface LagSummary {
   bestLag: LagResult;
   interpretation: string;
   results: LagResult[];
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
+/**
+ * Available environmental metrics.
+ * @constant METRICS
+ * @type {MetricOption[]}
+ */
 const METRICS: MetricOption[] = [
   { key: 'co2', label: 'CO₂', unit: 'ppm', color: '#ef4444' },
   { key: 'pm25', label: 'PM2.5', unit: 'µg/m³', color: '#a855f7' },
@@ -65,43 +97,50 @@ const METRICS: MetricOption[] = [
   { key: 'nh3', label: 'NH₃', unit: 'ppb', color: '#14b8a6' },
 ];
 
+/**
+ * Available analysis periods.
+ * @constant PERIODS
+ * @type {Array<{key: PeriodKey, label: string}>}
+ */
 const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: '3d', label: 'Últimos 3 días' },
   { key: '7d', label: 'Últimos 7 días' },
   { key: '30d', label: 'Últimos 30 días' },
 ];
 
-/** Slot size = 1 hour for all periods (lag steps in hours) */
+/**
+ * Time slot duration in milliseconds (1 hour).
+ * @constant SLOT_MS
+ */
 const SLOT_MS = 3_600_000;
 
-/** Max lag to evaluate in each direction (±slots) */
+/**
+ * Maximum lag to evaluate in each direction (±12 hours).
+ * @constant MAX_LAG
+ */
 const MAX_LAG = 12;
 
 /**
- * LagAnalysisComponent (Smart Component)
+ * LagAnalysisComponent
  *
- * Calcula la correlación cruzada (CCF) entre el conteo horario de vehículos
- * y el promedio horario de un contaminante ambiental, evaluando rezagos
- * desde −MAX_LAG h hasta +MAX_LAG h.
+ * Calculates and visualizes cross-correlation (CCF) between hourly vehicle counts
+ * and hourly-averaged environmental metric, evaluating lags from −12h to +12h.
  *
- * Un lag negativo (k < 0) significa que los vehículos anticipan el cambio
- * en el contaminante k horas después.
- * Un lag positivo (k > 0) significa que el contaminante sube antes que el tráfico.
+ * A negative lag (k < 0) indicates vehicles predict the pollutant change k hours ahead.
+ * A positive lag (k > 0) indicates the pollutant rises before vehicle traffic increases.
  *
- * Características:
- * - Gráfico de barras: correlación vs. rezago temporal
- * - Tabla detallada de resultados por lag
- * - Card interpretativa del lag óptimo
- * - Filtros: período (3d/7d/30d) + métrica seleccionable
- * - Dark mode support
+ * Features:
+ * - Bar chart: correlation coefficient vs. lag
+ * - Detailed results table with strength and direction
+ * - Best lag interpretation card
+ * - Selectable period (3d/7d/30d) and metric
+ * - Full dark mode support
  *
+ * @class LagAnalysisComponent
+ * @implements {OnInit, OnDestroy}
  * @selector app-lag-analysis
  * @standalone true
  * @imports CommonModule, FormsModule, BaseChartDirective
- * @returns Gráfico de análisis de rezagos con interpretación
- *
- * @example
- * <app-lag-analysis />
  */
 @Component({
   selector: 'app-lag-analysis',
@@ -111,35 +150,75 @@ const MAX_LAG = 12;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LagAnalysisComponent implements OnInit, OnDestroy {
+  /**
+   * Reference to chart directive for dynamic updates.
+   */
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
+  /**
+   * Available metrics for analysis.
+   * @readonly
+   */
   readonly metrics = METRICS;
+
+  /**
+   * Available time periods.
+   * @readonly
+   */
   readonly periods = PERIODS;
 
-  // ── State ──────────────────────────────────────────────────────────────────
-
+  /**
+   * Current filter state (period and metric).
+   * @private
+   */
   private readonly filter$ = new BehaviorSubject<{ period: PeriodKey; metric: MetricKey }>({
     period: '7d',
     metric: 'co2',
   });
+
+  /**
+   * Subject for cleanup on component destruction.
+   * @private
+   */
   private readonly destroy$ = new Subject<void>();
 
+  /**
+   * True while loading data and computing correlations.
+   */
   isLoading = true;
+
+  /**
+   * True if an error occurred during data loading.
+   */
   hasError = false;
+
+  /**
+   * Error message to display.
+   */
   errorMsg = '';
 
+  /**
+   * Lag analysis summary with best lag and interpretation.
+   */
   summary: LagSummary | null = null;
 
+  /**
+   * Chart data configuration.
+   */
   chartData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [] };
+
+  /**
+   * Chart options configuration.
+   */
   chartOptions: ChartConfiguration<'bar'>['options'] = this.buildChartOptions(METRICS[0]);
 
-  // ── Accessors ──────────────────────────────────────────────────────────────
-
+  /**
+   * Current filter values.
+   * @returns {{period: PeriodKey, metric: MetricKey}} Filter state.
+   */
   get currentFilter() {
     return this.filter$.value;
   }
-
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   constructor(
     private readonly sensorDataService: SensorDataService,
@@ -147,6 +226,10 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
+  /**
+   * Initializes reactive data pipeline.
+   * Subscribes to filter changes and reloads analysis.
+   */
   ngOnInit(): void {
     this.filter$
       .pipe(
@@ -167,22 +250,41 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Cleans up resources on component destruction.
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  // ── User interactions ──────────────────────────────────────────────────────
-
+  /**
+   * Updates the selected period and triggers recomputation.
+   *
+   * @param {PeriodKey} p - New period key.
+   */
   setPeriod(p: PeriodKey): void {
     this.filter$.next({ ...this.filter$.value, period: p });
   }
+
+  /**
+   * Updates the selected metric and triggers recomputation.
+   *
+   * @param {MetricKey} m - New metric key.
+   */
   setMetric(m: MetricKey): void {
     this.filter$.next({ ...this.filter$.value, metric: m });
   }
 
-  // ── Data pipeline ──────────────────────────────────────────────────────────
-
+  /**
+   * Loads sensor and vehicle data, aggregates into hourly slots,
+   * and computes cross-correlation at each lag.
+   *
+   * @private
+   * @param {PeriodKey} period - Analysis period.
+   * @param {MetricKey} metricKey - Metric for correlation analysis.
+   * @returns {Observable} Observable with summary, chart data, and options.
+   */
   private loadAndCompute(period: PeriodKey, metricKey: MetricKey) {
     const end = new Date();
     const hours = { '3d': 72, '7d': 168, '30d': 720 }[period];
@@ -217,7 +319,6 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
 
         const [sensorData, vehicleData] = result;
 
-        // Build hourly time slots
         const slotOrigin = Math.floor(start.getTime() / SLOT_MS) * SLOT_MS;
         const slotCount = Math.ceil((end.getTime() - slotOrigin) / SLOT_MS);
 
@@ -253,7 +354,6 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
           results.push({ lag: k, lagHours: k, r });
         }
 
-        // Best lag = highest |r|
         const bestLag = results.reduce((best, cur) =>
           Math.abs(cur.r) > Math.abs(best.r) ? cur : best,
         );
@@ -261,7 +361,6 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
         const interpretation = this.interpret(bestLag, metricOption.label);
         const summary: LagSummary = { bestLag, interpretation, results };
 
-        // Build chart
         const labels = results.map((r) => `${r.lag >= 0 ? '+' : ''}${r.lag}h`);
         const barColors = results.map((r) =>
           r.lag === bestLag.lag
@@ -292,17 +391,20 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ── Cross-correlation ──────────────────────────────────────────────────────
-
   /**
-   * Pearson correlation between x and y shifted by k positions.
-   * k > 0 → y leads x  |  k < 0 → x leads y
+   * Computes Pearson correlation between x and y with y shifted by k positions.
+   * A negative k shifts y backward (y leads x). Positive k shifts y forward (x leads y).
+   *
+   * @private
+   * @param {number[]} x - First variable (vehicle counts).
+   * @param {number[]} y - Second variable (pollutant values).
+   * @param {number} k - Lag shift in slots.
+   * @returns {number} Pearson correlation coefficient.
    */
   private crossCorrelation(x: number[], y: number[], k: number): number {
     const n = x.length;
     if (n < 4) return 0;
 
-    // Build shifted pairs
     const pairs: [number, number][] = [];
     for (let i = 0; i < n; i++) {
       const j = i + k;
@@ -333,8 +435,14 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     return den === 0 ? 0 : num / den;
   }
 
-  // ── Interpretation text ────────────────────────────────────────────────────
-
+  /**
+   * Generates human-readable interpretation of the best lag result.
+   *
+   * @private
+   * @param {LagResult} best - Best lag result.
+   * @param {string} metricLabel - Name of the metric being analyzed.
+   * @returns {string} Interpretation text.
+   */
   private interpret(best: LagResult, metricLabel: string): string {
     const absR = Math.abs(best.r);
     const strength = absR >= 0.5 ? 'significativa' : absR >= 0.3 ? 'moderada' : 'débil';
@@ -348,8 +456,13 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     return `Correlación ${strength} (r = ${best.r.toFixed(2)}) con rezago de +${best.lagHours} h: ${metricLabel} cambia antes que el tráfico vehicular (posible causalidad inversa u otro factor).`;
   }
 
-  // ── Chart options ──────────────────────────────────────────────────────────
-
+  /**
+   * Builds chart options with metric-specific styling.
+   *
+   * @private
+   * @param {MetricOption} m - Metric for chart configuration.
+   * @returns {ChartConfiguration<'bar'>['options']} Chart.js options object.
+   */
   private buildChartOptions(m: MetricOption): ChartConfiguration<'bar'>['options'] {
     return {
       responsive: true,
@@ -392,7 +505,12 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     };
   }
 
-  /** Color for the best-lag badge */
+  /**
+   * Returns Tailwind classes for best-lag badge based on correlation strength.
+   *
+   * @param {number} r - Correlation coefficient.
+   * @returns {string} Tailwind class string.
+   */
   badgeClass(r: number): string {
     if (Math.abs(r) >= 0.5)
       return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
@@ -401,7 +519,14 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
   }
 
-  /** Row color for results table */
+  /**
+   * Returns Tailwind classes for results table rows.
+   * Highlights the optimal lag row.
+   *
+   * @param {number} r - Correlation coefficient (unused, kept for consistency).
+   * @param {boolean} isOptimal - True if this is the best lag row.
+   * @returns {string} Tailwind class string.
+   */
   rowClass(r: number, isOptimal: boolean): string {
     if (isOptimal) return 'bg-amber-50 dark:bg-amber-900/10 font-semibold';
     return '';

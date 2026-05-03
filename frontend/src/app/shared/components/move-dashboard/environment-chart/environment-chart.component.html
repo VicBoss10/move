@@ -1,17 +1,20 @@
+<!-- Environment Chart Component
+     Displays environmental sensor trends over 12 hours including CO2, temperature, and humidity averages -->
+
 <div
   class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6 h-full"
 >
-  <!-- Header -->
+  <!-- Page header with title and description -->
   <div class="mb-6">
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
       Tendencia Ambiental (12h)
     </h3>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
       Comportamiento de sensores en las últimas 12 horas
     </p>
   </div>
 
-  <!-- Chart Container -->
+  <!-- Chart container with line graph and scrollable overflow -->
   <div class="max-w-full overflow-x-auto custom-scrollbar">
     <div class="-ml-5 min-w-[650px] xl:min-w-full pl-2">
       @if (chartData$ | async; as chartData) {
@@ -24,6 +27,7 @@
             style="max-height: 350px; position: relative"
           ></canvas>
         } @else {
+          <!-- Empty state when no chart data is available -->
           <div class="py-12 flex items-center justify-center">
             <div class="text-center">
               <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
@@ -37,7 +41,7 @@
     </div>
   </div>
 
-  <!-- Stats Footer -->
+  <!-- Statistics footer with average CO2, temperature, and humidity values -->
   <div class="mt-6 grid grid-cols-3 gap-4 border-t border-gray-200 pt-4 dark:border-gray-800">
     <div class="text-center">
       <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">CO₂ Promedio</p>

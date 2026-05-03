@@ -27,23 +27,26 @@ import { Camera } from '../../../../core/models/camera.model';
 import { Device, DeviceState } from '../../../../core/models/device.model';
 
 /**
- * CameraFiltersTableComponent
+ * CameraFiltersTableComponent (Smart Component)
  *
- * Componente que combina búsqueda de dispositivos y tabla de cámaras.
- * Maneja la lógica de filtrado y control de detección.
+ * Combines device search and camera detection control table.
+ * Manages filtering logic and detection start/stop operations.
  *
- * Características:
- * - Búsqueda por nombre de dispositivo
- * - Tabla responsiva con indicadores de estado
- * - Botones de control de detección (Iniciar/Detener) en cada fila
+ * Features:
+ * - Device name search with debouncing
+ * - Responsive table with device state indicators
+ * - Detection control buttons (Start/Stop) per row
+ * - Loading states for async operations
+ * - Vehicle Detection Service health monitoring
+ * - Automatic data refresh on state changes
  * - Dark mode support
- * - OnPush change detection para mejor performance
+ * - OnPush change detection for performance
  *
  * @selector app-camera-filters-table
  * @standalone true
- * @imports CommonModule, FormsModule
+ * @imports CommonModule, ReactiveFormsModule
  * @example
- * <app-camera-filters-table />
+ * <app-camera-filters-table [isServiceHealthy$]="detectionServiceHealth$" />
  */
 @Component({
   selector: 'app-camera-filters-table',
@@ -54,38 +57,56 @@ import { Device, DeviceState } from '../../../../core/models/device.model';
 })
 export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   /**
-   * Input: Observable que indica si el servicio está healthy/running
+   * Observable emitting Vehicle Detection Service health status.
+   * Used to enable/disable detection control buttons.
+   * @type {Observable<boolean>}
    */
   @Input() isServiceHealthy$: Observable<boolean> = of(false);
 
   /**
-   * FormControl para búsqueda de dispositivo
+   * FormControl for reactive device name search.
+   * Triggers camera list filtering on value changes.
+   * @type {FormControl<string | null>}
    */
   searchControl = new FormControl('');
 
   /**
-   * Observable de cámaras filtradas
+   * Observable emitting filtered camera list based on search term.
+   * Recalculates when search input changes or camera list refreshes.
+   * @type {Observable<Camera[]>}
    */
   cameras$: Observable<Camera[]>;
 
   /**
-   * Subject para forzar refresco de la tabla
-   */
-  /** Subject para forzar refresco de la tabla (compartido en el servicio) */
-  // Usamos el refresh$ de CameraService en lugar de un BehaviorSubject local
-
-  /**
-   * Subject para gestionar suscriptores
+   * Subject for managing subscriptions and cleanup.
+   * @type {Subject<void>}
+   * @private
    */
   private destroy$ = new Subject<void>();
 
   /**
-   * Mapa de estados de carga: cameraId -> isLoading
+   * Map tracking loading state per camera ID during async operations.
+   * Key: cameraId, Value: isLoading boolean
+   * @type {Map<number, boolean>}
    */
   loadingStates: Map<number, boolean> = new Map();
-  /** Último valor conocido del health del servicio */
+
+  /**
+   * Latest known value of Vehicle Detection Service health status.
+   * Used in button enable/disable logic and error handling.
+   * @type {boolean}
+   */
   isServiceHealthyLatest = false;
 
+  /**
+   * Initializes the component with service dependencies and sets up reactive camera list.
+   * Combines search term changes and refresh signals to filter camera data.
+   * @param {CameraService} cameraService - Camera data and refresh management
+   * @param {DeviceService} deviceService - Device state updates
+   * @param {ApiService} apiService - Raw API calls for non-cached camera list
+   * @param {ToastService} toastService - User notifications
+   * @param {ChangeDetectorRef} changeDetectorRef - Manual change detection triggering
+   */
   constructor(
     private cameraService: CameraService,
     private deviceService: DeviceService,
@@ -93,8 +114,6 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private changeDetectorRef: ChangeDetectorRef,
   ) {
-    // Tabla reactiva que filtra cuando el formControl cambia
-    // Usar apiService directamente para evitar caché y permitir actualizaciones en tiempo real
     this.cameras$ = combineLatest([
       this.searchControl.valueChanges.pipe(
         debounceTime(300),
@@ -116,28 +135,32 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Initialization lifecycle hook.
+   * Subscribes to Vehicle Detection Service health status for button state management.
+   * @returns {void}
+   */
   ngOnInit(): void {
-    // Suscribir health del servicio para usarlo en handlers y template
     this.isServiceHealthy$.pipe(takeUntil(this.destroy$)).subscribe((v) => {
       this.isServiceHealthyLatest = !!v;
       this.changeDetectorRef.markForCheck();
     });
   }
 
+  /**
+   * Cleanup lifecycle hook.
+   * Unsubscribes from all observables via destroy$ subject.
+   * @returns {void}
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   /**
-   * Aplica los filtros actuales
-   */
-  applyFilters(): void {
-    // Ya no necesario, filtrado es automático con formControl
-  }
-
-  /**
-   * Limpia todos los filtros a valores por defecto
+   * Clears all filters to default values.
+   * Resets search input and triggers table refresh.
+   * @returns {void}
    */
   clearFilters(): void {
     this.searchControl.setValue('');
@@ -145,11 +168,15 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Aplica filtros a los datos de cámaras
+   * Filters camera list by device name search term.
+   * Performs case-insensitive substring matching on device.name.
+   * @param {Camera[]} cameras - List of cameras to filter
+   * @param {string} searchTerm - Search term to match against device names
+   * @returns {Camera[]} Filtered camera list matching search criteria
+   * @private
    */
   private filterCameras(cameras: Camera[], searchTerm: string): Camera[] {
     return cameras.filter((camera) => {
-      // Filtrar por nombre de dispositivo
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();
         if (!camera.device.name.toLowerCase().includes(term)) {
@@ -161,7 +188,10 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene el color del badge según el estado
+   * Returns Tailwind CSS classes for device state badge styling.
+   * Color codes: ACTIVE=green, INACTIVE=yellow, FAILING=red.
+   * @param {string} state - Device state (ACTIVE, INACTIVE, FAILING)
+   * @returns {string} Tailwind CSS class string for badge appearance
    */
   getStateColor(state: string): string {
     const stateColors: Record<string, string> = {
@@ -173,7 +203,9 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene la etiqueta traducida del estado
+   * Returns human-readable Spanish label for device state.
+   * @param {string} state - Device state code
+   * @returns {string} Translated state label (Activa, Inactiva, Fallando)
    */
   getStateLabel(state: string): string {
     const stateLabels: Record<string, string> = {
@@ -185,7 +217,9 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene el ícono para el estado
+   * Returns emoji indicator for device state.
+   * @param {string} state - Device state code
+   * @returns {string} Emoji icon (🟢 for ACTIVE, 🟡 for INACTIVE, 🔴 for FAILING)
    */
   getStateIcon(state: string): string {
     const stateIcons: Record<string, string> = {
@@ -197,30 +231,31 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Formatea las coordenadas para visualización
-   */
-  formatCoordinates(latitude: number, longitude: number): string {
-    return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-  }
-
-  /**
-   * Verifica si la detección está activa para una cámara específica
-   * Usa device.state como fuente de verdad (persistente en BD)
+   * Checks if detection is currently active for a camera.
+   * Uses device.state as source of truth (persisted in database).
+   * @param {string} deviceState - Device state value
+   * @returns {boolean} True if device state is ACTIVE
    */
   isDetectionActive(deviceState: string): boolean {
     return deviceState === DeviceState.ACTIVE;
   }
 
   /**
-   * Verifica si se está cargando para una cámara específica
+   * Checks if an async operation is in progress for a camera.
+   * @param {number} cameraId - Camera ID to check
+   * @returns {boolean} True if operation is loading
    */
   isLoading(cameraId: number): boolean {
     return this.loadingStates.get(cameraId) || false;
   }
 
   /**
-   * Inicia la detección para una cámara específica
-   * Validaciones: servicio healthy y cámara no activa
+   * Starts vehicle detection for a camera.
+   * Updates device state to ACTIVE, then initiates video stream on VDS.
+   * Validates service health and camera readiness before proceeding.
+   * On error, reverts device state to INACTIVE and displays toast notification.
+   * @param {Camera} camera - Camera to start detection for
+   * @returns {void}
    */
   startDetectionForCamera(camera: Camera): void {
     console.log('startDetectionForCamera called with camera:', camera);
@@ -295,7 +330,12 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Detiene la detección para una cámara específica
+   * Stops vehicle detection for a camera.
+   * Queries VDS for active session, stops the stream, then updates device state to INACTIVE.
+   * Gracefully handles missing sessions and VDS errors by updating device state only.
+   * Ensures database consistency even if VDS is unreachable.
+   * @param {Camera} camera - Camera to stop detection for
+   * @returns {void}
    */
   stopDetectionForCamera(camera: Camera): void {
     // Validar que la cámara esté activa

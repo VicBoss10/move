@@ -1,9 +1,14 @@
+<!-- Temperature Chart Component
+     Line chart displaying temperature trends over 24-hour sliding window with hourly aggregation.
+     Orange line (#f97316) with semi-transparent fill, responsive scrolling on mobile, full width on XL screens, fade-in animation. -->
+
 <div
   class="group overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 px-5 pt-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-slate-300 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800/50 dark:hover:border-slate-600 sm:px-6 sm:pt-6"
 >
-  <!-- Header -->
   <div class="mb-6">
-    <h3 class="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-200">
+    <h3
+      class="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-200"
+    >
       Tendencia de Temperatura (24h)
     </h3>
     <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
@@ -11,7 +16,6 @@
     </p>
   </div>
 
-  <!-- Chart Container -->
   <div class="relative max-w-full overflow-x-auto custom-scrollbar pb-4">
     <div class="animate-fadeIn -ml-5 min-w-[650px] xl:min-w-full pl-2">
       @if (chartData$ | async; as data) {

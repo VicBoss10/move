@@ -3,71 +3,77 @@ import { tap, shareReplay, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 
 /**
- * Clase abstracta base para servicios de datos
- * Proporciona CRUD genérico, caché, y manejo de Observables
- * para reducir duplicación entre SensorDataService, VehicleService, etc.
+ * Abstract base class for data services providing generic CRUD operations.
+ * Implements client-side caching with TTL, in-flight request deduplication, and RxJS observables.
+ * Reduces code duplication across services like SensorDataService, VehicleDetectedService, etc.
  *
  * @abstract
- * @template T - Tipo de datos que maneja el servicio (ej: SensorData, VehicleDetected)
+ * @class BaseDataService
+ * @template T The entity type managed by the service.
  */
 export abstract class BaseDataService<T> {
   /**
-   * Observable que emite cambios en los datos
+   * Subject emitting changes to the data collection.
    * @protected
    */
   protected dataSubject: BehaviorSubject<T[]>;
 
   /**
-   * Observable público para subscribirse a cambios
+   * Public observable stream of data changes for external subscribers.
    */
   public data$: Observable<T[]>;
 
   /**
-   * Último error emitido por el servicio (null cuando no hay error)
+   * Subject tracking the latest error from the service.
+   * Null when no error has occurred.
+   * @protected
    */
   protected errorSubject: BehaviorSubject<string | null>;
 
   /**
-   * Observable público para reaccionar a errores del servicio
+   * Public observable stream of service errors.
    */
   public error$: Observable<string | null>;
 
   /**
-   * Caché local de datos
+   * Local cache of fetched data.
    * @protected
    */
   protected cacheData: T[] = [];
 
   /**
-   * Timestamp del último fetch del servidor
+   * Timestamp in milliseconds of the last successful data fetch.
+   * Used to determine cache validity.
    * @protected
    */
   protected lastFetch: number = 0;
 
   /**
-   * Duración del caché en milisegundos
-   * Subclases pueden cambiar este valor en constructor
+   * Cache time-to-live duration in milliseconds.
+   * Subclasses can override in their constructor for custom cache durations.
+   * Default: 5 minutes.
    * @protected
    */
-  protected cacheDuration: number = 5 * 60 * 1000; // Default: 5 minutos
+  protected cacheDuration: number = 5 * 60 * 1000;
 
   /**
-   * Observable en vuelo para getAll() — evita N peticiones HTTP paralelas
-   * al mismo endpoint cuando múltiples componentes se suscriben simultáneamente.
+   * Shared in-flight observable for getAll() requests.
+   * Prevents duplicate HTTP requests when multiple subscribers subscribe simultaneously.
    * @private
    */
   private inFlightGetAll$: Observable<T[]> | null = null;
 
   /**
-   * Endpoint del API (sin slash inicial)
+   * API endpoint path (without leading slash).
+   * Must be overridden by subclasses.
    * @protected
    * @abstract
    */
   protected abstract endpoint: string;
 
   /**
-   * Constructor debe ser llamado por subclases
-   * @param apiService - Inyección de dependencia al servicio HTTP base
+   * Initializes the service with a reference to the HTTP API layer.
+   * @param apiService Base HTTP service for API calls.
    */
   constructor(protected apiService: ApiService) {
     this.dataSubject = new BehaviorSubject<T[]>([]);
@@ -77,11 +83,12 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Obtiene todos los datos con caché e in-flight deduplication.
-   * - Si el caché es válido lo devuelve sin petición HTTP.
-   * - Si hay una petición ya en vuelo, reutiliza ese mismo Observable
-   *   en lugar de lanzar un segundo request idéntico al backend.
-   * @returns Observable<T[]>
+   * Fetches all data with client-side caching and in-flight deduplication.
+   * - Returns cached data if valid (within cacheDuration).
+   * - Reuses in-flight request if one is already pending.
+   * - Otherwise, makes a new HTTP request to the backend.
+   *
+   * @returns {Observable<T[]>} Observable emitting the data array.
    */
   getAll(): Observable<T[]> {
     const now = Date.now();

@@ -10,7 +10,14 @@ import {
 } from '../../../../core/config/environment-thresholds.config';
 
 /**
- * Interface para datos del gauge de temperatura
+ * GaugeData interface for temperature gauge display data.
+ * @interface GaugeData
+ * @property {number} temperature - Current temperature in Celsius rounded to 1 decimal place
+ * @property {number} gaugePercentage - Calculated fill percentage (0-100) for SVG visualization
+ * @property {string} gaugeColor - Tailwind text color class reflecting current status
+ * @property {string} status - Human-readable status label (e.g., "Muy Frío", "Cómodo", "Muy Calor")
+ * @property {string} bgColor - Tailwind gradient class for card background
+ * @property {Array<{color: string; label: string; rangeLabel: string}>} scaleLevels - Threshold levels with color and temperature range display
  */
 interface GaugeData {
   temperature: number;
@@ -22,17 +29,35 @@ interface GaugeData {
 }
 
 /**
- * TemperatureGaugeComponent
+ * TemperatureGaugeComponent (Presentation Component)
  *
- * Componente que muestra indicador circular dinámico de temperatura en °C.
- * Rango de -10°C a 50°C con código de color según condiciones.
- * Obtiene datos en tiempo real del backend.
+ * Displays a full-size circular SVG gauge for real-time temperature reading with threshold-based color coding and scale visualization.
+ *
+ * Features:
+ * - Single full-size SVG gauge (240-280px responsive size) showing current temperature in Celsius
+ * - Temperature range: -10°C to 50°C with dynamic gauge fill based on threshold configuration
+ * - Real-time data: combines latest sensor data with threshold configuration via combineLatest
+ * - Color-coded status: retrieves text color and gradient background from environment threshold configuration
+ * - Gauge percentage: calculated via getMetricGaugePercentageFromConfig, clamped to 0-100% range
+ * - Scale display: horizontal color-coded legend below gauge showing all threshold levels with temperature ranges
+ * - SVG structure: background circle (gray), progress circle (animated, color-coded), center text with value and unit
+ * - Animations: 500ms transition on gauge fill change with smooth easing
+ * - Responsive grid: 1 column mobile, maintains full width on desktop
+ * - Card styling: gradient background reflecting current air quality status
+ * - Error handling: falls back to default "Sin datos" state with zero gauge on service failure
+ * - OnPush change detection with async pipe subscription
+ *
+ * Interface GaugeData:
+ * - temperature: number - current temperature rounded to 1 decimal place
+ * - gaugePercentage: number - calculated fill percentage for SVG stroke-dashoffset
+ * - gaugeColor: string - Tailwind color class for progress circle and text
+ * - status: string - label derived from threshold (e.g., "Muy Frío", "Cómodo", "Muy Calor")
+ * - bgColor: string - gradient class for card background reflecting status
+ * - scaleLevels: array - threshold levels with color, label, and temperature range display
  *
  * @selector app-temperature-gauge
  * @standalone true
  * @imports CommonModule
- * @returns Indicador circular de temperatura
- *
  * @example
  * <app-temperature-gauge />
  */
@@ -45,7 +70,8 @@ interface GaugeData {
 })
 export class TemperatureGaugeComponent {
   /**
-   * Observable que emite datos del gauge (temperatura, porcentaje, color, estado)
+   * Observable stream emitting gauge data with calculated temperature, percentage, color, and status.
+   * @type {Observable<GaugeData>}
    */
   gaugeData$!: Observable<GaugeData>;
 
@@ -65,6 +91,13 @@ export class TemperatureGaugeComponent {
     this.initializeGaugeData();
   }
 
+  /**
+   * Initializes gauge data stream from latest sensor data and threshold configuration.
+   * Combines both observables, calculates gauge percentage and status from config, maps to GaugeData interface.
+   * Returns default "Sin datos" state on error with console logging.
+   * @private
+   * @returns {void}
+   */
   private initializeGaugeData(): void {
     this.gaugeData$ = combineLatest([
       this.sensorDataService.getLatest(),

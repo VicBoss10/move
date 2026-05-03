@@ -4,46 +4,54 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 /**
- * Servicio base para todas las comunicaciones HTTP con el backend
- * Centraliza la configuración de URL, manejo de errores y operaciones comunes
+ * Base HTTP communication service for all backend API requests.
+ * Centralizes URL configuration, error handling, and common HTTP operations.
+ * Manages error state and provides debugging utilities.
  *
- * @service
- * @providedIn root
+ * @class ApiService
+ * @injectable root
  */
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService implements OnInit {
   /**
-   * URL base del backend (desde variable de entorno o configuración)
-   * En desarrollo: http://localhost:8080
-   * En producción: https://api.moveiot.online
+   * Backend API base URL loaded from runtime configuration or environment.
+   * Injected from window.__API_BASE_URL__ by main.ts from /assets/config.json.
+   * Defaults to http://localhost:8080 for development.
+   * @private
    */
-  // Prefer runtime-injected value (set by main.ts from /assets/config.json), fall back to localhost
   private readonly apiUrl: string =
     (window as unknown as { __API_BASE_URL__?: string }).__API_BASE_URL__ ??
     'http://localhost:8080';
 
-  /** Último error HTTP detectado por el servicio. */
+  /**
+   * Subject for tracking HTTP errors across the application.
+   * @private
+   */
   private readonly errorSubject = new BehaviorSubject<string | null>(null);
 
-  /** Stream público de error HTTP para componentes/servicios consumidores. */
+  /**
+   * Observable stream of HTTP errors for consumption by components and services.
+   */
   public readonly error$ = this.errorSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
   /**
-   * Constructor privado para validar que la URL está disponible
+   * Logs the API service initialization with the configured backend URL.
    */
   ngOnInit() {
-    console.log(`ApiService inicializado - Backend: ${this.apiUrl}`);
+    console.log(`ApiService initialized - Backend: ${this.apiUrl}`);
   }
 
   /**
-   * GET genérico
-   * @param endpoint - Ruta del endpoint (ej: '/vehicles')
-   * @param params - Parámetros de query opcionales
-   * @returns Observable con la respuesta del servidor
+   * Performs a generic GET request to the backend API.
+   *
+   * @template T The type of the response data.
+   * @param {string} endpoint - API endpoint path (e.g., '/vehicles').
+   * @param {HttpParams | Object} [params] - Optional query parameters.
+   * @returns {Observable<T>} Observable with the server response.
    */
   get<T>(
     endpoint: string,
@@ -55,10 +63,12 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * POST genérico
-   * @param endpoint - Ruta del endpoint
-   * @param body - Datos a enviar
-   * @returns Observable con la respuesta del servidor
+   * Performs a generic POST request to the backend API.
+   *
+   * @template T The type of the response data.
+   * @param {string} endpoint - API endpoint path.
+   * @param {unknown} body - Request body to send to the server.
+   * @returns {Observable<T>} Observable with the server response.
    */
   post<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http
@@ -67,11 +77,12 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * POST que espera respuesta en texto plano (no JSON)
-   * Útil para endpoints del backend que retornan strings como "Created successfully..."
-   * @param endpoint - Ruta del endpoint
-   * @param body - Datos a enviar
-   * @returns Observable<string> con la respuesta del servidor
+   * Performs a POST request expecting plain text response.
+   * Used for endpoints that return plain text strings instead of JSON.
+   *
+   * @param {string} endpoint - API endpoint path.
+   * @param {unknown} body - Request body to send to the server.
+   * @returns {Observable<string>} Observable with the plain text response.
    */
   postText(endpoint: string, body: unknown): Observable<string> {
     return this.http
@@ -80,10 +91,12 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * GET que espera respuesta en texto plano (no JSON)
-   * @param endpoint - Ruta del endpoint
-   * @param params - Parámetros de query opcionales
-   * @returns Observable<string> con la respuesta del servidor
+   * Performs a GET request expecting plain text response.
+   * Used for endpoints that return plain text strings instead of JSON.
+   *
+   * @param {string} endpoint - API endpoint path.
+   * @param {HttpParams | Object} [params] - Optional query parameters.
+   * @returns {Observable<string>} Observable with the plain text response.
    */
   getText(
     endpoint: string,
@@ -95,8 +108,12 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * PUT que espera respuesta en texto plano (no JSON)
-   * Útil para endpoints del backend que retornan strings como "Updated successfully..."
+   * Performs a PUT request expecting plain text response.
+   * Used for endpoints that return plain text strings instead of JSON.
+   *
+   * @param {string} endpoint - API endpoint path.
+   * @param {unknown} body - Request body with updated data.
+   * @returns {Observable<string>} Observable with the plain text response.
    */
   putText(endpoint: string, body: unknown): Observable<string> {
     return this.http
@@ -105,10 +122,12 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * PUT genérico
-   * @param endpoint - Ruta del endpoint
-   * @param body - Datos a actualizar
-   * @returns Observable con la respuesta del servidor
+   * Performs a generic PUT request to the backend API.
+   *
+   * @template T The type of the response data.
+   * @param {string} endpoint - API endpoint path.
+   * @param {unknown} body - Request body with data to update.
+   * @returns {Observable<T>} Observable with the server response.
    */
   put<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http
@@ -117,9 +136,11 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * DELETE genérico
-   * @param endpoint - Ruta del endpoint
-   * @returns Observable con la respuesta del servidor
+   * Performs a generic DELETE request to the backend API.
+   *
+   * @template T The type of the response data.
+   * @param {string} endpoint - API endpoint path.
+   * @returns {Observable<T>} Observable with the server response.
    */
   delete<T>(endpoint: string): Observable<T> {
     return this.http
@@ -128,8 +149,11 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * DELETE que espera respuesta en texto plano (no JSON)
-   * Útil para endpoints del backend que retornan strings como "Deleted successfully..."
+   * Performs a DELETE request expecting plain text response.
+   * Used for endpoints that return plain text strings instead of JSON.
+   *
+   * @param {string} endpoint - API endpoint path.
+   * @returns {Observable<string>} Observable with the plain text response.
    */
   deleteText(endpoint: string): Observable<string> {
     return this.http
@@ -138,12 +162,15 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * Manejo centralizado de errores HTTP
-   * @param error - Error capturado por HttpClient
-   * @returns Observable que emite el error procesado
+   * Centralized HTTP error handling.
+   * Normalizes various error types and emits them through the error$ observable.
+   *
+   * @private
+   * @param {unknown} error - Error caught by HttpClient.
+   * @returns {Observable<never>} Observable that emits the processed error.
    */
   private handleError(error: unknown) {
-    let errorMessage = 'Error desconocido';
+    let errorMessage = 'Unknown error';
     let errorStatus: number | undefined;
     let errorDetails: unknown;
 
@@ -151,19 +178,17 @@ export class ApiService implements OnInit {
       errorStatus = error.status;
       errorDetails = error.error;
       if (error.error instanceof ErrorEvent) {
-        // Error del cliente o de red
         errorMessage = `Error: ${error.error.message}`;
-        console.error('Error en el cliente:', error.error);
+        console.error('Client error:', error.error);
       } else {
-        // Error del servidor
-        errorMessage = `Error ${error.status}: ${error.message || 'Error del servidor'}`;
-        console.error('Error del servidor:', error);
+        errorMessage = `Error ${error.status}: ${error.message || 'Server error'}`;
+        console.error('Server error:', error);
       }
     } else if (error instanceof Error) {
       errorMessage = error.message;
-      console.error('Error inesperado:', error);
+      console.error('Unexpected error:', error);
     } else {
-      console.error('Error desconocido:', error);
+      console.error('Unknown error:', error);
     }
 
     console.error('❌ ApiService Error:', errorMessage);
@@ -180,15 +205,22 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * Obtiene la URL base del API (útil para debuggin)
+   * Returns the configured API base URL for debugging purposes.
+   *
+   * @returns {string} The API base URL.
    */
   getApiUrl(): string {
     return this.apiUrl;
   }
 
   /**
-   * GET a una URL absoluta (no concatena `apiUrl`).
-   * Útil para servicios externos o microservicios con base distinta.
+   * Performs a GET request to an absolute URL without prepending the API base URL.
+   * Useful for calling external services or microservices with different base URLs.
+   *
+   * @template T The type of the response data.
+   * @param {string} fullUrl - Complete URL to fetch from.
+   * @param {HttpParams | Object} [params] - Optional query parameters.
+   * @returns {Observable<T>} Observable with the server response.
    */
   getAbsolute<T>(
     fullUrl: string,
@@ -200,8 +232,13 @@ export class ApiService implements OnInit {
   }
 
   /**
-   * POST a una URL absoluta (no concatena `apiUrl`).
-   * Útil para servicios externos o microservicios con base distinta.
+   * Performs a POST request to an absolute URL without prepending the API base URL.
+   * Useful for calling external services or microservices with different base URLs.
+   *
+   * @template T The type of the response data.
+   * @param {string} fullUrl - Complete URL to post to.
+   * @param {unknown} body - Request body to send to the server.
+   * @returns {Observable<T>} Observable with the server response.
    */
   postAbsolute<T>(fullUrl: string, body: unknown): Observable<T> {
     return this.http.post<T>(fullUrl, body).pipe(catchError((error) => this.handleError(error)));

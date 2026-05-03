@@ -7,32 +7,34 @@ import { User, UserSearchCriteria, UserStats } from '../models/user.model';
 import { QueryParamsBuilder } from '../utils/query-params.builder';
 
 /**
- * Servicio para gestionar Usuarios
- * Hereda funcionalidad CRUD base de BaseDataService
- * Agrega búsqueda avanzada y cálculo de estadísticas
+ * User management service for system users and access control.
+ * Extends BaseDataService for CRUD operations and adds advanced search and statistics.
  *
- * @service
- * @providedIn root
+ * @class UserService
+ * @extends BaseDataService<User>
+ * @injectable root
  */
 @Injectable({
   providedIn: 'root',
 })
 export class UserService extends BaseDataService<User> {
   /**
-   * Endpoint del API para usuarios
+   * API endpoint path for user resources.
+   * @protected
    */
   protected endpoint = 'users';
 
   constructor(apiService: ApiService) {
     super(apiService);
-    // Datos de usuarios cambian ocasionalmente - TTL de 30 minutos
     this.cacheDuration = 30 * 60 * 1000;
   }
 
   /**
-   * Busca usuarios con criterios específicos
-   * @param criteria - Criterios de búsqueda
-   * @returns Observable<User[]>
+   * Searches for users matching the provided criteria.
+   * Supports filtering by role and keyword matching.
+   *
+   * @param {UserSearchCriteria} criteria - Search filter criteria.
+   * @returns {Observable<User[]>} Observable with matching users.
    */
   search(criteria: UserSearchCriteria): Observable<User[]> {
     const queryParams = new QueryParamsBuilder()
@@ -53,7 +55,10 @@ export class UserService extends BaseDataService<User> {
   }
 
   /**
-   * Obtiene estadísticas de usuarios
+   * Calculates aggregated user statistics from cached data.
+   * Returns counts by role.
+   *
+   * @returns {UserStats} Aggregated user statistics.
    */
   getStats(): UserStats {
     const users = this.getCachedData();

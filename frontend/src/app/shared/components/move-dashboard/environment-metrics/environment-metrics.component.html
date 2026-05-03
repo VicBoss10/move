@@ -1,12 +1,15 @@
+<!-- Environment Metrics Component
+     Displays grid of environmental sensor metrics with health status indicators and trend information -->
+
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
   @if (metrics$ | async; as metrics) {
     @if (metrics && metrics.length > 0) {
-      <!-- Metric Card Item Start -->
+      <!-- Metric cards grid with icon, value, unit, trend and secondary information -->
       @for (metric of metrics; track metric) {
         <div
           [class]="'rounded-2xl border p-5 md:p-6 ' + ColorUtility.getHealthBgColor(metric.status)"
         >
-          <!-- Icon Container -->
+          <!-- Icon container with health status background color -->
           <div class="flex items-center justify-between">
             <div
               class="flex items-center justify-center w-12 h-12 rounded-xl"
@@ -18,10 +21,10 @@
               ></span>
             </div>
           </div>
-          <!-- Content -->
+          <!-- Content area with metric label, value, unit, trend and secondary information -->
           <div class="mt-5">
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ metric.label }}</span>
-            <!-- Valor principal -->
+            <!-- Primary value with unit -->
             <div class="mt-2 flex items-baseline gap-1">
               <h4
                 [class]="
@@ -32,7 +35,7 @@
               </h4>
               <span class="text-xs text-gray-500 dark:text-gray-400">{{ metric.unit }}</span>
             </div>
-            <!-- Trend o información secundaria -->
+            <!-- Trend information or secondary data -->
             @if (metric.trend) {
               <p [class]="'text-xs mt-2 ' + ColorUtility.getHealthTrendColor(metric.status)">
                 {{ metric.trend }}
@@ -46,8 +49,8 @@
           </div>
         </div>
       }
-      <!-- Metric Card Item End -->
     } @else {
+      <!-- Empty state when no metrics data is available -->
       <div class="col-span-1 sm:col-span-3 py-8 flex items-center justify-center">
         <div class="text-center">
           <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>

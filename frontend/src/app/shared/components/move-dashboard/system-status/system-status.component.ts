@@ -7,13 +7,13 @@ import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
 /**
- * Estado de un componente del sistema (online/offline, activo/inactivo)
+ * StatusCard interface for system component status information.
  * @interface StatusCard
- * @property {string} label - Nombre del componente
- * @property {string} icon - SVG como string
- * @property {'online' | 'offline' | 'active' | 'inactive'} status - Estado actual
- * @property {string} primary - Valor o estado principal
- * @property {string} [secondary] - Texto secundario opcional
+ * @property {string} label - Component name
+ * @property {string} icon - SVG icon as string
+ * @property {'online' | 'offline' | 'active' | 'inactive'} status - Current status
+ * @property {string} primary - Primary status or value text
+ * @property {string} [secondary] - Optional secondary status text
  */
 interface StatusCard {
   label: string;
@@ -26,21 +26,24 @@ interface StatusCard {
 /**
  * SystemStatusComponent
  *
- * Componente que muestra el estado del sistema, dispositivos y cámaras.
- * Presenta 3 tarjetas con indicadores visuales (online/offline) e información en tiempo real.
+ * Displays three status cards showing system health, device connectivity (sensors), and camera status.
+ * Each card shows real-time online/offline or active/inactive status with color-coded indicators and counts.
+ * Connected to DeviceService for reactive device state information.
  *
- * Características:
- * - Tarjetas de estado con código de color
- * - Indicadores online/offline/active/inactive
- * - Combina datos de múltiples servicios
- * - Dark mode support
- * - Responsivo
+ * Features:
+ * - Three status cards: System (backend availability), Devices (sensor count), Cameras (camera count)
+ * - Color-coded indicators: green for online/active, red for offline/inactive
+ * - Device filtering by type: SENSOR devices vs CAMERA devices
+ * - Active vs total device counts displayed per card
+ * - Reactive data updates from DeviceService with error fallback to offline status
+ * - Dark mode support with Tailwind dark: prefix and color-specific classes
+ * - Dynamic Tailwind class generation based on status via helper methods
+ * - shareReplay pattern for subscription efficiency
+ * - OnPush change detection for performance
  *
  * @selector app-system-status
  * @standalone true
  * @imports CommonModule, SafeHtmlPipe
- * @returns Tarjetas de estado del sistema
- *
  * @example
  * <app-system-status />
  */
@@ -53,12 +56,12 @@ interface StatusCard {
 })
 export class SystemStatusComponent {
   /**
-   * Observable que emite las tarjetas de estado del sistema
+   * Observable emitting array of three status cards for system, devices, and cameras
    */
   statusCards$!: Observable<StatusCard[]>;
 
   /**
-   * Iconos SVG para las tarjetas
+   * SVG icons for system, device, and camera status indicators
    */
   public readonly icons = {
     systemIcon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/></svg>`,
@@ -67,29 +70,30 @@ export class SystemStatusComponent {
   };
 
   /**
-   * Tarjetas por defecto cuando no hay conexión
+   * Default offline status cards shown on service error
+   * @private
    */
   private readonly defaultStatusCards: StatusCard[] = [
     {
-      label: 'Sistema',
+      label: 'System',
       icon: this.icons.systemIcon,
       status: 'offline',
       primary: '● OFFLINE',
-      secondary: 'Sin conexión con servicios',
+      secondary: 'No connection',
     },
     {
-      label: 'Dispositivos',
+      label: 'Devices',
       icon: this.icons.deviceIcon,
       status: 'offline',
       primary: '0 / 0',
-      secondary: 'Sin conexión',
+      secondary: 'No connection',
     },
     {
-      label: 'Cámaras',
+      label: 'Cameras',
       icon: this.icons.cameraIcon,
       status: 'inactive',
       primary: '0',
-      secondary: 'Sin conexión',
+      secondary: 'No connection',
     },
   ];
 
@@ -98,7 +102,7 @@ export class SystemStatusComponent {
   }
 
   /**
-   * Inicializa las tarjetas de estado combinando datos de dispositivos y ubicaciones
+   * Initializes status cards combining device and location data
    * @private
    */
   private initializeStatusCards(): void {
@@ -114,39 +118,39 @@ export class SystemStatusComponent {
         const camerasActive = cameras.filter((d) => d.state === DeviceState.ACTIVE).length;
         const camerasTotal = cameras.length;
 
-        const backendAvailable = true; // we are in the success path, so backend responded
+        const backendAvailable = true;
 
         const activeDevicesTotal = sensorsActive + camerasActive;
 
         return [
           {
-            label: 'Sistema',
+            label: 'System',
             icon: this.icons.systemIcon,
             status: 'online' as const,
             primary: '● ONLINE',
             secondary:
               backendAvailable && allDevices.length === 0
-                ? 'Backend disponible — sin dispositivos registrados'
-                : `${activeDevicesTotal} dispositivos activos`,
+                ? 'Backend available — no devices registered'
+                : `${activeDevicesTotal} active devices`,
           },
           {
-            label: 'Dispositivos',
+            label: 'Devices',
             icon: this.icons.deviceIcon,
             status: (sensorsActive > 0 ? 'online' : 'offline') as 'online' | 'offline',
             primary: `${sensorsActive} / ${sensorsTotal}`,
-            secondary: 'Sensores activos / registrados',
+            secondary: 'Active / Registered sensors',
           },
           {
-            label: 'Cámaras',
+            label: 'Cameras',
             icon: this.icons.cameraIcon,
             status: (camerasActive > 0 ? 'active' : 'inactive') as 'active' | 'inactive',
             primary: `${camerasActive} / ${camerasTotal}`,
-            secondary: 'Activas / Registradas',
+            secondary: 'Active / Registered',
           },
         ];
       }),
       catchError((error) => {
-        console.error('Error cargando estado del sistema:', error);
+        console.error('Error loading system status:', error);
         return of(this.defaultStatusCards);
       }),
       shareReplay(1),
@@ -154,9 +158,10 @@ export class SystemStatusComponent {
   }
 
   /**
-   * Retorna clases Tailwind para el fondo según estado
-   * @param {string} status - Estado (online/offline/active/inactive)
-   * @returns {string} Clases Tailwind CSS
+   * Returns Tailwind CSS classes for card background color based on status
+   * Green for online/active, red for offline/inactive, gray default
+   * @param status Device status (online/offline/active/inactive)
+   * @returns Tailwind CSS classes for background and border
    */
   getStatusColor(status: string): string {
     switch (status) {
@@ -172,9 +177,10 @@ export class SystemStatusComponent {
   }
 
   /**
-   * Retorna clases Tailwind para el color del texto según estado
-   * @param {string} status - Estado (online/offline/active/inactive)
-   * @returns {string} Clases Tailwind CSS para color
+   * Returns Tailwind CSS classes for text color based on status
+   * Green for online/active, red for offline/inactive, gray default
+   * @param status Device status (online/offline/active/inactive)
+   * @returns Tailwind CSS classes for text color
    */
   getTextColor(status: string): string {
     switch (status) {

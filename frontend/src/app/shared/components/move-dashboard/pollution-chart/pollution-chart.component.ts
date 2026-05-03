@@ -18,7 +18,6 @@ import { SensorData } from '../../../../core/models/sensor-data.model';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 
-// Registrar los elementos de Chart.js
 ChartJS.register(
   LineController,
   LineElement,
@@ -31,24 +30,26 @@ ChartJS.register(
 );
 
 /**
- * PollutionChartComponent
+ * PollutionChartComponent (Presentation Component)
  *
- * Componente que muestra un gráfico de línea con tendencias de Partículas (PM2.5 y PM10)
- * en las últimas 12 horas, promediadas por hora. Usa dos ejes Y para escalas distintas.
- * Conectado a SensorDataService para obtener datos reales del backend.
+ * Displays a dual-line chart with PM2.5 and PM10 particle concentration trends over the last 12 hours,
+ * averaged by hour. Uses independent Y axes for different scales. Connected to SensorDataService for
+ * real-time backend data. Includes footer statistics with average PM2.5 and PM10 values.
  *
- * Características:
- * - Gráfico de línea dual: PM2.5 y PM10
- * - Ejes Y independientes para cada métrica
- * - Datos actualizados desde el backend
- * - Dark mode support
- * - Responsivo
+ * Features:
+ * - Dual-line chart: PM2.5 and PM10 with independent Y axes (red and orange colors)
+ * - 12-hour time window with hourly averaging and dynamic slot generation
+ * - Reactive data updates from backend via Observable pattern
+ * - Dark mode support with configurable colors
+ * - Responsive layout with maintainAspectRatio and custom scrolling
+ * - shareReplay pattern for efficiency and shared subscriptions
+ * - OnPush change detection for performance
+ * - Error handling with empty array fallback
+ * - Average calculations for PM2.5 and PM10 displayed in footer statistics cards
  *
  * @selector app-pollution-chart
  * @standalone true
  * @imports CommonModule, BaseChartDirective
- * @returns Gráfico de tendencia de partículas
- *
  * @example
  * <app-pollution-chart />
  */
@@ -60,37 +61,59 @@ ChartJS.register(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PollutionChartComponent {
+  /**
+   * Reference to Chart.js canvas element for programmatic access.
+   * @type {BaseChartDirective | undefined}
+   */
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Observable que emite la configuración del gráfico con datos reactivos
+   * Observable stream of aggregated chart data with hourly labels and averaged PM2.5/PM10 values.
+   * @type {Observable<ChartConfiguration<'line'>['data']>}
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
   /**
-   * Observable que emite el promedio de PM 2.5
+   * Observable stream of average PM2.5 concentration (µg/m³) over 12-hour window.
+   * @type {Observable<number>}
    */
   avgPm25$!: Observable<number>;
 
   /**
-   * Observable que emite el promedio de PM 10
+   * Observable stream of average PM10 concentration (µg/m³) over 12-hour window.
+   * @type {Observable<number>}
    */
   avgPm10$!: Observable<number>;
 
   /**
-   * Observable compartido para los datos del sensor
+   * Observable stream of raw sensor data for the 12-hour window, fetched from backend.
+   * @type {Observable<SensorData[]>}
    * @private
    */
   private sensorData$!: Observable<SensorData[]>;
 
   /**
-   * Datos por defecto del gráfico cuando no hay datos disponibles
+   * Time window in hours for data aggregation (12-hour sliding window).
+   * @type {number}
+   * @private
+   */
+  private readonly HOURS_WINDOW = 12;
+
+  /**
+   * Default empty chart data returned when no sensor data is available.
+   * @type {ChartConfiguration<'line'>['data']}
+   * @private
    */
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [],
   };
 
+  /**
+   * Chart.js configuration object for dual-axis line chart styling and interactivity.
+   * Defines responsive layout, legend positioning, tooltip formatting, and dual Y axes labels.
+   * @type {ChartConfiguration<'line'>['options']}
+   */
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
@@ -195,10 +218,10 @@ export class PollutionChartComponent {
   };
 
   /**
-   * Ventana de horas a mostrar en la gráfica
+   * Initializes component with service dependencies and sets up data streams.
+   * Triggers initialization of sensor data observable, chart data observable, and average observables.
+   * @param {SensorDataService} sensorDataService - Service for querying historical sensor data
    */
-  private readonly HOURS_WINDOW = 12;
-
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
@@ -206,10 +229,11 @@ export class PollutionChartComponent {
   }
 
   /**
-   * Inicializa el observable compartido de datos del sensor.
-   * Obtiene el último registro para determinar la ventana de tiempo
-   * y luego consulta solo las últimas 12 horas al backend.
+   * Fetches the latest sensor timestamp, then queries the backend for all sensor data
+   * within the 12-hour window ending at that timestamp.
+   * Errors are caught and return empty array for graceful fallback.
    * @private
+   * @returns {void}
    */
   private initializeSensorData(): void {
     this.sensorData$ = this.sensorDataService.getLatest().pipe(
@@ -219,7 +243,7 @@ export class PollutionChartComponent {
         return this.sensorDataService.search({ start: startTime, end: endTime });
       }),
       catchError((error) => {
-        console.error('Error cargando datos de partículas:', error);
+        console.error('Error loading particle data:', error);
         return of([]);
       }),
       shareReplay(1),
@@ -227,9 +251,12 @@ export class PollutionChartComponent {
   }
 
   /**
-   * Inicializa los datos del gráfico desde el observable compartido.
-   * Agrupa los datos por hora y los promedia para tener 12 puntos limpios.
+   * Transforms raw sensor data into hourly-aggregated chart data with dual datasets (PM2.5 and PM10).
+   * Groups readings by hour, calculates average values per hour, and creates 12 hourly slots.
+   * Parses timestamps, filters invalid dates, and creates HH:00 format labels.
+   * Returns default empty chart on zero or invalid data.
    * @private
+   * @returns {void}
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
@@ -238,7 +265,6 @@ export class PollutionChartComponent {
           return this.defaultChartData;
         }
 
-        // Parsear timestamps y ordenar cronológicamente
         const parsedData = data
           .map((d) => ({ ...d, _time: new Date(d.timestamp) }))
           .filter((d) => !isNaN(d._time.getTime()))
@@ -248,7 +274,6 @@ export class PollutionChartComponent {
           return this.defaultChartData;
         }
 
-        // Hora del dato más reciente como referencia
         const latestTime = parsedData[parsedData.length - 1]._time;
         const latestSlotStart = new Date(
           latestTime.getFullYear(),
@@ -260,7 +285,6 @@ export class PollutionChartComponent {
           0,
         );
 
-        // Crear 12 slots horarios hacia atrás desde la hora más reciente
         const slots: { start: Date; end: Date; label: string }[] = [];
         for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
           const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
@@ -271,7 +295,6 @@ export class PollutionChartComponent {
 
         const labels = slots.map((s) => s.label);
 
-        // Agrupar datos en cada slot horario y promediar
         const pm25Data: (number | null)[] = [];
         const pm10Data: (number | null)[] = [];
 
@@ -330,8 +353,11 @@ export class PollutionChartComponent {
   }
 
   /**
-   * Inicializa los observables de promedios PM2.5 y PM10
+   * Calculates average PM2.5 and PM10 values from sensor data for footer statistics display.
+   * Creates separate observables for each particle type, returns 0 if no valid data exists.
+   * Called internally by constructor after chart data initialization.
    * @private
+   * @returns {void}
    */
   private initializeAverages(): void {
     this.avgPm25$ = this.sensorData$.pipe(

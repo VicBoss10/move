@@ -1,5 +1,10 @@
+<!-- Time Series Component
+     Displays temporal evolution of environmental metrics and vehicle counts with dual-axis line chart.
+     Shows aggregated hourly, 4-hourly, or daily values with statistics (min/avg/max).
+     Supports 24h, 7d, or 30d analysis periods. -->
+
 <div class="space-y-6">
-  <!-- ── Page header ──────────────────────────────────────────────────────── -->
+  <!-- Page header with title and description -->
   <div class="flex flex-col gap-1">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Series Temporales</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -7,7 +12,7 @@
     </p>
   </div>
 
-  <!-- ── Filters card ─────────────────────────────────────────────────────── -->
+  <!-- Period and metric selector controls -->
   <div
     class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
   >
@@ -17,7 +22,6 @@
       </h3>
     </div>
     <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-      <!-- Period selector -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="mr-1 text-sm font-medium text-gray-600 dark:text-gray-400">Período:</span>
         @for (p of periods; track p) {
@@ -35,7 +39,6 @@
         }
       </div>
 
-      <!-- Metric selector -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="mr-1 text-sm font-medium text-gray-600 dark:text-gray-400">Contaminante:</span>
         <select
@@ -51,11 +54,10 @@
     </div>
   </div>
 
-  <!-- ── Chart card ───────────────────────────────────────────────────────── -->
+  <!-- Time series line chart with dual Y-axes -->
   <div
     class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
   >
-    <!-- Card header -->
     <div
       class="flex items-start justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6"
     >
@@ -67,7 +69,6 @@
           Promedio por intervalo · eje izquierdo: contaminante · eje derecho: vehículos detectados
         </p>
       </div>
-      <!-- Loading badge -->
       @if (isLoading) {
         <div class="flex items-center gap-1.5 text-xs text-gray-400">
           <svg class="h-4 w-4 animate-spin text-brand-500" viewBox="0 0 24 24" fill="none">
@@ -126,7 +127,7 @@
         </div>
       }
 
-      <!-- Chart -->
+      <!-- Line chart canvas -->
       @if (!isLoading && !hasError) {
         <div class="max-w-full overflow-x-auto custom-scrollbar">
           <div class="min-w-[600px]" style="height: 380px; position: relative">
@@ -143,10 +144,9 @@
     </div>
   </div>
 
-  <!-- ── Stats summary ────────────────────────────────────────────────────── -->
+  <!-- Statistics summary cards (min, average, max, total vehicles) -->
   @if (stats && !isLoading) {
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <!-- Min -->
       <div
         class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
       >
@@ -158,7 +158,6 @@
         </p>
         <p class="mt-0.5 text-xs text-gray-400">{{ stats.metricOption.unit }}</p>
       </div>
-      <!-- Avg -->
       <div
         class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
       >
@@ -170,7 +169,6 @@
         </p>
         <p class="mt-0.5 text-xs text-gray-400">{{ stats.metricOption.unit }}</p>
       </div>
-      <!-- Max -->
       <div
         class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
       >
@@ -182,7 +180,6 @@
         </p>
         <p class="mt-0.5 text-xs text-gray-400">{{ stats.metricOption.unit }}</p>
       </div>
-      <!-- Vehicles total -->
       <div
         class="overflow-hidden rounded-2xl border border-indigo-100 bg-indigo-50 p-5 dark:border-indigo-900/40 dark:bg-indigo-900/10"
       >

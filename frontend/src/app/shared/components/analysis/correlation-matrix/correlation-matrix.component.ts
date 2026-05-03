@@ -13,10 +13,20 @@ import { VehicleDetectedService } from '../../../../core/services/vehicle-detect
 import { SensorData } from '../../../../core/models/sensor-data.model';
 import { VehicleDetected } from '../../../../core/models/vehicle.model';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
+/**
+ * Time period key for correlation analysis.
+ * @typedef {'24h' | '7d' | '30d'} PeriodKey
+ */
 type PeriodKey = '24h' | '7d' | '30d';
 
+/**
+ * Environmental or traffic variable metadata.
+ * @interface Variable
+ * @property {string} key - Variable identifier (e.g., 'co2', 'vehicleCount').
+ * @property {string} label - Full display label (e.g., 'CO₂').
+ * @property {string} shortLabel - Abbreviated label for table headers.
+ * @property {string} unit - Measurement unit (e.g., 'ppm', 'count').
+ */
 interface Variable {
   key: string;
   label: string;
@@ -24,16 +34,28 @@ interface Variable {
   unit: string;
 }
 
+/**
+ * Pearson correlation result for a matrix cell.
+ * @interface CellResult
+ * @property {number} r - Pearson correlation coefficient in range [-1, 1].
+ * @property {number} n - Number of paired samples used in computation.
+ * @property {string} label - Formatted correlation value for display.
+ * @property {string} color - Tailwind background utility class.
+ * @property {string} textColor - Tailwind text color utility class.
+ */
 interface CellResult {
-  r: number; // Pearson coefficient [-1, 1]
-  n: number; // sample size
-  label: string; // formatted value
-  color: string; // Tailwind bg class
-  textColor: string; // Tailwind text class
+  r: number;
+  n: number;
+  label: string;
+  color: string;
+  textColor: string;
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
+/**
+ * Environmental and traffic variables for correlation analysis.
+ * @constant VARIABLES
+ * @type {Variable[]}
+ */
 const VARIABLES: Variable[] = [
   { key: 'co2', label: 'CO₂', shortLabel: 'CO₂', unit: 'ppm' },
   { key: 'pm25', label: 'PM2.5', shortLabel: 'PM2.5', unit: 'µg/m³' },
@@ -46,43 +68,49 @@ const VARIABLES: Variable[] = [
   { key: 'vehicleCount', label: 'Vehículos', shortLabel: 'Veh.', unit: 'count' },
 ];
 
+/**
+ * Available time period options for correlation analysis.
+ * @constant PERIODS
+ * @type {Array<{key: PeriodKey, label: string}>}
+ */
 const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: '24h', label: 'Últimas 24h' },
   { key: '7d', label: 'Últimos 7 días' },
   { key: '30d', label: 'Últimos 30 días' },
 ];
 
-// interval size used to pair sensor ↔ vehicle readings
+/**
+ * Time slot duration in milliseconds for each period.
+ * Used to aggregate sensor and vehicle data into aligned intervals.
+ * @constant SLOT_MS
+ * @type {Record<PeriodKey, number>}
+ */
 const SLOT_MS: Record<PeriodKey, number> = {
-  '24h': 3_600_000, // 1 h
-  '7d': 4 * 3_600_000, // 4 h
-  '30d': 24 * 3_600_000, // 1 day
+  '24h': 3_600_000,
+  '7d': 4 * 3_600_000,
+  '30d': 24 * 3_600_000,
 };
 
 /**
- * CorrelationMatrixComponent (Smart Component)
+ * CorrelationMatrixComponent
  *
- * Calcula y visualiza la matriz de correlación de Pearson entre:
- * - 8 variables ambientales (sensor_data)
- * - conteo de vehículos detectados (vehicles_detected)
+ * Calculates and visualizes the Pearson correlation matrix between
+ * 8 environmental variables (from sensor data) and vehicle traffic counts.
+ * Data is aggregated into time-aligned slots to pair sensor readings
+ * with vehicle detection counts within the same intervals.
  *
- * Los datos se agregan en slots temporales para parear mediciones de
- * sensores con conteos de vehículos en el mismo intervalo.
+ * Features:
+ * - Interactive matrix with color-coded correlation strength
+ * - Selectable time periods (24h / 7d / 30d)
+ * - Pearson coefficient computation with sample details
+ * - Interpretation guide and color legend
+ * - Full dark mode support
  *
- * Características:
- * - Matriz interactiva con tonos de color (correlación fuerte/moderada/nula)
- * - Selección de período (24h/7d/30d)
- * - Cálculo de Pearson con detalle de muestra
- * - Leyenda interpretativa
- * - Dark mode support
- *
+ * @class CorrelationMatrixComponent
+ * @implements {OnInit, OnDestroy}
  * @selector app-correlation-matrix
  * @standalone true
  * @imports CommonModule
- * @returns Matriz de correlación interactiva
- *
- * @example
- * <app-correlation-matrix />
  */
 @Component({
   selector: 'app-correlation-matrix',
@@ -92,40 +120,74 @@ const SLOT_MS: Record<PeriodKey, number> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CorrelationMatrixComponent implements OnInit, OnDestroy {
+  /**
+   * List of variables included in correlation analysis.
+   * @readonly
+   */
   readonly variables = VARIABLES;
+
+  /**
+   * Available time period options.
+   * @readonly
+   */
   readonly periods = PERIODS;
 
-  // ── State ──────────────────────────────────────────────────────────────────
-
+  /**
+   * Currently selected analysis period.
+   * @private
+   */
   private readonly period$ = new BehaviorSubject<PeriodKey>('7d');
+
+  /**
+   * Subject for cleanup on component destruction.
+   * @private
+   */
   private readonly destroy$ = new Subject<void>();
 
+  /**
+   * True while loading data and computing correlations.
+   */
   isLoading = true;
+
+  /**
+   * True if an error occurred during data loading.
+   */
   hasError = false;
+
+  /**
+   * Error message to display to user.
+   */
   errorMsg = '';
 
-  /** matrix[row][col] = CellResult */
+  /**
+   * Correlation matrix: matrix[row][col] = CellResult.
+   */
   matrix: CellResult[][] = [];
 
-  /** number of paired time-slots used for computation */
+  /**
+   * Number of time slots with data used in Pearson computation.
+   */
   sampleSize = 0;
 
-  /** legend entries */
+  /**
+   * Color legend entries explaining correlation strength ranges.
+   * @readonly
+   */
   readonly legend = [
-    { color: 'bg-emerald-600', text: 'Correlación positiva fuerte  (r ≥ 0.7)' },
-    { color: 'bg-emerald-300', text: 'Correlación positiva moderada (0.3 ≤ r < 0.7)' },
-    { color: 'bg-gray-100 dark:bg-gray-700', text: 'Sin correlación significativa (|r| < 0.3)' },
-    { color: 'bg-blue-300', text: 'Correlación negativa moderada (-0.7 < r ≤ -0.3)' },
-    { color: 'bg-blue-600', text: 'Correlación negativa fuerte  (r ≤ -0.7)' },
+    { color: 'bg-emerald-600', text: 'Strong positive correlation (r ≥ 0.7)' },
+    { color: 'bg-emerald-300', text: 'Moderate positive correlation (0.3 ≤ r < 0.7)' },
+    { color: 'bg-gray-100 dark:bg-gray-700', text: 'No significant correlation (|r| < 0.3)' },
+    { color: 'bg-blue-300', text: 'Moderate negative correlation (-0.7 < r ≤ -0.3)' },
+    { color: 'bg-blue-600', text: 'Strong negative correlation (r ≤ -0.7)' },
   ];
 
-  // ── Accessors ──────────────────────────────────────────────────────────────
-
+  /**
+   * Currently selected analysis period.
+   * @returns {PeriodKey} Period key ('24h', '7d', or '30d').
+   */
   get currentPeriod(): PeriodKey {
     return this.period$.value;
   }
-
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   constructor(
     private readonly sensorDataService: SensorDataService,
@@ -133,6 +195,10 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
+  /**
+   * Initializes reactive data pipeline.
+   * Subscribes to period changes and reloads correlation matrix.
+   */
   ngOnInit(): void {
     this.period$
       .pipe(
@@ -152,19 +218,31 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Cleans up resources on component destruction.
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  // ── User interactions ──────────────────────────────────────────────────────
-
+  /**
+   * Updates the analysis period and triggers matrix recalculation.
+   *
+   * @param {PeriodKey} p - New period key.
+   */
   setPeriod(p: PeriodKey): void {
     this.period$.next(p);
   }
 
-  // ── Data pipeline ──────────────────────────────────────────────────────────
-
+  /**
+   * Loads sensor data and vehicle detections, aligns into time slots,
+   * and computes Pearson correlation matrix.
+   *
+   * @private
+   * @param {PeriodKey} period - Analysis period.
+   * @returns {Observable<{matrix: CellResult[][], sampleSize: number}>} Correlation matrix and sample count.
+   */
   private loadAndCompute(period: PeriodKey) {
     const end = new Date();
     const ms = { '24h': 24, '7d': 7 * 24, '30d': 30 * 24 }[period] * 3_600_000;
@@ -181,9 +259,9 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
 
     return combineLatest([sensor$, vehicle$]).pipe(
       catchError((err) => {
-        console.error('[CorrelationMatrix] Error cargando datos:', err);
+        console.error('[CorrelationMatrix] Error loading data:', err);
         this.hasError = true;
-        this.errorMsg = 'Error al cargar los datos. Intenta nuevamente.';
+        this.errorMsg = 'Error loading data. Please try again.';
         this.isLoading = false;
         this.cdr.markForCheck();
         return of(null);
@@ -195,11 +273,9 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
 
         const [sensorData, vehicleData] = result;
 
-        // Build aligned time slots
         const slotStart = Math.floor(start.getTime() / slot) * slot;
         const slotCount = Math.ceil((end.getTime() - slotStart) / slot);
 
-        // For each slot aggregate sensor averages + vehicle count
         const rows: Record<string, number>[] = [];
 
         for (let i = 0; i < slotCount; i++) {
@@ -240,7 +316,6 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
         const n = rows.length;
         const keys = VARIABLES.map((v) => v.key);
 
-        // Compute Pearson matrix
         const matrix: CellResult[][] = keys.map((rowKey) =>
           keys.map((colKey) => {
             if (rowKey === colKey) {
@@ -264,10 +339,13 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ── Statistics ─────────────────────────────────────────────────────────────
-
   /**
-   * Pearson correlation coefficient between two arrays.
+   * Computes the Pearson correlation coefficient between two numeric arrays.
+   *
+   * @private
+   * @param {number[]} xs - First variable values.
+   * @param {number[]} ys - Second variable values.
+   * @returns {number} Correlation coefficient in range [-1, 1], or NaN if n < 2.
    */
   private pearson(xs: number[], ys: number[]): number {
     const n = xs.length;
@@ -291,8 +369,14 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
     return den === 0 ? 0 : num / den;
   }
 
-  // ── Styling ────────────────────────────────────────────────────────────────
-
+  /**
+   * Returns Tailwind utility classes for matrix cell styling
+   * based on correlation strength.
+   *
+   * @private
+   * @param {number} r - Pearson coefficient.
+   * @returns {Object} Object with 'color' and 'textColor' Tailwind classes.
+   */
   private cellStyle(r: number): { color: string; textColor: string } {
     if (isNaN(r)) return { color: 'bg-gray-100 dark:bg-gray-700', textColor: 'text-gray-400' };
     if (r >= 0.7) return { color: 'bg-emerald-600', textColor: 'text-white' };
@@ -310,7 +394,13 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
     return { color: 'bg-gray-100 dark:bg-gray-700', textColor: 'text-gray-500 dark:text-gray-400' };
   }
 
-  /** True if diagonal (self-correlation) */
+  /**
+   * Determines if a matrix cell is on the diagonal (self-correlation).
+   *
+   * @param {number} rowIdx - Row index.
+   * @param {number} colIdx - Column index.
+   * @returns {boolean} True if row and column indices match.
+   */
   isDiagonal(rowIdx: number, colIdx: number): boolean {
     return rowIdx === colIdx;
   }

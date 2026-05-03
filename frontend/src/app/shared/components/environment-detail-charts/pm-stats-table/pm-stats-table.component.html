@@ -1,7 +1,11 @@
+<!-- PM Stats Table Component
+     Displays aggregated particle statistics in a responsive table with six key metrics.
+     Shows PM2.5 and PM10 rows with current, minimum, maximum, average values in µg/m³ and variation in percentage.
+     Includes color-coded variation indicator: green (<2%), orange (2-5%), red (>5%). -->
+
 <div
   class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
 >
-  <!-- Header -->
   <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
       Estadísticas de Partículas
@@ -9,7 +13,6 @@
     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Últimas 24 horas</p>
   </div>
 
-  <!-- Table -->
   <div class="overflow-x-auto">
     <table class="w-full">
       <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">

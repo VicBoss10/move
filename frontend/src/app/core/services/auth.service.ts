@@ -5,36 +5,87 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, map, catchError, finalize, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
-// Use shared `AuthToken` model for token responses
-
+/**
+ * Authentication service managing OAuth2/Keycloak authentication flow.
+ * Handles token acquisition, refresh, storage, and session management.
+ * Implements proactive silent refresh to maintain continuous authentication.
+ *
+ * @class AuthService
+ * @injectable root
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  // Prefer runtime-injected value from /assets/config.json (set by main.ts before bootstrap)
+  /**
+   * Keycloak authentication server URL.
+   * Injected from window.__AUTH_BASE_URL__ by main.ts from /assets/config.json.
+   * Defaults to http://localhost:8081 for development.
+   * @private
+   */
   private readonly keycloakUrl: string =
     (window as unknown as { __AUTH_BASE_URL__?: string }).__AUTH_BASE_URL__ ??
     'http://localhost:8081';
+  /**
+   * Keycloak realm name for this application.
+   * @private
+   */
   private readonly realm = 'move';
+  /**
+   * Keycloak public client ID for the frontend application.
+   * @private
+   */
   private readonly clientId = 'move-frontend';
-  // If your Keycloak client is confidential, set the secret here or
-  // provide it via a safer runtime mechanism. Leave empty for public clients.
+  /**
+   * Client secret for confidential clients. Empty for public clients.
+   * @private
+   */
   private readonly clientSecret: string = '';
 
-  /** Seconds before expiry to proactively refresh the access token in the background. */
+  /**
+   * Seconds before token expiry to trigger proactive refresh.
+   * Ensures continuous authentication without user interruption.
+   * @private
+   */
   private readonly REFRESH_THRESHOLD_SECONDS = 60;
 
+  /**
+   * Currently stored access token in memory.
+   * @private
+   */
   private accessToken: string | null = null;
+  /**
+   * Currently stored refresh token in memory.
+   * @private
+   */
   private refreshToken: string | null = null;
+  /**
+   * Token expiry timestamp in milliseconds.
+   * @private
+   */
   private tokenExpiry: number = 0;
 
-  /** Single-flight: shared observable so concurrent callers share one HTTP refresh request. */
+  /**
+   * Shared refresh observable for single-flight refresh requests.
+   * Ensures concurrent callers share one HTTP refresh request.
+   * @private
+   */
   private refresh$: Observable<string | null> | null = null;
 
-  /** Timer ID for the proactive silent background refresh. */
+  /**
+   * Timer ID for the proactive silent background refresh.
+   * @private
+   */
   private refreshTimerId: ReturnType<typeof setTimeout> | null = null;
 
+  /**
+   * Subject tracking authentication state.
+   * @private
+   */
   private readonly _isLoggedIn$ = new BehaviorSubject<boolean>(false);
+  /**
+   * Observable emitting authentication state changes.
+   */
   readonly isLoggedIn$: Observable<boolean> = this._isLoggedIn$.asObservable();
 
   constructor(
@@ -44,14 +95,27 @@ export class AuthService {
     this.loadFromSession();
   }
 
+  /**
+   * Constructs the Keycloak token endpoint URL.
+   * @private
+   */
   private get tokenUrl(): string {
     return `${this.keycloakUrl}/realms/${this.realm}/protocol/openid-connect/token`;
   }
 
+  /**
+   * Constructs the Keycloak logout endpoint URL.
+   * @private
+   */
   private get logoutUrl(): string {
     return `${this.keycloakUrl}/realms/${this.realm}/protocol/openid-connect/logout`;
   }
 
+  /**
+   * Loads authentication tokens and state from sessionStorage.
+   * Resumes background refresh if a valid session is found.
+   * @private
+   */
   private loadFromSession(): void {
     this.accessToken = sessionStorage.getItem('kc_access_token');
     this.refreshToken = sessionStorage.getItem('kc_refresh_token');
@@ -59,12 +123,17 @@ export class AuthService {
     this.tokenExpiry = expiry ? parseInt(expiry, 10) : 0;
     const loggedIn = this.isLoggedIn();
     this._isLoggedIn$.next(loggedIn);
-    // Resume background refresh if we have a valid session
     if (loggedIn && this.refreshToken) {
       this.scheduleSilentRefresh();
     }
   }
 
+  /**
+   * Stores authentication tokens in memory and sessionStorage.
+   * Schedules next proactive refresh based on token expiry.
+   * @private
+   * @param {AuthToken} response - Token response from Keycloak.
+   */
   private storeTokens(response: AuthToken): void {
     const expiresIn = response.expires_in ?? 3600;
     const expiry = Date.now() + expiresIn * 1000;
@@ -77,10 +146,14 @@ export class AuthService {
     }
     sessionStorage.setItem('kc_token_expiry', String(expiry));
     this._isLoggedIn$.next(true);
-    // Schedule next proactive refresh using the reported expires_in value
     this.scheduleSilentRefresh(expiresIn);
   }
 
+  /**
+   * Clears authentication tokens from memory and sessionStorage.
+   * Cancels any scheduled background refresh.
+   * @private
+   */
   private clearTokens(): void {
     this.accessToken = null;
     this.refreshToken = null;
@@ -97,9 +170,12 @@ export class AuthService {
   }
 
   /**
-   * Schedules a proactive silent refresh REFRESH_THRESHOLD_SECONDS before the token expires.
-   * @param expiresIn seconds until token expiry (from Keycloak response). If omitted,
-   *                  calculates remaining time from the stored tokenExpiry timestamp.
+   * Schedules a proactive background token refresh.
+   * Refresh occurs REFRESH_THRESHOLD_SECONDS before token expiry.
+   *
+   * @private
+   * @param {number} [expiresIn] - Seconds until token expiry from Keycloak response.
+   *                               If omitted, calculates from stored tokenExpiry timestamp.
    */
   private scheduleSilentRefresh(expiresIn?: number): void {
     if (this.refreshTimerId !== null) {
@@ -108,7 +184,6 @@ export class AuthService {
     }
     const msUntilExpiry =
       expiresIn !== undefined ? expiresIn * 1000 : this.tokenExpiry - Date.now();
-    // Refresh REFRESH_THRESHOLD_SECONDS before expiry; minimum 1 s to avoid re-entrant calls
     const delay = Math.max(msUntilExpiry - this.REFRESH_THRESHOLD_SECONDS * 1000, 1000);
     this.refreshTimerId = setTimeout(() => {
       this.refreshTimerId = null;
@@ -116,6 +191,14 @@ export class AuthService {
     }, delay);
   }
 
+  /**
+   * Authenticates a user with username and password credentials.
+   * Stores the returned tokens and schedules background refresh.
+   *
+   * @param {string} username - User's username.
+   * @param {string} password - User's password.
+   * @returns {Observable<void>} Completes when authentication succeeds.
+   */
   login(username: string, password: string): Observable<void> {
     const body = new HttpParams()
       .set('grant_type', 'password')
@@ -132,6 +215,10 @@ export class AuthService {
     );
   }
 
+  /**
+   * Logs out the current user and clears session.
+   * Notifies Keycloak of the logout and redirects to sign-in page.
+   */
   logout(): void {
     const token = this.refreshToken;
     this.clearTokens();
@@ -145,20 +232,26 @@ export class AuthService {
     this.router.navigate(['/signin']);
   }
 
+  /**
+   * Checks if the user is currently authenticated with a valid access token.
+   *
+   * @returns {boolean} True if access token exists and has not expired.
+   */
   isLoggedIn(): boolean {
     return !!this.accessToken && Date.now() < this.tokenExpiry;
   }
 
   /**
-   * Returns the current access token, refreshing proactively if within the threshold window
-   * or if already expired. Multiple concurrent callers share a single refresh request.
+   * Returns the current access token, refreshing proactively if needed.
+   * Refreshes if within the threshold window or if already expired.
+   * Multiple concurrent callers share a single refresh request.
+   *
+   * @returns {Promise<string | undefined>} Promise resolving to the access token or undefined.
    */
   async getToken(): Promise<string | undefined> {
-    // Token is valid and not yet within the refresh threshold — return immediately
     if (this.accessToken && Date.now() < this.tokenExpiry - this.REFRESH_THRESHOLD_SECONDS * 1000) {
       return this.accessToken;
     }
-    // Token is expired or inside the threshold window — refresh (single-flight)
     if (this.refreshToken) {
       const token = await this.refreshAccessToken().toPromise();
       return token ?? undefined;
@@ -167,9 +260,11 @@ export class AuthService {
   }
 
   /**
-   * Performs a token refresh using the stored refresh token.
-   * Implements single-flight: concurrent calls share the same in-flight HTTP request.
-   * Used by the interceptor to retry 401 responses and by the background timer.
+   * Refreshes the access token using the stored refresh token.
+   * Implements single-flight pattern: concurrent calls share one HTTP request.
+   * Used by auth interceptor and background refresh scheduler.
+   *
+   * @returns {Observable<string | null>} Observable with the new access token or null if refresh fails.
    */
   refreshAccessToken(): Observable<string | null> {
     if (this.refresh$) {
@@ -195,17 +290,21 @@ export class AuthService {
           this.clearTokens();
           return of(null);
         }),
-        // Clear the shared observable once the source completes so future calls create a fresh request
         finalize(() => {
           this.refresh$ = null;
         }),
-        // Replay the result to any callers that subscribe after the HTTP response arrives
         shareReplay(1),
       );
 
     return this.refresh$;
   }
 
+  /**
+   * Extracts user information from the stored access token JWT.
+   * Decodes the JWT payload and reads user claims and roles.
+   *
+   * @returns {Object} Object containing username, email, firstName, lastName, and roles array.
+   */
   getUserInfo(): {
     username?: string;
     email?: string;
@@ -215,7 +314,6 @@ export class AuthService {
   } {
     if (!this.accessToken) return { roles: [] };
     try {
-      // Properly decode base64url JWT payload and interpret as UTF-8
       const base64Url = this.accessToken.split('.')[1] || '';
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
@@ -226,11 +324,9 @@ export class AuthService {
         typeof v === 'object' && v !== null;
 
       try {
-        // Use TextDecoder when available to correctly decode UTF-8
         const decoder = new TextDecoder('utf-8');
         payload = JSON.parse(decoder.decode(bytes));
       } catch {
-        // Fallback: percent-encoding trick
         const escaped = raw
           .split('')
           .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
@@ -262,6 +358,12 @@ export class AuthService {
     }
   }
 
+  /**
+   * Checks if the authenticated user has a specific role.
+   *
+   * @param {string} role - Role name to check (e.g., 'ROLE_ADMIN').
+   * @returns {boolean} True if user has the specified role.
+   */
   hasRole(role: string): boolean {
     return this.getUserInfo().roles.includes(role);
   }

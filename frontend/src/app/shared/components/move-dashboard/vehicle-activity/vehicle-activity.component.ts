@@ -16,28 +16,34 @@ import { VehicleDetected, VehicleType } from '../../../../core/models/vehicle.mo
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
-// Registrar los elementos de Chart.js
 ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 /**
  * VehicleActivityComponent
  *
- * Componente que muestra un gráfico de barras horizontal con conteo de vehículos
- * por tipo: Carros, Motos, Buses, Camiones, Bicicletas. Actualizado diariamente.
- * Conectado a VehicleDetectedService para obtener datos en tiempo real.
+ * Displays a horizontal bar chart showing vehicle detection counts by type (Cars, Motorcycles, Buses,
+ * Trucks, Bicycles) for the current day. Includes summary statistics footer with vehicle counts by type
+ * and total vehicles detected. Connected to VehicleDetectedService for real-time vehicle detection data.
  *
- * Características:
- * - Gráfico de barras horizontal
- * - Conteo por tipo de vehículo
- * - Datos actualizados desde el backend
- * - Dark mode support
- * - Responsivo
+ * Features:
+ * - Horizontal bar chart with Chart.js (indexAxis: 'y') with five vehicle categories
+ * - Five distinct colors per vehicle type: blue (cars), green (motorcycles), orange (buses), red (trucks), purple (bicycles)
+ * - Daily vehicle counts filtered from 00:00 to current time (today only)
+ * - Vehicle type filtering using VehicleType enum (CAR, MOTORCYCLE, BUS, TRUCK, BICYCLE)
+ * - Separate Observables: chartData$ for bar chart, vehicleCounts$ for footer statistics
+ * - Shared vehicleData$ observable (private) for today's vehicle detections
+ * - Reactive data updates from VehicleDetectedService
+ * - Dark mode support with configurable colors
+ * - Custom tooltip showing "Detectados: {count}" per vehicle type
+ * - Responsive layout with scrollable chart on mobile
+ * - Error handling with empty chart fallback
+ * - shareReplay pattern for subscription efficiency
+ * - Helper method calculateVehicleCounts for type-based counting
+ * - OnPush change detection for performance
  *
  * @selector app-vehicle-activity
  * @standalone true
  * @imports CommonModule, BaseChartDirective
- * @returns Gráfico de actividad vehicular
- *
  * @example
  * <app-vehicle-activity />
  */
@@ -52,34 +58,39 @@ export class VehicleActivityComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Observable que emite la configuración del gráfico de barras con conteos de vehículos
+   * Observable emitting bar chart data with vehicle counts by type
    */
   chartData$!: Observable<ChartConfiguration<'bar'>['data']>;
 
   /**
-   * Observable que emite los conteos individuales de vehículos por tipo
+   * Observable emitting individual vehicle count array by type
    */
   vehicleCounts$!: Observable<number[]>;
 
   /**
-   * Observable compartido de datos de vehículos
+   * Observable emitting shared vehicle detection data
    * @private
    */
   private vehicleData$!: Observable<VehicleDetected[]>;
 
   /**
-   * Tipos de vehículos mapeados al enum VehicleType del backend
+   * Vehicle type labels mapped to VehicleType enum from backend
+   * @private
    */
-  private readonly vehicleTypes: string[] = ['Carros', 'Motos', 'Buses', 'Camiones', 'Bicicletas'];
+  private readonly vehicleTypes: string[] = ['Cars', 'Motorcycles', 'Buses', 'Trucks', 'Bicycles'];
 
   /**
-   * Datos por defecto del gráfico
+   * Default empty chart data structure
+   * @private
    */
   private readonly defaultChartData: ChartConfiguration<'bar'>['data'] = {
     labels: this.vehicleTypes,
     datasets: [],
   };
 
+  /**
+   * Chart.js configuration options for horizontal bar chart
+   */
   chartOptions: ChartConfiguration<'bar'>['options'] = {
     indexAxis: 'y',
     responsive: true,
@@ -103,7 +114,7 @@ export class VehicleActivityComponent {
         callbacks: {
           label: function (context) {
             const value = context.parsed.x;
-            return 'Detectados: ' + value;
+            return 'Detected: ' + value;
           },
         },
       },
@@ -126,7 +137,7 @@ export class VehicleActivityComponent {
         },
         title: {
           display: true,
-          text: 'Cantidad',
+          text: 'Count',
           color: '#6B7280',
         },
       },
@@ -156,8 +167,7 @@ export class VehicleActivityComponent {
   }
 
   /**
-   * Inicializa el observable compartido de datos de vehículos
-   * Filtra en memoria solo los vehículos detectados hoy
+   * Initializes shared vehicle data observable filtering to today's detections only
    * @private
    */
   private initializeVehicleData(): void {
@@ -169,14 +179,13 @@ export class VehicleActivityComponent {
         if (!vehicles || vehicles.length === 0) {
           return [];
         }
-        // Filtrar solo vehículos de hoy
         return vehicles.filter((v) => {
           const vDate = new Date(v.timestamp);
           return vDate >= todayStart && vDate <= now;
         });
       }),
       catchError((error) => {
-        console.error('Error cargando datos de vehículos:', error);
+        console.error('Error loading vehicle data:', error);
         return of([]);
       }),
       shareReplay(1),
@@ -184,7 +193,7 @@ export class VehicleActivityComponent {
   }
 
   /**
-   * Inicializa los datos del gráfico desde el observable compartido
+   * Initializes chart data observable with horizontal bar dataset from shared vehicle data
    * @private
    */
   private initializeChartData(): void {
@@ -200,15 +209,9 @@ export class VehicleActivityComponent {
           labels: this.vehicleTypes,
           datasets: [
             {
-              label: 'Cantidad de Vehículos',
+              label: 'Vehicle Count',
               data: vehicleCounts,
-              backgroundColor: [
-                '#3b82f6', // Azul para Carros
-                '#10b981', // Verde para Motos
-                '#f97316', // Naranja para Buses
-                '#ef4444', // Rojo para Camiones
-                '#8b5cf6', // Púrpura para Bicicletas
-              ],
+              backgroundColor: ['#3b82f6', '#10b981', '#f97316', '#ef4444', '#8b5cf6'],
               borderColor: ['#1e40af', '#059669', '#ea580c', '#dc2626', '#6d28d9'],
               borderWidth: 1,
               borderRadius: 4,
@@ -221,7 +224,7 @@ export class VehicleActivityComponent {
   }
 
   /**
-   * Inicializa los conteos de vehículos desde el observable compartido
+   * Initializes vehicle counts observable for footer statistics display
    * @private
    */
   private initializeVehicleCounts(): void {
@@ -237,10 +240,10 @@ export class VehicleActivityComponent {
   }
 
   /**
-   * Calcula los conteos de vehículos por tipo
+   * Calculates vehicle count array by type using VehicleType enum filtering.
+   * @param vehicles Array of detected vehicles
+   * @returns Array of counts [cars, motorcycles, buses, trucks, bicycles]
    * @private
-   * @param {any[]} vehicles - Array de vehículos detectados
-   * @returns {number[]} Array de conteos [carros, motos, buses, camiones, bicicletas]
    */
   private calculateVehicleCounts(vehicles: VehicleDetected[]): number[] {
     const carCount = vehicles.filter(

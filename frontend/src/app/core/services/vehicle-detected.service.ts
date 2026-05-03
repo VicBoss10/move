@@ -7,19 +7,20 @@ import { VehicleDetected, VehicleSearchCriteria, VehicleStats } from '../models/
 import { QueryParamsBuilder } from '../utils/query-params.builder';
 
 /**
- * Servicio para gestionar Vehículos Detectados
- * Hereda funcionalidad CRUD base de BaseDataService
- * Agrega búsqueda avanzada y cálculo de estadísticas
+ * Vehicle detection management service for detected vehicle events.
+ * Extends BaseDataService for CRUD operations and adds advanced search and statistics.
  *
- * @service
- * @providedIn root
+ * @class VehicleDetectedService
+ * @extends BaseDataService<VehicleDetected>
+ * @injectable root
  */
 @Injectable({
   providedIn: 'root',
 })
 export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
   /**
-   * Endpoint del API para vehículos
+   * API endpoint path for vehicle detection resources.
+   * @protected
    */
   protected endpoint = 'vehicles';
 

@@ -1,7 +1,12 @@
+<!-- Vehicle Type Distribution Chart Component
+     Shows doughnut chart visualization of vehicle detections by type.
+     Displays total count and summary cards with counts for each vehicle category.
+     Includes empty state when no detections are available. -->
+
 <div
   class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
 >
-  <!-- Header -->
+  <!-- Page header with title and description -->
   <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Distribución por Tipo</h3>
     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -9,7 +14,7 @@
     </p>
   </div>
 
-  <!-- Sin datos -->
+  <!-- Empty state when no detection data available -->
   @if (stats.totalDetected === 0) {
     <div class="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-6">
       <svg
@@ -29,18 +34,18 @@
     </div>
   }
 
-  <!-- Chart + summary -->
+  <!-- Doughnut chart and vehicle type summary cards -->
   @if (stats.totalDetected > 0) {
     <div class="px-5 py-4 sm:px-6">
-      <!-- Donut chart centrado -->
+      <!-- Centered doughnut chart with vehicle type distribution -->
       <div class="mx-auto max-w-[260px]">
         <canvas baseChart [data]="donutData" [options]="donutOptions" type="doughnut"></canvas>
       </div>
-      <!-- Total en el centro (decorativo) -->
+      <!-- Total detection count display -->
       <p class="mt-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
         Total: <span class="text-gray-900 dark:text-white">{{ stats.totalDetected }}</span>
       </p>
-      <!-- Tarjetas de resumen por tipo -->
+      <!-- Summary cards grid with vehicle type counts and colors -->
       <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
         <div class="flex flex-col items-center rounded-xl bg-blue-50 px-3 py-3 dark:bg-blue-900/20">
           <span class="text-xs font-medium text-blue-600 dark:text-blue-400"> Auto</span>

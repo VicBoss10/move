@@ -18,7 +18,7 @@ import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 
-// Registrar los scales y elementos
+// Register Chart.js scales and elements
 ChartJS.register(
   LineController,
   LineElement,
@@ -31,12 +31,30 @@ ChartJS.register(
 );
 
 /**
- * Componente que muestra un gráfico dinámico comparativo de múltiples gases
- * (CO, NO₂, NH₃) en las últimas 12 horas, promediando por hora.
- * Utiliza RxJS Observables y ChangeDetectionStrategy.OnPush.
+ * GasesComparisonChartComponent (Presentation Component)
+ *
+ * Displays multi-series line chart comparing three gas concentrations (CO, NO₂, NH₃) over 12-hour sliding window.
+ *
+ * Features:
+ * - Three-series line chart: CO (purple), NO₂ (amber), NH₃ (cyan) with distinct colors and units
+ * - 12-hour sliding window with hourly aggregation: calculates mean concentration per hour, null for empty slots
+ * - Fetches latest sensor timestamp to determine time window range
+ * - Query-based data loading from backend with start/end date filtering
+ * - Current gas values observable: latest readings extracted separately with rounded precision (1 decimal)
+ * - Chart.js multi-line configuration: semi-transparent fill under each series, point markers
+ * - Responsive layout: scrollable container on mobile (min-width 650px), full width on XL screens
+ * - Legend display with point-style icons, positioned at top
+ * - Tooltip with formatted units: CO (ppm), NO₂ (µg/m³), NH₃ (ppb), black background with white text
+ * - Grid styling: light gray lines with reduced opacity, dark mode aware
+ * - Y-axis title: "Concentração (µg/m³, ppm, ppb)", X-axis: hourly labels (HH:00 format)
+ * - OnPush change detection with async pipe for data subscription
+ * - Fallback: displays empty chart on data load error
  *
  * @selector app-gases-comparison-chart
  * @standalone true
+ * @imports CommonModule, BaseChartDirective
+ * @example
+ * <app-gases-comparison-chart />
  */
 @Component({
   selector: 'app-gases-comparison-chart',
@@ -46,20 +64,28 @@ ChartJS.register(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GasesComparisonChartComponent {
+  /**
+   * Reference to Chart.js canvas element for programmatic access.
+   * @type {BaseChartDirective | undefined}
+   */
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Ventana de horas a mostrar
+   * Time window in hours for data aggregation (12-hour sliding window).
+   * @type {number}
+   * @private
    */
   private readonly HOURS_WINDOW = 12;
 
   /**
-   * Observable que emite la configuración del gráfico con datos reactivos
+   * Observable stream of aggregated multi-series chart data with hourly labels and averaged gas values.
+   * @type {Observable<ChartConfiguration<'line'>['data']>}
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
   /**
-   * Observable que emite valores actuales de cada gas
+   * Observable stream of current gas concentrations from latest sensor reading.
+   * @type {Observable<{co: number; no2: number; nh3: number}>}
    */
   gasValues$!: Observable<{
     co: number;
@@ -68,10 +94,17 @@ export class GasesComparisonChartComponent {
   }>;
 
   /**
-   * Observable compartido de datos del sensor (últimas 12h)
+   * Observable stream of raw sensor data for the 12-hour window, fetched from backend.
+   * @type {Observable<SensorData[]>}
+   * @private
    */
   private sensorData$!: Observable<SensorData[]>;
 
+  /**
+   * Chart.js configuration object for multi-series line chart styling and interactivity.
+   * Defines responsive layout, legend positioning, tooltip formatting, and axis labels.
+   * @type {ChartConfiguration<'line'>['options']}
+   */
   readonly chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: true,
@@ -137,7 +170,7 @@ export class GasesComparisonChartComponent {
         position: 'left',
         title: {
           display: true,
-          text: 'Concentración (µg/m³, ppm, ppb)',
+          text: 'Concentration (µg/m³, ppm, ppb)',
           color: '#6B7280',
           font: {
             weight: 'bold',
@@ -161,6 +194,11 @@ export class GasesComparisonChartComponent {
     datasets: [],
   };
 
+  /**
+   * Initializes component with service dependency and sets up data streams.
+   * Triggers initialization of sensor data, chart data, and gas values observables.
+   * @param {SensorDataService} sensorDataService - Service for querying historical gas sensor data
+   */
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
@@ -168,8 +206,11 @@ export class GasesComparisonChartComponent {
   }
 
   /**
-   * Obtiene el último registro para determinar la ventana de tiempo
-   * y luego consulta solo las últimas 12 horas al backend.
+   * Fetches the latest sensor timestamp, then queries the backend for all sensor data
+   * within the 12-hour window ending at that timestamp.
+   * Errors are caught and return empty array for graceful fallback.
+   * @private
+   * @returns {void}
    */
   private initializeSensorData(): void {
     this.sensorData$ = this.sensorDataService.getLatest().pipe(
@@ -187,7 +228,12 @@ export class GasesComparisonChartComponent {
   }
 
   /**
-   * Inicializa los datos del gráfico agrupando por hora y promediando.
+   * Transforms raw sensor data into hourly-aggregated multi-series chart data.
+   * Groups readings by hour for each gas, calculates average per hour, and creates 12 hourly slots.
+   * Parses timestamps, filters invalid dates, and creates HH:00 format labels.
+   * Returns default empty chart on zero or invalid data.
+   * @private
+   * @returns {void}
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
@@ -216,7 +262,7 @@ export class GasesComparisonChartComponent {
           0,
         );
 
-        // Crear 12 slots horarios hacia atrás desde la hora más reciente
+        // Create 12 hourly slots backwards from latest hour
         const slots: { start: Date; end: Date; label: string }[] = [];
         for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
           const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
@@ -299,7 +345,11 @@ export class GasesComparisonChartComponent {
   }
 
   /**
-   * Inicializa los valores actuales de los gases (desde el último registro)
+   * Extracts current gas concentration values from latest sensor reading.
+   * Rounds CO and NH₃ to 1 decimal, NO₂ to nearest integer per unit conventions.
+   * Returns zero-state on error for graceful fallback.
+   * @private
+   * @returns {void}
    */
   private initializeGasValues(): void {
     this.gasValues$ = this.sensorDataService.getLatest().pipe(

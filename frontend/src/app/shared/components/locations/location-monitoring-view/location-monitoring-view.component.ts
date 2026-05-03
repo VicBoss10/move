@@ -20,7 +20,6 @@ import { Device, DeviceType } from '../../../../core/models/device.model';
 import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
 import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
 
-// Local view model: extiende `AppLocation` con propiedades calculadas usadas sólo en este componente
 interface LocationView extends AppLocation {
   devices?: Device[];
   deviceCount?: number;
@@ -30,21 +29,38 @@ interface LocationView extends AppLocation {
 }
 
 /**
- * LocationMonitoringViewComponent
+ * LocationMonitoringViewComponent (Container Component)
  *
- * Componente que muestra los puntos de monitoreo (ubicaciones)
- * disponibles en el sistema con información geográfica.
- * Carga datos en tiempo real desde el backend.
+ * Displays all monitoring locations on an interactive Google Map with system summary statistics,
+ * device counts per location, and integrated location filtering table. Loads location, device,
+ * and detection data via combineLatest with enrichment calculations.
  *
- * Características:
- * - Ubicaciones desde el backend (no hardcodeadas)
- * - Información de coordenadas GPS
- * - Filtros por ubicación
- * - Descripción de cada ubicación
- * - Panel de información del sistema en tiempo real
+ * Features:
+ * - Summary stat cards: total locations, active locations (with ACTIVE devices), last detection timestamp
+ * - Google Map with default center from DEFAULT_MAP_CONFIG, auto-fit to all location bounds
+ * - Dynamic marker icons: green SVG pins (36px) for recent detections (last 24h), larger pins scaled by device count
+ * - Marker labels: "C" for camera-only, "S" for sensor-only, "C/S" for mixed devices
+ * - InfoWindow popup: location description, lat/lng (6 decimals), device count with icons, device list
+ * - Marker click handler: lazy-loads device list for selected location on demand
+ * - Location enrichment: calculates deviceCount, cameraCount, sensorCount, lastActivity for each location
+ * - Helper methods: getCameraCount, getSensorCount, getSelectedDevices (avoid casts in template)
+ * - Manual refresh trigger: onLocationChanged() called from location-filters component
+ * - Error handling: independent catchError on each data stream, returns empty arrays on failure
+ * - User geolocation: requests and centers map on user location if accuracy <1000m
+ * - focusOnLocation method: centers map at zoom 16 on a specific location
+ * - fitMapToLocations private method: auto-centers and zooms map to show all valid locations
+ * - Loading state with isLoading flag and finalize operator
+ * - Responsive grid: 2 columns mobile, 3 columns desktop for stat cards
+ * - Dark mode support via dark: Tailwind prefix
+ * - OnPush change detection with markForCheck after async operations
+ * - OnDestroy cleanup via takeUntil(destroy$) pattern
+ * - Child component: LocationFiltersComponent integrated at bottom for unified management
  *
  * @selector app-location-monitoring-view
  * @standalone true
+ * @imports CommonModule, GoogleMapsModule, LocationFiltersComponent
+ * @example
+ * <app-location-monitoring-view />
  */
 @Component({
   selector: 'app-location-monitoring-view',
@@ -54,54 +70,27 @@ interface LocationView extends AppLocation {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
-  /**
-   * Subject para cleanup de suscripciones
-   */
   private destroy$ = new Subject<void>();
 
-  /** Referencia al InfoWindow del mapa */
   @ViewChild(MapInfoWindow) infoWindow!: MapInfoWindow;
 
-  /** Array de ubicaciones para binding en el template */
   locations: LocationView[] = [];
 
-  /**
-   * Información general del sistema (calculada dinámicamente)
-   */
   systemInfo = {
     totalLocations: 0,
     activeLocations: 0,
     lastDetection: new Date(),
   };
 
-  /**
-   * Estado de carga
-   */
   isLoading = false;
-
-  /**
-   * Mensaje de error si hay
-   */
   errorMessage: string | null = null;
 
-  /** Centro del mapa */
   center: google.maps.LatLngLiteral = DEFAULT_MAP_CONFIG.center;
-
-  /** Nivel de zoom */
   zoom = DEFAULT_MAP_CONFIG.zoom;
-
-  /** Opciones del mapa */
   mapOptions: google.maps.MapOptions = { ...DEFAULT_MAP_CONFIG.options };
-
-  /** Indica si la API de Google Maps está disponible */
   isApiLoaded = false;
 
-  /** Ubicación seleccionada en el info window */
   selectedInfoLocation: LocationView | null = null;
-
-  /**
-   * Constructor e inyección de dependencias
-   */
   constructor(
     private locationService: LocationService,
     private mapsLoader: GoogleMapsLoaderService,
@@ -112,7 +101,11 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   ) {}
 
   /**
-   * Hook del ciclo de vida: Carga ubicaciones al inicializar
+   * Lifecycle hook: initializes component on first view.
+   * Loads Google Maps API asynchronously, requests user geolocation if available,
+   * and triggers loadLocations() to populate map with location data.
+   * Marks component for change detection after API load and geolocation completion.
+   * @returns {void}
    */
   ngOnInit(): void {
     this.mapsLoader.load().then((loaded) => {
@@ -122,11 +115,9 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Mostrar el mapa inmediatamente con centro por defecto (Pasto)
       this.isApiLoaded = true;
       this.cdr.markForCheck();
 
-      // Geolocalización en segundo plano — no bloquea el render del mapa
       this.mapsLoader.requestUserLocation().then((userLocation) => {
         if (userLocation && userLocation.accuracy < 1000) {
           this.center = { lat: userLocation.lat, lng: userLocation.lng };
@@ -139,8 +130,12 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga las ubicaciones desde el backend
-   * @private
+   * Loads locations, devices, and detection data from backend via parallel streams.
+   * Uses combineLatest to merge locations$, devices$, lastDetect$ observables.
+   * Enriches each location with device count, camera/sensor counts, and last activity timestamp.
+   * Calculates system info (total locations, active locations, last detection).
+   * Fits map bounds to show all valid location coordinates.
+   * Sets isLoading flag with finalize operator and handles errors via catchError.
    * @returns {void}
    */
   loadLocations(): void {
@@ -195,7 +190,6 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
       .subscribe((values) => {
         const [locations, devices, lastDetection] = values as [AppLocation[], Device[], Date];
 
-        // Normalize locations adding computed properties to simplify template logic
         const enriched = locations.map((loc) => {
           const related = (devices || []).filter((d) => d?.location?.id === loc.id);
           const deviceCount = related.length;
@@ -226,15 +220,16 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Actualiza la información del sistema basada en datos reales de dispositivos y detecciones
-   * @private
-   * @param {any[]} devices - Listado de dispositivos del sistema
-   * @param {Date} lastDetection - Fecha de la última detección
+   * Updates system info object with aggregate statistics from devices and last detection.
+   * Calculates totalLocations (all locations), activeLocations (unique location IDs with ACTIVE devices),
+   * and lastDetection timestamp (most recent vehicle or sensor data).
+   * Used internally by loadLocations() to populate systemInfo display cards.
+   * @param {Device[]} devices - Array of Device objects from backend
+   * @param {Date} lastDetection - Most recent detection timestamp (vehicle or sensor)
    * @returns {void}
    */
   private updateSystemInfo(devices: Device[], lastDetection: Date): void {
     this.systemInfo.totalLocations = this.locations.length;
-    // Contar cuántas ubicaciones tienen al menos un dispositivo en estado ACTIVE
     const activeLocationIds = new Set<number>();
     (devices || []).forEach((d: Device) => {
       if (d && d.location && d.location.id != null && d.state === 'ACTIVE') {
@@ -246,24 +241,29 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja cambios en las ubicaciones desde location-filters
+   * Handles location changes from child LocationFiltersComponent.
+   * Called from LocationTableComponent (locationChanged) output event.
+   * Re-executes loadLocations() to refresh map and system info with latest backend data.
+   * @returns {void}
    */
   onLocationChanged(): void {
     this.loadLocations();
   }
 
   /**
-   * Abre el InfoWindow al hacer clic en un marcador del mapa
-   * @param marker - Referencia al MapAdvancedMarker
-   * @param location - Datos de la ubicación
+   * Handles map marker click to display location info and load associated devices.
+   * Sets selectedInfoLocation reference, opens InfoWindow, and asynchronously loads
+   * device list for the location. Updates device counts (camera/sensor) on load.
+   * Called from [routerLink] directive with (markerClick) event in template.
+   * @param {MapMarker} marker - Google Maps marker element
+   * @param {AppLocation} location - Location object associated with clicked marker
+   * @returns {void}
    */
   onMarkerClick(marker: MapMarker, location: AppLocation): void {
-    // First set shallow location so info window can open quickly
     this.selectedInfoLocation = location as LocationView;
     if (this.infoWindow) this.infoWindow.open(marker);
     this.cdr.markForCheck();
 
-    // Load devices on the client side (avoid depending on search params on backend)
     this.deviceService
       .getAll()
       .pipe(takeUntil(this.destroy$))
@@ -292,22 +292,24 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Genera un icono SVG como data-URL para usar como marcador
-   * Color y estilo se calculan según actividad/estado de la ubicación
+   * Generates custom SVG marker icon with dynamic color and size based on activity recency and device count.
+   * Recent activity (last 24h) uses green (#10B981), older uses light green (#14d83f).
+   * Base size is 36px for recent, 48px for older; increases by 6px per device (max +24px).
+   * Returns data URI with URL-encoded SVG string for use with google.maps.Marker.
+   * @param {LocationView | AppLocation} location - Location object with lastActivity and device count
+   * @returns {string} Data URI string for SVG marker icon
    */
   getMarkerIcon(location: LocationView | AppLocation): string | google.maps.Icon {
     const rawLast = (location as unknown as Partial<{ lastActivity?: string | Date }>).lastActivity;
     const lastActivity = rawLast ? new Date(rawLast).getTime() : 0;
-    const isRecent = lastActivity && Date.now() - lastActivity < 24 * 60 * 60 * 1000; // 24h
-    const color = isRecent ? '#10B981' : '#14d83f'; // green or blue
+    const isRecent = lastActivity && Date.now() - lastActivity < 24 * 60 * 60 * 1000;
+    const color = isRecent ? '#10B981' : '#14d83f';
 
-    // Determine device count to adjust marker visual size
     const locPartial = location as Partial<LocationView>;
     const deviceCount = (locPartial.deviceCount ?? (locPartial.devices ?? []).length) as number;
-    const baseSize = isRecent ? 36 : 48; // px
+    const baseSize = isRecent ? 36 : 48;
     const size = baseSize + Math.min(24, (deviceCount || 0) * 6);
 
-    // Simple pin-shaped SVG marker encoded as data URL
     const svg = `<?xml version='1.0' encoding='UTF-8'?>
 <svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${Math.round(size * 1.3)}' viewBox='0 0 48 62'>
   <path d='M24 2C15.16 2 8 9.16 8 18c0 12 16 28 16 28s16-16 16-28c0-8.84-7.16-16-16-16z' fill='${color}' stroke='#ffffff' stroke-width='2'/>
@@ -319,7 +321,13 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Return a small label object to show emoji indicators for camera/sensor
+   * Generates marker label to indicate device types present at location.
+   * Returns "C/S" for locations with both cameras and sensors,
+   * "C" for camera-only, "S" for sensor-only, null if no devices.
+   * Uses cameraCount/sensorCount or filters devices array as fallback.
+   * White text on marker, 12px font size.
+   * @param {LocationView | AppLocation} location - Location object with device type information
+   * @returns {google.maps.MarkerLabel | null} Label object or null if no devices
    */
   getMarkerLabel(location: LocationView | AppLocation): google.maps.MarkerLabel | null {
     const devices = (location as unknown as Partial<LocationView>)?.devices ?? [];
@@ -339,7 +347,15 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
     return { text, color: '#ffffff', fontSize: '12px' } as google.maps.MarkerLabel;
   }
 
-  /** helper used in info window */
+  /**
+   * Returns count of CAMERA type devices for specified location.
+   * Uses cameraCount property if available; otherwise filters devices array
+   * for entries where type string contains 'camera' (case-insensitive).
+   * Returns 0 if location is null or no cameras found.
+   * Used in template for device count display in info window.
+   * @param {LocationView | AppLocation | null} location - Location object to check
+   * @returns {number} Count of camera devices (0 or positive integer)
+   */
   getCameraCount(location: LocationView | AppLocation | null): number {
     if (!location) return 0;
     const loc = location as Partial<LocationView>;
@@ -349,6 +365,15 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
       .length;
   }
 
+  /**
+   * Returns count of SENSOR type devices for specified location.
+   * Uses sensorCount property if available; otherwise filters devices array
+   * for entries where type string contains 'sensor' (case-insensitive).
+   * Returns 0 if location is null or no sensors found.
+   * Used in template for device count display in info window.
+   * @param {LocationView | AppLocation | null} location - Location object to check
+   * @returns {number} Count of sensor devices (0 or positive integer)
+   */
   getSensorCount(location: LocationView | AppLocation | null): number {
     if (!location) return 0;
     const loc = location as Partial<LocationView>;
@@ -358,14 +383,24 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
       .length;
   }
 
-  /** Devuelve el listado de dispositivos de la ubicación seleccionada (evita casts en plantilla) */
+  /**
+   * Returns device list for currently selected location displayed in info window.
+   * Reads from selectedInfoLocation.devices array (populated on marker click).
+   * Returns empty array if selectedInfoLocation is null or has no devices.
+   * Used in template to render device details in info window popup.
+   * @returns {Device[]} Array of Device objects for selected location
+   */
   getSelectedDevices(): Device[] {
     return (this.selectedInfoLocation?.devices ?? []) as Device[];
   }
 
   /**
-   * Centra el mapa en una ubicación específica
-   * @param location - Ubicación a enfocar
+   * Centers and zooms map to focus on specified location.
+   * Sets map center to location coordinates and zoom level to 16.
+   * Marks component for change detection to trigger map redraw.
+   * Can be called from template or parent component to focus on specific location.
+   * @param {AppLocation} location - Location object with latitude and longitude
+   * @returns {void}
    */
   focusOnLocation(location: AppLocation): void {
     this.center = { lat: location.latitude, lng: location.longitude };
@@ -374,14 +409,17 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Ajusta el centro del mapa para mostrar todas las ubicaciones.
-   * Si no hay ubicaciones, mantiene el centro actual (Pasto por defecto).
-   * @private
+   * Automatically fits map center and zoom level to show all valid locations.
+   * Filters locations with valid (finite) latitude/longitude coordinates.
+   * For single location: centers on it at zoom 15.
+   * For multiple locations: calculates average center point and uses default zoom.
+   * For zero locations: takes no action.
+   * Called internally by loadLocations() after data enrichment.
+   * @returns {void}
    */
   private fitMapToLocations(): void {
     if (this.locations.length === 0) return;
 
-    // Filtrar ubicaciones con coordenadas válidas
     const valid = this.locations.filter(
       (loc) =>
         loc.latitude != null &&
@@ -407,7 +445,10 @@ export class LocationMonitoringViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Hook del ciclo de vida: Limpia las suscripciones
+   * Lifecycle hook: cleans up subscriptions and completes destroy$ subject.
+   * Called when component is destroyed to prevent memory leaks.
+   * Unsubscribes all observables using takeUntil(destroy$) pattern.
+   * @returns {void}
    */
   ngOnDestroy(): void {
     this.destroy$.next();

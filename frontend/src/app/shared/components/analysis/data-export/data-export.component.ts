@@ -39,11 +39,28 @@ ChartJS.register(
   Filler,
 );
 
-// ── Tipos ─────────────────────────────────────────────────────────────────────
-
+/**
+ * Environmental metric key type.
+ * @typedef {'co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3'} MetricKey
+ */
 type MetricKey = 'co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3';
+
+/**
+ * Time period key type.
+ * @typedef {'24h' | '7d' | '30d'} PeriodKey
+ */
 type PeriodKey = '24h' | '7d' | '30d';
 
+/**
+ * Metric display and PDF configuration.
+ * @interface MetricOption
+ * @property {MetricKey} key - Metric identifier.
+ * @property {string} label - Display label with Unicode characters.
+ * @property {string} pdfLabel - PDF-safe label (ASCII only).
+ * @property {string} unit - Display unit with Unicode.
+ * @property {string} pdfUnit - PDF-safe unit (ASCII only).
+ * @property {string} color - Hex color for charts.
+ */
 interface MetricOption {
   key: MetricKey;
   label: string;
@@ -53,14 +70,24 @@ interface MetricOption {
   color: string;
 }
 
+/**
+ * Complete report data structure.
+ * @interface ReportData
+ * @property {SensorData[]} sensorData - Environmental sensor readings.
+ * @property {VehicleDetected[]} vehicleData - Vehicle detection records.
+ * @property {Location[]} locations - Geographic locations.
+ */
 interface ReportData {
   sensorData: SensorData[];
   vehicleData: VehicleDetected[];
   locations: Location[];
 }
 
-// ── Constantes ────────────────────────────────────────────────────────────────
-
+/**
+ * All available environmental metrics.
+ * @constant ALL_METRIC_KEYS
+ * @type {MetricKey[]}
+ */
 const ALL_METRIC_KEYS: MetricKey[] = [
   'co2',
   'pm25',
@@ -72,6 +99,11 @@ const ALL_METRIC_KEYS: MetricKey[] = [
   'nh3',
 ];
 
+/**
+ * Metric configurations with display and PDF labels.
+ * @constant METRICS
+ * @type {MetricOption[]}
+ */
 const METRICS: MetricOption[] = [
   { key: 'co2', label: 'CO₂', pdfLabel: 'CO2', unit: 'ppm', pdfUnit: 'ppm', color: '#ef4444' },
   {
@@ -111,36 +143,50 @@ const METRICS: MetricOption[] = [
   { key: 'nh3', label: 'NH₃', pdfLabel: 'NH3', unit: 'ppb', pdfUnit: 'ppb', color: '#14b8a6' },
 ];
 
+/**
+ * Available report time periods.
+ * @constant PERIODS
+ * @type {Array<{key: PeriodKey, label: string, hours: number}>}
+ */
 const PERIODS: { key: PeriodKey; label: string; hours: number }[] = [
   { key: '24h', label: 'Últimas 24 h', hours: 24 },
   { key: '7d', label: 'Últimos 7 días', hours: 168 },
   { key: '30d', label: 'Últimos 30 días', hours: 720 },
 ];
 
+/**
+ * Vehicle count chart color.
+ * @constant VEHICLE_COLOR
+ */
 const VEHICLE_COLOR = '#6366f1';
 
 /**
- * DataExportComponent (Smart Component)
+ * DataExportComponent
  *
- * Herramienta interactiva para exportar reportes de análisis en formato PDF.
- * Carga datos completos (sensor + vehículos + ubicaciones) y genera reportes
- * con gráficos y estadísticas compiladas.
+ * Interactive PDF report generation tool for environmental analysis.
+ * Loads complete data (sensor, vehicle, location) and generates professional
+ * multi-page reports with embedded charts and statistics.
  *
- * Características:
- * - Selección de métricas y períodos (24h/7d/30d)
- * - Vista previa de datos antes de exportar
- * - Generación de PDF con márgenes y estilos profesionales
- * - Gráficos embebidos (series de tiempo, rezagos, ubicaciones)
- * - Estadísticas resumidas por métrica
- * - Dark mode support
+ * Features:
+ * - Period and metric selection (24h/7d/30d)
+ * - Real-time progress tracking during generation
+ * - Professional PDF with cover page, headers, footers
+ * - Embedded high-resolution charts (time series, correlation, lag analysis)
+ * - Summary statistics and location ranking tables
+ * - Full dark mode support
  *
+ * Report sections:
+ * 1. Cover page with MOVE branding
+ * 2. Time series visualization (metric + vehicle count)
+ * 3. 9×9 Pearson correlation matrix
+ * 4. Cross-correlation lag analysis (−12h to +12h)
+ * 5. Location-based comparison with rankings
+ *
+ * @class DataExportComponent
+ * @implements {OnDestroy}
  * @selector app-data-export
  * @standalone true
  * @imports CommonModule, FormsModule
- * @returns Panel de exportación con previsualizacion
- *
- * @example
- * <app-data-export />
  */
 @Component({
   selector: 'app-data-export',
@@ -150,16 +196,47 @@ const VEHICLE_COLOR = '#6366f1';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DataExportComponent implements OnDestroy {
+  /**
+   * Subject for cleanup on component destruction.
+   * @private
+   */
   private readonly destroy$ = new Subject<void>();
 
+  /**
+   * Available metrics for report generation.
+   * @readonly
+   */
   readonly metrics = METRICS;
+
+  /**
+   * Available time periods for report generation.
+   * @readonly
+   */
   readonly periods = PERIODS;
 
+  /**
+   * Currently selected analysis period.
+   */
   selectedPeriod: PeriodKey = '7d';
+
+  /**
+   * Currently selected metric for detailed analysis.
+   */
   selectedMetric: MetricKey = 'co2';
 
+  /**
+   * True while PDF generation is in progress.
+   */
   isGenerating = false;
+
+  /**
+   * Generation progress percentage (0-100).
+   */
   progress = 0;
+
+  /**
+   * Current status message displayed during generation.
+   */
   progressMsg = '';
 
   constructor(
@@ -169,25 +246,41 @@ export class DataExportComponent implements OnDestroy {
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
+  /**
+   * Cleans up resources on component destruction.
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  // ── Acciones del usuario ───────────────────────────────────────────────────
-
+  /**
+   * Updates the selected time period.
+   *
+   * @param {PeriodKey} p - New period key.
+   */
   setPeriod(p: PeriodKey): void {
     this.selectedPeriod = p;
     this.cdr.markForCheck();
   }
 
+  /**
+   * Updates the selected metric for analysis.
+   *
+   * @param {MetricKey} m - New metric key.
+   */
   setMetric(m: MetricKey): void {
     this.selectedMetric = m;
     this.cdr.markForCheck();
   }
 
-  // ── Pipeline principal ─────────────────────────────────────────────────────
-
+  /**
+   * Orchestrates the complete PDF generation process.
+   * Fetches data, creates charts, assembles pages, and triggers download.
+   *
+   * @async
+   * @returns {Promise<void>}
+   */
   async generatePdf(): Promise<void> {
     this.isGenerating = true;
     this.progress = 0;
@@ -354,8 +447,12 @@ export class DataExportComponent implements OnDestroy {
     }
   }
 
-  // ── Obtener datos ──────────────────────────────────────────────────────────
-
+  /**
+   * Fetches data from all services for report generation.
+   *
+   * @private
+   * @returns {Promise<ReportData>} Promise with sensor data, vehicles, and locations.
+   */
   private fetchData(): Promise<ReportData> {
     const { start, end } = this.dateRange();
     return new Promise((resolve, reject) => {
@@ -373,11 +470,16 @@ export class DataExportComponent implements OnDestroy {
     });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  RENDERIZACIÓN DE GRÁFICOS (canvas off-screen → dataURL)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  /** Gráfico de líneas dual: contaminante + vehículos en el tiempo */
+  /**
+   * Renders dual-axis line chart: metric over time with vehicle counts.
+   * Aggregates data into time buckets and returns as PNG dataURL.
+   *
+   * @private
+   * @param {ReportData} data - Report data with sensor and vehicle information.
+   * @param {MetricOption} metric - Selected metric for Y-axis.
+   * @param {{key: PeriodKey, hours: number}} period - Analysis period.
+   * @returns {string} PNG chart image as dataURL.
+   */
   private chartTimeSeries(
     data: ReportData,
     metric: MetricOption,
@@ -464,7 +566,14 @@ export class DataExportComponent implements OnDestroy {
     });
   }
 
-  /** Matriz de correlación 9×9 dibujada a mano en un canvas */
+  /**
+   * Renders 9×9 Pearson correlation matrix using custom canvas drawing.
+   * Includes color-coding based on correlation strength.
+   *
+   * @private
+   * @param {ReportData} data - Report data for correlation computation.
+   * @returns {string} PNG chart image as dataURL.
+   */
   private chartCorrelationMatrix(data: ReportData): string {
     const { start } = this.dateRange();
     const slotMs = 3_600_000;
@@ -513,7 +622,6 @@ export class DataExportComponent implements OnDestroy {
       }
     }
 
-    // Dibujar en canvas
     const cellW = 110;
     const cellH = 70;
     const labelW = 170;
@@ -530,7 +638,6 @@ export class DataExportComponent implements OnDestroy {
 
     const pdfLabels = [...METRICS.map((m) => m.pdfLabel), 'Vehiculos'];
 
-    // encabezados columna
     ctx.fillStyle = '#374151';
     ctx.font = 'bold 22px sans-serif';
     ctx.textAlign = 'center';
@@ -542,7 +649,6 @@ export class DataExportComponent implements OnDestroy {
       ctx.restore();
     }
 
-    // filas
     for (let i = 0; i < n; i++) {
       ctx.fillStyle = '#374151';
       ctx.font = 'bold 22px sans-serif';
@@ -571,7 +677,15 @@ export class DataExportComponent implements OnDestroy {
     return canvas.toDataURL('image/png');
   }
 
-  /** Gráfico de barras de cross-correlación por lag */
+  /**
+   * Renders cross-correlation bar chart with lag offsets (−12h to +12h).
+   * Highlights best lag in orange.
+   *
+   * @private
+   * @param {ReportData} data - Report data for lag computation.
+   * @param {MetricOption} metric - Metric for correlation analysis.
+   * @returns {string} PNG chart image as dataURL.
+   */
   private chartLag(data: ReportData, metric: MetricOption): string {
     const info = this.lagResults(data, metric);
     const colors = info.lags.map((l) =>
@@ -614,7 +728,14 @@ export class DataExportComponent implements OnDestroy {
     });
   }
 
-  /** Barras agrupadas por ubicación: contaminante + vehículos */
+  /**
+   * Renders grouped bar chart comparing metric and vehicle counts by location.
+   *
+   * @private
+   * @param {ReportData} data - Report data with location information.
+   * @param {MetricOption} metric - Metric for comparison chart.
+   * @returns {string} PNG chart image as dataURL.
+   */
   private chartLocation(data: ReportData, metric: MetricOption): string {
     const rows = this.locationRows(data, metric);
     return this.offscreenChart(1400, 600, {
@@ -668,10 +789,14 @@ export class DataExportComponent implements OnDestroy {
     });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  CÓMPUTO DE DATOS
-  // ═══════════════════════════════════════════════════════════════════════════
-
+  /**
+   * Computes time-series statistics for the selected metric.
+   *
+   * @private
+   * @param {ReportData} data - Report data.
+   * @param {MetricOption} metric - Metric for statistics.
+   * @returns {Array<{label: string, value: string}>} Statistics rows.
+   */
   private tsStats(data: ReportData, metric: MetricOption): { label: string; value: string }[] {
     const vals = data.sensorData
       .map((d) => d[metric.key] as number)
@@ -693,6 +818,15 @@ export class DataExportComponent implements OnDestroy {
     ];
   }
 
+  /**
+   * Computes cross-correlation lag analysis (−12h to +12h).
+   * Returns best lag, interpretation text, and top 5 results.
+   *
+   * @private
+   * @param {ReportData} data - Report data.
+   * @param {MetricOption} metric - Metric for lag analysis.
+   * @returns {Object} Lag results with best, interpretation, and top 5.
+   */
   private lagResults(
     data: ReportData,
     metric: MetricOption,
@@ -764,6 +898,14 @@ export class DataExportComponent implements OnDestroy {
     };
   }
 
+  /**
+   * Computes per-location statistics ranked by average metric value.
+   *
+   * @private
+   * @param {ReportData} data - Report data with location information.
+   * @param {MetricOption} metric - Metric for location statistics.
+   * @returns {Array} Location rows with avg, min, max, vehicle count, and sample count.
+   */
   private locationRows(
     data: ReportData,
     metric: MetricOption,
@@ -791,10 +933,19 @@ export class DataExportComponent implements OnDestroy {
       .sort((a, b) => b.avg - a.avg);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  PÁGINAS DEL PDF
-  // ═══════════════════════════════════════════════════════════════════════════
-
+  /**
+   * Renders cover page with MOVE branding, logo, and report metadata.
+   *
+   * @private
+   * @param {jsPDF} doc - jsPDF document instance.
+   * @param {string} logo - Logo image as dataURL.
+   * @param {MetricOption} metric - Selected metric for title badge.
+   * @param {{key: PeriodKey, label: string}} period - Analysis period.
+   * @param {Date} start - Report start date.
+   * @param {Date} end - Report end date.
+   * @param {number} pw - Page width in mm.
+   * @param {number} ph - Page height in mm.
+   */
   private pageCover(
     doc: jsPDF,
     logo: string,
@@ -805,58 +956,47 @@ export class DataExportComponent implements OnDestroy {
     pw: number,
     ph: number,
   ): void {
-    // ── Background ───────────────────────────────────────────────────────────
-    doc.setFillColor(15, 23, 42); // slate-900
+    doc.setFillColor(15, 23, 42);
     doc.rect(0, 0, pw, ph, 'F');
 
-    // ── Top green accent bar ─────────────────────────────────────────────────
-    doc.setFillColor(34, 197, 94); // green-500
+    doc.setFillColor(34, 197, 94);
     doc.rect(0, 0, pw, 7, 'F');
 
-    // ── Left green stripe ────────────────────────────────────────────────────
-    doc.setFillColor(22, 163, 74); // green-600
+    doc.setFillColor(22, 163, 74);
     doc.rect(0, 7, 5, ph - 7, 'F');
 
-    // ── Center content card ──────────────────────────────────────────────────
     const cardX = pw / 2 - 78;
     const cardW = 156;
     const cardH = 215;
-    doc.setFillColor(30, 41, 59); // slate-800
+    doc.setFillColor(30, 41, 59);
     doc.roundedRect(cardX, 40, cardW, cardH, 5, 5, 'F');
-    // green bar on top of card
     doc.setFillColor(34, 197, 94);
     doc.roundedRect(cardX, 40, cardW, 6, 5, 5, 'F');
     doc.rect(cardX, 43, cardW, 3, 'F');
 
-    // ── Logo ─────────────────────────────────────────────────────────────────
     if (logo) {
       doc.addImage(logo, 'PNG', pw / 2 - 16, 58, 32, 32);
     }
 
-    // ── MOVE title in green ───────────────────────────────────────────────────
     doc.setFontSize(54);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(34, 197, 94); // green
+    doc.setTextColor(34, 197, 94);
     doc.text('MOVE', pw / 2, 115, { align: 'center' });
 
-    // ── System subtitle ──────────────────────────────────────────────────────
     doc.setFontSize(9.5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 116, 139); // slate-500
+    doc.setTextColor(100, 116, 139);
     doc.text('Sistema de Monitoreo Ambiental', pw / 2, 124, { align: 'center' });
 
-    // ── Green divider ────────────────────────────────────────────────────────
     doc.setDrawColor(34, 197, 94);
     doc.setLineWidth(0.8);
     doc.line(pw / 2 - 46, 130, pw / 2 + 46, 130);
 
-    // ── Report title ─────────────────────────────────────────────────────────
     doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(248, 250, 252); // white-ish
+    doc.setTextColor(248, 250, 252);
     doc.text('Informe de Analisis Ambiental', pw / 2, 141, { align: 'center' });
 
-    // ── Metric pill (colored with metric color) ───────────────────────────────
     const [mR, mG, mB] = this.hexRgb(metric.color);
     doc.setFillColor(mR, mG, mB);
     doc.roundedRect(pw / 2 - 33, 147, 66, 11, 3, 3, 'F');
@@ -865,7 +1005,6 @@ export class DataExportComponent implements OnDestroy {
     doc.setTextColor(255, 255, 255);
     doc.text(`${metric.pdfLabel}  ·  ${metric.pdfUnit}`, pw / 2, 154, { align: 'center' });
 
-    // ── Detail rows ──────────────────────────────────────────────────────────
     const details: [string, string][] = [
       ['Periodo', period.label],
       ['Desde', this.fmtDate(start)],
@@ -874,7 +1013,7 @@ export class DataExportComponent implements OnDestroy {
     ];
     let dy = 170;
     for (const [lbl, val] of details) {
-      doc.setDrawColor(51, 65, 85); // slate-700 separator
+      doc.setDrawColor(51, 65, 85);
       doc.setLineWidth(0.2);
       doc.line(cardX + 10, dy - 3, cardX + cardW - 10, dy - 3);
       doc.setFontSize(7.5);
@@ -887,7 +1026,6 @@ export class DataExportComponent implements OnDestroy {
       dy += 11;
     }
 
-    // ── Footer note ───────────────────────────────────────────────────────────
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(71, 85, 105);
@@ -896,9 +1034,19 @@ export class DataExportComponent implements OnDestroy {
     });
   }
 
+  /**
+   * Renders page header with title, subtitle, and decorative accent bar.
+   *
+   * @private
+   * @param {jsPDF} doc - jsPDF document instance.
+   * @param {string} title - Page title.
+   * @param {string} subtitle - Page subtitle.
+   * @param {number} mx - Left margin in mm.
+   * @param {number} my - Top margin in mm.
+   * @returns {number} Y-position after header.
+   */
   private pageHeader(doc: jsPDF, title: string, subtitle: string, mx: number, my: number): number {
-    // Green left accent bar
-    doc.setFillColor(34, 197, 94); // green-500
+    doc.setFillColor(34, 197, 94);
     doc.rect(mx, my, 3.5, 16, 'F');
 
     doc.setFontSize(17);
@@ -918,22 +1066,40 @@ export class DataExportComponent implements OnDestroy {
     return my + 27;
   }
 
+  /**
+   * Renders footer with document info and page number.
+   *
+   * @private
+   * @param {jsPDF} doc - jsPDF document instance.
+   * @param {number} pw - Page width in mm.
+   * @param {number} ph - Page height in mm.
+   * @param {number} pageNum - Current page number.
+   */
   private pageFooter(doc: jsPDF, pw: number, ph: number, pageNum: number): void {
-    // Dark footer bar
-    doc.setFillColor(15, 23, 42); // slate-900
+    doc.setFillColor(15, 23, 42);
     doc.rect(0, ph - 11, pw, 11, 'F');
-    // Green left accent strip
-    doc.setFillColor(34, 197, 94); // green-500
+    doc.setFillColor(34, 197, 94);
     doc.rect(0, ph - 11, 5, 11, 'F');
 
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(148, 163, 184); // slate-400
+    doc.setTextColor(148, 163, 184);
     doc.text('MOVE — Sistema de Monitoreo Ambiental', 10, ph - 4.5);
-    doc.setTextColor(34, 197, 94); // green
+    doc.setTextColor(34, 197, 94);
     doc.text(`Pagina ${pageNum} de 5`, pw - 10, ph - 4.5, { align: 'right' });
   }
 
+  /**
+   * Renders a statistics row with multiple columns.
+   *
+   * @private
+   * @param {jsPDF} doc - jsPDF document instance.
+   * @param {number} mx - Left margin in mm.
+   * @param {number} y - Top position in mm.
+   * @param {number} cw - Content width in mm.
+   * @param {Array<{label: string, value: string}>} stats - Statistics to display.
+   * @returns {number} Y-position after stats row.
+   */
   private statsRow(
     doc: jsPDF,
     mx: number,
@@ -944,23 +1110,19 @@ export class DataExportComponent implements OnDestroy {
     const colW = cw / stats.length;
     const boxH = 27;
 
-    // Light green background
-    doc.setFillColor(240, 253, 244); // green-50
+    doc.setFillColor(240, 253, 244);
     doc.roundedRect(mx, y, cw, boxH, 3, 3, 'F');
-    // Top green accent bar
-    doc.setFillColor(34, 197, 94); // green-500
+    doc.setFillColor(34, 197, 94);
     doc.roundedRect(mx, y, cw, 4, 3, 3, 'F');
-    doc.rect(mx, y + 2, cw, 2, 'F'); // fill lower arc of accent
-    // Border
-    doc.setDrawColor(187, 247, 208); // green-200
+    doc.rect(mx, y + 2, cw, 2, 'F');
+    doc.setDrawColor(187, 247, 208);
     doc.setLineWidth(0.3);
     doc.roundedRect(mx, y, cw, boxH, 3, 3, 'S');
 
     for (let i = 0; i < stats.length; i++) {
       const cx = mx + i * colW + colW / 2;
-      // Column divider
       if (i > 0) {
-        doc.setDrawColor(167, 243, 208); // green-200
+        doc.setDrawColor(167, 243, 208);
         doc.setLineWidth(0.3);
         doc.line(mx + i * colW, y + 6, mx + i * colW, y + boxH - 3);
       }
@@ -970,7 +1132,7 @@ export class DataExportComponent implements OnDestroy {
       doc.text(stats[i].label, cx, y + 13, { align: 'center' });
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(22, 163, 74); // green-600
+      doc.setTextColor(22, 163, 74);
       doc.text(stats[i].value, cx, y + 22, { align: 'center' });
     }
 
@@ -978,6 +1140,17 @@ export class DataExportComponent implements OnDestroy {
     return y + boxH + 6;
   }
 
+  /**
+   * Renders a table of top 5 lag results with color-coded values.
+   *
+   * @private
+   * @param {jsPDF} doc - jsPDF document instance.
+   * @param {number} mx - Left margin in mm.
+   * @param {number} y - Top position in mm.
+   * @param {number} cw - Content width in mm.
+   * @param {Array<{lag: number, r: number}>} top5 - Top 5 lag results.
+   * @returns {number} Y-position after table.
+   */
   private lagTable(
     doc: jsPDF,
     mx: number,
@@ -985,19 +1158,17 @@ export class DataExportComponent implements OnDestroy {
     cw: number,
     top5: { lag: number; r: number }[],
   ): number {
-    // Section title
     doc.setFontSize(9.5);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 163, 74); // green-600
+    doc.setTextColor(22, 163, 74);
     doc.text('Top 5 rezagos con mayor correlacion', mx, y);
     y += 6;
 
-    // Dark header bar
-    doc.setFillColor(15, 23, 42); // slate-900
+    doc.setFillColor(15, 23, 42);
     doc.rect(mx, y, cw, 8, 'F');
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(148, 163, 184); // slate-400
+    doc.setTextColor(148, 163, 184);
     doc.text('Rezago', mx + 5, y + 5.5);
     doc.text('Coeficiente r', mx + 46, y + 5.5);
     doc.text('Intensidad', mx + 96, y + 5.5);
@@ -1007,7 +1178,6 @@ export class DataExportComponent implements OnDestroy {
     doc.setFont('helvetica', 'normal');
     for (let i = 0; i < top5.length; i++) {
       const lag = top5[i];
-      // Alternating row background
       doc.setFillColor(i % 2 === 0 ? 240 : 249, i % 2 === 0 ? 253 : 250, i % 2 === 0 ? 244 : 251);
       doc.rect(mx, y - 1, cw, 7.5, 'F');
 
@@ -1015,13 +1185,10 @@ export class DataExportComponent implements OnDestroy {
       doc.setTextColor(17, 24, 39);
       doc.text(`${lag.lag > 0 ? '+' : ''}${lag.lag} h`, mx + 5, y + 4.5);
 
-      // Color-code the r value
       const absR = Math.abs(lag.r);
-      if (absR > 0.7)
-        doc.setTextColor(22, 163, 74); // green
-      else if (absR > 0.4)
-        doc.setTextColor(217, 119, 6); // amber
-      else doc.setTextColor(107, 114, 128); // gray
+      if (absR > 0.7) doc.setTextColor(22, 163, 74);
+      else if (absR > 0.4) doc.setTextColor(217, 119, 6);
+      else doc.setTextColor(107, 114, 128);
       doc.setFont('helvetica', 'bold');
       doc.text(lag.r.toFixed(4), mx + 46, y + 4.5);
       doc.setFont('helvetica', 'normal');
@@ -1037,13 +1204,25 @@ export class DataExportComponent implements OnDestroy {
       y += 7.5;
     }
 
-    // Bottom border
-    doc.setDrawColor(187, 247, 208); // green-200
+    doc.setDrawColor(187, 247, 208);
     doc.setLineWidth(0.3);
     doc.line(mx, y, mx + cw, y);
     return y + 6;
   }
 
+  /**
+   * Renders a table of location statistics ranked by average metric value.
+   * Includes medal styling for top 3 locations.
+   *
+   * @private
+   * @param {jsPDF} doc - jsPDF document instance.
+   * @param {number} mx - Left margin in mm.
+   * @param {number} y - Top position in mm.
+   * @param {number} cw - Content width in mm.
+   * @param {Array} rows - Location data rows.
+   * @param {MetricOption} metric - Metric for unit display.
+   * @returns {number} Y-position after table.
+   */
   private locationTable(
     doc: jsPDF,
     mx: number,
@@ -1059,19 +1238,17 @@ export class DataExportComponent implements OnDestroy {
     }[],
     metric: MetricOption,
   ): number {
-    // Section title
     doc.setFontSize(9.5);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 163, 74); // green-600
+    doc.setTextColor(22, 163, 74);
     doc.text('Ranking de ubicaciones', mx, y);
     y += 6;
 
-    // Dark header bar
-    doc.setFillColor(15, 23, 42); // slate-900
+    doc.setFillColor(15, 23, 42);
     doc.rect(mx, y, cw, 8, 'F');
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(148, 163, 184); // slate-400
+    doc.setTextColor(148, 163, 184);
     const c = [mx + 4, mx + 16, mx + 72, mx + 106, mx + 134, mx + 158];
     doc.text('#', c[0], y + 5.5);
     doc.text('Ubicacion', c[1], y + 5.5);
@@ -1083,14 +1260,14 @@ export class DataExportComponent implements OnDestroy {
 
     const [mR, mG, mB] = this.hexRgb(metric.color);
     const medalBg: [number, number, number][] = [
-      [254, 252, 232], // amber-50  (gold)
-      [248, 250, 252], // slate-50  (silver)
-      [253, 244, 234], // orange-50 (bronze)
+      [254, 252, 232],
+      [248, 250, 252],
+      [253, 244, 234],
     ];
     const medalFg: [number, number, number][] = [
-      [234, 179, 8], // amber
-      [148, 163, 184], // slate
-      [180, 120, 68], // brown
+      [234, 179, 8],
+      [148, 163, 184],
+      [180, 120, 68],
     ];
 
     doc.setFont('helvetica', 'normal');
@@ -1099,7 +1276,6 @@ export class DataExportComponent implements OnDestroy {
       const row = rows[i];
       const rowH = 7.5;
 
-      // Row background
       if (i < 3) {
         const [br, bg, bb] = medalBg[i];
         doc.setFillColor(br, bg, bb);
@@ -1108,14 +1284,12 @@ export class DataExportComponent implements OnDestroy {
       }
       doc.rect(mx, y - 1, cw, rowH, 'F');
 
-      // Left accent bar for top 3
       if (i < 3) {
         const [ar, ag, ab] = medalFg[i];
         doc.setFillColor(ar, ag, ab);
         doc.rect(mx, y - 1, 3, rowH, 'F');
       }
 
-      // Rank badge
       if (i < 3) {
         const [br, bg, bb] = medalFg[i];
         doc.setFillColor(br, bg, bb);
@@ -1124,7 +1298,7 @@ export class DataExportComponent implements OnDestroy {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(255, 255, 255);
         doc.text(`${i + 1}`, c[0] + 3, y + 3.5, { align: 'center' });
-        doc.setFont('helvetica', i < 3 ? 'bold' : 'normal');
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(8.5);
       } else {
         doc.setFont('helvetica', 'normal');
@@ -1135,7 +1309,6 @@ export class DataExportComponent implements OnDestroy {
       doc.setTextColor(17, 24, 39);
       doc.text(row.label.substring(0, 26), c[1], y + 4.5);
 
-      // Avg in metric color
       doc.setFillColor(mR, mG, mB);
       doc.setTextColor(mR, mG, mB);
       doc.setFont('helvetica', 'bold');
@@ -1146,7 +1319,6 @@ export class DataExportComponent implements OnDestroy {
       doc.text(`${row.min}`, c[3], y + 4.5);
       doc.text(`${row.max}`, c[4], y + 4.5);
 
-      // Vehicles in indigo
       doc.setTextColor(99, 102, 241);
       doc.setFont('helvetica', 'bold');
       doc.text(`${row.vehicles}`, c[5], y + 4.5);
@@ -1155,29 +1327,46 @@ export class DataExportComponent implements OnDestroy {
       y += rowH;
     }
 
-    // Bottom border
-    doc.setDrawColor(187, 247, 208); // green-200
+    doc.setDrawColor(187, 247, 208);
     doc.setLineWidth(0.3);
     doc.line(mx, y, mx + cw, y);
     return y + 6;
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  UTILIDADES
-  // ═══════════════════════════════════════════════════════════════════════════
-
+  /**
+   * Updates progress tracking during PDF generation.
+   *
+   * @private
+   * @param {number} pct - Progress percentage (0-100).
+   * @param {string} msg - Status message.
+   */
   private tick(pct: number, msg: string): void {
     this.progress = pct;
     this.progressMsg = msg;
     this.cdr.markForCheck();
   }
 
+  /**
+   * Computes start and end dates for selected period.
+   *
+   * @private
+   * @returns {{start: Date, end: Date}} Date range.
+   */
   private dateRange(): { start: Date; end: Date } {
     const end = new Date();
     const hours = PERIODS.find((p) => p.key === this.selectedPeriod)!.hours;
     return { start: new Date(end.getTime() - hours * 3_600_000), end };
   }
 
+  /**
+   * Creates array of time bucket boundaries.
+   *
+   * @private
+   * @param {Date} start - Start date.
+   * @param {Date} end - End date.
+   * @param {number} ms - Bucket size in milliseconds.
+   * @returns {Date[]} Array of bucket boundary dates.
+   */
   private timeBuckets(start: Date, end: Date, ms: number): Date[] {
     const out: Date[] = [];
     let t = start.getTime();
@@ -1188,12 +1377,27 @@ export class DataExportComponent implements OnDestroy {
     return out;
   }
 
+  /**
+   * Formats bucket boundary date for chart labels.
+   *
+   * @private
+   * @param {Date} d - Date to format.
+   * @param {PeriodKey} p - Period for formatting context.
+   * @returns {string} Formatted label.
+   */
   private bucketLabel(d: Date, p: PeriodKey): string {
     if (p === '24h') return d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
     if (p === '7d') return d.toLocaleDateString('es', { weekday: 'short', hour: '2-digit' });
     return d.toLocaleDateString('es', { day: '2-digit', month: 'short' });
   }
 
+  /**
+   * Formats date for PDF display.
+   *
+   * @private
+   * @param {Date} d - Date to format.
+   * @returns {string} Formatted date string.
+   */
   private fmtDate(d: Date): string {
     return d.toLocaleDateString('es', {
       year: 'numeric',
@@ -1204,6 +1408,14 @@ export class DataExportComponent implements OnDestroy {
     });
   }
 
+  /**
+   * Computes Pearson correlation coefficient.
+   *
+   * @private
+   * @param {number[]} x - First variable.
+   * @param {number[]} y - Second variable.
+   * @returns {number} Correlation coefficient.
+   */
   private pearson(x: number[], y: number[]): number {
     const n = Math.min(x.length, y.length);
     if (n < 3) return 0;
@@ -1223,6 +1435,13 @@ export class DataExportComponent implements OnDestroy {
     return den === 0 ? 0 : (n * sxy - sx * sy) / den;
   }
 
+  /**
+   * Returns hex color for correlation strength.
+   *
+   * @private
+   * @param {number} r - Correlation coefficient.
+   * @returns {string} Hex color string.
+   */
   private corrColor(r: number): string {
     if (r >= 0.8) return '#065f46';
     if (r >= 0.6) return '#059669';
@@ -1235,6 +1454,15 @@ export class DataExportComponent implements OnDestroy {
     return '#1e3a8a';
   }
 
+  /**
+   * Renders chart to off-screen canvas and returns PNG dataURL.
+   *
+   * @private
+   * @param {number} w - Canvas width in pixels.
+   * @param {number} h - Canvas height in pixels.
+   * @param {ChartConfiguration} cfg - Chart.js configuration.
+   * @returns {string} PNG image as dataURL.
+   */
   private offscreenChart(w: number, h: number, cfg: ChartConfiguration): string {
     const canvas = document.createElement('canvas');
     canvas.width = w;
@@ -1248,7 +1476,13 @@ export class DataExportComponent implements OnDestroy {
     return url;
   }
 
-  /** Converts a CSS hex color string to an [R, G, B] tuple for jsPDF. */
+  /**
+   * Converts CSS hex color to RGB tuple for jsPDF.
+   *
+   * @private
+   * @param {string} hex - Hex color string (e.g., '#ff0000').
+   * @returns {[number, number, number]} RGB tuple.
+   */
   private hexRgb(hex: string): [number, number, number] {
     const h = hex.replace('#', '');
     return [
@@ -1258,6 +1492,13 @@ export class DataExportComponent implements OnDestroy {
     ];
   }
 
+  /**
+   * Loads logo image from assets and converts to canvas dataURL.
+   *
+   * @private
+   * @async
+   * @returns {Promise<string>} Logo as PNG dataURL, or empty string on failure.
+   */
   private async loadLogo(): Promise<string> {
     try {
       return await new Promise<string>((resolve) => {

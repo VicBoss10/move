@@ -9,6 +9,30 @@ import { LabelComponent } from '../../form/label/label.component';
 import { InputFieldComponent } from '../../form/input/input-field.component';
 import { CheckboxComponent } from '../../form/input/checkbox.component';
 
+/**
+ * SignupFormComponent (Presentational Component)
+ *
+ * User registration form with email, password, and name inputs.
+ * Handles account creation and automatic login on successful registration.
+ *
+ * Features:
+ * - First and last name input fields
+ * - Email and password inputs
+ * - Password visibility toggle
+ * - Terms and conditions checkbox
+ * - Loading state during registration
+ * - Backend error message display
+ * - Automatic login after successful registration
+ * - Navigation to dashboard on success
+ * - Links to signin form
+ *
+ * @selector app-signup-form
+ * @standalone true
+ * @imports RouterModule, FormsModule, LabelComponent, InputFieldComponent, CheckboxComponent
+ *
+ * @example
+ * <app-signup-form />
+ */
 @Component({
   selector: 'app-signup-form',
   imports: [RouterModule, FormsModule, LabelComponent, InputFieldComponent, CheckboxComponent],
@@ -16,28 +40,81 @@ import { CheckboxComponent } from '../../form/input/checkbox.component';
   styles: ``,
 })
 export class SignupFormComponent {
+  /**
+   * User's first name input.
+   * @type {string}
+   */
   fname = '';
+
+  /**
+   * User's last name input.
+   * @type {string}
+   */
   lname = '';
+
+  /**
+   * User's email address input.
+   * @type {string}
+   */
   email = '';
+
+  /**
+   * User's password input.
+   * @type {string}
+   */
   password = '';
+
+  /**
+   * Password visibility toggle state.
+   * @type {boolean}
+   */
   showPassword = false;
+
+  /**
+   * Terms and conditions checkbox agreement state.
+   * @type {boolean}
+   */
   isChecked = false;
+
+  /**
+   * Error message displayed to user on registration failure.
+   * @type {string}
+   */
   errorMessage = '';
+
+  /**
+   * Loading state during registration request.
+   * @type {boolean}
+   */
   loading = false;
 
+  /**
+   * Initializes the component with service dependencies.
+   * @param {AuthService} auth - Authentication service for login
+   * @param {ApiService} api - API service for user registration
+   * @param {Router} router - Angular router for navigation
+   */
   constructor(
     private auth: AuthService,
     private api: ApiService,
     private router: Router,
   ) {}
 
+  /**
+   * Toggles password input visibility between text and password type.
+   * @returns {void}
+   */
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
   }
 
+  /**
+   * Submits registration data to API, then automatically logs in the new user.
+   * Displays backend validation errors if registration fails.
+   * Navigates to dashboard on successful registration and login.
+   * @returns {void}
+   */
   onSignUp(): void {
-    // Client-side validation
-    // Submit to backend and show backend errors if any. Keep client-side checks minimal.
     this.loading = true;
     this.errorMessage = '';
     const registerData = {
@@ -53,7 +130,6 @@ export class SignupFormComponent {
       .subscribe({
         next: () => this.router.navigate(['/dashboard/dashboard']),
         error: (err) => {
-          // Try to show backend validation message if present
           try {
             const msg = err?.error?.message || err?.error?.error_description || err?.message;
             this.errorMessage =

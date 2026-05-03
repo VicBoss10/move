@@ -6,7 +6,8 @@ import { SensorDataService } from '../../../../core/services/sensor-data.service
 import { SensorData } from '../../../../core/models/sensor-data.model';
 
 /**
- * Interface para estadísticas de gas
+ * GasStats aggregation data model for single gas metric.
+ * @interface GasStats
  */
 interface GasStats {
   symbol: string;
@@ -19,16 +20,24 @@ interface GasStats {
 }
 
 /**
- * GasesStatsTableComponent
+ * GasesStatsTableComponent (Presentation Component)
  *
- * Componente que muestra tabla con estadísticas dinámicas de los 3 gases:
- * CO, NO₂, NH₃. Obtiene datos en tiempo real del backend.
+ * Displays a statistics table for three pollutant gases: CO, NO₂, and NH₃.
+ *
+ * Features:
+ * - Three-row table: one row per gas with symbol, name, and unit
+ * - Five statistics columns: current (latest), minimum, maximum, average, all from historical data
+ * - Current value highlighted with distinct styling; average in blue
+ * - Unit-aware display: CO (ppm), NO₂ (µg/m³), NH₃ (ppb)
+ * - Real-time aggregation from all historical sensor data via backend query
+ * - Average calculation: rounded to 1 decimal place for display
+ * - Responsive table: scrollable on mobile, auto layout on larger screens
+ * - OnPush change detection with async pipe for subscription
+ * - Fallback: displays zero-state on data load error
  *
  * @selector app-gases-stats-table
  * @standalone true
  * @imports CommonModule
- * @returns Tabla con estadísticas de gases
- *
  * @example
  * <app-gases-stats-table />
  */
@@ -41,10 +50,16 @@ interface GasStats {
 })
 export class GasesStatsTableComponent {
   /**
-   * Observable que emite estadísticas de cada gas
+   * Observable stream of aggregated gas statistics for three pollutants.
+   * @type {Observable<GasStats[]>}
    */
   gasesStats$!: Observable<GasStats[]>;
 
+  /**
+   * Default zero-state statistics for three gases: CO, NO₂, NH₃.
+   * @type {GasStats[]}
+   * @private
+   */
   private readonly defaultStats: GasStats[] = [
     {
       symbol: 'CO',
@@ -75,12 +90,20 @@ export class GasesStatsTableComponent {
     },
   ];
 
+  /**
+   * Initializes component with service dependency and sets up stats observable.
+   * @param {SensorDataService} sensorDataService - Service for querying historical gas sensor data
+   */
   constructor(private sensorDataService: SensorDataService) {
     this.initializeGasStats();
   }
 
   /**
-   * Inicializa estadísticas de gases desde el servicio
+   * Transforms all sensor data into aggregated statistics observable for each gas.
+   * Extracts values per gas, computes current (latest), min, max, and average.
+   * Returns zero-state on empty or invalid data.
+   * @private
+   * @returns {void}
    */
   private initializeGasStats(): void {
     this.gasesStats$ = this.sensorDataService.getAll().pipe(
@@ -89,7 +112,6 @@ export class GasesStatsTableComponent {
           return this.defaultStats;
         }
 
-        // Extraer valores de cada gas
         const coValues = sensorData.map((d) => d.co || 0);
         const no2Values = sensorData.map((d) => d.no2 || 0);
         const nh3Values = sensorData.map((d) => d.nh3 || 0);
@@ -119,7 +141,7 @@ export class GasesStatsTableComponent {
         ];
       }),
       catchError((error) => {
-        console.error('Error cargando estadísticas de gases:', error);
+        console.error('Error loading gas statistics:', error);
         return of(this.defaultStats);
       }),
       shareReplay(1),
@@ -127,14 +149,20 @@ export class GasesStatsTableComponent {
   }
 
   /**
-   * Obtiene el último valor de un array
+   * Extracts the last value from a numeric array.
+   * @private
+   * @param {number[]} values - Array of numeric values
+   * @returns {number} Last value in array, or 0 if empty
    */
   private getLatestValue(values: number[]): number {
     return values.length > 0 ? values[values.length - 1] : 0;
   }
 
   /**
-   * Calcula el promedio de un array
+   * Computes arithmetic mean of numeric array, rounded to 1 decimal place.
+   * @private
+   * @param {number[]} values - Array of numeric values to average
+   * @returns {number} Mean value rounded to 1 decimal, or 0 if empty
    */
   private calculateAverage(values: number[]): number {
     if (values.length === 0) return 0;

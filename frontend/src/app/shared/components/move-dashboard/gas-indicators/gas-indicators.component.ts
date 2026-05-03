@@ -12,16 +12,21 @@ import { SensorData } from '../../../../core/models/sensor-data.model';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 
 /**
- * Indicador de gas con información de niveles y umbrales de calidad
+ * GasIndicator interface for gas concentration gauge display.
  * @interface GasIndicator
- * @property {string} label - Nombre del gas (CO2, CO, NO2, NH3)
- * @property {number} value - Valor actual medido
- * @property {string} unit - Unidad de medida (ppm, ppb)
- * @property {number} min - Valor mínimo de la escala
- * @property {number} max - Valor máximo de la escala
- * @property {{good: number, moderate: number, poor: number}} threshold - Umbrales de calidad
- * @property {'good' | 'moderate' | 'poor'} status - Estado actual
- * @property {string} color - Color hexadecimal para visualización
+ * @property {string} label - Gas name (CO2, CO, NO2, NH3)
+ * @property {number} value - Current measured value
+ * @property {string} unit - Unit of measurement (ppm, ppb)
+ * @property {number} min - Minimum scale value
+ * @property {number} max - Maximum scale value
+ * @property {{good: number, moderate: number, poor: number}} threshold - Quality thresholds
+ * @property {'good' | 'moderate' | 'poor' | 'critical' | 'no-data'} status - Current status
+ * @property {string} statusLabel - Localized status label
+ * @property {string} statusBgClass - Tailwind background color class
+ * @property {string} statusTextClass - Tailwind text color class
+ * @property {string} color - Hex color for visualization
+ * @property {EnvironmentMetricKey} metricKey - Metric key reference
+ * @property {number} gaugePercentage - Gauge fill percentage (0-100)
  */
 interface GasIndicator {
   label: string;
@@ -42,22 +47,27 @@ interface GasIndicator {
 /**
  * GasIndicatorsComponent
  *
- * Componente que muestra 4 indicadores de gases como gauges SVG semicirculares.
- * Visualiza CO2, CO, NO2 y NH3 con porcentaje, estado y umbral visual.
- * Conectado a SensorDataService para obtener datos reales del backend.
+ * Displays four circular SVG gauge visualizations for real-time gas concentrations: CO₂, CO, NO₂, and NH₃.
+ * Each gauge shows current value, measurement unit, animated stroke progress, and status badge. Connected
+ * to SensorDataService for real-time data and ThresholdsService for threshold configurations.
  *
- * Características:
- * - Gauges semicirculares SVG
- * - Código de color según umbrales
- * - Datos actualizados desde el backend
- * - Dark mode support
- * - Responsivo
+ * Features:
+ * - Four SVG circular gauges with dynamic stroke-dashoffset progress animation
+ * - Real-time gas values (CO₂, CO, NO₂, NH₃) with threshold-based evaluation
+ * - Threshold-based color coding: green (good), yellow (moderate), orange (poor), red (critical)
+ * - Gauge percentage calculation based on scale min/max and current threshold config
+ * - Status legend (status-legend Observable) synchronized with current thresholds from ThresholdsService
+ * - Helper methods: getPercentage, getCircumference, getStrokeDashoffset for SVG calculation
+ * - Reactive data combining latest sensor data with dynamic threshold config via combineLatest
+ * - Dark mode support with Tailwind dark: prefix
+ * - Responsive grid layout: 2 columns mobile, 4 columns on sm and up
+ * - Error handling with default empty indicators array
+ * - shareReplay pattern for subscription efficiency
+ * - OnPush change detection for performance
  *
  * @selector app-gas-indicators
  * @standalone true
  * @imports CommonModule
- * @returns Indicadores de gases
- *
  * @example
  * <app-gas-indicators />
  */
@@ -70,17 +80,18 @@ interface GasIndicator {
 })
 export class GasIndicatorsComponent {
   /**
-   * Leyenda de estados reactiva basada en los umbrales actuales del servicio.
+   * Observable emitting status legend (color and label pairs) synchronized with current thresholds
    */
   statusLegend$: Observable<{ color: string; label: string }[]>;
 
   /**
-   * Observable que emite los indicadores de gases con datos reactivos
+   * Observable emitting array of four gas indicators (CO2, CO, NO2, NH3) with gauges and status
    */
   gasIndicators$!: Observable<GasIndicator[]>;
 
   /**
-   * Indicadores por defecto cuando no hay datos
+   * Default empty indicators array for error fallback
+   * @private
    */
   private readonly defaultIndicators: GasIndicator[] = [];
 
@@ -99,8 +110,7 @@ export class GasIndicatorsComponent {
   }
 
   /**
-   * Inicializa los indicadores de gases desde el servicio,
-   * reaccionando a cambios de umbrales
+   * Initializes gas indicators observable combining latest sensor data with dynamic threshold config
    * @private
    */
   private initializeGasIndicators(): void {
@@ -144,21 +154,37 @@ export class GasIndicatorsComponent {
         return indicators;
       }),
       catchError((error) => {
-        console.error('Error cargando datos de gases:', error);
+        console.error('Error loading gas indicators:', error);
         return of(this.defaultIndicators);
       }),
       shareReplay(1),
     );
   }
 
+  /**
+   * Returns gauge percentage for SVG stroke-dashoffset calculation
+   * @param gas Gas indicator with gauge percentage value
+   * @returns Percentage value (0-100)
+   */
   getPercentage(gas: GasIndicator): number {
     return gas.gaugePercentage;
   }
 
+  /**
+   * Calculates SVG circle circumference for stroke animation
+   * @param radius Circle radius (default 45)
+   * @returns Circumference value for stroke calculation
+   */
   getCircumference(radius: number = 45): number {
     return 2 * Math.PI * radius;
   }
 
+  /**
+   * Calculates SVG stroke-dashoffset for animated gauge progress indicator
+   * @param percentage Current percentage fill (0-100)
+   * @param radius Circle radius (default 45)
+   * @returns Stroke-dashoffset value for animation
+   */
   getStrokeDashoffset(percentage: number, radius: number = 45): number {
     const circumference = 2 * Math.PI * radius;
     return circumference * (1 - Math.max(0, Math.min(100, percentage)) / 100);

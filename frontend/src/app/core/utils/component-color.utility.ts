@@ -1,10 +1,18 @@
 /**
- * Utility para centralizar toda la lógica de colores y estados de los componentes
- * Evita duplicación de métodos repetitivos en múltiples componentes
+ * Centralized color utility for component styling based on status and health states.
+ * Provides Tailwind CSS class selections for consistent theming across the application.
+ * Supports both light and dark mode through Tailwind dark mode classes.
+ *
+ * @class ComponentColorUtility
  */
 export class ComponentColorUtility {
   /**
-   * Retorna el color de fondo y borde para un status
+   * Returns background and border Tailwind classes for air quality status.
+   * Maps good/moderate/unhealthy states to green/yellow/red color palettes.
+   *
+   * @static
+   * @param {string} status - Air quality status (good, moderate, unhealthy).
+   * @returns {string} Tailwind classes for background and border styling.
    */
   static getStatusBgColor(status: string): string {
     switch (status) {
@@ -20,7 +28,12 @@ export class ComponentColorUtility {
   }
 
   /**
-   * Retorna el color del texto para un status
+   * Returns text color Tailwind classes for air quality status.
+   * Provides readable text colors that match the status background colors.
+   *
+   * @static
+   * @param {string} status - Air quality status (good, moderate, unhealthy).
+   * @returns {string} Tailwind classes for text color styling.
    */
   static getStatusTextColor(status: string): string {
     switch (status) {
@@ -36,7 +49,12 @@ export class ComponentColorUtility {
   }
 
   /**
-   * Retorna el color de fondo del ícono para un status
+   * Returns icon background Tailwind classes for air quality status.
+   * Creates a subtle background container for status indicator icons.
+   *
+   * @static
+   * @param {string} status - Air quality status (good, moderate, unhealthy).
+   * @returns {string} Tailwind classes for icon background styling.
    */
   static getStatusIconBgColor(status: string): string {
     switch (status) {
@@ -52,7 +70,12 @@ export class ComponentColorUtility {
   }
 
   /**
-   * Retorna el color del ícono para un status
+   * Returns icon color Tailwind classes for air quality status.
+   * Matches icon colors to the status visual hierarchy.
+   *
+   * @static
+   * @param {string} status - Air quality status (good, moderate, unhealthy).
+   * @returns {string} Tailwind classes for icon color styling.
    */
   static getStatusIconColor(status: string): string {
     switch (status) {
@@ -68,7 +91,12 @@ export class ComponentColorUtility {
   }
 
   /**
-   * Retorna el color de fondo y borde para un status normal/warning/critical
+   * Returns background and border Tailwind classes for device health status.
+   * Maps normal/warning/critical states to green/yellow/red color palettes.
+   *
+   * @static
+   * @param {string} status - Device health status (normal, warning, critical).
+   * @returns {string} Tailwind classes for background and border styling.
    */
   static getHealthBgColor(status: string): string {
     switch (status) {
@@ -84,7 +112,12 @@ export class ComponentColorUtility {
   }
 
   /**
-   * Retorna el color del texto para un status normal/warning/critical
+   * Returns text color Tailwind classes for device health status.
+   * Provides readable text colors matching the health status.
+   *
+   * @static
+   * @param {string} status - Device health status (normal, warning, critical).
+   * @returns {string} Tailwind classes for text color styling.
    */
   static getHealthTextColor(status: string): string {
     switch (status) {
@@ -100,7 +133,12 @@ export class ComponentColorUtility {
   }
 
   /**
-   * Retorna el color del ícono de fondo para un status normal/warning/critical
+   * Returns icon background Tailwind classes for device health status.
+   * Creates subtle background containers for health indicator icons.
+   *
+   * @static
+   * @param {string} status - Device health status (normal, warning, critical).
+   * @returns {string} Tailwind classes for icon background styling.
    */
   static getHealthIconBgColor(status: string): string {
     switch (status) {
@@ -116,7 +154,12 @@ export class ComponentColorUtility {
   }
 
   /**
-   * Retorna el color para un trend normal/warning/critical
+   * Returns trend color Tailwind classes for device health status.
+   * Used to visualize health trends and changes in device status.
+   *
+   * @static
+   * @param {string} status - Device health status (normal, warning, critical).
+   * @returns {string} Tailwind classes for trend color styling.
    */
   static getHealthTrendColor(status: string): string {
     switch (status) {

@@ -15,32 +15,34 @@ import {
 import { QueryParamsBuilder } from '../utils/query-params.builder';
 
 /**
- * Servicio para gestionar Dispositivos (Cámaras, Sensores)
- * Hereda funcionalidad CRUD base de BaseDataService
- * Agrega búsqueda avanzada y cálculo de estadísticas
+ * Device management service for cameras, sensors, and thermal devices.
+ * Extends BaseDataService for CRUD operations and adds advanced search and statistics.
  *
- * @service
- * @providedIn root
+ * @class DeviceService
+ * @extends BaseDataService<Device>
+ * @injectable root
  */
 @Injectable({
   providedIn: 'root',
 })
 export class DeviceService extends BaseDataService<Device> {
   /**
-   * Endpoint del API para dispositivos
+   * API endpoint path for device resources.
+   * @protected
    */
   protected endpoint = 'devices';
 
   constructor(apiService: ApiService) {
     super(apiService);
-    // Datos de dispositivos son relativamente estáticos - TTL de 15 minutos
     this.cacheDuration = 15 * 60 * 1000;
   }
 
   /**
-   * Busca dispositivos con criterios específicos
-   * @param criteria - Criterios de búsqueda
-   * @returns Observable<Device[]>
+   * Searches for devices matching the provided criteria.
+   * Supports filtering by device type, operational state, and location.
+   *
+   * @param {DeviceSearchCriteria} criteria - Search filter criteria.
+   * @returns {Observable<Device[]>} Observable with matching devices.
    */
   search(criteria: DeviceSearchCriteria): Observable<Device[]> {
     const queryParams = new QueryParamsBuilder()
@@ -55,14 +57,17 @@ export class DeviceService extends BaseDataService<Device> {
         this.clearServiceError();
       }),
       catchError((error) => {
-        this.setServiceError(error, 'Error al buscar dispositivos');
+        this.setServiceError(error, 'Error searching devices');
         return throwError(() => error);
       }),
     );
   }
 
   /**
-   * Obtiene estadísticas de dispositivos
+   * Calculates aggregated device statistics from cached data.
+   * Returns counts by type and operational state.
+   *
+   * @returns {DeviceStats} Aggregated device statistics.
    */
   getStats(): DeviceStats {
     const devices = this.getCachedData();

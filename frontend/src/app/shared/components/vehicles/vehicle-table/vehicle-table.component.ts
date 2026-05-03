@@ -1,25 +1,27 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 /**
- * VehicleTableComponent
+ * VehicleTableComponent (Presentational Component)
  *
- * Componente que muestra una tabla de vehículos detectados con todos sus datos.
- * Incluye filtrado, ordenamiento y detalles de cada vehículo.
+ * Displays statistics table with vehicle detection counts aggregated by type.
+ * Receives stats data via @Input and renders as table rows with color-coded badges.
+ * Includes 12-hour trend visualization via mini bar charts and percentage calculations.
  *
- * Características:
- * - Tabla responsive con scroll en mobile
- * - Indicadores de estado con colores
- * - Velocidad visual con barras de progreso
- * - Emisiones de CO₂ con alertas
- * - Timestamp de última detección
+ * Features:
+ * - Responsive table with horizontal scrolling on mobile
+ * - Vehicle type badges with color coding: CAR (blue), BUS (orange), MOTORCYCLE (red), BICYCLE (green), TRUCK (yellow)
+ * - Detection count and percentage of total columns
+ * - 12-hour trend sparkline with individual hour bars
+ * - Tooltip hover showing hourly breakdown ("Hora -N: X detecciones")
+ * - Empty state with icon when no stats available
+ * - Dark mode support with Tailwind CSS
+ * - OnPush change detection
  *
  * @selector app-vehicle-table
  * @standalone true
- * @imports CommonModule
- * @returns Tabla de vehículos detectados
- *
+ * @imports (none - presentational only)
  * @example
- * <app-vehicle-table [vehicles]="vehiclesList" />
+ * <app-vehicle-table [stats]="vehicleStats" />
  */
 @Component({
   selector: 'app-vehicle-table',
@@ -30,8 +32,9 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 })
 export class VehicleTableComponent {
   /**
-   * Estadísticas por tipo que el componente mostrará en filas.
-   * Cada elemento contiene `type`, `count`, `percent` y `trend` (array numérico).
+   * Input array of vehicle statistics by type for table rendering.
+   * Each stat row includes type, total count, percentage, and optional 12-hour trend array.
+   * @type {Array<{type: string; count: number; percent: number; trend?: number[]; trendMax?: number;}>}
    */
   @Input() stats: Array<{
     type: string;
@@ -41,16 +44,22 @@ export class VehicleTableComponent {
     trendMax?: number;
   }> = [];
 
-  /** Devuelve la altura (px) para una barra de tendencia */
+  /**
+   * Calculates pixel height for trend bar based on value and max for proportional visualization
+   * @param {number} value - Current hour's detection count
+   * @param {number} trendMax - Maximum value in trend array for scaling
+   * @returns {number} Pixel height clamped to minimum 2px
+   */
   barHeight(value: number, trendMax?: number): number {
     const max = trendMax && trendMax > 0 ? trendMax : 1;
     return Math.max(2, (value / max) * 28);
   }
 
   /**
-   * Obtiene el color por tipo de vehículo
-   * @param {string} vehicleType - Tipo de vehículo
-   * @returns {string} Clase de color Tailwind
+   * Returns Tailwind CSS color classes for vehicle type badge background and text.
+   * Color mapping: CAR (blue), BUS (orange), MOTORCYCLE (red), BICYCLE (green), TRUCK (yellow)
+   * @param {string} vehicleType - Vehicle type value (CAR, BUS, MOTORCYCLE, BICYCLE, TRUCK)
+   * @returns {string} Tailwind CSS class string for badge styling
    */
   getTypeColor(vehicleType: string): string {
     const typeColors: Record<string, string> = {
@@ -66,9 +75,9 @@ export class VehicleTableComponent {
   }
 
   /**
-   * Obtiene el label del tipo de vehículo
-   * @param {string} vehicleType - Tipo de vehículo
-   * @returns {string} Label legible
+   * Returns localized display label for vehicle type enum value
+   * @param {string} vehicleType - Vehicle type enum value
+   * @returns {string} Localized label text
    */
   getTypeLabel(vehicleType: string): string {
     const typeLabels: Record<string, string> = {
@@ -78,13 +87,13 @@ export class VehicleTableComponent {
       BICYCLE: 'Bicicleta',
       TRUCK: 'Camion',
     };
-    return typeLabels[vehicleType] || 'Desconocido';
+    return typeLabels[vehicleType] || 'Unknown';
   }
 
   /**
-   * Obtiene el ícono para el tipo de vehículo
-   * @param {string} vehicleType - Tipo de vehículo
-   * @returns {string} Emoji del vehículo
+   * Returns icon identifier for vehicle type (utility method, not currently used in template)
+   * @param {string} vehicleType - Vehicle type enum value
+   * @returns {string} Icon name identifier
    */
   getTypeIcon(vehicleType: string): string {
     const icons: Record<string, string> = {
@@ -98,9 +107,9 @@ export class VehicleTableComponent {
   }
 
   /**
-   * Formatea la fecha de detección de forma relativa
-   * @param {Date} date - Fecha a formatear
-   * @returns {string} Fecha formateada (ej: "hace 2m")
+   * Formats date as relative time string (e.g., "2m ago", "3h ago")
+   * @param {Date} date - Date object or ISO string to format
+   * @returns {string} Relative time text
    */
   formatTime(date: Date): string {
     const now = new Date();
@@ -111,20 +120,20 @@ export class VehicleTableComponent {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (seconds < 60) return `hace ${seconds}s`;
-    if (minutes < 60) return `hace ${minutes}m`;
-    if (hours < 24) return `hace ${hours}h`;
-    return `hace ${days}d`;
+    if (seconds < 60) return `${seconds}s ago`;
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
   }
 
   /**
-   * Formatea fecha completa
-   * @param {Date} date - Fecha a formatear
-   * @returns {string} Fecha completa formateada
+   * Formats date as full localized datetime string (MM/DD/YYYY HH:MM:SS)
+   * @param {Date} date - Date object or ISO string to format
+   * @returns {string} Full date-time text
    */
   formatFullDate(date: Date): string {
     const timestamp = typeof date === 'string' ? new Date(date) : date;
-    return timestamp.toLocaleString('es-CO', {
+    return timestamp.toLocaleString('en-US', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

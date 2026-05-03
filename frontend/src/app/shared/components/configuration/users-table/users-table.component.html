@@ -1,5 +1,10 @@
+<!-- Users Table Component
+     Displays list of Keycloak users with edit and delete capabilities.
+     Includes edit form modal and delete confirmation modal. -->
+
 <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
   <table class="min-w-full">
+    <!-- Table header with column labels -->
     <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
       <tr>
         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -25,6 +30,7 @@
         </th>
       </tr>
     </thead>
+    <!-- User data rows with role badges and action buttons -->
     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
       @for (user of users; track user) {
         <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
@@ -81,7 +87,7 @@
   </table>
 </div>
 
-<!-- Edit modal -->
+<!-- Edit user modal with email, name, and role form fields -->
 <app-modal
   [isOpen]="editingUser !== null"
   [showCloseButton]="false"
@@ -159,7 +165,7 @@
   }
 </app-modal>
 
-<!-- Delete modal -->
+<!-- Delete confirmation modal with warning icon and confirmation buttons -->
 <app-modal
   [isOpen]="deleteTarget !== null"
   [showCloseButton]="false"

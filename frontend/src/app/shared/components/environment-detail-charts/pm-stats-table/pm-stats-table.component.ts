@@ -6,7 +6,8 @@ import { SensorDataService } from '../../../../core/services/sensor-data.service
 import { SensorData } from '../../../../core/models/sensor-data.model';
 
 /**
- * Interface para estadísticas de partículas
+ * PMStats aggregation data model.
+ * @interface PMStats
  */
 interface PMStats {
   symbol: string;
@@ -20,16 +21,25 @@ interface PMStats {
 }
 
 /**
- * PmStatsTableComponent
+ * PmStatsTableComponent (Presentation Component)
  *
- * Componente que muestra tabla con estadísticas dinámicas de PM2.5 y PM10.
- * Obtiene datos en tiempo real del backend.
+ * Displays a statistics summary table for PM2.5 and PM10 particle concentrations with key metrics.
+ *
+ * Features:
+ * - Two-row table with PM2.5 and PM10 particle type metrics
+ * - Six-column layout: particle type, current, minimum, maximum, average (blue highlight), variation (color-coded)
+ * - Real-time aggregation from all historical sensor data via backend query
+ * - Variation calculation: ((latest - previous) / previous) * 100 as percentage change ratio
+ * - Color-coded variation: green (<2%), orange (2-5%), red (>5%)
+ * - All values rounded to 1 decimal place for display (µg/m³)
+ * - Responsive table with horizontal scroll on mobile, full width on larger screens
+ * - Hover effects on rows with light background color change
+ * - OnPush change detection with async pipe for subscription
+ * - Fallback: displays zero-state on data load error
  *
  * @selector app-pm-stats-table
  * @standalone true
  * @imports CommonModule
- * @returns Tabla con estadísticas de partículas
- *
  * @example
  * <app-pm-stats-table />
  */
@@ -42,10 +52,16 @@ interface PMStats {
 })
 export class PmStatsTableComponent {
   /**
-   * Observable que emite estadísticas de partículas
+   * Observable stream of calculated particle statistics aggregated from all sensor data.
+   * @type {Observable<PMStats[]>}
    */
   pmStats$!: Observable<PMStats[]>;
 
+  /**
+   * Default zero-state statistics returned on error.
+   * @type {PMStats[]}
+   * @private
+   */
   private readonly defaultStats: PMStats[] = [
     {
       symbol: 'PM2.5',
@@ -69,12 +85,20 @@ export class PmStatsTableComponent {
     },
   ];
 
+  /**
+   * Initializes component with service dependency and sets up stats observable.
+   * @param {SensorDataService} sensorDataService - Service for querying historical particle sensor data
+   */
   constructor(private sensorDataService: SensorDataService) {
     this.initializePMStats();
   }
 
   /**
-   * Inicializa estadísticas de partículas desde el servicio
+   * Transforms all sensor data into aggregated statistics observable.
+   * Maps raw particle data to calculated stats: current, min, max, average, percentage change variation.
+   * Returns zero-state on empty or invalid data.
+   * @private
+   * @returns {void}
    */
   private initializePMStats(): void {
     this.pmStats$ = this.sensorDataService.getAll().pipe(
@@ -83,7 +107,6 @@ export class PmStatsTableComponent {
           return this.defaultStats;
         }
 
-        // Extraer valores de cada partícula
         const pm25Values = sensorData.map((d) => d.pm25 || 0);
         const pm10Values = sensorData.map((d) => d.pm10 || 0);
 
@@ -107,7 +130,7 @@ export class PmStatsTableComponent {
         ];
       }),
       catchError((error) => {
-        console.error('Error cargando estadísticas de partículas:', error);
+        console.error('Error loading particle statistics:', error);
         return of(this.defaultStats);
       }),
       shareReplay(1),
@@ -115,14 +138,20 @@ export class PmStatsTableComponent {
   }
 
   /**
-   * Obtiene el último valor de un array
+   * Extracts the last value from a numeric array.
+   * @private
+   * @param {number[]} values - Array of numeric values
+   * @returns {number} Last value in array, or 0 if empty
    */
   private getLatestValue(values: number[]): number {
     return values.length > 0 ? values[values.length - 1] : 0;
   }
 
   /**
-   * Calcula el promedio de un array
+   * Computes arithmetic mean of numeric array and rounds to 1 decimal place.
+   * @private
+   * @param {number[]} values - Array of numeric values to average
+   * @returns {number} Mean value rounded to 1 decimal, or 0 if empty
    */
   private calculateAverage(values: number[]): number {
     if (values.length === 0) return 0;
@@ -131,7 +160,12 @@ export class PmStatsTableComponent {
   }
 
   /**
-   * Calcula la variación porcentual
+   * Calculates percentage change from second-to-last to last value in array.
+   * Returns absolute value of ((latest - previous) / previous) * 100 as percentage.
+   * Rounds result to 1 decimal place; returns 0 if less than 2 values or previous is zero.
+   * @private
+   * @param {number[]} values - Array of numeric values (at least 2 for meaningful variation)
+   * @returns {number} Absolute percentage change (0-100+) rounded to 1 decimal
    */
   private calculateVariation(values: number[]): number {
     if (values.length < 2) return 0;
@@ -143,7 +177,10 @@ export class PmStatsTableComponent {
   }
 
   /**
-   * Obtiene clase de color para la variación
+   * Derives Tailwind color classes for variation indicator based on magnitude.
+   * Red: >5%, orange: 2-5%, green: <2% to reflect volatility of particle levels.
+   * @param {number} variacion - Variation percentage value to evaluate
+   * @returns {string} Tailwind CSS color classes for light and dark modes
    */
   getVariationColor(variacion: number): string {
     if (variacion > 5) return 'text-red-600 dark:text-red-400';

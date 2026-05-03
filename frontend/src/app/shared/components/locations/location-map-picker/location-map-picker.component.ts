@@ -13,31 +13,52 @@ import { GoogleMapsModule, MapInfoWindow, MapAdvancedMarker } from '@angular/goo
 import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
 import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
 
-/**
- * Coordenadas emitidas al seleccionar un punto en el mapa
- */
 export interface MapCoordinates {
   latitude: number;
   longitude: number;
 }
 
 /**
- * LocationMapPickerComponent
+ * LocationMapPickerComponent (Presentational Component)
  *
- * Componente reutilizable que muestra un Google Map interactivo para seleccionar
- * una ubicación haciendo clic. Emite las coordenadas seleccionadas al componente padre.
+ * Displays an interactive Google Map for selecting location coordinates via mouse click.
+ * Emits selected coordinates to parent via EventEmitter. Includes user geolocation with accuracy-based
+ * fallback instructions, animated GPS pulse marker, and optional read-only mode.
  *
- * Uso:
- * ```html
- * <app-location-map-picker
- *   [initialLatitude]="6.2442"
- *   [initialLongitude]="-75.5812"
- *   (coordinatesSelected)="onCoordinatesSelected($event)"
- * />
- * ```
+ * Features:
+ * - Google Map with default center (Pasto, Colombia) from DEFAULT_MAP_CONFIG
+ * - User geolocation via Geolocation API with accuracy threshold (<1000m = usable, shown in green)
+ * - GPS pulse animation: blue dot (8px) with expanding 40px semi-transparent pulse ring (2s loop)
+ * - Animated MapAdvancedMarker for selected location with click-to-open InfoWindow
+ * - Info window displays selected coordinates (lat/lng formatted to 6 decimals)
+ * - Click to place marker: updates markerPosition, emits MapCoordinates event
+ * - Read-only mode Input: disables clicking, changes cursor to default, hides instructions
+ * - Initial marker placement: if [initialLatitude] and [initialLongitude] provided, centers map on those coordinates
+ * - Conditional instructions based on GPS accuracy: green bar if accurate, amber if imprecise, hidden if read-only
+ * - API loading state with fallback message (div shows "Google Maps no disponible")
+ * - Dark mode support via dark: Tailwind prefix
+ * - Responsive map height via [mapHeight] Input (default 400px)
+ * - OnPush change detection with markForCheck after async API load and geolocation
+ *
+ * Inputs:
+ * - initialLatitude: number | null - starting marker position latitude
+ * - initialLongitude: number | null - starting marker position longitude
+ * - mapHeight: string - CSS height for map container (default '400px')
+ * - readonly: boolean - if true, disables map interaction and instructions (default false)
+ *
+ * Outputs:
+ * - coordinatesSelected: EventEmitter<MapCoordinates> - fires on map click with {latitude, longitude}
  *
  * @selector app-location-map-picker
  * @standalone true
+ * @imports CommonModule, GoogleMapsModule
+ * @example
+ * <app-location-map-picker
+ *   [initialLatitude]="6.2442"
+ *   [initialLongitude]="-75.5812"
+ *   mapHeight="500px"
+ *   (coordinatesSelected)="onCoordinatesSelected($event)"
+ * />
  */
 @Component({
   selector: 'app-location-map-picker',
@@ -47,68 +68,28 @@ export interface MapCoordinates {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationMapPickerComponent implements OnInit {
-  /**
-   * Latitud inicial del marcador (opcional)
-   */
   @Input() initialLatitude: number | null = null;
-
-  /**
-   * Longitud inicial del marcador (opcional)
-   */
   @Input() initialLongitude: number | null = null;
-
-  /**
-   * Altura del contenedor del mapa
-   */
   @Input() mapHeight = '400px';
-
-  /**
-   * Si el mapa es solo lectura (no permite seleccionar)
-   */
   @Input() readonly = false;
 
-  /**
-   * Emite las coordenadas cuando el usuario hace clic en el mapa
-   */
   @Output() coordinatesSelected = new EventEmitter<MapCoordinates>();
 
-  /** Referencia al InfoWindow del mapa */
   @ViewChild(MapInfoWindow) infoWindow!: MapInfoWindow;
 
-  /** Centro del mapa */
   center: google.maps.LatLngLiteral = DEFAULT_MAP_CONFIG.center;
-
-  /** Nivel de zoom */
   zoom = DEFAULT_MAP_CONFIG.zoom;
-
-  /** Opciones del mapa */
   mapOptions: google.maps.MapOptions = {
     ...DEFAULT_MAP_CONFIG.options,
     draggableCursor: 'crosshair',
   };
-
-  /** Posición del marcador seleccionado */
   markerPosition: google.maps.LatLngLiteral | null = null;
-
-  /** Ubicación actual del usuario (punto azul) */
   userLocation: google.maps.LatLngLiteral | null = null;
-
-  /** Contenido visual del marcador de ubicación del usuario (punto azul) */
   userLocationContent: HTMLElement | null = null;
-
-  /** Texto del info window */
   infoContent = '';
-
-  /** Indica si se obtuvo la ubicación GPS del usuario */
   gpsObtained = false;
-
-  /** Indica si la precisión del GPS fue suficiente */
   gpsAccurate = false;
-
-  /** Precisión del GPS en metros */
   gpsAccuracy = 0;
-
-  /** Indica si la API de Google Maps está disponible */
   isApiLoaded = false;
 
   constructor(
@@ -117,7 +98,11 @@ export class LocationMapPickerComponent implements OnInit {
   ) {}
 
   /**
-   * Inicializa el mapa: carga la API dinámicamente y configura la posición inicial
+   * Initializes component on first view: loads Google Maps API asynchronously,
+   * configures initial marker position from inputs, requests user geolocation,
+   * and creates animated GPS pulse marker with accuracy validation.
+   * Marks component for change detection after API load and geolocation completion.
+   * @returns {void}
    */
   ngOnInit(): void {
     if (this.initialLatitude !== null && this.initialLongitude !== null) {
@@ -142,23 +127,19 @@ export class LocationMapPickerComponent implements OnInit {
         return;
       }
 
-      // Mostrar el mapa inmediatamente con centro por defecto (Pasto)
       this.isApiLoaded = true;
       this.cdr.markForCheck();
 
-      // Geolocalización en segundo plano — no bloquea el render del mapa
       this.mapsLoader.requestUserLocation().then((geoResult) => {
         if (geoResult) {
           const userPos = { lat: geoResult.lat, lng: geoResult.lng };
           this.gpsAccuracy = Math.round(geoResult.accuracy);
           this.gpsObtained = true;
-          this.gpsAccurate = geoResult.accuracy < 1000; // < 1km = usable
+          this.gpsAccurate = geoResult.accuracy < 1000;
 
-          // Solo mostrar punto azul y centrar si la precisión es aceptable
           if (this.gpsAccurate) {
             this.userLocation = userPos;
 
-            // Crear punto azul con animación de pulso
             const wrapper = document.createElement('div');
             wrapper.style.position = 'relative';
             wrapper.style.width = '20px';
@@ -189,7 +170,6 @@ export class LocationMapPickerComponent implements OnInit {
               document.head.appendChild(style);
             }
 
-            // Centrar en la ubicación real del usuario
             if (this.markerPosition === null) {
               this.center = userPos;
               this.zoom = 17;
@@ -202,8 +182,12 @@ export class LocationMapPickerComponent implements OnInit {
   }
 
   /**
-   * Maneja el clic en el mapa para seleccionar una ubicación
-   * @param event - Evento del mapa con las coordenadas del clic
+   * Handles map click event to place marker and emit selected coordinates.
+   * Validates readonly mode and event.latLng availability. Updates markerPosition,
+   * formats info window text to 6 decimal places, and emits MapCoordinates event
+   * with latitude and longitude. Disabled when readonly=true.
+   * @param {google.maps.MapMouseEvent} event - Map mouse click event with latLng property
+   * @returns {void}
    */
   onMapClick(event: google.maps.MapMouseEvent): void {
     if (this.readonly || !event.latLng) return;
@@ -221,8 +205,12 @@ export class LocationMapPickerComponent implements OnInit {
   }
 
   /**
-   * Abre el InfoWindow al hacer clic en el marcador
-   * @param marker - Referencia al marcador
+   * Handles marker click event to display coordinates in InfoWindow.
+   * Updates infoContent with current marker position formatted to 6 decimal places,
+   * then opens InfoWindow at marker location. Validates infoWindow and markerPosition
+   * existence before proceeding.
+   * @param {MapAdvancedMarker} marker - Clicked map marker reference
+   * @returns {void}
    */
   onMarkerClick(marker: MapAdvancedMarker): void {
     if (this.infoWindow && this.markerPosition) {

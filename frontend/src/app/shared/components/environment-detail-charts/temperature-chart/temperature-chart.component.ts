@@ -12,7 +12,6 @@ import {
   Tooltip,
   Legend,
   Filler,
-  Point,
 } from 'chart.js';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
@@ -32,12 +31,33 @@ ChartJS.register(
 );
 
 /**
- * Componente que muestra un gráfico dinámico de línea con la tendencia de temperatura
- * en las últimas 24 horas, promediando por hora. Mediciones en grados Celsius.
- * Utiliza RxJS Observables y ChangeDetectionStrategy.OnPush.
+ * TemperatureChartComponent (Presentation Component)
+ *
+ * Displays a line chart visualization of temperature trends over a 24-hour sliding window with hourly aggregation.
+ *
+ * Features:
+ * - Single orange line (#f97316) showing temperature progression in 24-hour backward sliding window from latest timestamp
+ * - Hourly aggregation: creates 24 hourly slots, calculates average temperature per slot, rounds to 2 decimal places
+ * - X-axis: hourly time labels (HH:00 format), maximum 12 ticks
+ * - Y-axis: linear scale with unit label "Temperatura (°C)", dynamic range based on data values, no zero-lock
+ * - Point styling: 5px radius default, 8px on hover, white 3px border, orange fill, color change to brown on hover
+ * - Tooltip: dark background with temperature value formatted to 1 decimal place with °C unit
+ * - Responsive: min-width 650px scrollable container on mobile, full width on XL screens
+ * - Animation on load: 750ms fade-in with easeInOutQuart easing
+ * - Data source: switchMap from latest timestamp to search within 24-hour window, filters valid dates, sorts ascending
+ * - Error handling: returns empty dataset on service failure with console error logging
+ * - OnPush change detection with async pipe subscription
+ * - Fallback: displays empty chart on error
+ *
+ * Private observables:
+ * - sensorData$: Observable<SensorData[]> - filtered and sorted historical data within 24-hour window
+ * - chartData$: Observable<ChartConfiguration['data']> - prepared chart dataset and labels
  *
  * @selector app-temperature-chart
  * @standalone true
+ * @imports CommonModule, BaseChartDirective
+ * @example
+ * <app-temperature-chart />
  */
 @Component({
   selector: 'app-temperature-chart',
@@ -50,18 +70,22 @@ export class TemperatureChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Ventana de horas a mostrar
+   * Hours window for historical data aggregation (24-hour backward sliding window).
+   * @type {number}
+   * @private
    */
   private readonly HOURS_WINDOW = 24;
 
   /**
-   * Observable que emite la configuración del gráfico con datos reactivos
+   * Observable emitting prepared chart dataset and labels with hourly aggregated temperature data.
+   * @type {Observable<ChartConfiguration<'line'>['data']>}
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
-
   /**
-   * Observable compartido de datos del sensor (últimas 24h)
+   * Observable stream of sensor data filtered within 24-hour window and sorted by timestamp.
+   * @type {Observable<SensorData[]>}
+   * @private
    */
   private sensorData$!: Observable<SensorData[]>;
 
@@ -187,8 +211,11 @@ export class TemperatureChartComponent {
   }
 
   /**
-   * Obtiene el último registro para determinar la ventana de tiempo
-   * y luego consulta solo las últimas 24 horas al backend.
+   * Initializes sensor data stream from latest timestamp and searches within 24-hour window.
+   * Filters for valid dates, sorts by timestamp ascending, and caches result with shareReplay(1).
+   * Returns empty array on error with console logging.
+   * @private
+   * @returns {void}
    */
   private initializeSensorData(): void {
     this.sensorData$ = this.sensorDataService.getLatest().pipe(
@@ -198,7 +225,7 @@ export class TemperatureChartComponent {
         return this.sensorDataService.search({ start: startTime, end: endTime });
       }),
       catchError((error) => {
-        console.error('Error cargando datos de temperatura:', error);
+        console.error('Error loading temperature data:', error);
         return of([]);
       }),
       shareReplay(1),
@@ -206,7 +233,11 @@ export class TemperatureChartComponent {
   }
 
   /**
-   * Inicializa los datos del gráfico agrupando por hora y promediando.
+   * Transforms sensor data into chart dataset with 24 hourly slots and aggregated temperature averages.
+   * Creates hourly backward slots from latest timestamp, calculates mean temperature per slot rounded to 2 decimals.
+   * Returns default empty dataset if no data available.
+   * @private
+   * @returns {void}
    */
   private initializeChartData(): void {
     this.chartData$ = this.sensorData$.pipe(
@@ -234,8 +265,7 @@ export class TemperatureChartComponent {
           0,
           0,
         );
-
-        // Crear 24 slots horarios hacia atrás desde la hora más reciente
+        
         const slots: { start: Date; end: Date; label: string }[] = [];
         for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
           const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);

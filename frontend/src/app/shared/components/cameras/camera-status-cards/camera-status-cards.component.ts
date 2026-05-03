@@ -6,14 +6,14 @@ import {
 } from '../../common/generic-stats-cards/generic-stats-cards.component';
 
 /**
- * Interfaz para estadísticas de cámaras
+ * Camera deployment statistics and health metrics.
  * @interface CameraStats
- * @property {number} totalCameras - Total de cámaras
- * @property {number} activeCameras - Cámaras activas
- * @property {number} inactiveCameras - Cámaras inactivas
- * @property {number} failingCameras - Cámaras con fallo
- * @property {number} vehiclesDetected - Vehículos detectados
- * @property {number} uptime - Tiempo de disponibilidad en %
+ * @property {number} totalCameras - Total installed camera devices
+ * @property {number} activeCameras - Currently active cameras with detection enabled
+ * @property {number} inactiveCameras - Inactive cameras without detection
+ * @property {number} failingCameras - Cameras with errors or failures
+ * @property {number} vehiclesDetected - Total vehicle detection count
+ * @property {number} uptime - System uptime percentage
  */
 export interface CameraStats {
   totalCameras: number;
@@ -25,16 +25,21 @@ export interface CameraStats {
 }
 
 /**
- * CameraStatusCardsComponent
+ * CameraStatusCardsComponent (Presentational Component)
  *
- * Componente que muestra tarjetas con estadísticas de cámaras.
- * Usa GenericStatsCardsComponent para evitar duplicación.
+ * Displays camera statistics as styled cards using reusable GenericStatsCardsComponent.
+ *
+ * Features:
+ * - Total, active, inactive, and failing camera counts
+ * - Vehicle detection count with color-coded badges
+ * - System uptime percentage
+ * - Dynamic percentage calculations
+ * - Dark mode support
+ * - OnPush change detection
  *
  * @selector app-camera-status-cards
  * @standalone true
- * @imports CommonModule, GenericStatsCardsComponent
- * @returns Tarjetas de estadísticas de cámaras
- *
+ * @imports GenericStatsCardsComponent
  * @example
  * <app-camera-status-cards [stats]="cameraStats" />
  */
@@ -47,7 +52,8 @@ export interface CameraStats {
 })
 export class CameraStatusCardsComponent {
   /**
-   * Estadísticas a mostrar
+   * Camera statistics to display.
+   * Provides defaults for development/preview purposes.
    * @type {CameraStats}
    */
   @Input() stats: CameraStats = {
@@ -60,7 +66,9 @@ export class CameraStatusCardsComponent {
   };
 
   /**
-   * Convierte las estadísticas a array de StatCards
+   * Converts camera statistics to generic stat card array.
+   * Calculates percentage values and assigns color-coded borders.
+   * @returns {StatCard[]} Array of stat cards for generic component rendering
    */
   getStatCards(): StatCard[] {
     return [

@@ -25,13 +25,32 @@ interface DetectionRecord {
 }
 
 /**
- * LocationHistoryViewComponent
+ * LocationHistoryViewComponent (Presentation Component)
  *
- * Componente que muestra el historial de detecciones (vehículos y sensores) por ubicación.
- * Carga datos en tiempo real desde el backend.
+ * Displays aggregated detection history (vehicles and sensors) grouped by location with summary statistics,
+ * a detailed table, and overall system tallies. Data loads via forkJoin from three parallel streams:
+ * locations, vehicle detections, and sensor data.
  *
- * @component
+ * Features:
+ * - Three summary stat cards: total detections (brand color), vehicles detected (warning/yellow), sensors detected (green)
+ * - Detection history table with five columns: location description, vehicle count (warning badge), sensor count (green badge), total, last update
+ * - Parallel data loading via forkJoin with independent error handling (returns empty arrays on API failure)
+ * - Detection record aggregation: counts vehicles and sensors grouped by location.id from both vehicle and sensor objects
+ * - Latest timestamp tracking per location (compares vehicle and sensor timestamps, shows most recent)
+ * - Sort by lastUpdate descending (most recent first), "Sin datos" for locations with no detections
+ * - Overall statistics calculated from aggregated data (totalVehicleDetections, totalSensorDetections, totalDetections)
+ * - Loading state with isLoading flag and finalize operator to reset after completion
+ * - Empty state with centered message when no detection records exist
+ * - Responsive grid: 1 column mobile, 3 columns desktop for stat cards
+ * - Dark mode support via dark: Tailwind prefix
+ * - OnPush change detection with manual markForCheck calls
+ * - OnDestroy cleanup via takeUntil(destroy$) pattern
+ *
+ * @selector app-location-history-view
  * @standalone true
+ * @imports CommonModule
+ * @example
+ * <app-location-history-view />
  */
 @Component({
   selector: 'app-location-history-view',
@@ -41,38 +60,17 @@ interface DetectionRecord {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationHistoryViewComponent implements OnInit, OnDestroy {
-  /**
-   * Subject para cleanup de suscripciones
-   */
   private destroy$ = new Subject<void>();
-
-  /**
-   * Historial de detecciones agrupado por ubicación
-   */
   detectionHistory: DetectionRecord[] = [];
 
-  /**
-   * Estadísticas generales
-   */
   overallStats = {
     totalVehicleDetections: 0,
     totalSensorDetections: 0,
     totalDetections: 0,
   };
 
-  /**
-   * Estado de carga
-   */
   isLoading = false;
-
-  /**
-   * Mensaje de error
-   */
   errorMessage: string | null = null;
-
-  /**
-   * Constructor e inyección de dependencias
-   */
   constructor(
     private vehicleService: VehicleDetectedService,
     private sensorService: SensorDataService,
@@ -81,14 +79,20 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
   ) {}
 
   /**
-   * Inicializa el componente
+   * Lifecycle hook: initializes component on first view.
+   * Triggers loadHistoryData() to fetch and process detection history
+   * from locations, vehicles, and sensors.
+   * @returns {void}
    */
   ngOnInit(): void {
     this.loadHistoryData();
   }
 
   /**
-   * Hook del ciclo de vida: Limpia las suscripciones
+   * Lifecycle hook: cleans up subscriptions and completes destroy$ subject.
+   * Called when component is destroyed to prevent memory leaks.
+   * Unsubscribes all observables using takeUntil(destroy$) pattern.
+   * @returns {void}
    */
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -96,15 +100,17 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga los datos del historial desde el backend
-   * @private
+   * Loads detection history data from backend via parallel streams using forkJoin.
+   * Combines locationService.getAll(), vehicleService.getAll(), and sensorService.getAll()
+   * with independent error handling (returns empty arrays on API failure).
+   * Sets isLoading flag with finalize operator and calls processDetectionData() for aggregation.
+   * Executed once on component init via ngOnInit().
    * @returns {void}
    */
   private loadHistoryData(): void {
     this.isLoading = true;
     this.errorMessage = null;
 
-    // Cargar ubicaciones, vehículos y sensores en paralelo
     forkJoin({
       locations: this.locationService.getAll().pipe(
         catchError((error) => {
@@ -139,11 +145,15 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Procesa datos de detecciones (vehículos y sensores) agrupados por ubicación
-   * @private
-   * @param {Location[]} locations - Array de ubicaciones
-   * @param {any[]} vehicles - Array de detecciones de vehículos
-   * @param {any[]} sensors - Array de detecciones de sensores
+   * Processes and aggregates detection history grouped by location ID.
+   * Creates location map with initial device counts, processes vehicle detections,
+   * processes sensor data, and populates detection records with aggregated counts.
+   * Tracks latest timestamp per location across both vehicle and sensor detections.
+   * Sorts records by lastUpdate descending (most recent first).
+   * Calls calculateStats() to update overall statistics.
+   * @param {Location[]} locations - Array of Location objects from backend
+   * @param {VehicleDetected[]} vehicles - Array of vehicle detection records
+   * @param {SensorData[]} sensors - Array of sensor data records
    * @returns {void}
    */
   private processDetectionData(
@@ -153,12 +163,11 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
   ): void {
     const locationMap = new Map<number, DetectionRecord>();
 
-    // Inicializar mapa con todas las ubicaciones
     const lastDateMap = new Map<number, Date | null>();
     locations.forEach((loc) => {
       locationMap.set(loc.id, {
         id: loc.id,
-        description: loc.description || `Ubicación ${loc.id}`,
+        description: loc.description || `Location ${loc.id}`,
         vehicleDetections: 0,
         sensorDetections: 0,
         lastUpdate: '',
@@ -166,16 +175,13 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
       lastDateMap.set(loc.id, null);
     });
 
-    // Contar detecciones de vehículos por ubicación y actualizar último timestamp
     vehicles.forEach((vehicle) => {
-      // Try multiple paths where a vehicle's location can be stored
       const locationId = vehicle.location?.id ?? vehicle.device?.location?.id ?? null;
       if (locationId) {
         if (!locationMap.has(locationId)) {
-          // create placeholder entry if vehicle references a location not in the locations list
           locationMap.set(locationId, {
             id: locationId,
-            description: `Ubicación ${locationId}`,
+            description: `Location ${locationId}`,
             vehicleDetections: 0,
             sensorDetections: 0,
             lastUpdate: '',
@@ -192,14 +198,13 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Contar detecciones de sensores por ubicación y actualizar último timestamp
     sensors.forEach((sensor) => {
       const locationId = sensor.device?.location?.id;
       if (locationId) {
         if (!locationMap.has(locationId)) {
           locationMap.set(locationId, {
             id: locationId,
-            description: `Ubicación ${locationId}`,
+            description: `Location ${locationId}`,
             vehicleDetections: 0,
             sensorDetections: 0,
             lastUpdate: '',
@@ -216,25 +221,26 @@ export class LocationHistoryViewComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Convertir último timestamp a cadena legible y mostrar todas las ubicaciones
     this.detectionHistory = Array.from(locationMap.values()).map((r) => {
       const d = lastDateMap.get(r.id);
       return {
         ...r,
-        lastUpdate: d ? d.toLocaleString('es-ES') : 'Sin datos',
+        lastUpdate: d ? d.toLocaleString('en-US') : 'No data',
         lastTimestamp: d ? d.getTime() : 0,
       } as DetectionRecord;
     });
 
-    // Ordenar por última detección (más reciente primero, sin datos al final)
     this.detectionHistory.sort((a, b) => (b.lastTimestamp || 0) - (a.lastTimestamp || 0));
 
     this.calculateStats();
   }
 
   /**
-   * Calcula las estadísticas generales
-   * @private
+   * Calculates aggregate statistics from detection history records.
+   * Computes totalVehicleDetections, totalSensorDetections, and totalDetections (sum of both)
+   * by reducing over detectionHistory array.
+   * Updates overallStats object used to display summary cards in template.
+   * Called internally by processDetectionData() after aggregation completes.
    * @returns {void}
    */
   private calculateStats(): void {

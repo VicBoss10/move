@@ -1,16 +1,20 @@
+<!-- Register Device Form Component
+     Device registration wizard supporting both CAMERA and SENSOR device types.
+     Camera path: device type selection, name, location, state, streaming config (type and URL).
+     Sensor path: step-by-step registration guide with images: power connection, captive portal LED,
+     WiFi validation, location selection, and success confirmation.
+     Reactive form validation with error messages and responsive grid layout. -->
+
 <div class="space-y-6">
-  <!-- Header -->
   <div class="flex flex-col gap-2">
     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Registrar Dispositivo</h1>
     <p class="text-gray-600 dark:text-gray-400">Añade una nueva cámara o sensor al sistema</p>
   </div>
 
-  <!-- Main Form Card -->
   <div
     class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 shadow-sm overflow-hidden"
   >
     <form [formGroup]="deviceForm" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
-      <!-- Step 1: Device Type Selection -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"
           >Tipo de Dispositivo *</label
@@ -33,11 +37,9 @@
         <input type="hidden" formControlName="type" />
       </div>
 
-      <!-- Step 2: Basic Device Information (Only for CAMERA) -->
       @if ((selectedType$ | async) === 'CAMERA') {
         <div class="pb-6 border-b border-gray-200 dark:border-gray-700">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <!-- Nombre del Dispositivo -->
             <div>
               <label
                 for="name"
@@ -66,7 +68,7 @@
                 </div>
               }
             </div>
-            <!-- Ubicación -->
+
             <div>
               <label
                 for="location"
@@ -95,7 +97,7 @@
                 </div>
               }
             </div>
-            <!-- Estado Inicial -->
+
             <div>
               <label
                 for="state"
@@ -119,7 +121,6 @@
         </div>
       }
 
-      <!-- Step 3: Camera-Specific Configuration -->
       @if ((selectedType$ | async) === 'CAMERA') {
         <div class="pb-6 border-b border-gray-200 dark:border-gray-700">
           <div
@@ -132,8 +133,8 @@
               Configure los parámetros de streaming para la cámara
             </p>
           </div>
+
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
-            <!-- Tipo de Streaming -->
             <div>
               <label
                 for="streamType"
@@ -164,7 +165,7 @@
                 </div>
               }
             </div>
-            <!-- URL/Ruta del Stream -->
+
             <div>
               <label
                 for="source"
@@ -197,7 +198,6 @@
         </div>
       }
 
-      <!-- Step 4: Sensor-Specific Configuration (Informational) -->
       @if ((selectedType$ | async) === 'SENSOR') {
         <div class="pb-6 border-b border-gray-200 dark:border-gray-700">
           <div
@@ -240,7 +240,7 @@
               </div>
             </div>
           </div>
-          <!-- Step 2: Captive portal -->
+
           <div
             class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4"
           >
@@ -283,7 +283,7 @@
               </div>
             </div>
           </div>
-          <!-- Step 3: Validación de credenciales Wi-Fi -->
+
           <div
             class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4"
           >
@@ -311,7 +311,7 @@
               </div>
             </div>
           </div>
-          <!-- Step 4: ubicacion -->
+
           <div
             class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4"
           >
@@ -347,7 +347,7 @@
               </div>
             </div>
           </div>
-          <!-- Step 5: Registro exitoso -->
+
           <div
             class="mt-4 bg-brand-50 dark:bg-gray-800/20 border border-brand-200 dark:border-gray-700 rounded-lg p-4"
           >
@@ -361,8 +361,10 @@
                   cambiará su estado a "Activo" y el proceso de registro quedará finalizado.
                 </p>
                 <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                  Indicador LED: la luz azul parpadeará cada 30 segundos para indicar que el sensor
-                  está enviando datos periódicamente al servidor.
+                  Indicador LED: la luz azul parpadeará dos veces rapidamente cada 30 segundos para
+                  indicar que el sensor está enviando datos periódicamente al servidor. Parpadearea
+                  una vez si no logra enviar los datos al servidor y guardara los datos localmente
+                  para intentar enviarlos nuevamente.
                 </p>
                 <p class="text-gray-700 dark:text-gray-400 text-sm mt-1">
                   Verifica en la aplicación que el dispositivo aparece como activo y comprueba las
@@ -381,7 +383,6 @@
         </div>
       }
 
-      <!-- Form Actions (Only for CAMERA) -->
       @if ((selectedType$ | async) === 'CAMERA') {
         <div class="flex gap-4 justify-end">
           <button

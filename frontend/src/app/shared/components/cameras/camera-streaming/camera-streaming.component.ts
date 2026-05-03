@@ -13,7 +13,10 @@ import { Camera, StreamResponse } from '../../../../core/models/camera.model';
 import { DeviceState } from '../../../../core/models/device.model';
 
 /**
- * Interfaz para filtros de cámara
+ * Camera filter options for list filtering.
+ * @interface CameraFilters
+ * @property {string} state - Device state filter
+ * @property {number} location - Location ID filter
  */
 export interface CameraFilters {
   state: string;
@@ -21,24 +24,26 @@ export interface CameraFilters {
 }
 
 /**
- * CameraStreamingComponent
+ * CameraStreamingComponent (Smart Component)
  *
- * Componente que permite visualizar streaming de cámaras en tiempo real.
- * Maneja la selección de cámaras, inicio/parada de streams y detección de vehículos.
+ * Enables real-time video streaming and live monitoring of camera devices.
+ * Manages camera selection, stream playback, MJPEG/snapshot fallback for Safari/iOS.
  *
- * Características:
- * - Lista de cámaras disponibles
- * - Visualización de streaming en tiempo real
- * - Control de inicio/parada del stream
- * - Contador de detecciones de vehículos
- * - Manejo de errores y estados de carga
+ * Features:
+ * - Real-time MJPEG video streaming
+ * - Automatic snapshot polling fallback for MJPEG-unsupported browsers
+ * - Camera selection with active detection check
+ * - YouTube-style control overlay with auto-hide on mobile
+ * - Fullscreen streaming view
+ * - Session management for active streams
+ * - Dynamic camera list with live refresh
+ * - Error handling and loading states
  * - Dark mode support
+ * - OnPush change detection
  *
  * @selector app-camera-streaming-content
  * @standalone true
  * @imports CommonModule, RouterModule
- * @returns Página de streaming de cámaras
- *
  * @example
  * <app-camera-streaming-content />
  */
@@ -51,79 +56,149 @@ export interface CameraFilters {
 })
 export class CameraStreamingComponent implements OnInit, OnDestroy {
   /**
-   * Subject para manejo de cleanup en ngOnDestroy
+   * Subject for managing subscriptions and cleanup.
+   * @type {Subject<void>}
    * @private
    */
   private destroy$ = new Subject<void>();
 
-  /** Lista de cámaras disponibles */
+  /**
+   * List of active camera devices available for streaming.
+   * @type {Camera[]}
+   */
   cameras: Camera[] = [];
 
-  /** Cámara actualmente seleccionada */
+  /**
+   * Currently selected camera for streaming.
+   * @type {Camera | null}
+   */
   selectedCamera: Camera | null = null;
 
-  /** URL del stream */
+  /**
+   * Stream URL (MJPEG) for img src binding.
+   * @type {string | null}
+   */
   streamUrl: string | null = null;
 
-  /** ID de sesión del stream activo */
+  /**
+   * Active stream session ID from VDS.
+   * @type {string | null}
+   */
   sessionId: string | null = null;
 
-  /** Indicador de estado de carga */
+  /**
+   * Loading state during camera fetch or stream setup.
+   * @type {boolean}
+   */
   isLoading: boolean = false;
 
-  /** True cuando la detección está activa en el backend para la cámara seleccionada */
+  /**
+   * Detection active flag (device.state === ACTIVE in database).
+   * @type {boolean}
+   */
   detectionActive: boolean = false;
 
-  /** True cuando el usuario está visualizando el feed de video */
+  /**
+   * User is currently viewing the video feed.
+   * @type {boolean}
+   */
   isViewing: boolean = false;
 
-  /** Mensaje de error actual */
+  /**
+   * Error message to display to user.
+   * @type {string | null}
+   */
   errorMessage: string | null = null;
 
-  /** URL original del feed (para fallback a snapshot) */
+  /**
+   * MJPEG feed URL from stream response.
+   * Used as fallback base for snapshot polling.
+   * @type {string | null}
+   * @private
+   */
   private feedUrl: string | null = null;
 
-  /** Modo snapshot para navegadores sin soporte MJPEG (Safari/iOS) */
+  /**
+   * Snapshot polling mode enabled (MJPEG unsupported).
+   * @type {boolean}
+   */
   isSnapshotMode: boolean = false;
 
-  /** URL del snapshot actual con cache-busting */
+  /**
+   * Current snapshot URL with cache-busting timestamp.
+   * @type {string | null}
+   */
   snapshotUrl: string | null = null;
 
-  /** Intervalo de polling para snapshots */
+  /**
+   * Timeout/interval reference for snapshot polling.
+   * @type {ReturnType<typeof setInterval> | null}
+   * @private
+   */
   private snapshotIntervalRef: ReturnType<typeof setInterval> | null = null;
+
+  /**
+   * Preloading image for next snapshot frame.
+   * @type {HTMLImageElement | null}
+   * @private
+   */
   private pendingPreloadImg: HTMLImageElement | null = null;
 
-  /** Filtros aplicados a la tabla */
+  /**
+   * Current filter state for camera list.
+   * @type {CameraFilters}
+   */
   appliedFilters: CameraFilters = {
     state: '',
     location: 0,
   };
 
-  /** Flag para mostrar controles en móvil cuando se toca el stream */
+  /**
+   * Mobile touch control visibility toggle.
+   * Controls overlay fade in/out on touch.
+   * @type {boolean}
+   */
   showControlsOnTouch: boolean = false;
 
-  /** Referencia al timeout de ocultamiento de controles */
+  /**
+   * Timeout reference for hiding mobile touch controls.
+   * @type {ReturnType<typeof setTimeout> | null}
+   * @private
+   */
   private touchControlsTimeoutRef: ReturnType<typeof setTimeout> | null = null;
 
+  /**
+   * Initializes the component with service dependencies.
+   * @param {CameraService} cameraService - Camera data and stream management
+   * @param {ChangeDetectorRef} changeDetectorRef - Manual change detection trigger
+   */
   constructor(
     private cameraService: CameraService,
     private changeDetectorRef: ChangeDetectorRef,
   ) {}
 
+  /**
+   * Initialization lifecycle hook.
+   * Loads initial camera list and subscribes to refresh signals.
+   * @returns {void}
+   */
   ngOnInit(): void {
     this.loadCameras();
-    // React to camera list refreshes triggered elsewhere (start/stop detection)
     this.cameraService.refresh$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.loadCameras();
     });
   }
 
+  /**
+   * Cleanup lifecycle hook.
+   * Stops video viewing and clears timeouts before destruction.
+   * Detection continues running on backend until explicitly stopped.
+   * @returns {void}
+   */
   ngOnDestroy(): void {
-    // Solo detener la visualización — la detección persiste en el backend hasta detenerse explícitamente
     if (this.isViewing) {
       this.stopViewing();
     }
-    // Limpiar timeout de controles
     if (this.touchControlsTimeoutRef !== null) {
       clearTimeout(this.touchControlsTimeoutRef);
     }
@@ -131,6 +206,11 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  /**
+   * Loads camera list filtered to show only ACTIVE cameras.
+   * Deselects camera if it becomes inactive between refreshes.
+   * @returns {void}
+   */
   loadCameras(): void {
     this.isLoading = true;
     this.cameraService
@@ -166,12 +246,18 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Selects a camera and fetches its active stream session.
+   * Stops current viewing if switching cameras.
+   * Queries backend for active stream if detection is enabled.
+   * @param {Camera} camera - Camera to select
+   * @returns {void}
+   */
   selectCamera(camera: Camera): void {
     if (this.selectedCamera?.id === camera.id) {
       return;
     }
 
-    // Solo cambiar la selección; no hacer nada más
     if (this.isViewing) {
       this.stopViewing();
     }
@@ -182,9 +268,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     this.detectionActive = false;
     this.errorMessage = null;
 
-    // Validar que la cámara esté activa en BD (device.state === ACTIVE)
     if (camera.device.state === DeviceState.ACTIVE) {
-      // La detección está activa en el backend; solicitar la sesión activa asociada al device
       this.detectionActive = true;
       this.isLoading = true;
       this.cameraService
@@ -192,14 +276,12 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (res: StreamResponse) => {
-            // El backend devuelve sessionId y streamUrl/snapshotUrl
             this.sessionId = res?.sessionId || null;
             this.feedUrl = this.toAbsoluteApiUrl(res?.streamUrl || null);
             this.isLoading = false;
             this.changeDetectorRef.markForCheck();
           },
           error: (err) => {
-            // No hay sesión activa o error: mantener detectionActive true (BD) pero no hay feed
             console.warn('No active stream for device or error:', err);
             this.sessionId = null;
             this.feedUrl = null;
@@ -212,10 +294,13 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     this.changeDetectorRef.markForCheck();
   }
 
+  /**
+   * Starts video stream viewing.
+   * Detects Safari/iOS and uses snapshot polling fallback if needed.
+   * Constructs feed URL from session ID if needed (race condition safety).
+   * @returns {void}
+   */
   startViewing(): void {
-    // Fallback: Si feedUrl aún no está disponible pero tenemos sessionId,
-    // construirla localmente. Esto ocurre en iPhone cuando el usuario da click
-    // antes de que getActiveStreamByDevice() complete.
     if (!this.feedUrl && this.sessionId && this.detectionActive) {
       this.feedUrl = this.toAbsoluteApiUrl(`/streams/feed/${this.sessionId}`);
     }
@@ -238,11 +323,14 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     this.changeDetectorRef.markForCheck();
   }
 
+  /**
+   * Stops video stream viewing and clears polling/timeouts.
+   * @returns {void}
+   */
   stopViewing(): void {
     this.isViewing = false;
     this.streamUrl = null;
     this.showControlsOnTouch = false;
-    // Limpiar timeout de controles
     if (this.touchControlsTimeoutRef !== null) {
       clearTimeout(this.touchControlsTimeoutRef);
       this.touchControlsTimeoutRef = null;
@@ -251,6 +339,11 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     this.changeDetectorRef.markForCheck();
   }
 
+  /**
+   * Toggles fullscreen mode for stream container.
+   * @param {HTMLElement} element - Stream container DOM element
+   * @returns {void}
+   */
   toggleFullScreen(element: HTMLElement): void {
     if (document.fullscreenElement) {
       document.exitFullscreen();
@@ -260,24 +353,22 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja el evento de toque en el stream para mostrar controles en móvil
-   * Los controles se ocultarán después de 4 segundos (similar a YouTube)
+   * Handles stream touch event on mobile.
+   * Shows control overlay for 4 seconds (YouTube-style auto-hide).
+   * @returns {void}
    */
   onStreamTouched(): void {
     if (!this.isViewing) {
       return;
     }
 
-    // Mostrar controles
     this.showControlsOnTouch = true;
     this.changeDetectorRef.markForCheck();
 
-    // Limpiar timeout anterior si existe
     if (this.touchControlsTimeoutRef !== null) {
       clearTimeout(this.touchControlsTimeoutRef);
     }
 
-    // Ocultar controles después de 4 segundos
     this.touchControlsTimeoutRef = setTimeout(() => {
       this.showControlsOnTouch = false;
       this.touchControlsTimeoutRef = null;
@@ -285,14 +376,27 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }, 4000);
   }
 
+  /**
+   * Returns display name of selected camera.
+   * @returns {string} Camera device name or placeholder
+   */
   getSelectedCameraName(): string {
     return this.selectedCamera?.device.name || 'Ninguna cámara seleccionada';
   }
 
+  /**
+   * Returns device state of selected camera.
+   * @returns {string} Device state (ACTIVE, INACTIVE, FAILING) or N/A
+   */
   getSelectedCameraState(): string {
     return this.selectedCamera?.device.state || 'N/A';
   }
 
+  /**
+   * Handles MJPEG stream loading error.
+   * Falls back to snapshot polling mode.
+   * @returns {void}
+   */
   onStreamError(): void {
     if (this.isViewing && this.feedUrl && !this.isSnapshotMode) {
       this.isSnapshotMode = true;
@@ -302,26 +406,42 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Detects Safari or iOS browser (no native MJPEG support).
+   * @returns {boolean} True if Safari or iOS
+   * @private
+   */
   private isSafariOrIos(): boolean {
     const ua = navigator.userAgent;
     return /iPad|iPhone|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/.test(ua));
   }
 
+  /**
+   * Detects mobile device (any mobile OS).
+   * @returns {boolean} True if mobile browser detected
+   */
   isMobile(): boolean {
+    // eslint-disable-next-line no-useless-escape
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent,
     );
   }
 
+  /**
+   * Starts snapshot polling cycle for browsers without MJPEG support.
+   * Converts MJPEG feed URL to snapshot endpoint and polls sequentially.
+   * On mobile, requests smaller frames (640px, quality 50) for faster transfer.
+   * Uses recursive scheduling with zero delay on success, 300ms on error.
+   * @param {string} mjpegUrl - MJPEG feed URL to convert to snapshot base
+   * @private
+   */
   private startSnapshotPolling(mjpegUrl: string): void {
     const snapshotBase = mjpegUrl
       .replace('/streams/feed/', '/streams/snapshot/')
       .replace('/stream/feed/', '/stream/snapshot/');
-    // En móvil: pedir frame más pequeño (640px, quality 50) para transferir rápido
     const mobile = this.isMobile();
     const suffix = mobile ? '&w=640&q=50' : '';
 
-    // Ciclo secuencial: el siguiente request arranca inmediatamente al completar el anterior.
     const scheduleNext = () => {
       if (this.snapshotIntervalRef === null) return;
 
@@ -333,7 +453,6 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
         if (this.snapshotIntervalRef === null) return;
         this.snapshotUrl = img.src;
         this.changeDetectorRef.detectChanges();
-        // Sin delay: encadenar inmediatamente el siguiente frame
         this.snapshotIntervalRef = setTimeout(scheduleNext, 0) as unknown as ReturnType<
           typeof setInterval
         >;
@@ -350,13 +469,16 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
       img.src = `${snapshotBase}?t=${Date.now()}${suffix}`;
     };
 
-    // Primer snapshot inmediato
     this.snapshotUrl = `${snapshotBase}?t=${Date.now()}${suffix}`;
     this.snapshotIntervalRef = setTimeout(scheduleNext, 0) as unknown as ReturnType<
       typeof setInterval
     >;
   }
 
+  /**
+   * Stops snapshot polling and clears pending image loads.
+   * @private
+   */
   private stopSnapshotPolling(): void {
     if (this.snapshotIntervalRef !== null) {
       clearTimeout(this.snapshotIntervalRef as unknown as ReturnType<typeof setTimeout>);
@@ -371,6 +493,13 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Converts relative API URLs to absolute using runtime-injected base URL.
+   * Handles both relative and absolute URLs, with localhost fallback.
+   * @param {string | null} url - Relative or absolute URL
+   * @returns {string | null} Absolute URL or null
+   * @private
+   */
   private toAbsoluteApiUrl(url: string | null): string | null {
     if (!url) {
       return null;
@@ -387,6 +516,11 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     return `${apiBase.replace(/\/$/, '')}${normalizedPath}`;
   }
 
+  /**
+   * Updates applied filters from external filter control.
+   * @param {CameraFilters} filters - New filter values
+   * @returns {void}
+   */
   onFiltersChanged(filters: CameraFilters): void {
     this.appliedFilters = filters;
     this.changeDetectorRef.markForCheck();

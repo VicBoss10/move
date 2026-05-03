@@ -1,5 +1,10 @@
+<!-- Vehicle Statistics Cards Component
+     Displays stat cards grid with total detections and counts by vehicle type.
+     Each card shows count, percentage of total, and color-coded icon.
+     Responsive grid layout: 1 column mobile, 2 columns tablet, 3+ columns desktop. -->
+
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  <!-- Total Detectados -->
+  <!-- Total detections card with lightning icon -->
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-brand-500">
     <div class="flex justify-between items-start">
       <div>
@@ -27,7 +32,7 @@
     </div>
   </div>
 
-  <!-- Autos -->
+  <!-- Cars/autos count card with percentage -->
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-warning-500">
     <div class="flex justify-between items-start">
       <div>
@@ -54,7 +59,7 @@
     </div>
   </div>
 
-  <!-- Buses -->
+  <!-- Buses count card with percentage -->
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-orange-500">
     <div class="flex justify-between items-start">
       <div>
@@ -81,7 +86,7 @@
     </div>
   </div>
 
-  <!-- Motos -->
+  <!-- Motorcycles/motos count card with percentage -->
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-red-500">
     <div class="flex justify-between items-start">
       <div>
@@ -104,7 +109,7 @@
     </div>
   </div>
 
-  <!-- Camiones -->
+  <!-- Trucks/camiones count card with percentage -->
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
     <div class="flex justify-between items-start">
       <div>

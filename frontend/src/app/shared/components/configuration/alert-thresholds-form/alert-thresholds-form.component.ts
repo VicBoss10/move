@@ -11,18 +11,27 @@ import {
 import { ToastService } from '../../../../core/services/toast.service';
 
 /**
- * AlertThresholdsFormComponent
+ * AlertThresholdsFormComponent (Presentational Component)
  *
- * Componente encargado de mostrar y editar los umbrales de alerta
- * para las métricas ambientales (CO₂, PM2.5, temperatura, etc.).
- * Permite seleccionar una métrica, editar sus niveles (max) y
- * persistir overrides en `localStorage` a través de `ThresholdsService`.
+ * Manages environmental metric alert threshold configuration and persistence.
+ * Displays threshold settings for metrics like CO₂, PM2.5, temperature, etc.,
+ * allowing users to customize alert level thresholds and save overrides.
  *
- * - Valida que los umbrales estén en orden creciente (nivel n > nivel n-1)
- * - Guarda/Restablece los valores y notifica con `ToastService`
+ * Features:
+ * - Metric selection with reactive form rebuild
+ * - Editable threshold max values per alert level (good/moderate/poor/critical)
+ * - Progressive validation ensuring strictly ascending threshold values
+ * - Reset to factory defaults via ThresholdsService
+ * - LocalStorage persistence of custom threshold overrides
+ * - Form state tracking with FormArray and reactive change detection
+ * - Dark mode support
+ * - OnPush change detection with manual ChangeDetectorRef triggers
  *
  * @selector app-alert-thresholds-form
  * @standalone true
+ * @imports CommonModule, ReactiveFormsModule
+ * @example
+ * <app-alert-thresholds-form />
  */
 @Component({
   selector: 'app-alert-thresholds-form',
@@ -32,11 +41,37 @@ import { ToastService } from '../../../../core/services/toast.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AlertThresholdsFormComponent implements OnInit {
+  /**
+   * Available environmental metric keys for threshold configuration.
+   * @type {EnvironmentMetricKey[]}
+   */
   metrics: EnvironmentMetricKey[] = Object.keys(ENV_THRESHOLDS) as EnvironmentMetricKey[];
+
+  /**
+   * Currently selected metric being edited.
+   * @type {EnvironmentMetricKey}
+   */
   selected: EnvironmentMetricKey = 'co2';
+
+  /**
+   * Reactive form group containing metric selection and threshold levels FormArray.
+   * @type {FormGroup}
+   */
   form: FormGroup;
+
+  /**
+   * Reference to environment thresholds configuration object for template binding.
+   * @type {typeof ENV_THRESHOLDS}
+   */
   public envThresholds = ENV_THRESHOLDS;
 
+  /**
+   * Initializes component with form builder and service dependencies.
+   * @param {FormBuilder} fb - Angular FormBuilder for reactive form creation
+   * @param {ThresholdsService} thresholds - Service managing threshold configuration and persistence
+   * @param {ToastService} toast - Service for displaying user notifications
+   * @param {ChangeDetectorRef} cdr - Change detection reference for manual triggering in OnPush mode
+   */
   constructor(
     private fb: FormBuilder,
     private thresholds: ThresholdsService,
@@ -46,10 +81,19 @@ export class AlertThresholdsFormComponent implements OnInit {
     this.form = this.createEmptyForm();
   }
 
+  /**
+   * Component initialization lifecycle hook.
+   * Builds reactive form for the default selected metric.
+   */
   ngOnInit(): void {
     this.buildFormFor(this.selected);
   }
 
+  /**
+   * Creates an empty form group with metric selection and empty levels FormArray.
+   * @returns {FormGroup} Empty reactive form ready for population
+   * @private
+   */
   private createEmptyForm(): FormGroup {
     return this.fb.group({
       metric: ['co2', Validators.required],
@@ -57,19 +101,31 @@ export class AlertThresholdsFormComponent implements OnInit {
     });
   }
 
+  /**
+   * TrackBy function for @for loop iteration by index.
+   * Optimizes change detection in template loops.
+   * @param {number} index - Loop index
+   * @returns {number} Index for tracking
+   */
   trackByIndex(index: number): number {
     return index;
   }
 
+  /**
+   * TrackBy function for @for loop iteration by metric key.
+   * Optimizes change detection in template metric selector.
+   * @param {EnvironmentMetricKey} metric - Metric key identifier
+   * @returns {string} Metric key for tracking
+   */
   trackByMetric(metric: EnvironmentMetricKey): string {
     return metric;
   }
 
   /**
-   * Construye el formulario para la métrica seleccionada usando los
-   * umbrales actualmente cargados desde `ThresholdsService`.
-   * Incluye todos los niveles pero marcará el último como solo lectura en el HTML.
-   * @param metric - Clave de la métrica (co2, pm25, temperature, ...)
+   * Rebuilds reactive form for selected metric.
+   * Populates FormArray with threshold level controls from ThresholdsService.
+   * Critical level (max: Infinity) is rendered read-only in template.
+   * @param {EnvironmentMetricKey} metric - Metric key (co2, pm25, temperature, etc.)
    */
   buildFormFor(metric: EnvironmentMetricKey) {
     const cfg = this.thresholds.getMetric(metric) as MetricThresholdConfig;
@@ -82,10 +138,11 @@ export class AlertThresholdsFormComponent implements OnInit {
   }
 
   /**
-   * Crea un FormGroup para un nivel de un umbral individual.
-   * Si es el nivel Crítico (marcado con max: Infinity), lo dejamos como null
-   * y sin validadores obligatorios ya que no se edita.
-   * @param level - Configuración del nivel (max, key, label)
+   * Creates FormGroup for individual threshold level control.
+   * Critical level (marked with max: Infinity) is populated with null and no validators
+   * since it is read-only in the template.
+   * @param {ThresholdLevel} level - Threshold level configuration (max, key, label, colors)
+   * @returns {FormGroup} Form group with max/key/label controls
    */
   levelGroup(level: ThresholdLevel) {
     const isInfinity = level.max === Infinity;
@@ -99,18 +156,26 @@ export class AlertThresholdsFormComponent implements OnInit {
     });
   }
 
+  /**
+   * Getter for levels FormArray.
+   * @returns {FormArray} Array of threshold level form groups
+   */
   get levels(): FormArray {
     return this.form.get('levels') as FormArray;
   }
 
-  /** Selecciona una métrica diferente y reconstruye el formulario. */
+  /**
+   * Selects different metric and rebuilds form with new threshold values.
+   * @param {EnvironmentMetricKey} metric - Metric key to select
+   */
   selectMetric(metric: EnvironmentMetricKey) {
     this.buildFormFor(metric);
   }
 
   /**
-   * Valida que los valores `max` de los niveles editables sean estrictamente crecientes.
-   * Devuelve null si es válido o un mensaje de error en caso contrario.
+   * Validates threshold max values are strictly ascending.
+   * Skips last level (critical) as it has max: Infinity.
+   * @returns {string | null} Error message if invalid, null if all values pass validation
    */
   validateOrder(): string | null {
     // Solo validamos hasta el penúltimo, ya que el último es Infinity (null en form)
@@ -130,8 +195,9 @@ export class AlertThresholdsFormComponent implements OnInit {
   }
 
   /**
-   * Persiste los cambios validados en `ThresholdsService`.
-   * Mapea los controles del formulario a la estructura `ThresholdLevel`.
+   * Persists validated threshold changes to ThresholdsService and localStorage.
+   * Maps form controls back to ThresholdLevel structure with original color/gauge properties.
+   * Displays success toast on completion.
    */
   save() {
     const err = this.validateOrder();
@@ -164,6 +230,10 @@ export class AlertThresholdsFormComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  /**
+   * Resets all thresholds to factory defaults via ThresholdsService.
+   * Rebuilds form for current metric and displays success notification.
+   */
   reset() {
     this.thresholds.reset();
     this.buildFormFor(this.selected);
@@ -171,9 +241,10 @@ export class AlertThresholdsFormComponent implements OnInit {
   }
 
   /**
-   * Devuelve la clase CSS del color para el indicador de nivel
-   * basado en el índice del nivel en la lista.
-   * @param index - Índice del nivel (0=good, 1=moderate, 2=poor, etc.)
+   * Returns Tailwind color class for threshold level indicator.
+   * Maps severity progression from good (green) to critical (red).
+   * @param {number} index - Level index (0=good, 1=moderate, 2=poor, 3=critical)
+   * @returns {string} Tailwind bg color class
    */
   getLevelColorClass(index: number): string {
     const colors = [

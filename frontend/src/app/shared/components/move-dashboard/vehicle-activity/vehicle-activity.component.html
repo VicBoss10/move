@@ -1,13 +1,16 @@
+<!-- Vehicle Activity Component
+     Displays bar chart of vehicle detections by type with summary counts and total statistics -->
+
 <div
   class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6 h-full"
 >
-  <!-- Header -->
+  <!-- Page header with title and description -->
   <div class="mb-6">
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Actividad Vehicular</h3>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Tipos de vehículos detectados hoy</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400">Tipos de vehículos detectados hoy</p>
   </div>
 
-  <!-- Chart Container -->
+  <!-- Chart container with bar graph and scrollable overflow -->
   <div class="max-w-full overflow-x-auto custom-scrollbar">
     <div class="-ml-5 min-w-[650px] xl:min-w-full pl-2">
       @if (chartData$ | async; as data) {
@@ -20,6 +23,7 @@
             style="max-height: 300px; position: relative"
           ></canvas>
         } @else {
+          <!-- Empty state when no chart data is available -->
           <div class="py-12 flex items-center justify-center">
             <div class="text-center">
               <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
@@ -33,9 +37,10 @@
     </div>
   </div>
 
-  <!-- Stats Footer -->
+  <!-- Statistics footer with vehicle counts by type and total detection count -->
   <div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-800">
     @if (vehicleCounts$ | async; as counts) {
+      <!-- Vehicle type count cards grid -->
       <div class="grid grid-cols-5 gap-3">
         <div class="text-center">
           <div
@@ -83,7 +88,7 @@
           <p class="text-sm font-bold text-purple-600 dark:text-purple-400">{{ counts[4] }}</p>
         </div>
       </div>
-      <!-- Total -->
+      <!-- Total vehicles detected summary -->
       <div
         class="mt-4 flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50"
       >

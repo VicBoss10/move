@@ -1,15 +1,17 @@
+<!-- CO2 Stats Table Component
+     Displays aggregated CO2 statistics in a responsive grid with five key metrics.
+     Shows current, minimum, maximum, average values in ppm and variation percentage.
+     Includes color-coded variation indicator: green (<2%), orange (2-5%), red (>5%). -->
+
 @if (stats$ | async; as stats) {
   <div
     class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
   >
-    <!-- Header -->
     <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
       <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Estadísticas de CO₂</h3>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Últimas 24 horas</p>
     </div>
-    <!-- Stats Grid -->
     <div class="grid grid-cols-2 gap-4 p-5 sm:grid-cols-5 sm:p-6">
-      <!-- Actual -->
       <div class="text-center">
         <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Actual</p>
         <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
@@ -17,7 +19,6 @@
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ppm</p>
       </div>
-      <!-- Mínimo -->
       <div class="text-center">
         <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Mínimo</p>
         <p class="mt-2 text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -25,7 +26,6 @@
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ppm</p>
       </div>
-      <!-- Máximo -->
       <div class="text-center">
         <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Máximo</p>
         <p class="mt-2 text-2xl font-bold text-orange-600 dark:text-orange-400">
@@ -33,7 +33,6 @@
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ppm</p>
       </div>
-      <!-- Promedio -->
       <div class="text-center">
         <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Promedio</p>
         <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
@@ -41,7 +40,6 @@
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ppm</p>
       </div>
-      <!-- Variación -->
       <div class="text-center">
         <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Variación</p>
         <p [class]="'mt-2 text-2xl font-bold ' + getVariationColor(stats.variacion)">

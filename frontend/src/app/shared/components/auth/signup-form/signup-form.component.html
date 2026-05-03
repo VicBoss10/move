@@ -1,3 +1,7 @@
+<!-- Sign Up Form Component
+     Displays registration form with name, email, password inputs,
+     terms agreement checkbox, and OAuth signup buttons. -->
+
 <div class="w-full max-w-md mx-auto mb-5 sm:pt-10">
   <a
     routerLink="/"
@@ -36,7 +40,8 @@
       </p>
     </div>
 
-    <!-- OAuth Buttons -->
+    <!-- OAuth signup buttons -->
+
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
       <button
         class="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
@@ -86,7 +91,7 @@
       </button>
     </div>
 
-    <!-- Divider -->
+    <!-- Divider between OAuth and email/password form -->
     <div class="relative py-3 sm:py-5">
       <div class="absolute inset-0 flex items-center">
         <div class="w-full border-t border-gray-200 dark:border-gray-800"></div>
@@ -96,10 +101,10 @@
       </div>
     </div>
 
+    <!-- Registration form with name, email, and password inputs -->
     <form (ngSubmit)="onSignUp()">
       <div class="space-y-5">
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <!-- First Name -->
           <div class="sm:col-span-1">
             <app-label> Nombre<span class="text-error-500">*</span> </app-label>
             <app-input-field
@@ -110,7 +115,6 @@
               placeholder="Ingresa tu nombre"
             />
           </div>
-          <!-- Last Name -->
           <div class="sm:col-span-1">
             <app-label> Apellido<span class="text-error-500">*</span> </app-label>
             <app-input-field
@@ -122,7 +126,6 @@
             />
           </div>
         </div>
-        <!-- Email -->
         <div>
           <app-label> Correo electrónico <span class="text-error-500">*</span> </app-label>
           <app-input-field
@@ -133,7 +136,6 @@
             placeholder="Ingresa tu correo electrónico"
           />
         </div>
-        <!-- Password -->
         <div>
           <app-label>Contraseña <span class="text-error-500">*</span></app-label>
           <div class="relative">
@@ -183,7 +185,6 @@
             </span>
           </div>
         </div>
-        <!-- Checkbox -->
         <div class="flex items-center gap-3">
           <app-checkbox className="w-5 h-5" [(checked)]="isChecked" />
           <p class="inline-block font-normal text-gray-500 dark:text-gray-400">
@@ -193,7 +194,6 @@
             <span class="text-gray-800 dark:text-white"> Política de Privacidad </span>
           </p>
         </div>
-        <!-- Button -->
         <div>
           <button
             type="submit"
@@ -206,12 +206,14 @@
       </div>
     </form>
 
+    <!-- Error message display -->
     @if (errorMessage) {
       <div class="mt-3">
         <p class="text-sm text-center text-error-500">{{ errorMessage }}</p>
       </div>
     }
 
+    <!-- Link to signin form -->
     <div class="mt-5">
       <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
         ¿Ya tienes una cuenta?

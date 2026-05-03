@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import {
   ENV_THRESHOLDS,
   MetricThresholdConfig,
@@ -9,13 +9,28 @@ import { ApiThresholdsService } from './api-thresholds.service';
 
 const STORAGE_KEY = 'env_thresholds_overrides_v1';
 
+/**
+ * Threshold configuration service managing alert thresholds for environmental metrics.
+ * Maintains a reactive store of threshold configurations with localStorage persistence and API sync.
+ * Supports both default thresholds and user-defined overrides.
+ *
+ * @class ThresholdsService
+ * @injectable root
+ */
 @Injectable({ providedIn: 'root' })
 export class ThresholdsService {
-  /** Almacén reactivo con la configuración actual (incluye overrides). */
+  /**
+   * Reactive store of current threshold configuration including overrides.
+   * @private
+   */
   private store$ = new BehaviorSubject<Record<EnvironmentMetricKey, MetricThresholdConfig>>(
     this.loadSync(),
   );
 
+  /**
+   * Flag indicating whether API initialization has completed.
+   * @private
+   */
   private initialized = false;
 
   constructor(private apiThresholds: ApiThresholdsService) {
@@ -23,8 +38,12 @@ export class ThresholdsService {
   }
 
   /**
-   * Carga desde localStorage de forma síncrona para inicialización rápida.
-   * Se actualiza desde la API cuando esté disponible.
+   * Synchronously loads thresholds from localStorage on initialization.
+   * Merges default thresholds with stored overrides for quick startup.
+   * Falls back to defaults if localStorage is unavailable.
+   *
+   * @private
+   * @returns {Record} Merged threshold configuration with overrides applied.
    */
   private loadSync(): Record<EnvironmentMetricKey, MetricThresholdConfig> {
     try {
@@ -46,8 +65,11 @@ export class ThresholdsService {
   }
 
   /**
-   * Intenta cargar los umbrales desde la API backend.
-   * Si falla, mantiene los valores por defecto.
+   * Asynchronously initializes thresholds from the backend API.
+   * Updates the reactive store with server values when available.
+   * Falls back to default/localStorage values if API call fails.
+   *
+   * @private
    */
   private initializeFromApi(): void {
     this.apiThresholds.getThresholdsGrouped().subscribe({
@@ -73,7 +95,10 @@ export class ThresholdsService {
   }
 
   /**
-   * Observador para reaccionar a cambios de umbrales en la UI.
+   * Retrieves an observable stream of all threshold configurations.
+   * Components subscribe to this to react to threshold changes.
+   *
+   * @returns {Observable} Observable emitting the current threshold configuration.
    */
   getAll(): Observable<Record<EnvironmentMetricKey, MetricThresholdConfig>> {
     return this.store$.asObservable();

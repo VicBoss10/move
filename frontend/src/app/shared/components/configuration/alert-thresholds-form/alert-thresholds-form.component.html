@@ -1,5 +1,9 @@
+<!-- Alert Thresholds Form Component
+     Configurable alert level thresholds for environmental metrics.
+     Allows metric selection, editing max values, validation, save/reset. -->
+
 <div class="space-y-6">
-  <!-- Encabezado -->
+  <!-- Page header with title and description -->
   <div class="flex flex-col gap-2">
     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Umbrales de Alerta</h1>
     <p class="text-gray-600 dark:text-gray-400">
@@ -8,7 +12,7 @@
     </p>
   </div>
 
-  <!-- Selector de Métricas en Tabs -->
+  <!-- Metric selector tabs and form container -->
   <div
     class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 overflow-hidden"
   >
@@ -31,10 +35,10 @@
       }
     </div>
 
-    <!-- Formulario de edición -->
+    <!-- Form section with metric title, save/reset buttons, and threshold controls -->
     <div class="p-6">
       <form [formGroup]="form" class="space-y-6">
-        <!-- Encabezado del formulario -->
+        <!-- Form header with title, description, and action buttons -->
         <div
           class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700"
         >
@@ -80,7 +84,7 @@
           </div>
         </div>
 
-        <!-- Niveles de umbral -->
+        <!-- Threshold level controls FormArray with color indicator, max value input, validation status -->
         <div class="space-y-4" formArrayName="levels">
           @for (lvl of levels.controls; track trackByIndex($index); let i = $index) {
             <div
@@ -88,7 +92,7 @@
               class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
             >
               <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <!-- Etiqueta del nivel -->
+                <!-- Level label with colored indicator dot -->
                 <div class="md:col-span-1">
                   <div class="flex items-center gap-2">
                     <div [ngClass]="getLevelColorClass(i)" class="h-3 w-3 rounded-full"></div>
@@ -100,7 +104,7 @@
                     </div>
                   </div>
                 </div>
-                <!-- Input del valor máximo (Solo si NO es el último nivel de la lista actual) -->
+                <!-- Max value input (editable for all except critical level which is read-only) -->
                 <div class="md:col-span-2">
                   @if (i < levels.controls.length - 1) {
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -129,7 +133,7 @@
                     </div>
                   }
                 </div>
-                <!-- Indicador de validación -->
+                <!-- Validation status indicator (checkmark/error icon) -->
                 <div class="md:col-span-1">
                   @if (i < levels.controls.length - 1) {
                     @if (levels.controls[i].get('max')?.valid) {
@@ -170,7 +174,7 @@
           }
         </div>
 
-        <!-- Mensaje de validación global -->
+        <!-- Global validation error message alert (displays if thresholds not in ascending order) -->
         @if (validateOrder()) {
           <div
             class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4"

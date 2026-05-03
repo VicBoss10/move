@@ -8,25 +8,22 @@ import { SensorData, SensorDataSearchCriteria, SensorStats } from '../models/sen
 import { QueryParamsBuilder } from '../utils/query-params.builder';
 
 /**
- * Helpers para normalizar respuestas del backend a `SensorData` tipado.
- * El backend puede devolver timestamps como string; estos helpers
- * convierten `timestamp` a `Date` cuando corresponde.
- */
-
-/**
- * Servicio para gestionar Datos de Sensores
- * Hereda funcionalidad CRUD base de BaseDataService
- * Agrega búsqueda avanzada, estadísticas y métodos especializados
+ * Sensor data management service for environmental monitoring.
+ * Extends BaseDataService for CRUD operations and adds advanced filtering, search, and statistics.
+ * Handles complex range queries on multiple sensor parameters (temperature, humidity, CO2, etc).
+ * Automatically normalizes timestamps from string to Date objects.
  *
- * @service
- * @providedIn root
+ * @class SensorDataService
+ * @extends BaseDataService<SensorData>
+ * @injectable root
  */
 @Injectable({
   providedIn: 'root',
 })
 export class SensorDataService extends BaseDataService<SensorData> {
   /**
-   * Endpoint del API para sensores
+   * API endpoint path for sensor data resources.
+   * @protected
    */
   protected endpoint = 'sensordata';
 
@@ -37,9 +34,12 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   /**
-   * Busca datos de sensores con criterios complejos
-   * @param criteria - Criterios de búsqueda (rangos de temperatura, humedad, paginación, etc)
-   * @returns Observable<SensorData[]>
+   * Searches for sensor data matching complex filter criteria.
+   * Supports range filtering on all sensor parameters, device/location filtering, and pagination.
+   * Automatically handles timestamp string-to-Date conversion.
+   *
+   * @param {SensorDataSearchCriteria} criteria - Advanced search and filter criteria.
+   * @returns {Observable<SensorData[]>} Observable with matching sensor readings.
    */
   search(criteria: SensorDataSearchCriteria): Observable<SensorData[]> {
     const queryParams = new QueryParamsBuilder()
@@ -60,30 +60,25 @@ export class SensorDataService extends BaseDataService<SensorData> {
 
     return this.apiService.get<SensorData[]>(`/${this.endpoint}/search`, queryParams).pipe(
       map((data) => {
-        // Normalizar a SensorData[] (convierte timestamp strings a Date)
         if (Array.isArray(data)) {
           this.clearServiceError();
           return this.parseSensorDataArray(data);
         }
-        // Si no es array (backend retornó mensaje de texto), retornar array vacío
-        console.warn('Backend retornó respuesta no-JSON:', data);
-        this.setServiceError(null, 'Respuesta inválida del backend para sensores');
+        console.warn('Backend returned non-JSON response:', data);
+        this.setServiceError(null, 'Invalid response from backend for sensor data');
         return [];
       }),
       catchError((error) => {
-        // Manejo de errores de parsing JSON (cuando backend retorna texto plano)
-        // Esto ocurre cuando no hay datos y el backend retorna un mensaje de texto
         if (
           error &&
           (error.message?.includes('Http failure during parsing') ||
             error.message?.includes('Unexpected token'))
         ) {
-          console.warn('No hay datos disponibles para los criterios especificados');
+          console.warn('No data available for specified criteria');
           this.clearServiceError();
           return of([]);
         }
-        // Re-lanzar otros errores
-        this.setServiceError(error, 'Error al buscar datos de sensores');
+        this.setServiceError(error, 'Error searching sensor data');
         return throwError(() => error);
       }),
     );

@@ -1,5 +1,9 @@
+<!-- Lag Analysis Component
+     Calculates and visualizes cross-correlation between hourly vehicle counts
+     and hourly-averaged environmental metrics with lag evaluation (−12h to +12h). -->
+
 <div class="space-y-6">
-  <!-- ── Page header ──────────────────────────────────────────────────────── -->
+  <!-- Page header with title and description -->
   <div class="flex flex-col gap-1">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Rezagos / Cross-correlation</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -8,12 +12,11 @@
     </p>
   </div>
 
-  <!-- ── Filters ───────────────────────────────────────────────────────────── -->
+  <!-- Period and metric selector controls -->
   <div
     class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
   >
     <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-      <!-- Period -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Período:</span>
         @for (p of periods; track p) {
@@ -31,7 +34,6 @@
         }
       </div>
 
-      <!-- Metric -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Contaminante:</span>
         <select
@@ -47,13 +49,12 @@
     </div>
   </div>
 
-  <!-- ── Best lag card (insight) ───────────────────────────────────────────── -->
+  <!-- Best lag interpretation card -->
   @if (summary && !isLoading && !hasError) {
     <div
       class="overflow-hidden rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800/40 dark:bg-amber-900/10"
     >
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-        <!-- Icon -->
         <div
           class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30"
         >
@@ -71,7 +72,6 @@
             />
           </svg>
         </div>
-        <!-- Text -->
         <div class="flex-1">
           <div class="flex flex-wrap items-center gap-2">
             <h3 class="text-sm font-semibold text-amber-800 dark:text-amber-300">
@@ -93,7 +93,7 @@
     </div>
   }
 
-  <!-- ── Chart card ────────────────────────────────────────────────────────── -->
+  <!-- Cross-correlation bar chart -->
   <div
     class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
   >
@@ -127,7 +127,6 @@
     </div>
 
     <div class="p-5 sm:p-6">
-      <!-- Error -->
       @if (hasError && !isLoading) {
         <div class="flex flex-col items-center justify-center gap-3 py-16 text-center">
           <svg class="h-10 w-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -142,7 +141,6 @@
         </div>
       }
 
-      <!-- Empty -->
       @if (!isLoading && !hasError && !summary) {
         <div class="flex flex-col items-center justify-center gap-3 py-16 text-center">
           <svg
@@ -161,7 +159,6 @@
         </div>
       }
 
-      <!-- Bar chart -->
       @if (!isLoading && !hasError && summary) {
         <div class="max-w-full overflow-x-auto custom-scrollbar">
           <div class="min-w-[600px]" style="height: 340px; position: relative">
@@ -178,7 +175,7 @@
     </div>
   </div>
 
-  <!-- ── Results table ─────────────────────────────────────────────────────── -->
+  <!-- Detailed lag results table -->
   @if (summary && !isLoading && !hasError) {
     <div
       class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
@@ -217,7 +214,6 @@
           <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
             @for (row of summary.results; track row) {
               <tr [ngClass]="rowClass(row.r, row.lag === summary.bestLag.lag)">
-                <!-- Lag -->
                 <td class="whitespace-nowrap px-5 py-3 font-mono text-gray-800 dark:text-gray-200">
                   {{ row.lag >= 0 ? '+' : '' }}{{ row.lagHours }} h
                   @if (row.lag === summary.bestLag.lag) {
@@ -228,7 +224,6 @@
                     </span>
                   }
                 </td>
-                <!-- r value -->
                 <td
                   class="whitespace-nowrap px-5 py-3 font-mono"
                   [ngClass]="
@@ -241,7 +236,6 @@
                 >
                   {{ row.r.toFixed(3) }}
                 </td>
-                <!-- Strength -->
                 <td class="px-5 py-3 text-gray-600 dark:text-gray-400">
                   @if (row.r >= 0.5 || row.r <= -0.5) {
                     <span
@@ -262,7 +256,6 @@
                     }
                   }
                 </td>
-                <!-- Direction -->
                 <td class="px-5 py-3 text-xs text-gray-600 dark:text-gray-400">
                   @if (row.lag < 0) {
                     Vehículos → {{ row.lag === 0 ? '' : 'luego' }} contaminante
@@ -282,7 +275,7 @@
     </div>
   }
 
-  <!-- ── Methodology note ──────────────────────────────────────────────────── -->
+  <!-- Methodology explanation -->
   <div
     class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-800/30"
   >

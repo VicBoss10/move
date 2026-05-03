@@ -1,18 +1,25 @@
 /**
- * DeleteDataFormComponent
+ * DeleteDataFormComponent (Smart Component)
  *
- * Componente para eliminar datos masivos del sistema: datos de sensores y detecciones de vehículos.
- * Permite borrar todos los registros o por rango de fechas, con confirmación y feedback visual vía toast.
+ * Manages bulk deletion of sensor data and vehicle detection records with confirmation workflows.
+ * Supports total deletion or date-range bounded deletion for both data types.
  *
- * Características:
- * - Consulta automática del primer y último registro para limitar los rangos válidos
- * - Eliminación total o por rango de fechas para sensores y vehículos
- * - Modal de confirmación antes de acciones destructivas
- * - Mensajes de éxito/error mediante ToastService
- * - Estados de carga y feedback reactivo con BehaviorSubject
+ * Features:
+ * - Auto-loaded first/last record timestamps for min/max date constraints
+ * - Total deletion or date-range bounded deletion for sensors and vehicles
+ * - Destructive action confirmation modal with warning messages
+ * - Reactive loading and success/error state management via BehaviorSubject
+ * - Toast notifications for user feedback
+ * - Independent sensor and vehicle data management sections
+ * - Date input field validation and constraint binding
+ * - Dark mode support
+ * - OnPush change detection with manual ChangeDetectorRef triggers
  *
  * @selector app-delete-data-form
  * @standalone true
+ * @imports CommonModule, FormsModule
+ * @example
+ * <app-delete-data-form />
  */
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -31,7 +38,6 @@ import { ToastService } from '../../../../core/services/toast.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeleteDataFormComponent implements OnInit {
-  // Sensor data section
   sensorMinDate = '';
   sensorMaxDate = '';
   sensorStartDate = '';
@@ -40,7 +46,6 @@ export class DeleteDataFormComponent implements OnInit {
   sensorSuccess$ = new BehaviorSubject<string | null>(null);
   sensorError$ = new BehaviorSubject<string | null>(null);
 
-  // Vehicles section
   vehicleMinDate = '';
   vehicleMaxDate = '';
   vehicleStartDate = '';
@@ -49,12 +54,18 @@ export class DeleteDataFormComponent implements OnInit {
   vehicleSuccess$ = new BehaviorSubject<string | null>(null);
   vehicleError$ = new BehaviorSubject<string | null>(null);
 
-  // Confirmation modal
   confirmVisible = false;
   confirmTitle = '';
   confirmDesc = '';
   private pendingAction: (() => void) | null = null;
 
+  /**
+   * Initializes component with service dependencies.
+   * @param {SensorDataService} sensorService - Service managing sensor data operations
+   * @param {VehicleDetectedService} vehicleService - Service managing vehicle detection data operations
+   * @param {ToastService} toastService - Service for displaying user notifications
+   * @param {ChangeDetectorRef} cdr - Change detection reference for manual triggering in OnPush mode
+   */
   constructor(
     private sensorService: SensorDataService,
     private vehicleService: VehicleDetectedService,
@@ -62,11 +73,20 @@ export class DeleteDataFormComponent implements OnInit {
     private cdr: ChangeDetectorRef,
   ) {}
 
+  /**
+   * Component initialization lifecycle hook.
+   * Loads first and last timestamps for both sensor and vehicle data to constrain date inputs.
+   */
   ngOnInit(): void {
     this.loadSensorDateBounds();
     this.loadVehicleDateBounds();
   }
 
+  /**
+   * Loads first and last sensor data record timestamps to constrain date picker min/max.
+   * Silently fails on error (no message if no records exist).
+   * @private
+   */
   private loadSensorDateBounds(): void {
     this.sensorService.getFirstRecord().subscribe({
       next: (r) => {
@@ -84,6 +104,11 @@ export class DeleteDataFormComponent implements OnInit {
     });
   }
 
+  /**
+   * Loads first and last vehicle detection record timestamps to constrain date picker min/max.
+   * Silently fails on error (no message if no records exist).
+   * @private
+   */
   private loadVehicleDateBounds(): void {
     this.vehicleService.getFirstRecord().subscribe({
       next: (r) => {
@@ -101,12 +126,25 @@ export class DeleteDataFormComponent implements OnInit {
     });
   }
 
+  /**
+   * Converts timestamp to ISO 8601 date string (YYYY-MM-DD) for date input binding.
+   * @param {string | number | Date | null | undefined} timestamp - Timestamp to convert
+   * @returns {string} ISO date string or empty string if null
+   * @private
+   */
   private toDateString(timestamp: string | number | Date | null | undefined): string {
     if (!timestamp) return '';
     const d = new Date(timestamp);
     return d.toISOString().split('T')[0];
   }
 
+  /**
+   * Opens confirmation modal with custom title and description.
+   * Stores pending action callback to execute if user confirms.
+   * @param {string} title - Modal header title
+   * @param {string} desc - Modal body description/warning message
+   * @param {() => void} action - Callback function to execute on confirmation
+   */
   requestConfirm(title: string, desc: string, action: () => void): void {
     this.confirmTitle = title;
     this.confirmDesc = desc;
@@ -115,6 +153,9 @@ export class DeleteDataFormComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  /**
+   * Executes pending action and closes confirmation modal.
+   */
   confirmAction(): void {
     this.confirmVisible = false;
     if (this.pendingAction) {
@@ -124,14 +165,18 @@ export class DeleteDataFormComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  /**
+   * Cancels pending action and closes confirmation modal.
+   */
   cancelConfirm(): void {
     this.confirmVisible = false;
     this.pendingAction = null;
     this.cdr.markForCheck();
   }
 
-  // ── Sensor actions ─────────────────────────────────────────────────────────
-
+  /**
+   * Initiates total sensor data deletion with confirmation modal.
+   */
   deleteSensorAll(): void {
     this.requestConfirm(
       'Eliminar todos los datos de sensores',
@@ -140,6 +185,11 @@ export class DeleteDataFormComponent implements OnInit {
     );
   }
 
+  /**
+   * Executes total sensor data deletion with loading state and error handling.
+   * Resets date bounds and clears input fields on success.
+   * @private
+   */
   private executeSensorAll(): void {
     this.sensorLoading$.next(true);
     this.sensorSuccess$.next(null);
@@ -168,6 +218,10 @@ export class DeleteDataFormComponent implements OnInit {
       });
   }
 
+  /**
+   * Initiates sensor data deletion by date range with confirmation modal.
+   * Validates both start and end dates are selected before proceeding.
+   */
   deleteSensorByRange(): void {
     if (!this.sensorStartDate || !this.sensorEndDate) return;
     this.requestConfirm(
@@ -177,6 +231,12 @@ export class DeleteDataFormComponent implements OnInit {
     );
   }
 
+  /**
+   * Executes sensor data deletion by date range with loading state and error handling.
+   * Converts date strings to ISO timestamps with time bounds (start: 00:00:00, end: 23:59:59).
+   * Reloads date bounds on success.
+   * @private
+   */
   private executeSensorByRange(): void {
     this.sensorLoading$.next(true);
     this.sensorSuccess$.next(null);
@@ -206,8 +266,9 @@ export class DeleteDataFormComponent implements OnInit {
       });
   }
 
-  // ── Vehicle actions ─────────────────────────────────────────────────────────
-
+  /**
+   * Initiates total vehicle detection data deletion with confirmation modal.
+   */
   deleteVehicleAll(): void {
     this.requestConfirm(
       'Eliminar todas las detecciones de vehículos',
@@ -216,6 +277,11 @@ export class DeleteDataFormComponent implements OnInit {
     );
   }
 
+  /**
+   * Executes total vehicle detection data deletion with loading state and error handling.
+   * Resets date bounds and clears input fields on success.
+   * @private
+   */
   private executeVehicleAll(): void {
     this.vehicleLoading$.next(true);
     this.vehicleSuccess$.next(null);
@@ -244,6 +310,10 @@ export class DeleteDataFormComponent implements OnInit {
       });
   }
 
+  /**
+   * Initiates vehicle detection data deletion by date range with confirmation modal.
+   * Validates both start and end dates are selected before proceeding.
+   */
   deleteVehicleByRange(): void {
     if (!this.vehicleStartDate || !this.vehicleEndDate) return;
     this.requestConfirm(
@@ -253,6 +323,12 @@ export class DeleteDataFormComponent implements OnInit {
     );
   }
 
+  /**
+   * Executes vehicle detection data deletion by date range with loading state and error handling.
+   * Converts date strings to ISO timestamps with time bounds (start: 00:00:00, end: 23:59:59).
+   * Reloads date bounds on success.
+   * @private
+   */
   private executeVehicleByRange(): void {
     this.vehicleLoading$.next(true);
     this.vehicleSuccess$.next(null);

@@ -1,10 +1,12 @@
+<!-- Sensor Data Table Component
+     Displays a responsive historical sensor data table with nine parameter columns (timestamp, CO₂, temperature, humidity, PM2.5, PM10, CO, NO₂, NH₃).
+     Supports pagination with load-more button, loading/error/empty states, and responsive horizontal scrolling on mobile. -->
+
 <div>
-  <!-- Table Container -->
   <div class="col-span-12">
     <div
       class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
     >
-      <!-- Header with filters -->
       <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -18,7 +20,6 @@
         </div>
       </div>
 
-      <!-- Table -->
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead
@@ -73,7 +74,6 @@
             </tr>
           </thead>
           <tbody>
-            <!-- Loading state -->
             @if (isLoading) {
               <tr>
                 <td colspan="11" class="px-5 py-4 text-center text-sm text-gray-500">
@@ -82,7 +82,6 @@
               </tr>
             }
 
-            <!-- Error state -->
             @if (errorMessage && !isLoading) {
               <tr>
                 <td colspan="11" class="px-5 py-4 text-center text-sm text-red-600">
@@ -91,7 +90,6 @@
               </tr>
             }
 
-            <!-- Empty state -->
             @if (!isLoading && filteredRecords.length === 0 && !errorMessage) {
               <tr>
                 <td colspan="11" class="px-5 py-4 text-center text-sm text-gray-500">
@@ -100,7 +98,6 @@
               </tr>
             }
 
-            <!-- Data rows -->
             @for (record of filteredRecords; track record) {
               <tr
                 class="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/50"
@@ -156,7 +153,6 @@
         </table>
       </div>
 
-      <!-- Empty state -->
       @if (!isLoading && filteredRecords.length === 0 && !errorMessage) {
         <div
           class="flex flex-col items-center justify-center border-t border-gray-200 px-5 py-12 text-center dark:border-gray-800 sm:px-6"
@@ -178,7 +174,6 @@
         </div>
       }
 
-      <!-- Load More Button -->
       @if (filteredRecords.length > 0 && hasMoreData && !errorMessage) {
         <div class="border-t border-gray-200 px-5 py-4 text-center dark:border-gray-800 sm:px-6">
           <button
@@ -221,7 +216,6 @@
         </div>
       }
 
-      <!-- No More Data Message -->
       @if (filteredRecords.length > 0 && !hasMoreData && !isLoading) {
         <div class="border-t border-gray-200 px-5 py-4 text-center dark:border-gray-800 sm:px-6">
           <p class="text-sm text-gray-500 dark:text-gray-400">

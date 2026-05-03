@@ -1,16 +1,27 @@
 import { Injectable } from '@angular/core';
 
+/**
+ * Searchable route entry for the global navigation search.
+ * @interface SearchEntry
+ */
 export interface SearchEntry {
+  /** Display title of the route. */
   title: string;
+  /** Angular route path for navigation. */
   path: string;
+  /** Category or section for grouping related routes. */
   section: string;
+  /** Keywords for fuzzy matching (accent-insensitive). */
   keywords: string[];
+  /** If true, route is only visible to admin users. */
   adminOnly?: boolean;
 }
 
 /**
- * Índice de rutas disponibles en el sistema.
- * adminOnly: true → solo visible para usuarios con rol admin.
+ * Index of all navigable routes in the system.
+ * Each entry provides search metadata for the global search feature.
+ * Routes marked adminOnly are only visible to users with admin role.
+ * @constant SEARCH_INDEX
  */
 export const SEARCH_INDEX: SearchEntry[] = [
   // Menú principal
@@ -223,11 +234,24 @@ export const SEARCH_INDEX: SearchEntry[] = [
 ];
 
 /**
- * SearchService — filtra el índice de rutas por query y permisos.
- * Normaliza acentos para que "análisis" matchee "analisis".
+ * Global route search service for navigation.
+ * Filters the route index by query and user permissions.
+ * Performs accent-insensitive matching (e.g., "análisis" matches "analisis").
+ * Returns up to 8 most relevant results.
+ *
+ * @class SearchService
+ * @injectable root
  */
 @Injectable({ providedIn: 'root' })
 export class SearchService {
+  /**
+   * Normalizes a string for accent-insensitive comparison.
+   * Converts to lowercase, removes diacritical marks, enables fuzzy matching.
+   *
+   * @private
+   * @param {string} str - String to normalize.
+   * @returns {string} Normalized string without accents.
+   */
   private normalize(str: string): string {
     return str
       .toLowerCase()
@@ -235,6 +259,16 @@ export class SearchService {
       .replace(/[\u0300-\u036f]/g, '');
   }
 
+  /**
+   * Searches the route index for entries matching the query.
+   * Filters by user permissions (hides admin routes from non-admin users).
+   * Uses accent-insensitive matching on title, section, and keywords.
+   * Limits results to the top 8 matches.
+   *
+   * @param {string} query - Search query from the user.
+   * @param {boolean} isAdmin - Whether the user has admin role.
+   * @returns {SearchEntry[]} Array of matching routes, up to 8 results.
+   */
   search(query: string, isAdmin: boolean): SearchEntry[] {
     const q = this.normalize(query.trim());
     if (q.length < 2) return [];

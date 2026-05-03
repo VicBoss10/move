@@ -119,16 +119,6 @@ const DASHBOARD_ROUTES: Routes = [
         data: { roles: ['admin'] },
       },
       {
-        path: 'connected-sensors',
-        loadComponent: () =>
-          import('./pages/devices/connected-sensors/connected-sensors.component').then(
-            (m) => m.ConnectedSensorsComponent,
-          ),
-        title: 'Sensores Conectados',
-        canActivate: [roleGuard],
-        data: { roles: ['admin'] },
-      },
-      {
         path: 'device-status',
         loadComponent: () =>
           import('./pages/devices/device-status/device-status.component').then(

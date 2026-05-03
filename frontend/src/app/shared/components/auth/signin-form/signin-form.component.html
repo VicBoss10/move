@@ -1,3 +1,7 @@
+<!-- Sign In Form Component
+     Displays email and password login form with password visibility toggle,
+     error message display, and navigation to password reset and signup pages. -->
+
 <div class="w-full max-w-md pt-10 mx-auto">
   <a
     routerLink="/"
@@ -36,7 +40,7 @@
       </p>
     </div>
 
-    <!-- OAuth Buttons -->
+    <!-- OAuth login buttons -->
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
       <button
         class="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
@@ -69,7 +73,7 @@
       </button>
     </div>
 
-    <!-- Divider -->
+    <!-- Divider between OAuth and email/password form -->
     <div class="relative py-3 sm:py-5">
       <div class="absolute inset-0 flex items-center">
         <div class="w-full border-t border-gray-200 dark:border-gray-800"></div>
@@ -79,7 +83,7 @@
       </div>
     </div>
 
-    <!-- Form -->
+    <!-- Email and password login form -->
     <form (ngSubmit)="onSignIn()" class="space-y-6">
       <div>
         <app-label>Correo electrónico <span class="text-error-500">*</span></app-label>
@@ -158,10 +162,12 @@
       </app-button>
     </form>
 
+    <!-- Error message display -->
     @if (errorMessage) {
       <p class="mt-3 text-sm text-center text-error-500">{{ errorMessage }}</p>
     }
 
+    <!-- Link to signup form -->
     <div class="mt-5">
       <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
         ¿No tienes una cuenta?

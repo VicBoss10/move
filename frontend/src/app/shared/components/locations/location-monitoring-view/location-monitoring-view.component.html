@@ -1,5 +1,8 @@
+<!-- Location Monitoring View Component
+     Displays all monitoring locations on interactive map with system statistics and location table -->
+
 <div class="space-y-6">
-  <!-- Encabezado -->
+  <!-- Page header with title and description -->
   <div class="flex flex-col gap-2">
     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Puntos de Monitoreo</h1>
     <p class="text-gray-600 dark:text-gray-400">
@@ -7,9 +10,8 @@
     </p>
   </div>
 
-  <!-- Grid de Información Rápida -->
+  <!-- System statistics cards -->
   <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-    <!-- Total -->
     <div
       class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
     >
@@ -19,7 +21,6 @@
       </p>
     </div>
 
-    <!-- Ubicaciones Activas -->
     <div
       class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
     >
@@ -29,7 +30,6 @@
       </p>
     </div>
 
-    <!-- Última Detección -->
     <div
       class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
     >
@@ -40,10 +40,11 @@
     </div>
   </div>
 
-  <!-- Mapa de Google Maps con marcadores de ubicaciones -->
+  <!-- Interactive map section -->
   <div class="space-y-2">
     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Mapa de Ubicaciones</h2>
 
+    <!-- Google Map with markers -->
     @if (isApiLoaded) {
       <div class="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
         <google-map
@@ -53,7 +54,6 @@
           height="400px"
           width="100%"
         >
-          <!-- Marcadores de cada ubicación del backend -->
           @for (location of locations; track location) {
             <map-marker
               #markerRef="mapMarker"
@@ -63,7 +63,6 @@
               (mapClick)="onMarkerClick(markerRef, location)"
             ></map-marker>
           }
-          <!-- Info Window compartido -->
           <map-info-window>
             @if (selectedInfoLocation) {
               <div class="p-3 max-w-xs">
@@ -143,6 +142,7 @@
         </google-map>
       </div>
     } @else {
+      <!-- Fallback when Google Maps API is not loaded -->
       <div
         class="flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
       >
@@ -171,10 +171,7 @@
         <p class="text-xs text-gray-500 mt-1">Configura la API Key para ver el mapa</p>
       </div>
     }
-
-    <!-- Fallback sin API -->
   </div>
 
-  <!-- Filtros + Tabla (integrados en location-filters) -->
   <app-location-filters />
 </div>

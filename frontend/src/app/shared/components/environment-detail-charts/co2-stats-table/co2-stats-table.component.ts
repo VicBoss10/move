@@ -6,7 +6,7 @@ import { SensorDataService } from '../../../../core/services/sensor-data.service
 import { SensorData } from '../../../../core/models/sensor-data.model';
 
 /**
- * Interface para estadísticas de CO₂
+ * Co2Stats aggregation data model.
  * @interface Co2Stats
  */
 interface Co2Stats {
@@ -18,14 +18,26 @@ interface Co2Stats {
 }
 
 /**
- * Co2StatsTableComponent
+ * Co2StatsTableComponent (Presentation Component)
  *
- * Componente dinámico que muestra tabla de estadísticas de CO₂ desde el backend.
- * Calcula estadísticas en tiempo real: actual, mínimo, máximo, promedio y variación.
- * Sigue el patrón Observable reactivo con ChangeDetectionStrategy.OnPush.
+ * Displays a statistics summary table for CO₂ concentration with key metrics.
+ *
+ * Features:
+ * - Five-column stats grid: current, minimum, maximum, average, variation
+ * - Real-time aggregation from all historical sensor data via backend query
+ * - Variation calculation: (max - min) / avg * 100 as percentage of average
+ * - Color-coded variation: green (<2%), orange (2-5%), red (>5%)
+ * - Null/invalid value filtering: only positive CO₂ values included in calculations
+ * - Stats rounding: all values rounded to nearest integer for display
+ * - Responsive layout: 2 columns on mobile, 5 columns on small screens and up
+ * - OnPush change detection with async pipe for subscription
+ * - Fallback: displays zero-state on data load error
  *
  * @selector app-co2-stats-table
  * @standalone true
+ * @imports CommonModule
+ * @example
+ * <app-co2-stats-table />
  */
 @Component({
   selector: 'app-co2-stats-table',
@@ -36,16 +48,25 @@ interface Co2Stats {
 })
 export class Co2StatsTableComponent {
   /**
-   * Observable que emite las estadísticas de CO₂ calculadas dinámicamente
+   * Observable stream of calculated CO₂ statistics aggregated from all sensor data.
+   * @type {Observable<Co2Stats>}
    */
   stats$!: Observable<Co2Stats>;
 
+  /**
+   * Initializes component with service dependency and sets up stats observable.
+   * @param {SensorDataService} sensorDataService - Service for querying historical CO₂ sensor data
+   */
   constructor(private sensorDataService: SensorDataService) {
     this.initializeStats();
   }
 
   /**
-   * Inicializa las estadísticas desde el servicio
+   * Transforms all sensor data into aggregated statistics observable.
+   * Maps raw sensor data to calculated stats: current, min, max, average, variation percentage.
+   * Returns zero-state on empty or invalid data.
+   * @private
+   * @returns {void}
    */
   private initializeStats(): void {
     this.stats$ = this.sensorDataService.getAll().pipe(
@@ -65,12 +86,14 @@ export class Co2StatsTableComponent {
   }
 
   /**
-   * Calcula estadísticas de CO₂ desde los datos del sensor
-   * @param sensorData - Array de datos de sensores
-   * @returns Objeto con estadísticas calculadas
+   * Aggregates CO₂ statistics from sensor data array.
+   * Filters null/undefined values, extracts last reading as current, computes min/max/average.
+   * Variation = (max - min) / average * 100 as percentage representation of range.
+   * @private
+   * @param {SensorData[]} sensorData - Array of sensor readings to aggregate
+   * @returns {Co2Stats} Object with current, min, max, average (ppm), variation (%)
    */
   private calculateStats(sensorData: SensorData[]): Co2Stats {
-    // Obtener valores de CO₂, filtrando los nulos/undefined
     const co2Values = sensorData
       .map((d) => d.co2)
       .filter((v) => v !== null && v !== undefined && v > 0);
@@ -79,13 +102,11 @@ export class Co2StatsTableComponent {
       return this.getEmptyStats();
     }
 
-    // Calcular estadísticas
     const actual = co2Values[co2Values.length - 1];
     const minimo = Math.min(...co2Values);
     const maximo = Math.max(...co2Values);
     const promedio = Math.round(co2Values.reduce((a, b) => a + b, 0) / co2Values.length);
 
-    // Calcular variación como diferencia entre máximo y mínimo en porcentaje del promedio
     const variacion = promedio > 0 ? Math.round(((maximo - minimo) / promedio) * 100 * 10) / 10 : 0;
 
     return {
@@ -98,8 +119,9 @@ export class Co2StatsTableComponent {
   }
 
   /**
-   * Retorna estadísticas vacías como valor por defecto
-   * @returns Objeto Co2Stats con valores en 0
+   * Returns zero-valued stats object for fallback display.
+   * @private
+   * @returns {Co2Stats} Stats object with all values set to 0
    */
   private getEmptyStats(): Co2Stats {
     return {
@@ -112,9 +134,10 @@ export class Co2StatsTableComponent {
   }
 
   /**
-   * Obtiene clase de color para la variación según su magnitud
-   * @param variacion - Valor de variación en porcentaje
-   * @returns Clases CSS de Tailwind
+   * Derives Tailwind color classes for variation indicator based on magnitude.
+   * Green: <2%, orange: 2-5%, red: >5% to reflect stability of CO₂ levels.
+   * @param {number} variacion - Variation percentage value to evaluate
+   * @returns {string} Tailwind CSS color classes for light and dark modes
    */
   getVariationColor(variacion: number): string {
     if (variacion > 5) return 'text-red-600 dark:text-red-400';

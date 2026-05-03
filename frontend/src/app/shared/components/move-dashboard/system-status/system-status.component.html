@@ -1,9 +1,12 @@
+<!-- System Status Component
+     Displays grid of system status cards showing online/offline status for devices and services -->
+
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
-  <!-- Status Card Item Start -->
+  <!-- Status cards grid with icon, primary value, secondary information and color indicators -->
   @if (statusCards$ | async; as cards) {
     @for (card of cards; track card) {
       <div [class]="'rounded-2xl border p-5 md:p-6 ' + getStatusColor(card.status)">
-        <!-- Icon Container -->
+        <!-- Icon container with status color background -->
         <div
           class="flex items-center justify-center w-12 h-12 rounded-xl"
           [class.bg-green-100]="card.status === 'online' || card.status === 'active'"
@@ -13,7 +16,7 @@
         >
           <span [innerHTML]="card.icon | safeHtml" [class]="getTextColor(card.status)"></span>
         </div>
-        <!-- Content -->
+        <!-- Content area with label, primary and secondary status information -->
         <div class="mt-5">
           <span class="text-sm text-gray-500 dark:text-gray-400">{{ card.label }}</span>
           <h4 [class]="'mt-2 font-bold text-title-sm ' + getTextColor(card.status)">
@@ -28,5 +31,4 @@
       </div>
     }
   }
-  <!-- Status Card Item End -->
 </div>

@@ -6,7 +6,8 @@ import { SensorDataService } from '../../../../core/services/sensor-data.service
 import { SensorData } from '../../../../core/models/sensor-data.model';
 
 /**
- * Interface para estadísticas de humedad
+ * HumidityStats aggregation data model.
+ * @interface HumidityStats
  */
 interface HumidityStats {
   actual: number;
@@ -17,17 +18,23 @@ interface HumidityStats {
 }
 
 /**
- * HumidityStatsTableComponent
+ * HumidityStatsTableComponent (Presentation Component)
  *
- * Componente que muestra tabla de estadísticas dinámicas de humedad relativa.
- * Incluye actual, mínimo, máximo, promedio y variación en %.
- * Obtiene datos en tiempo real del backend.
+ * Displays a statistics summary table for relative humidity with key metrics.
+ *
+ * Features:
+ * - Five-column stats grid: current, minimum, maximum, average, variation
+ * - Real-time aggregation from all historical sensor data via backend query
+ * - Variation calculation: (max - min) as percentage point difference
+ * - Color-coded variation: green (<5%), orange (5-10%), red (>10%)
+ * - All values rounded to 1 decimal place for display (percentage)
+ * - Responsive layout: 2 columns on mobile, 5 columns on small screens and up
+ * - OnPush change detection with async pipe for subscription
+ * - Fallback: displays zero-state on data load error
  *
  * @selector app-humidity-stats-table
  * @standalone true
  * @imports CommonModule
- * @returns Tabla con estadísticas de humedad
- *
  * @example
  * <app-humidity-stats-table />
  */
@@ -40,10 +47,16 @@ interface HumidityStats {
 })
 export class HumidityStatsTableComponent {
   /**
-   * Observable que emite estadísticas de humedad
+   * Observable stream of calculated humidity statistics aggregated from all sensor data.
+   * @type {Observable<HumidityStats>}
    */
   stats$!: Observable<HumidityStats>;
 
+  /**
+   * Default zero-state statistics returned on error.
+   * @type {HumidityStats}
+   * @private
+   */
   private readonly defaultStats: HumidityStats = {
     actual: 0,
     minimo: 0,
@@ -52,12 +65,20 @@ export class HumidityStatsTableComponent {
     variacion: 0,
   };
 
+  /**
+   * Initializes component with service dependency and sets up stats observable.
+   * @param {SensorDataService} sensorDataService - Service for querying historical humidity sensor data
+   */
   constructor(private sensorDataService: SensorDataService) {
     this.initializeStats();
   }
 
   /**
-   * Inicializa estadísticas de humedad desde el servicio
+   * Transforms all sensor data into aggregated statistics observable.
+   * Maps raw sensor data to calculated stats: current, min, max, average, variation percentage points.
+   * Returns zero-state on empty or invalid data.
+   * @private
+   * @returns {void}
    */
   private initializeStats(): void {
     this.stats$ = this.sensorDataService.getAll().pipe(
@@ -66,7 +87,6 @@ export class HumidityStatsTableComponent {
           return this.defaultStats;
         }
 
-        // Extraer valores de humedad
         const humidityValues = sensorData.map((d) => d.humidity || 0);
 
         const actual = this.getLatestValue(humidityValues);
@@ -84,7 +104,7 @@ export class HumidityStatsTableComponent {
         };
       }),
       catchError((error) => {
-        console.error('Error cargando estadísticas de humedad:', error);
+        console.error('Error loading humidity statistics:', error);
         return of(this.defaultStats);
       }),
       shareReplay(1),
@@ -92,14 +112,20 @@ export class HumidityStatsTableComponent {
   }
 
   /**
-   * Obtiene el último valor de un array
+   * Extracts the last value from a numeric array.
+   * @private
+   * @param {number[]} values - Array of numeric values
+   * @returns {number} Last value in array, or 0 if empty
    */
   private getLatestValue(values: number[]): number {
     return values.length > 0 ? values[values.length - 1] : 0;
   }
 
   /**
-   * Calcula el promedio de un array
+   * Computes arithmetic mean of numeric array.
+   * @private
+   * @param {number[]} values - Array of numeric values to average
+   * @returns {number} Mean value, or 0 if empty
    */
   private calculateAverage(values: number[]): number {
     if (values.length === 0) return 0;
@@ -108,7 +134,10 @@ export class HumidityStatsTableComponent {
   }
 
   /**
-   * Obtiene clase de color para la variación
+   * Derives Tailwind color classes for variation indicator based on magnitude.
+   * Green: <5%, orange: 5-10%, red: >10% to reflect stability of humidity levels.
+   * @param {number} variacion - Variation percentage point value to evaluate
+   * @returns {string} Tailwind CSS color classes for light and dark modes
    */
   getVariationColor(variacion: number): string {
     if (variacion > 10) return 'text-red-600 dark:text-red-400';

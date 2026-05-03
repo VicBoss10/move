@@ -18,7 +18,6 @@ import { SensorData } from '../../../../core/models/sensor-data.model';
 import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 
-// Registrar los scales y elementos
 ChartJS.register(
   LineController,
   LineElement,
@@ -33,22 +32,24 @@ ChartJS.register(
 /**
  * EnvironmentChartComponent
  *
- * Componente que muestra un gráfico de línea con tendencias de Temperatura y Humedad
- * en las últimas 12 horas. Utiliza dos ejes Y para escalar independientemente.
- * Conectado con SensorDataService para obtener datos reales del backend.
+ * Displays a dual-line chart with Temperature and Humidity trends over the last 12 hours.
+ * Uses independent Y axes to accommodate different measurement scales. Includes footer statistics
+ * with average CO₂, Temperature, and Humidity values. Connected to SensorDataService for real-time data.
  *
- * Características:
- * - Gráfico de línea dual: Temperatura y Humedad
- * - Ejes Y independientes
- * - Datos actualizados desde el backend
- * - Dark mode support
- * - Responsivo
+ * Features:
+ * - Dual-line chart: Temperature (°C) and Humidity (%) with independent Y axes (orange and blue)
+ * - 12-hour time window with hourly averaging and dynamic slot generation
+ * - Reactive data updates from backend via Observable pattern with spanGaps support for missing data
+ * - Dark mode support with configurable colors and responsive styling
+ * - Responsive layout with maintainAspectRatio and custom scrolling
+ * - shareReplay pattern for subscription efficiency
+ * - Average computations displayed in footer: CO₂ (ppm), Temperature (°C), Humidity (%)
+ * - OnPush change detection for performance
+ * - Error handling with empty array fallback on service errors
  *
  * @selector app-environment-chart
  * @standalone true
  * @imports CommonModule, BaseChartDirective
- * @returns Gráfico de tendencia ambiental
- *
  * @example
  * <app-environment-chart />
  */
@@ -62,35 +63,13 @@ ChartJS.register(
 export class EnvironmentChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  /**
-   * Observable que emite la configuración del gráfico con datos reactivos
-   */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
-
-  /**
-   * Observable que emite el promedio de temperatura
-   */
   avgTemperature$!: Observable<number>;
-
-  /**
-   * Observable que emite el promedio de humedad
-   */
   avgHumidity$!: Observable<number>;
-
-  /**
-   * Observable que emite el promedio de CO2
-   */
   avgCo2$!: Observable<number>;
 
-  /**
-   * Observable compartido para los datos del sensor
-   * @private
-   */
   private sensorData$!: Observable<SensorData[]>;
 
-  /**
-   * Datos por defecto del gráfico
-   */
   private readonly defaultChartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [],
@@ -199,6 +178,8 @@ export class EnvironmentChartComponent {
     },
   };
 
+  private readonly HOURS_WINDOW = 12;
+
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
@@ -206,14 +187,7 @@ export class EnvironmentChartComponent {
   }
 
   /**
-   * Horas de datos a mostrar en la gráfica
-   */
-  private readonly HOURS_WINDOW = 12;
-
-  /**
-   * Inicializa el observable compartido de datos del sensor.
-   * Obtiene el último registro para determinar la ventana de tiempo
-   * y luego consulta solo las últimas 12 horas al backend.
+   * Initializes sensor data observable with 12-hour time window from latest record
    * @private
    */
   private initializeSensorData(): void {
@@ -224,7 +198,7 @@ export class EnvironmentChartComponent {
         return this.sensorDataService.search({ start: startTime, end: endTime });
       }),
       catchError((error) => {
-        console.error('Error cargando datos de sensores:', error);
+        console.error('Error loading sensor data:', error);
         return of([]);
       }),
       shareReplay(1),
@@ -232,9 +206,7 @@ export class EnvironmentChartComponent {
   }
 
   /**
-   * Inicializa los datos del gráfico desde el observable compartido.
-   * Agrupa los datos por hora real del timestamp y genera labels dinámicos
-   * terminando en la hora del dato más reciente.
+   * Initializes chart data observable with hourly averaged temperature and humidity
    * @private
    */
   private initializeChartData(): void {
@@ -244,7 +216,6 @@ export class EnvironmentChartComponent {
           return this.defaultChartData;
         }
 
-        // Parsear timestamps y ordenar cronológicamente
         const parsedData = data
           .map((d) => ({ ...d, _time: new Date(d.timestamp) }))
           .filter((d) => !isNaN(d._time.getTime()))
@@ -254,7 +225,6 @@ export class EnvironmentChartComponent {
           return this.defaultChartData;
         }
 
-        // Hora del dato más reciente como referencia
         const latestTime = parsedData[parsedData.length - 1]._time;
         const latestSlotStart = new Date(
           latestTime.getFullYear(),
@@ -266,7 +236,6 @@ export class EnvironmentChartComponent {
           0,
         );
 
-        // Crear 12 slots horarios hacia atrás desde la hora más reciente
         const slots: { start: Date; end: Date; label: string }[] = [];
         for (let i = 11; i >= 0; i--) {
           const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
@@ -277,7 +246,6 @@ export class EnvironmentChartComponent {
 
         const labels = slots.map((s) => s.label);
 
-        // Agrupar datos en cada slot horario y promediar
         const tempData: (number | null)[] = [];
         const humidityData: (number | null)[] = [];
 
@@ -340,7 +308,7 @@ export class EnvironmentChartComponent {
   }
 
   /**
-   * Inicializa los observables de promedios de temperatura y humedad
+   * Initializes average value observables for temperature, humidity, and CO₂
    * @private
    */
   private initializeAverages(): void {

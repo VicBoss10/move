@@ -1,13 +1,18 @@
+<!-- Vehicle Table Component
+     Displays statistics table with vehicle detection counts grouped by type.
+     Includes count, percentage, and 12-hour trend bars for each vehicle type.
+     Responsive table with color-coded vehicle type badges. -->
+
 <div
   class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
 >
-  <!-- Header -->
+  <!-- Page header with title and description -->
   <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Vehículos Detectados</h3>
     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Listado de vehículos detectados</p>
   </div>
 
-  <!-- Stats Table (rows by vehicle type) -->
+  <!-- Statistics table with vehicle type rows, counts, percentages, and 12-hour trend bars -->
   <div class="overflow-x-auto">
     <table class="w-full">
       <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
@@ -81,7 +86,7 @@
     </table>
   </div>
 
-  <!-- Empty state -->
+  <!-- Empty state when no vehicle statistics available -->
   @if (!stats || stats.length === 0) {
     <div
       class="flex flex-col items-center justify-center border-t border-gray-200 px-5 py-12 text-center dark:border-gray-800 sm:px-6"

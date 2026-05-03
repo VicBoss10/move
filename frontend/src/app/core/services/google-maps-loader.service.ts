@@ -3,48 +3,59 @@ import { BehaviorSubject } from 'rxjs';
 import { getGoogleMapsApiKey } from '../config/google-maps.config';
 
 /**
- * Resultado de geolocalización con precisión
+ * Geolocation coordinates with accuracy information.
+ * @interface GeoLocationResult
  */
 export interface GeoLocationResult {
+  /** Latitude coordinate. */
   lat: number;
+  /** Longitude coordinate. */
   lng: number;
-  accuracy: number; // metros
+  /** Position accuracy in meters. */
+  accuracy: number;
 }
 
 /**
- * GoogleMapsLoaderService
+ * Google Maps API dynamic loader and geolocation service.
+ * Handles lazy-loading the Google Maps JavaScript API with automatic deduplication.
+ * Provides user geolocation via browser API with result caching.
  *
- * Servicio que carga dinámicamente el script de Google Maps JavaScript API.
- * Garantiza que el script se cargue una sola vez y expone una promesa
- * que los componentes pueden usar para esperar a que esté listo.
+ * Initialization flow:
+ * 1. Retrieves API Key from runtime configuration or environment.
+ * 2. Dynamically injects Google Maps script into document head.
+ * 3. Resolves when script finishes loading and is ready for use.
  *
- * Flujo:
- * 1. Obtiene la API Key desde google-maps.config (runtime Docker o valor local)
- * 2. Inyecta el <script> de Google Maps en el <head>
- * 3. Resuelve la promesa cuando el script termina de cargar
- *
- * @service
- * @providedIn root
+ * @class GoogleMapsLoaderService
+ * @injectable root
  */
 @Injectable({
   providedIn: 'root',
 })
 export class GoogleMapsLoaderService {
-  /** Último error de carga/geolocalización del servicio. */
+  /**
+   * Subject tracking errors from Google Maps or geolocation operations.
+   * @private
+   */
   private readonly errorSubject = new BehaviorSubject<string | null>(null);
 
-  /** Stream público de errores de Google Maps. */
+  /**
+   * Public error stream for components to subscribe to load/location failures.
+   */
   public readonly error$ = this.errorSubject.asObservable();
 
   /**
-   * Promesa que se resuelve cuando la API de Google Maps está lista
+   * Cached promise for the Google Maps API load operation.
+   * Ensures the API is loaded only once even with multiple subscribers.
+   * @private
    */
   private loadPromise: Promise<boolean> | null = null;
 
   /**
-   * Carga la API de Google Maps dinámicamente.
-   * Si ya se cargó o está en proceso, retorna la misma promesa.
-   * @returns Promesa que resuelve true si cargó exitosamente, false si falló
+   * Loads the Google Maps JavaScript API dynamically.
+   * Returns cached promise if load is already in progress or completed.
+   * Logs warnings if API key is not configured.
+   *
+   * @returns {Promise<boolean>} Promise resolving to true on success, false on failure.
    */
   load(): Promise<boolean> {
     if (this.loadPromise) {
@@ -134,16 +145,23 @@ export class GoogleMapsLoaderService {
   }
 
   /**
-   * Caché del último resultado de geolocalización para evitar pedirlo varias veces.
+   * Cache of the last geolocation result to avoid repeated requests.
+   * @private
    */
   private geoCache: GeoLocationResult | null = null;
+  /**
+   * Shared promise for the geolocation request to prevent duplicate API calls.
+   * @private
+   */
   private geoPromise: Promise<GeoLocationResult | null> | null = null;
 
   /**
-   * Solicita la geolocalización del usuario de forma rápida.
-   * Usa getCurrentPosition para obtener una posición rápida (~1-2s).
-   * El resultado se cachea para que otros componentes no repitan la petición.
-   * @returns Promesa con las coordenadas y precisión del usuario, o null si no disponible
+   * Requests the user's current geolocation using the Geolocation API.
+   * Uses getCurrentPosition for fast single-shot positioning (~1-2s).
+   * Caches the result to prevent repeated geolocation requests.
+   * Supports 3-second timeout with fallback to null.
+   *
+   * @returns {Promise<GeoLocationResult | null>} Promise with user coordinates and accuracy, or null if unavailable.
    */
   requestUserLocation(): Promise<GeoLocationResult | null> {
     // Retornar caché si ya tenemos resultado

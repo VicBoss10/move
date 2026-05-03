@@ -1,12 +1,15 @@
+<!-- Air Quality Card Component
+     Displays grid of air quality metric cards with status indicators and numerical values -->
+
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
   @if (metrics$ | async; as metrics) {
     @if (metrics && metrics.length > 0) {
-      <!-- Air Quality Metric Card -->
+      <!-- Air quality metric cards grid with status badges and values -->
       @for (metric of metrics; track metric) {
         <div
           [class]="'rounded-2xl border p-5 md:p-6 ' + ColorUtility.getStatusBgColor(metric.status)"
         >
-          <!-- Icon Container -->
+          <!-- Icon container with status color background and status badge -->
           <div class="flex items-center justify-between">
             <div
               class="flex items-center justify-center w-12 h-12 rounded-xl"
@@ -26,10 +29,10 @@
               {{ metric.statusLabel }}
             </span>
           </div>
-          <!-- Content -->
+          <!-- Content area with metric label, value and unit -->
           <div class="mt-5">
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ metric.label }}</span>
-            <!-- Valor principal -->
+            <!-- Primary value with unit -->
             <div class="mt-2 flex items-baseline gap-1">
               <h4 [class]="'font-bold text-3xl ' + ColorUtility.getStatusTextColor(metric.status)">
                 {{ metric.value }}
@@ -40,6 +43,7 @@
         </div>
       }
     } @else {
+      <!-- Empty state when no air quality metrics are available -->
       <div class="col-span-1 sm:col-span-2 py-8 flex items-center justify-center">
         <div class="text-center">
           <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>

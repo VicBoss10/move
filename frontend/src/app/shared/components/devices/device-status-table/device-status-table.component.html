@@ -1,5 +1,10 @@
+<!-- Device Status Table Component
+     Displays grid of device cards showing name, type, status badge, location, connectivity, last activity, data points.
+     Supports two status: ACTIVE (green), INACTIVE (gray), FAILING (red). Includes edit and delete modals.
+     Edit modal: reactive form with name, state, location, optional camera streaming config.
+     Delete modal: confirmation dialog with device name validation. -->
+
 <div class="space-y-6">
-  <!-- Encabezado -->
   <div class="flex flex-col gap-2">
     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dispositivos</h1>
     <p class="text-gray-600 dark:text-gray-400">
@@ -7,13 +12,11 @@
     </p>
   </div>
 
-  <!-- Cards de dispositivos -->
   <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
     @for (device of devices$ | async; track device) {
       <div
         class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
       >
-        <!-- Encabezado del Card -->
         <div class="mb-4 flex items-start justify-between">
           <div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ device.name }}</h3>
@@ -29,16 +32,15 @@
             {{ getStatusText(device.status) }}
           </span>
         </div>
-        <!-- Información -->
+
         <div class="space-y-3 border-t border-gray-200 pt-4 dark:border-gray-700">
-          <!-- Ubicación -->
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-600 dark:text-gray-400">Ubicación</span>
             <span class="font-medium text-gray-900 dark:text-white">
               {{ device.location.description || 'Sin ubicación' }}
             </span>
           </div>
-          <!-- Estado de conectividad -->
+
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-600 dark:text-gray-400">Conectividad</span>
             <span
@@ -52,20 +54,20 @@
               {{ device.isOnline ? 'En línea' : 'Fuera de línea' }}
             </span>
           </div>
-          <!-- Última actividad -->
+
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-600 dark:text-gray-400">Última actividad</span>
             <span class="font-medium text-gray-900 dark:text-white">
               {{ device.lastActivity ? (device.lastActivity | date: 'short') : 'Sin datos' }}
             </span>
           </div>
-          <!-- Puntos de datos -->
+
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-600 dark:text-gray-400">Datos totales</span>
             <span class="font-medium text-gray-900 dark:text-white">{{ device.dataPoints }}</span>
           </div>
         </div>
-        <!-- Acciones -->
+
         <div class="mt-4 flex gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
           <button
             (click)="openEdit(device)"
@@ -85,7 +87,6 @@
   </div>
 </div>
 
-<!-- Modal Editar dispositivo -->
 <app-modal
   [isOpen]="!!editingDevice"
   (close)="closeEdit()"
@@ -96,7 +97,6 @@
     <div class="p-6">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Dispositivo</h2>
       <form [formGroup]="editForm" (ngSubmit)="saveEdit()" class="space-y-4">
-        <!-- Nombre -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Nombre *
@@ -113,7 +113,7 @@
             </p>
           }
         </div>
-        <!-- Estado -->
+
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Estado *
@@ -127,7 +127,7 @@
             <option [value]="DeviceState.FAILING">Con fallas</option>
           </select>
         </div>
-        <!-- Ubicación -->
+
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Ubicación *
@@ -147,7 +147,7 @@
             </p>
           }
         </div>
-        <!-- Configuración de Cámara (solo para CAMERA) -->
+
         @if (editingDevice.type === DeviceType.CAMERA) {
           <div
             class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-4 py-3"
@@ -156,7 +156,7 @@
               Configuración de Cámara
             </p>
           </div>
-          <!-- Tipo de Streaming -->
+
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Tipo de Streaming *
@@ -171,7 +171,7 @@
               }
             </select>
           </div>
-          <!-- URL/Ruta del Stream -->
+
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               URL / Ruta del Stream *
@@ -184,7 +184,7 @@
             />
           </div>
         }
-        <!-- Acciones -->
+
         <div class="flex gap-3 justify-end pt-1">
           <button
             type="button"
@@ -207,7 +207,6 @@
   }
 </app-modal>
 
-<!-- Modal Confirmar eliminación -->
 <app-modal
   [isOpen]="!!deleteTarget"
   (close)="closeDelete()"

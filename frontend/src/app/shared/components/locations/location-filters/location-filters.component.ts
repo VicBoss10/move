@@ -22,13 +22,26 @@ import { ApiService } from '../../../../core/services/api.service';
 import { Location } from '../../../../core/models/location.model';
 
 /**
- * LocationFiltersComponent
+ * LocationFiltersComponent (Container Component)
  *
- * Contenedor que combina búsqueda de ubicaciones y tabla.
- * Maneja el filtrado en tiempo real mientras escribes.
+ * Combines real-time location search with a location table, providing debounced search-as-you-type
+ * filtering. Emits refresh events to child table component on data changes.
+ *
+ * Features:
+ * - Reactive FormControl for location search with 300ms debounce and distinctUntilChanged
+ * - Real-time filtering applied to location descriptions (case-insensitive substring match)
+ * - Manual refresh trigger via refreshTrigger$ BehaviorSubject
+ * - Integrated location-table child component with input [locations] and output (locationChanged)
+ * - combineLatest pattern combining search input and refresh trigger for responsive updates
+ * - Error handling with empty array fallback on API failure
+ * - OnPush change detection for performance
+ * - OnDestroy cleanup via takeUntil(destroy$) pattern
  *
  * @selector app-location-filters
  * @standalone true
+ * @imports CommonModule, ReactiveFormsModule, LocationTableComponent
+ * @example
+ * <app-location-filters />
  */
 @Component({
   selector: 'app-location-filters',
@@ -38,31 +51,16 @@ import { Location } from '../../../../core/models/location.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationFiltersComponent implements OnInit, OnDestroy {
-  /**
-   * FormControl para búsqueda de ubicación
-   */
   searchControl = new FormControl('');
-
-  /**
-   * Observable de ubicaciones filtradas
-   */
   locations$: Observable<Location[]>;
 
-  /**
-   * Subject para forzar refresco de datos
-   */
   private refreshTrigger$ = new BehaviorSubject<void>(undefined);
-
-  /**
-   * Subject para cleanup de suscripciones
-   */
   private destroy$ = new Subject<void>();
 
   constructor(
     private apiService: ApiService,
     private cdr: ChangeDetectorRef,
   ) {
-    // Observable reactivo que filtra ubicaciones cuando el searchControl cambia
     this.locations$ = combineLatest([
       this.searchControl.valueChanges.pipe(
         debounceTime(300),
@@ -84,17 +82,32 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Initializes component on first view (currently empty).
+   * Observable setup occurs in constructor via combineLatest pattern.
+   * @returns {void}
+   */
   ngOnInit(): void {
-    // Initialize
+    // Initialization handled in constructor
   }
 
+  /**
+   * Lifecycle hook: cleans up subscriptions and completes destroy$ subject.
+   * Called when component is destroyed to prevent memory leaks.
+   * @returns {void}
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   /**
-   * Filtra ubicaciones según el término de búsqueda
+   * Filters locations array by description using case-insensitive substring matching.
+   * Returns all locations if searchTerm is empty or whitespace only.
+   * Used internally by locations$ observable to filter results reactively.
+   * @param {Location[]} locations - Array of Location objects to filter
+   * @param {string} searchTerm - Search string to match against location descriptions
+   * @returns {Location[]} Filtered array of locations matching search term
    */
   private filterLocations(locations: Location[], searchTerm: string): Location[] {
     if (!searchTerm.trim()) {
@@ -106,7 +119,11 @@ export class LocationFiltersComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Recarga los datos de ubicaciones
+   * Triggers data refresh when locations are modified from child LocationTableComponent.
+   * Called from locationChanged output event of LocationTableComponent.
+   * Emits undefined to refreshTrigger$ BehaviorSubject to re-execute locations$ observable
+   * and reload current search results from backend.
+   * @returns {void}
    */
   onLocationChanged(): void {
     this.refreshTrigger$.next();

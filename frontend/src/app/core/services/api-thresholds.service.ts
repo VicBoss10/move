@@ -1,72 +1,139 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { EnvironmentMetricKey, MetricThresholdConfig, ThresholdLevel } from '../config/environment-thresholds.config';
+import { MetricThresholdConfig, ThresholdLevel } from '../config/environment-thresholds.config';
 import { ApiService } from './api.service';
 
+/**
+ * Data transfer object for threshold configuration from the API.
+ * @interface ApiThresholdDto
+ */
 interface ApiThresholdDto {
+  /** Threshold record identifier. */
   id?: number;
+  /** Environmental metric name (e.g., 'co2', 'temperature'). */
   metric: string;
+  /** Threshold level name (e.g., 'good', 'moderate', 'poor'). */
   level: string;
+  /** Maximum value for this threshold level. */
   maxValue: number | null;
+  /** Timestamp when threshold was created. */
   createdAt?: string;
+  /** Timestamp when threshold was last updated. */
   updatedAt?: string;
 }
 
+/**
+ * API response structure for grouped thresholds.
+ * @interface ThresholdResponse
+ */
 interface ThresholdResponse {
+  /** Thresholds grouped by metric name. */
   [metric: string]: ThresholdLevel[];
 }
 
+/**
+ * API threshold service for CRUD operations on alert thresholds.
+ * Communicates with the backend threshold endpoints and provides conversion utilities.
+ *
+ * @class ApiThresholdsService
+ * @injectable root
+ */
 @Injectable({ providedIn: 'root' })
 export class ApiThresholdsService {
   constructor(private apiService: ApiService) {}
 
+  /**
+   * Fetches all thresholds from the backend.
+   *
+   * @returns {Observable<ApiThresholdDto[]>} Observable with all threshold records.
+   */
   getAllThresholds(): Observable<ApiThresholdDto[]> {
-    return this.apiService.get<ApiThresholdDto[]>('/thresholds').pipe(
-      catchError(() => of([]))
-    );
+    return this.apiService.get<ApiThresholdDto[]>('/thresholds').pipe(catchError(() => of([])));
   }
 
+  /**
+   * Fetches all thresholds grouped by metric name.
+   *
+   * @returns {Observable} Observable with thresholds organized by metric.
+   */
   getThresholdsGrouped(): Observable<{ [key: string]: ApiThresholdDto[] }> {
-    return this.apiService.get<{ [key: string]: ApiThresholdDto[] }>('/thresholds/grouped').pipe(
-      catchError(() => of({}))
-    );
+    return this.apiService
+      .get<{ [key: string]: ApiThresholdDto[] }>('/thresholds/grouped')
+      .pipe(catchError(() => of({})));
   }
 
+  /**
+   * Fetches thresholds for a specific environmental metric.
+   *
+   * @param {string} metric - Metric name (e.g., 'co2', 'temperature').
+   * @returns {Observable<ApiThresholdDto[]>} Observable with thresholds for the metric.
+   */
   getThresholdsByMetric(metric: string): Observable<ApiThresholdDto[]> {
-    return this.apiService.get<ApiThresholdDto[]>(`/thresholds/metric/${metric}`).pipe(
-      catchError(() => of([]))
-    );
+    return this.apiService
+      .get<ApiThresholdDto[]>(`/thresholds/metric/${metric}`)
+      .pipe(catchError(() => of([])));
   }
 
+  /**
+   * Creates a new threshold record on the backend.
+   *
+   * @param {ApiThresholdDto} dto - Threshold data to create.
+   * @returns {Observable<ApiThresholdDto>} Observable with the created threshold.
+   */
   createThreshold(dto: ApiThresholdDto): Observable<ApiThresholdDto> {
-    return this.apiService.post<ApiThresholdDto>('/thresholds', dto).pipe(
-      catchError(() => of(dto))
-    );
+    return this.apiService
+      .post<ApiThresholdDto>('/thresholds', dto)
+      .pipe(catchError(() => of(dto)));
   }
 
+  /**
+   * Updates an existing threshold record on the backend.
+   *
+   * @param {number} id - Threshold record identifier.
+   * @param {ApiThresholdDto} dto - Updated threshold data.
+   * @returns {Observable<ApiThresholdDto>} Observable with the updated threshold.
+   */
   updateThreshold(id: number, dto: ApiThresholdDto): Observable<ApiThresholdDto> {
-    return this.apiService.put<ApiThresholdDto>(`/thresholds/${id}`, dto).pipe(
-      catchError(() => of(dto))
-    );
+    return this.apiService
+      .put<ApiThresholdDto>(`/thresholds/${id}`, dto)
+      .pipe(catchError(() => of(dto)));
   }
 
+  /**
+   * Deletes a threshold record from the backend.
+   *
+   * @param {number} id - Threshold record identifier.
+   * @returns {Observable<unknown>} Observable confirming deletion.
+   */
   deleteThreshold(id: number): Observable<unknown> {
-    return this.apiService.delete(`/thresholds/${id}`).pipe(
-      catchError(() => of(null))
-    );
+    return this.apiService.delete(`/thresholds/${id}`).pipe(catchError(() => of(null)));
   }
 
-  updateMetricThresholds(metric: string, thresholds: ApiThresholdDto[]): Observable<ApiThresholdDto[]> {
-    return this.apiService.put<ApiThresholdDto[]>(`/thresholds/metric/${metric}`, thresholds).pipe(
-      catchError(() => of(thresholds))
-    );
+  /**
+   * Updates all thresholds for a specific metric.
+   *
+   * @param {string} metric - Metric name.
+   * @param {ApiThresholdDto[]} thresholds - Array of threshold records.
+   * @returns {Observable<ApiThresholdDto[]>} Observable with updated thresholds.
+   */
+  updateMetricThresholds(
+    metric: string,
+    thresholds: ApiThresholdDto[],
+  ): Observable<ApiThresholdDto[]> {
+    return this.apiService
+      .put<ApiThresholdDto[]>(`/thresholds/metric/${metric}`, thresholds)
+      .pipe(catchError(() => of(thresholds)));
   }
 
+  /**
+   * Deletes all thresholds for a specific metric.
+   *
+   * @param {string} metric - Metric name.
+   * @returns {Observable<unknown>} Observable confirming deletion.
+   */
   deleteMetricThresholds(metric: string): Observable<unknown> {
-    return this.apiService.delete(`/thresholds/metric/${metric}`).pipe(
-      catchError(() => of(null))
-    );
+    return this.apiService.delete(`/thresholds/metric/${metric}`).pipe(catchError(() => of(null)));
   }
 
   convertApiToConfig(apiThresholds: ApiThresholdDto[]): MetricThresholdConfig | null {

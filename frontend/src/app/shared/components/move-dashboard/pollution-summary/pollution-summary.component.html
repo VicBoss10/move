@@ -1,19 +1,23 @@
+<!-- Pollution Summary Component
+     Displays table of pollutant statistics with current, average, min, max values and status badges -->
+
 <div
   class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6"
 >
-  <!-- Header -->
+  <!-- Page header with title and description -->
   <div class="mb-6">
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Resumen de Contaminantes</h3>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
       Estadísticas comparativas (Actual, Promedio, Mín, Máx)
     </p>
   </div>
 
-  <!-- Table -->
+  <!-- Pollutant statistics table with scrollable overflow -->
   @if (pollutionData$ | async; as rows) {
     @if (rows && rows.length > 0) {
       <div class="max-w-full overflow-x-auto custom-scrollbar">
         <table class="w-full text-sm">
+          <!-- Table header with column titles -->
           <thead>
             <tr class="border-b border-gray-200 dark:border-gray-700">
               <th class="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
@@ -36,6 +40,7 @@
               </th>
             </tr>
           </thead>
+          <!-- Table body with pollutant rows and trend indicators -->
           <tbody>
             @for (row of rows; track row) {
               <tr
@@ -82,6 +87,7 @@
         </table>
       </div>
     } @else {
+      <!-- Empty state when no pollution data is available -->
       <div class="py-8 flex items-center justify-center">
         <div class="text-center">
           <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
@@ -93,7 +99,7 @@
     }
   }
 
-  <!-- Footer info -->
+  <!-- Footer information about historical data and trend indicators -->
   <div
     class="mt-4 text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg"
   >

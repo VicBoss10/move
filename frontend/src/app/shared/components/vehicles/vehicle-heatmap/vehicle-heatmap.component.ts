@@ -14,7 +14,6 @@ import { VehicleDetected } from '../../../../core/models/vehicle.model';
 import { DEFAULT_MAP_CONFIG } from '../../../../core/config/google-maps.config';
 import { GoogleMapsLoaderService } from '../../../../core/services/google-maps-loader.service';
 
-/** Punto del mapa de calor con coordenada y peso (número de detecciones) */
 interface HeatPoint {
   lat: number;
   lng: number;
@@ -25,17 +24,31 @@ interface HeatPoint {
 /**
  * VehicleHeatmapComponent
  *
- * Muestra un mapa de calor de Google Maps con la concentración de detecciones
- * de vehículos por ubicación. Las zonas con más detecciones aparecen en
- * colores cálidos (rojo/naranja) y las de menor actividad en frío (verde/azul).
+ * Displays a Google Maps heatmap visualization showing vehicle detection density and concentration by location.
+ * Hot zones (red/orange) indicate high detection concentrations, cool zones (green/blue) show low activity.
+ * Integrates with Google Maps API and automatically centers map on first location with data.
  *
- * Proceso de datos:
- * 1. Carga todas las detecciones desde el backend
- * 2. Agrupa por ubicación (lat/lng del dispositivo)
- * 3. Usa el conteo como "peso" para la intensidad del calor
+ * Data flow:
+ * 1. Loads all vehicle detections from backend via VehicleDetectedService
+ * 2. Groups detections by location coordinate (latitude/longitude from device)
+ * 3. Uses detection count as weight for heatmap intensity
+ * 4. Renders weighted coordinates to Google Maps HeatmapLayer
+ *
+ * Features:
+ * - Google Maps heatmap layer with configurable radius, opacity, and dissipating animation
+ * - Loading state with spinner animation during API and data loading
+ * - Error handling for API unavailability and visualization library loading failures
+ * - Empty state when no location data available (devices without GPS coordinates)
+ * - Color gradient legend from cool (low activity) to hot (high activity)
+ * - Auto-centering on first location with detection data
+ * - Display of total detections and unique location count in header
+ * - OnPush change detection with manual ChangeDetectorRef triggers
  *
  * @selector app-vehicle-heatmap
  * @standalone true
+ * @imports GoogleMapsModule
+ * @example
+ * <app-vehicle-heatmap />
  */
 @Component({
   selector: 'app-vehicle-heatmap',
@@ -45,82 +58,118 @@ interface HeatPoint {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehicleHeatmapComponent implements OnInit, OnDestroy {
+  /**
+   * Subject for managing component lifecycle cleanup
+   * @private
+   */
   private destroy$ = new Subject<void>();
 
-  /** Centro del mapa: usa el default del proyecto (Pasto, Nariño) */
+  /**
+   * Map center coordinates, initialized to project default (Pasto, Nariño)
+   */
   center: google.maps.LatLngLiteral = DEFAULT_MAP_CONFIG.center;
 
-  /** Nivel de zoom inicial */
+  /**
+   * Map zoom level (default 13 for city-level view)
+   */
   zoom = 13;
 
-  /** Opciones del mapa */
+  /**
+   * Google Maps configuration options with default styling and controls
+   */
   mapOptions: google.maps.MapOptions = {
     ...DEFAULT_MAP_CONFIG.options,
     mapTypeId: 'roadmap',
   };
 
-  /** Si la API de Maps ya fue cargada */
+  /**
+   * Flag indicating if Google Maps API has been successfully loaded
+   */
   isApiLoaded = false;
 
-  /** Carga en progreso */
+  /**
+   * Flag indicating if data or API loading is in progress
+   */
   isLoading = false;
 
-  /** Mensaje de error si algo falla */
+  /**
+   * Error message to display if API load or data fetch fails, null if no error
+   */
   errorMessage: string | null = null;
 
-  /** Total de detecciones procesadas */
+  /**
+   * Total number of vehicle detections processed for heatmap
+   */
   totalDetections = 0;
 
-  /** Número de ubicaciones únicas con datos */
+  /**
+   * Number of unique locations with detection data
+   */
   locationCount = 0;
 
   /**
-   * Datos para MapHeatmapLayer: array de LatLng ponderados.
-   * Usamos 'any' para evitar dependencia de tipado en google.maps.visualization
-   * (la biblioteca se carga dinámicamente).
+   * Weighted array of LatLng points for heatmap visualization.
+   * Uses 'any' type to avoid strict typing dependency on dynamically-loaded google.maps.visualization
    */
   heatmapData: google.maps.LatLng[] = [];
 
-  /** Opciones del heatmap layer */
+  /**
+   * Heatmap layer rendering configuration (radius, opacity, dissipating animation)
+   */
   heatmapOptions = {
     radius: 40,
     opacity: 0.75,
     dissipating: true,
   };
 
+  /**
+   * Initializes component with service dependencies.
+   * @param {VehicleDetectedService} vehicleService - Service for fetching vehicle detections
+   * @param {GoogleMapsLoaderService} mapsLoader - Service for loading Google Maps API
+   * @param {ChangeDetectorRef} cdr - Change detection reference for manual triggering in OnPush mode
+   */
   constructor(
     private vehicleService: VehicleDetectedService,
     private mapsLoader: GoogleMapsLoaderService,
     private cdr: ChangeDetectorRef,
   ) {}
 
+  /**
+   * Lifecycle hook: loads map data on initialization
+   */
   ngOnInit(): void {
     this.loadData();
   }
 
+  /**
+   * Lifecycle hook: cleans up subscriptions on destroy
+   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
+  /**
+   * Asynchronously loads Google Maps API, visualization library, and vehicle detection data.
+   * Sets appropriate error messages and loading states. Calls processHeatmapData on successful load.
+   * @private
+   */
   private async loadData(): Promise<void> {
     this.isLoading = true;
     this.cdr.markForCheck();
 
-    // 1. Cargar la API de Google Maps
     const mapsReady = await this.mapsLoader.load();
     if (!mapsReady) {
-      this.errorMessage = 'Google Maps API no disponible. Verifica la clave de API.';
+      this.errorMessage = 'Google Maps API unavailable. Check your API key.';
       this.isLoading = false;
       this.cdr.markForCheck();
       return;
     }
 
-    // 2. Cargar la biblioteca "visualization" (necesaria para HeatmapLayer)
     try {
       await (google.maps as any).importLibrary('visualization');
     } catch {
-      this.errorMessage = 'No se pudo cargar la biblioteca de visualización de Maps.';
+      this.errorMessage = 'Failed to load visualization library.';
       this.isLoading = false;
       this.cdr.markForCheck();
       return;
@@ -129,14 +178,13 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
     this.isApiLoaded = true;
     this.cdr.markForCheck();
 
-    // 3. Cargar detecciones desde el backend
     this.vehicleService
       .getAll()
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
           console.error('Error loading heatmap data:', error);
-          this.errorMessage = 'Error al cargar los datos del mapa de calor.';
+          this.errorMessage = 'Failed to load heatmap data.';
           return of([]);
         }),
         finalize(() => {
@@ -151,8 +199,11 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Agrupa las detecciones por ubicación y construye los puntos del mapa de calor.
-   * El "peso" de cada punto equivale al número de detecciones en esa coordenada.
+   * Groups vehicle detections by location coordinate and constructs weighted heatmap points.
+   * Each coordinate is repeated N times (where N = detection count) to create weight for heatmap intensity.
+   * Updates totalDetections, locationCount, and recalculates map center to first location with data.
+   * @param {VehicleDetected[]} vehicles - Array of vehicle detections from backend
+   * @private
    */
   private processHeatmapData(vehicles: VehicleDetected[]): void {
     this.totalDetections = vehicles.length;
@@ -175,15 +226,13 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
           lat: loc.latitude,
           lng: loc.longitude,
           count: 1,
-          description: loc.description ?? 'Sin descripción',
+          description: loc.description ?? 'No description',
         });
       }
     });
 
     this.locationCount = locationMap.size;
 
-    // Construir puntos ponderados: repetir la coordenada N veces según el conteo
-    // para que google.maps.visualization.HeatmapLayer intensifique zonas de mayor actividad
     const points: google.maps.LatLng[] = [];
     locationMap.forEach((point) => {
       for (let i = 0; i < point.count; i++) {
@@ -193,7 +242,6 @@ export class VehicleHeatmapComponent implements OnInit, OnDestroy {
 
     this.heatmapData = points;
 
-    // Centrar el mapa en la primera ubicación con datos
     if (locationMap.size > 0) {
       const first = locationMap.values().next().value!;
       this.center = { lat: first.lat, lng: first.lng };

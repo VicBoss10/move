@@ -10,7 +10,8 @@ import {
 } from '../../../../core/config/environment-thresholds.config';
 
 /**
- * Interface para un indicador de gas
+ * GasIndicator aggregation model for multi-gas gauge display.
+ * @interface GasIndicator
  */
 interface GasIndicator {
   name: string;
@@ -24,16 +25,25 @@ interface GasIndicator {
 }
 
 /**
- * MultiGasIndicatorsComponent
+ * MultiGasIndicatorsComponent (Presentation Component)
  *
- * Componente que muestra 3 indicadores circulares lado a lado para gases:
- * CO, NO₂, NH₃. Cada gauge muestra el nivel actual dinámico del backend.
+ * Displays three circular gauge visualizations for CO, NO₂, and NH₃ gas concentrations with real-time updates.
+ *
+ * Features:
+ * - Three mini SVG circular gauges showing current gas levels
+ * - Real-time data from latest sensor reading and threshold configuration
+ * - Color-coded status derived from threshold ranges and color mapping
+ * - Three gas types: CO (ppm), NO₂ (µg/m³), NH₃ (ppb) with dynamic units
+ * - Status label beneath each gauge with color-coded text
+ * - Reactive data stream: combineLatest of latest sensor data and threshold changes
+ * - OnPush change detection with async pipe for subscription
+ * - Responsive grid layout: 1 column mobile, 2 columns tablet, 3 columns desktop
+ * - Gauge percentage clamped to 0-100% for overflow protection
+ * - Fallback: displays empty state on data load error
  *
  * @selector app-multi-gas-indicators
  * @standalone true
  * @imports CommonModule
- * @returns 4 indicadores de gases
- *
  * @example
  * <app-multi-gas-indicators />
  */
@@ -46,10 +56,17 @@ interface GasIndicator {
 })
 export class MultiGasIndicatorsComponent {
   /**
-   * Observable que emite array de indicadores de gases con valores actuales
+   * Observable stream of calculated gas indicators with current values, units, colors, and status labels.
+   * @type {Observable<GasIndicator[]>}
    */
   gasIndicators$!: Observable<GasIndicator[]>;
 
+  /**
+   * Initializes component with service dependencies and sets up gas indicators observable.
+   * Triggers initialization combining latest sensor data and threshold configuration.
+   * @param {SensorDataService} sensorDataService - Service for querying latest gas sensor data
+   * @param {ThresholdsService} thresholds - Service for accessing threshold configuration for all gas types
+   */
   constructor(
     private sensorDataService: SensorDataService,
     private thresholds: ThresholdsService,
@@ -58,8 +75,11 @@ export class MultiGasIndicatorsComponent {
   }
 
   /**
-   * Inicializa los indicadores de gases desde el servicio,
-   * reaccionando a cambios de umbrales
+   * Combines latest sensor data and threshold configuration to produce gauge rendering data for three gas types.
+   * Maps CO, NO₂, and NH₃ configurations to indicator objects with values rounded to 1 decimal place.
+   * Calculates status and color from threshold ranges; returns empty array on error for graceful fallback.
+   * @private
+   * @returns {void}
    */
   private initializeGasIndicators(): void {
     this.gasIndicators$ = combineLatest([
@@ -97,7 +117,7 @@ export class MultiGasIndicatorsComponent {
         });
       }),
       catchError((error) => {
-        console.error('Error cargando indicadores de gases:', error);
+        console.error('Error loading gas indicators:', error);
         return of([]);
       }),
       shareReplay(1),
@@ -105,10 +125,11 @@ export class MultiGasIndicatorsComponent {
   }
 
   /**
-   * Calcula el porcentaje de llenado para un gauge
-   * @param {number} value - Valor actual
-   * @param {number} max - Valor máximo
-   * @returns {number} Porcentaje (0-100)
+   * Calculates the percentage fill value for a gauge circular visualization.
+   * Clamps result to 0-100 range to prevent visual overflow beyond the circle boundary.
+   * @param {number} value - Current gas concentration value
+   * @param {number} max - Maximum scale value from threshold configuration
+   * @returns {number} Percentage fill (0-100) for SVG stroke-dashoffset calculation
    */
   getGaugePercentage(value: number, max: number): number {
     return Math.min((value / max) * 100, 100);

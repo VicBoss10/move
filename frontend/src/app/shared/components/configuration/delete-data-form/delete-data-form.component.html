@@ -1,5 +1,9 @@
+<!-- Delete Data Form Component
+     Bulk deletion interface for sensor data and vehicle detection records.
+     Includes date range selectors, confirmation modals, and reactive loading states. -->
+
 <div class="space-y-6">
-  <!-- Page Header -->
+  <!-- Page header with title and warning description -->
   <div class="flex flex-col gap-1">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Eliminar datos</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -7,12 +11,13 @@
     </p>
   </div>
 
+  <!-- Two-column grid layout for sensor and vehicle deletion cards -->
   <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-    <!-- ── Sensor Data Card ── -->
+    <!-- Sensor data deletion card with total and date range options -->
     <div
       class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
     >
-      <!-- Header -->
+      <!-- Card header with icon, title, and date range display -->
       <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
         <div class="flex items-center gap-3">
           <div
@@ -50,9 +55,9 @@
         </div>
       </div>
 
-      <!-- Content -->
+      <!-- Card content with deletion options and date range inputs -->
       <div class="space-y-4 p-5 sm:p-6">
-        <!-- Delete All -->
+        <!-- Delete all sensor records section -->
         <div
           class="rounded-xl border border-red-100 bg-red-50/50 p-4 dark:border-red-900/30 dark:bg-red-900/10"
         >
@@ -92,7 +97,7 @@
           </button>
         </div>
 
-        <!-- Delete By Range -->
+        <!-- Delete sensor records by date range section -->
         <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
           <p class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
             Eliminar por rango de fechas
@@ -141,17 +146,14 @@
             Eliminar rango seleccionado
           </button>
         </div>
-
-        <!-- Feedback -->
-        <!-- Mensajes de éxito/error removidos, solo toast -->
       </div>
     </div>
 
-    <!-- ── Vehicles Card ── -->
+    <!-- Vehicle detection deletion card with total and date range options -->
     <div
       class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
     >
-      <!-- Header -->
+      <!-- Card header with icon, title, and date range display -->
       <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
         <div class="flex items-center gap-3">
           <div
@@ -189,9 +191,9 @@
         </div>
       </div>
 
-      <!-- Content -->
+      <!-- Card content with deletion options and date range inputs -->
       <div class="space-y-4 p-5 sm:p-6">
-        <!-- Delete All -->
+        <!-- Delete all vehicle detection records section -->
         <div
           class="rounded-xl border border-red-100 bg-red-50/50 p-4 dark:border-red-900/30 dark:bg-red-900/10"
         >
@@ -231,7 +233,7 @@
           </button>
         </div>
 
-        <!-- Delete By Range -->
+        <!-- Delete vehicle detection records by date range section -->
         <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
           <p class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
             Eliminar por rango de fechas
@@ -280,14 +282,11 @@
             Eliminar rango seleccionado
           </button>
         </div>
-
-        <!-- Feedback -->
-        <!-- Mensajes de éxito/error removidos, solo toast -->
       </div>
     </div>
   </div>
 
-  <!-- ── Confirmation Modal ── -->
+  <!-- Confirmation modal for destructive deletion actions -->
   @if (confirmVisible) {
     <div
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"

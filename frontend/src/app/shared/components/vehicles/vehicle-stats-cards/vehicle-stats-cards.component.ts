@@ -6,14 +6,14 @@ import {
 } from '../../common/generic-stats-cards/generic-stats-cards.component';
 
 /**
- * Interfaz para estadísticas de vehículos
+ * VehicleStats interface for vehicle detection statistics by type.
  * @interface VehicleStats
- * @property {number} totalDetected - Total de vehículos detectados
- * @property {number} carCount - Total de Autos detectados
- * @property {number} motorcycleCount - Total de Motos detectadas
- * @property {number} busCount - Total de Buses detectados
- * @property {number} truckCount - Total de Camiones detectados
- * @property {number} bicycleCount - Total de Bicicletas detectadas
+ * @property {number} totalDetected - Total vehicle detections
+ * @property {number} carCount - Total cars detected
+ * @property {number} motorcycleCount - Total motorcycles detected
+ * @property {number} busCount - Total buses detected
+ * @property {number} truckCount - Total trucks detected
+ * @property {number} bicycleCount - Total bicycles detected
  */
 export interface VehicleStats {
   totalDetected: number;
@@ -25,22 +25,23 @@ export interface VehicleStats {
 }
 
 /**
- * VehicleStatsCardsComponent
+ * VehicleStatsCardsComponent (Presentational Component)
  *
- * Componente que muestra tarjetas con estadísticas generales de vehículos.
- * Usa el componente genérico GenericStatsCardsComponent para evitar duplicación.
+ * Displays metric cards grid showing vehicle detection statistics by type.
+ * Delegates rendering to reusable GenericStatsCardsComponent to avoid code duplication.
+ * Transforms input VehicleStats into GenericStatsCardsComponent-compatible StatCard format.
  *
- * Características:
- * - Tarjetas de métrica codificadas por color
- * - Responsive grid
- * - Dark mode support
- * - Reutilizable
+ * Features:
+ * - Six stat cards: total detections, cars, motorcycles, buses, trucks, bicycles
+ * - Color-coded cards with left border: red (total), yellow (cars), purple (motos), orange (buses), yellow (trucks), green (bicycles)
+ * - Card count with percentage of total displayed below label
+ * - Responsive grid layout: 1 column mobile, 2 columns tablet, 3 columns desktop
+ * - Dark mode support with Tailwind CSS
+ * - OnPush change detection
  *
  * @selector app-vehicle-stats-cards
  * @standalone true
- * @imports CommonModule, GenericStatsCardsComponent
- * @returns Tarjetas de estadísticas
- *
+ * @imports GenericStatsCardsComponent
  * @example
  * <app-vehicle-stats-cards [stats]="vehicleStats" />
  */
@@ -53,7 +54,8 @@ export interface VehicleStats {
 })
 export class VehicleStatsCardsComponent {
   /**
-   * Estadísticas a mostrar (recibidas desde el padre)
+   * Input stats object containing vehicle detection counts by type.
+   * Passed from parent component and transformed to StatCard format for generic component.
    * @type {VehicleStats}
    */
   @Input() stats: VehicleStats = {
@@ -66,7 +68,9 @@ export class VehicleStatsCardsComponent {
   };
 
   /**
-   * Convierte las estadísticas a array de StatCards para el componente genérico
+   * Transforms input VehicleStats into StatCard array for GenericStatsCardsComponent rendering.
+   * Maps vehicle types to colored cards with border and text color styling.
+   * @returns {StatCard[]} Array of stat cards for generic component
    */
   getStatCards(): StatCard[] {
     return [
@@ -110,10 +114,11 @@ export class VehicleStatsCardsComponent {
   }
 
   /**
-   * Calcula el porcentaje de cambio respecto al valor anterior
-   * @param {number} current - Valor actual
-   * @param {number} previous - Valor anterior
-   * @returns {number} Porcentaje de cambio
+   * Calculates percentage change between two values (utility method, currently unused).
+   * Returns 0 if previous value is 0 to avoid division by zero.
+   * @param {number} current - Current value
+   * @param {number} previous - Previous value for comparison
+   * @returns {number} Percentage change ((current - previous) / previous * 100)
    */
   calculateChange(current: number, previous: number): number {
     if (previous === 0) return 0;
@@ -121,10 +126,11 @@ export class VehicleStatsCardsComponent {
   }
 
   /**
-   * Calcula el porcentaje relativo
-   * @param {number} value - Valor actual
-   * @param {number} total - Valor total
-   * @returns {number} Porcentaje
+   * Calculates percentage of value relative to total.
+   * Returns 0 if total is 0 to avoid division by zero.
+   * @param {number} value - Value to calculate percentage for
+   * @param {number} total - Total value for denominator
+   * @returns {number} Percentage (value / total * 100)
    */
   calculatePercentage(value: number, total: number): number {
     if (total === 0) return 0;
