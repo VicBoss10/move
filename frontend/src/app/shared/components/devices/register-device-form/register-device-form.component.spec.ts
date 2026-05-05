@@ -10,6 +10,15 @@ import { DeviceService } from '../../../../core/services/device.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { Location } from '../../../../core/models/location.model';
 
+type CameraRegistrationRequestTestType = {
+  name: string;
+  type: string;
+  state: string;
+  locationId: number;
+  streamType: string;
+  source: string;
+};
+
 /**
  * Test suite for RegisterDeviceFormComponent.
  *
@@ -440,7 +449,7 @@ describe('RegisterDeviceFormComponent', () => {
       component.onSubmit();
       tick(100);
 
-      const callArgs = deviceServiceMock.register.calls.mostRecent().args[0] as any;
+      const callArgs = deviceServiceMock.register.calls.mostRecent().args[0] as CameraRegistrationRequestTestType;
       expect(callArgs.name).toBe('Test Camera');
     }));
 
@@ -458,7 +467,7 @@ describe('RegisterDeviceFormComponent', () => {
       component.onSubmit();
       tick(100);
 
-      const callArgs = deviceServiceMock.register.calls.mostRecent().args[0] as any;
+      const callArgs = deviceServiceMock.register.calls.mostRecent().args[0] as CameraRegistrationRequestTestType;
       expect(callArgs.source).toBe('rtsp://camera.local/stream');
     }));
   });
