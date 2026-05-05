@@ -97,6 +97,13 @@ export class SigninFormComponent {
    */
   onSignIn(): void {
     if (!this.email || !this.password) return;
+
+    const validationError = this.validateSignIn();
+    if (validationError) {
+      this.errorMessage = validationError;
+      return;
+    }
+
     this.loading = true;
     this.errorMessage = '';
     this.auth.login(this.email, this.password).subscribe({
@@ -106,5 +113,30 @@ export class SigninFormComponent {
         this.loading = false;
       },
     });
+  }
+
+  private validateSignIn(): string {
+    if (!this.email.trim()) {
+      return 'El correo electrónico es requerido.';
+    }
+
+    if (!this.isValidEmail(this.email)) {
+      return 'Por favor, ingresa un correo electrónico válido.';
+    }
+
+    if (!this.password.trim()) {
+      return 'La contraseña es requerida.';
+    }
+
+    if (this.password.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres.';
+    }
+
+    return '';
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 }

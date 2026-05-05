@@ -72,9 +72,6 @@
           />
         </div>
 
-        <input id="latitude" type="hidden" formControlName="latitude" />
-        <input id="longitude" type="hidden" formControlName="longitude" />
-
         @if (locationForm.get('latitude')?.value && locationForm.get('longitude')?.value) {
           <div class="mt-4">
             <p class="text-sm text-gray-600 dark:text-gray-400">Ubicación seleccionada:</p>

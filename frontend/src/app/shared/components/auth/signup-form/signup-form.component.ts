@@ -115,6 +115,12 @@ export class SignupFormComponent {
    * @returns {void}
    */
   onSignUp(): void {
+    const validationError = this.validateSignUp();
+    if (validationError) {
+      this.errorMessage = validationError;
+      return;
+    }
+
     this.loading = true;
     this.errorMessage = '';
     const registerData = {
@@ -140,5 +146,54 @@ export class SignupFormComponent {
           this.loading = false;
         },
       });
+  }
+
+  private validateSignUp(): string {
+    if (!this.fname.trim()) {
+      return 'El nombre es requerido.';
+    }
+
+    if (this.fname.length > 50) {
+      return 'El nombre no debe exceder 50 caracteres.';
+    }
+
+    if (!this.lname.trim()) {
+      return 'El apellido es requerido.';
+    }
+
+    if (this.lname.length > 50) {
+      return 'El apellido no debe exceder 50 caracteres.';
+    }
+
+    if (!this.email.trim()) {
+      return 'El correo electrónico es requerido.';
+    }
+
+    if (!this.isValidEmail(this.email)) {
+      return 'Por favor, ingresa un correo electrónico válido.';
+    }
+
+    if (!this.password.trim()) {
+      return 'La contraseña es requerida.';
+    }
+
+    if (this.password.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres.';
+    }
+
+    if (this.password.length > 100) {
+      return 'La contraseña no debe exceder 100 caracteres.';
+    }
+
+    if (!this.isChecked) {
+      return 'Debes aceptar los Términos y Condiciones.';
+    }
+
+    return '';
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 }
