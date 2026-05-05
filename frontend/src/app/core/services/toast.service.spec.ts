@@ -34,11 +34,11 @@ describe('ToastService', () => {
   describe('show()', () => {
     it('should add a toast with message and default info variant', (done) => {
       const message = 'Test notification';
-      const subscription = service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
+
+      service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
         expect(toasts.length).toBe(1);
         expect(toasts[0].message).toBe(message);
         expect(toasts[0].variant).toBe('info');
-        subscription.unsubscribe();
         done();
       });
 
@@ -55,9 +55,8 @@ describe('ToastService', () => {
     });
 
     it('should include title when provided', (done) => {
-      const subscription = service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
+      service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
         expect(toasts[0].title).toBe('Custom Title');
-        subscription.unsubscribe();
         done();
       });
 
@@ -104,11 +103,10 @@ describe('ToastService', () => {
 
   describe('success()', () => {
     it('should create a success variant toast', (done) => {
-      const subscription = service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
+      service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
         expect(toasts[0].variant).toBe('success');
         expect(toasts[0].title).toBe('Success');
         expect(toasts[0].message).toBe('Operation completed');
-        subscription.unsubscribe();
         done();
       });
 
@@ -131,11 +129,10 @@ describe('ToastService', () => {
 
   describe('error()', () => {
     it('should create an error variant toast', (done) => {
-      const subscription = service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
+      service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
         expect(toasts[0].variant).toBe('error');
         expect(toasts[0].title).toBe('Error');
         expect(toasts[0].message).toBe('Operation failed');
-        subscription.unsubscribe();
         done();
       });
 
@@ -144,7 +141,7 @@ describe('ToastService', () => {
   });
 
   describe('dismiss()', () => {
-    it('should remove a toast by its ID', (done) => {
+    it('should remove a toast by its ID', fakeAsync(() => {
       const toasts: Toast[][] = [];
       const subscription = service.toasts$.subscribe((t) => toasts.push([...t]));
 
@@ -152,15 +149,13 @@ describe('ToastService', () => {
       expect(toasts[1].length).toBe(1);
 
       service.dismiss(id);
+      tick(50);
 
-      setTimeout(() => {
-        expect(toasts[2].length).toBe(0);
-        subscription.unsubscribe();
-        done();
-      }, 50);
-    });
+      expect(toasts[2].length).toBe(0);
+      subscription.unsubscribe();
+    }));
 
-    it('should only remove the specified toast, keeping others', (done) => {
+    it('should only remove the specified toast, keeping others', fakeAsync(() => {
       const toasts: Toast[][] = [];
       const subscription = service.toasts$.subscribe((t) => toasts.push([...t]));
 
@@ -170,18 +165,16 @@ describe('ToastService', () => {
       expect(toasts[3].length).toBe(3);
 
       service.dismiss(id2);
+      tick(50);
 
-      setTimeout(() => {
-        expect(toasts[4].length).toBe(2);
-        expect(toasts[4].map((t) => t.id)).toEqual([id1, id3]);
-        subscription.unsubscribe();
-        done();
-      }, 50);
-    });
+      expect(toasts[4].length).toBe(2);
+      expect(toasts[4].map((t) => t.id)).toEqual([id1, id3]);
+      subscription.unsubscribe();
+    }));
   });
 
   describe('clear()', () => {
-    it('should remove all toasts at once', (done) => {
+    it('should remove all toasts at once', fakeAsync(() => {
       const toasts: Toast[][] = [];
       const subscription = service.toasts$.subscribe((t) => toasts.push([...t]));
 
@@ -191,46 +184,42 @@ describe('ToastService', () => {
       expect(toasts[3].length).toBe(3);
 
       service.clear();
+      tick(50);
 
-      setTimeout(() => {
-        expect(toasts[4].length).toBe(0);
-        subscription.unsubscribe();
-        done();
-      }, 50);
-    });
+      expect(toasts[4].length).toBe(0);
+      subscription.unsubscribe();
+    }));
   });
 
   describe('variants', () => {
-    it('should support all variant types', (done) => {
+    it('should support all variant types', fakeAsync(() => {
       const toasts: Toast[][] = [];
       const subscription = service.toasts$.subscribe((t) => toasts.push([...t]));
 
       const variants: ToastVariant[] = ['success', 'error', 'warning', 'info'];
       variants.forEach((v) => service.show(`Test ${v}`, { variant: v }));
 
-      setTimeout(() => {
-        expect(toasts[4].length).toBe(4);
-        const receivedVariants = toasts[4].map((t) => t.variant);
-        expect(receivedVariants).toEqual(variants);
-        subscription.unsubscribe();
-        done();
-      }, 50);
-    });
+      tick(50);
+
+      expect(toasts[4].length).toBe(4);
+      const receivedVariants = toasts[4].map((t) => t.variant);
+      expect(receivedVariants).toEqual(variants);
+      subscription.unsubscribe();
+    }));
   });
 
   describe('edge cases', () => {
     it('should handle empty message', (done) => {
-      const subscription = service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
+      service.toasts$.pipe(skip(1), take(1)).subscribe((toasts) => {
         expect(toasts[0].message).toBe('');
         expect(toasts[0].id).toBeDefined();
-        subscription.unsubscribe();
         done();
       });
 
       service.show('');
     });
 
-    it('should handle multiple rapid shows', (done) => {
+    it('should handle multiple rapid shows', fakeAsync(() => {
       const toasts: Toast[][] = [];
       const subscription = service.toasts$.subscribe((t) => toasts.push([...t]));
 
@@ -238,12 +227,11 @@ describe('ToastService', () => {
         service.show(`Toast ${i}`);
       }
 
-      setTimeout(() => {
-        expect(toasts[5].length).toBe(5);
-        subscription.unsubscribe();
-        done();
-      }, 50);
-    });
+      tick(50);
+
+      expect(toasts[5].length).toBe(5);
+      subscription.unsubscribe();
+    }));
 
     it('should handle very short timeout', fakeAsync(() => {
       const toasts: Toast[][] = [];

@@ -73,20 +73,19 @@ describe('ApiService', () => {
 
     it('should emit error through error$ on GET failure', (done) => {
       const endpoint = '/users';
-      let errorEmitted = false;
+      let emissionCount = 0;
 
       service.error$.subscribe((error) => {
-        if (error) {
-          errorEmitted = true;
+        emissionCount++;
+        if (emissionCount === 2 && error) {
           expect(error).toContain('404');
+          done();
         }
       });
 
       service.get(endpoint).subscribe({
         error: (err) => {
           expect(err.status).toBe(404);
-          expect(errorEmitted).toBe(true);
-          done();
         },
       });
 

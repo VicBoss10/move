@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { skip, take } from 'rxjs';
 import { AuthService } from './auth.service';
 import { AuthToken } from '../models/api.models';
 
@@ -166,9 +167,9 @@ describe('AuthService', () => {
       sessionStorage.setItem('kc_refresh_token', 'refresh');
       reloadSession();
 
-      let isLoggedIn = true;
-      service.isLoggedIn$.subscribe((logged) => {
-        isLoggedIn = logged;
+      service.isLoggedIn$.pipe(skip(1), take(1)).subscribe((isLoggedIn) => {
+        expect(isLoggedIn).toBe(false);
+        done();
       });
 
       service.logout();
@@ -176,11 +177,6 @@ describe('AuthService', () => {
       // Handle the logout HTTP request
       const req = httpMock.expectOne((r) => r.url.includes('logout'));
       req.flush({});
-
-      setTimeout(() => {
-        expect(isLoggedIn).toBe(false);
-        done();
-      }, 100);
     });
 
     it('should call logout endpoint with refresh token', () => {
@@ -449,10 +445,9 @@ describe('AuthService', () => {
       sessionStorage.setItem('kc_refresh_token', 'refresh');
       reloadSession();
 
-      let lastValue = true;
-
-      service.isLoggedIn$.subscribe((isLoggedIn) => {
-        lastValue = isLoggedIn;
+      service.isLoggedIn$.pipe(skip(1), take(1)).subscribe((isLoggedIn) => {
+        expect(isLoggedIn).toBe(false);
+        done();
       });
 
       service.logout();
@@ -460,11 +455,6 @@ describe('AuthService', () => {
       // Handle the logout HTTP request
       const req = httpMock.expectOne((r) => r.url.includes('logout'));
       req.flush({});
-
-      setTimeout(() => {
-        expect(lastValue).toBe(false);
-        done();
-      }, 100);
     });
   });
 });

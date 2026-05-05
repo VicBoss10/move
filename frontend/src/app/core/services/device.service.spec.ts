@@ -174,7 +174,7 @@ describe('DeviceService', () => {
       apiServiceMock.get.and.returnValue(throwError(() => error));
 
       service.error$.pipe(skip(1), take(1)).subscribe((err) => {
-        expect(err).toBeDefined();
+        expect(err).toBeTruthy();
         done();
       });
 
@@ -314,7 +314,7 @@ describe('DeviceService', () => {
       apiServiceMock.post.and.returnValue(throwError(() => error));
 
       service.error$.pipe(skip(1), take(1)).subscribe((err) => {
-        expect(err).toBeDefined();
+        expect(err).toBeTruthy();
         done();
       });
 

@@ -335,12 +335,12 @@ describe('CameraService', () => {
 
       apiServiceMock.get.and.returnValue(of(mockCameras));
 
-      service.triggerRefresh();
-
-      setTimeout(() => {
-        expect(service['cacheData']).toEqual(mockCameras);
+      service.data$.pipe(skip(1), take(1)).subscribe((data) => {
+        expect(data).toEqual(mockCameras);
         done();
-      }, 100);
+      });
+
+      service.triggerRefresh();
     });
 
     it('should handle error during refresh gracefully', (done) => {
@@ -348,19 +348,12 @@ describe('CameraService', () => {
 
       apiServiceMock.get.and.returnValue(throwError(() => error));
 
-      let errorEmitted = false;
       service.error$.pipe(skip(1), take(1)).subscribe((err) => {
-        if (err) {
-          errorEmitted = true;
-        }
+        expect(err).toBeDefined();
+        done();
       });
 
       service.triggerRefresh();
-
-      setTimeout(() => {
-        expect(errorEmitted).toBe(true);
-        done();
-      }, 100);
     });
   });
 

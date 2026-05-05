@@ -124,14 +124,10 @@ describe('UserService', () => {
 
       apiServiceMock.get.and.returnValue(of(userResults));
 
-      let emissionCount = 0;
-      service.data$.subscribe((users) => {
-        emissionCount++;
-        if (emissionCount === 2 && users.length > 0) {
-          expect(users.length).toBe(2);
-          expect(users[0].role).toBe('USER');
-          done();
-        }
+      service.data$.pipe(skip(1), take(1)).subscribe((users) => {
+        expect(users.length).toBe(2);
+        expect(users[0].role).toBe('USER');
+        done();
       });
 
       service.search(criteria).subscribe();
@@ -142,13 +138,9 @@ describe('UserService', () => {
 
       apiServiceMock.get.and.returnValue(of([]));
 
-      let emissionCount = 0;
-      service.error$.subscribe((error) => {
-        emissionCount++;
-        if (emissionCount === 1) {
-          expect(error).toBeNull();
-          done();
-        }
+      service.error$.pipe(take(1)).subscribe((error) => {
+        expect(error).toBeNull();
+        done();
       });
 
       service.search(criteria).subscribe();
@@ -240,25 +232,17 @@ describe('UserService', () => {
 
   describe('Observable streams', () => {
     it('should emit initial empty data', (done) => {
-      let emissionCount = 0;
-      service.data$.subscribe((users) => {
-        emissionCount++;
-        if (emissionCount === 1) {
-          expect(Array.isArray(users)).toBe(true);
-          expect(users.length).toBe(0);
-          done();
-        }
+      service.data$.pipe(take(1)).subscribe((users) => {
+        expect(Array.isArray(users)).toBe(true);
+        expect(users.length).toBe(0);
+        done();
       });
     });
 
     it('should emit initial null error', (done) => {
-      let emissionCount = 0;
-      service.error$.subscribe((error) => {
-        emissionCount++;
-        if (emissionCount === 1) {
-          expect(error).toBeNull();
-          done();
-        }
+      service.error$.pipe(take(1)).subscribe((error) => {
+        expect(error).toBeNull();
+        done();
       });
     });
   });

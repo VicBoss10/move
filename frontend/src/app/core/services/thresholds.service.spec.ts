@@ -1,7 +1,7 @@
 /// <reference types="jasmine" />
 
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, throwError, skip, take } from 'rxjs';
 import { provideHttpClient } from '@angular/common/http';
 import { ThresholdsService } from './thresholds.service';
 import { ApiThresholdsService } from './api-thresholds.service';
@@ -228,15 +228,18 @@ describe('ThresholdsService', () => {
       apiThresholdsMock.convertConfigToApi.and.returnValue([]);
       apiThresholdsMock.updateMetricThresholds.and.returnValue(of([]));
 
-      service.updateMetric(metric, newConfig);
+      service
+        .getAll()
+        .pipe(skip(1), take(1))
+        .subscribe(() => {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          expect(stored).toBeTruthy();
+          const overrides = JSON.parse(stored!);
+          expect(overrides[metric]).toBeDefined();
+          done();
+        });
 
-      setTimeout(() => {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        expect(stored).toBeTruthy();
-        const overrides = JSON.parse(stored!);
-        expect(overrides[metric]).toBeDefined();
-        done();
-      }, 100);
+      service.updateMetric(metric, newConfig);
     });
 
     it('should call API to persist changes', (done) => {
@@ -247,12 +250,15 @@ describe('ThresholdsService', () => {
       apiThresholdsMock.convertConfigToApi.and.returnValue(mockDtos);
       apiThresholdsMock.updateMetricThresholds.and.returnValue(of([]));
 
-      service.updateMetric(metric, newConfig);
+      service
+        .getAll()
+        .pipe(skip(1), take(1))
+        .subscribe(() => {
+          expect(apiThresholdsMock.updateMetricThresholds).toHaveBeenCalledWith(metric, mockDtos);
+          done();
+        });
 
-      setTimeout(() => {
-        expect(apiThresholdsMock.updateMetricThresholds).toHaveBeenCalledWith(metric, mockDtos);
-        done();
-      }, 100);
+      service.updateMetric(metric, newConfig);
     });
 
     it('should handle API errors gracefully', (done) => {
@@ -283,14 +289,17 @@ describe('ThresholdsService', () => {
       apiThresholdsMock.convertConfigToApi.and.returnValue([]);
       apiThresholdsMock.updateMetricThresholds.and.returnValue(of([]));
 
-      service.updateMetric(metric, defaultConfig);
+      service
+        .getAll()
+        .pipe(skip(1), take(1))
+        .subscribe(() => {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          const overrides = stored ? JSON.parse(stored) : {};
+          expect(overrides[metric]).toBeUndefined();
+          done();
+        });
 
-      setTimeout(() => {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        const overrides = stored ? JSON.parse(stored) : {};
-        expect(overrides[metric]).toBeUndefined();
-        done();
-      }, 100);
+      service.updateMetric(metric, defaultConfig);
     });
   });
 
@@ -298,12 +307,15 @@ describe('ThresholdsService', () => {
     it('should clear localStorage overrides', (done) => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ co2: {} }));
 
-      service.reset();
+      service
+        .getAll()
+        .pipe(skip(1), take(1))
+        .subscribe(() => {
+          expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+          done();
+        });
 
-      setTimeout(() => {
-        expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
-        done();
-      }, 100);
+      service.reset();
     });
 
     it('should restore default thresholds to store', (done) => {
@@ -313,35 +325,32 @@ describe('ThresholdsService', () => {
       apiThresholdsMock.convertConfigToApi.and.returnValue([]);
       apiThresholdsMock.updateMetricThresholds.and.returnValue(of([]));
 
-      service.updateMetric(metric, newConfig);
-
-      setTimeout(() => {
-        apiThresholdsMock.updateMetricThresholds.calls.reset();
-
-        let emissionCount = 0;
-        service.getAll().subscribe((config) => {
-          emissionCount++;
-          if (emissionCount === 2) {
-            expect(config[metric]).toEqual(ENV_THRESHOLDS[metric]);
-            done();
-          }
+      service
+        .getAll()
+        .pipe(skip(2), take(1))
+        .subscribe((config) => {
+          expect(config[metric]).toEqual(ENV_THRESHOLDS[metric]);
+          done();
         });
 
-        service.reset();
-      }, 100);
+      service.updateMetric(metric, newConfig);
+      service.reset();
     });
 
     it('should attempt to restore all metrics in backend', (done) => {
       apiThresholdsMock.convertConfigToApi.and.returnValue([]);
       apiThresholdsMock.updateMetricThresholds.and.returnValue(of([]));
 
-      service.reset();
+      service
+        .getAll()
+        .pipe(skip(1), take(1))
+        .subscribe(() => {
+          const metrics = Object.keys(ENV_THRESHOLDS).length;
+          expect(apiThresholdsMock.updateMetricThresholds).toHaveBeenCalledTimes(metrics);
+          done();
+        });
 
-      setTimeout(() => {
-        const metrics = Object.keys(ENV_THRESHOLDS).length;
-        expect(apiThresholdsMock.updateMetricThresholds).toHaveBeenCalledTimes(metrics);
-        done();
-      }, 100);
+      service.reset();
     });
 
     it('should handle API errors during reset gracefully', (done) => {
@@ -350,12 +359,15 @@ describe('ThresholdsService', () => {
         throwError(() => new Error('API error')),
       );
 
-      service.reset();
+      service
+        .getAll()
+        .pipe(skip(1), take(1))
+        .subscribe(() => {
+          expect(service).toBeTruthy();
+          done();
+        });
 
-      setTimeout(() => {
-        expect(service).toBeTruthy();
-        done();
-      }, 100);
+      service.reset();
     });
   });
 

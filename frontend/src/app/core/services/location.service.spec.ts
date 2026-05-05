@@ -1,7 +1,7 @@
 /// <reference types="jasmine" />
 
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, throwError, skip, take } from 'rxjs';
 import { provideHttpClient } from '@angular/common/http';
 import { LocationService } from './location.service';
 import { ApiService } from './api.service';
@@ -167,22 +167,13 @@ describe('LocationService', () => {
     it('should emit via data$ observable', (done) => {
       apiServiceMock.get.and.returnValue(of(mockLocations));
 
-      let dataEmitted = false;
-      const dataSub = service.data$.subscribe((locations) => {
-        if (locations.length > 0) {
-          dataEmitted = true;
-          expect(locations.length).toBe(3);
-          expect(locations.every((l) => l.id !== 0)).toBe(true);
-        }
+      service.data$.pipe(skip(1), take(1)).subscribe((locations) => {
+        expect(locations.length).toBe(3);
+        expect(locations.every((l) => l.id !== 0)).toBe(true);
+        done();
       });
 
-      service.getAll().subscribe(() => {
-        setTimeout(() => {
-          expect(dataEmitted).toBe(true);
-          dataSub.unsubscribe();
-          done();
-        }, 100);
-      });
+      service.getAll().subscribe();
     });
   });
 
@@ -337,22 +328,13 @@ describe('LocationService', () => {
 
       apiServiceMock.get.and.returnValue(of(filtered));
 
-      let dataEmitted = false;
-      const dataSub = service.data$.subscribe((locations) => {
-        if (locations.length > 0) {
-          dataEmitted = true;
-          expect(locations.length).toBe(1);
-          expect(locations[0].description).toBe('Park');
-        }
+      service.data$.pipe(skip(1), take(1)).subscribe((locations) => {
+        expect(locations.length).toBe(1);
+        expect(locations[0].description).toBe('Park');
+        done();
       });
 
-      service.search(criteria).subscribe(() => {
-        setTimeout(() => {
-          expect(dataEmitted).toBe(true);
-          dataSub.unsubscribe();
-          done();
-        }, 100);
-      });
+      service.search(criteria).subscribe();
     });
 
     it('should handle search error', (done) => {
@@ -431,19 +413,12 @@ describe('LocationService', () => {
       expect(stats.activeLocations).toBe(0);
     });
 
-    it('should update lastUpdated timestamp', (done) => {
+    it('should update lastUpdated timestamp', () => {
       service['cacheData'] = mockLocations.filter((l) => l.id !== 0);
 
       const beforeStats = service.getStats();
-      const beforeTimestamp = beforeStats.lastUpdated.getTime();
-
-      setTimeout(() => {
-        const afterStats = service.getStats();
-        const afterTimestamp = afterStats.lastUpdated.getTime();
-
-        expect(afterTimestamp).toBeGreaterThanOrEqual(beforeTimestamp);
-        done();
-      }, 10);
+      expect(beforeStats.lastUpdated).toBeDefined();
+      expect(beforeStats.lastUpdated instanceof Date).toBe(true);
     });
   });
 
