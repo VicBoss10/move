@@ -24,15 +24,12 @@ export interface SearchEntry {
  * @constant SEARCH_INDEX
  */
 export const SEARCH_INDEX: SearchEntry[] = [
-  // Menú principal
   {
     title: 'Inicio',
     path: '/dashboard/dashboard',
     section: 'Menú',
     keywords: ['home', 'inicio', 'dashboard'],
   },
-
-  // Ambiente
   {
     title: 'CO₂',
     path: '/dashboard/environment/co2',
@@ -69,8 +66,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     section: 'Ambiente',
     keywords: ['historico', 'historial', 'ambiental'],
   },
-
-  // Vehículos
   {
     title: 'Vehículos Detectados',
     path: '/dashboard/vehicles/detected',
@@ -83,8 +78,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     section: 'Vehículos',
     keywords: ['estadisticas', 'stats', 'conteo'],
   },
-
-  // Cámara
   {
     title: 'Streaming',
     path: '/dashboard/cameras/streaming',
@@ -97,8 +90,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     section: 'Cámara',
     keywords: ['modelo', 'estado', 'ia', 'deteccion', 'yolo'],
   },
-
-  // Ubicaciones (admin only)
   {
     title: 'Registrar Ubicación',
     path: '/dashboard/locations/register-location',
@@ -120,8 +111,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     keywords: ['historial', 'ubicacion'],
     adminOnly: true,
   },
-
-  // Dispositivos (admin only)
   {
     title: 'Registrar Dispositivo',
     path: '/dashboard/devices/register-device',
@@ -143,8 +132,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     keywords: ['logs', 'registro', 'eventos', 'errores'],
     adminOnly: true,
   },
-
-  // Análisis (admin only)
   {
     title: 'Series Temporales',
     path: '/dashboard/analysis/time-series',
@@ -180,8 +167,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     keywords: ['exportar', 'datos', 'csv', 'descargar', 'export'],
     adminOnly: true,
   },
-
-  // Configuración (solo admin)
   {
     title: 'Usuarios',
     path: '/dashboard/configuration/users',
@@ -203,8 +188,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     keywords: ['parametros', 'sistema', 'config', 'ajustes'],
     adminOnly: true,
   },
-
-  // Ayuda
   {
     title: 'Cómo Funciona',
     path: '/dashboard/help/how-it-works',
@@ -223,8 +206,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     section: 'Ayuda',
     keywords: ['arquitectura', 'sistema', 'diagrama', 'componentes'],
   },
-
-  // Cuenta
   {
     title: 'Perfil',
     path: '/dashboard/profile',

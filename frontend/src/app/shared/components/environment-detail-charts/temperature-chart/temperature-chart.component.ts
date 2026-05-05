@@ -265,7 +265,7 @@ export class TemperatureChartComponent {
           0,
           0,
         );
-        
+
         const slots: { start: Date; end: Date; label: string }[] = [];
         for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
           const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
@@ -309,7 +309,10 @@ export class TemperatureChartComponent {
               yAxisID: 'y',
               segment: {
                 borderColor: (ctx: Record<string, unknown>) => {
-                  if ((ctx['p0DataIndex'] as number | undefined) !== undefined && (ctx['p1DataIndex'] as number | undefined) !== undefined) {
+                  if (
+                    (ctx['p0DataIndex'] as number | undefined) !== undefined &&
+                    (ctx['p1DataIndex'] as number | undefined) !== undefined
+                  ) {
                     return '#f97316';
                   }
                   return 'rgba(249, 115, 22, 0.5)';
@@ -322,5 +325,4 @@ export class TemperatureChartComponent {
       shareReplay(1),
     );
   }
-
 }

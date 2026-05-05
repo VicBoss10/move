@@ -88,7 +88,6 @@ export class ThresholdsService {
         this.initialized = true;
       },
       error: () => {
-        // Si falla la API, seguimos con los valores por defecto
         this.initialized = true;
       },
     });
@@ -105,20 +104,37 @@ export class ThresholdsService {
   }
 
   /**
-   * Devuelve una copia de la configuración de una métrica específica.
-   * @param metric - Clave de la métrica
+   * Deep clone helper that preserves special values like Infinity.
+   * @private
    */
-  getMetric(metric: EnvironmentMetricKey): MetricThresholdConfig {
-    const snapshot = this.store$.getValue();
-    // deep clone to avoid external mutation
-    return JSON.parse(JSON.stringify(snapshot[metric]));
+  private deepClone(obj: unknown): unknown {
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.deepClone(item));
+    }
+    const cloned: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      cloned[key] = this.deepClone((obj as Record<string, unknown>)[key]);
+    }
+    return cloned;
   }
 
   /**
-   * Actualiza la configuración de una métrica.
-   * Persiste en el backend y luego en localStorage como fallback.
-   * @param metric - Clave de la métrica
-   * @param cfg - Nueva configuración completa de la métrica
+   * Returns a copy of the configuration for a specific metric.
+   * @param metric - Key of the metric
+   */
+  getMetric(metric: EnvironmentMetricKey): MetricThresholdConfig {
+    const snapshot = this.store$.getValue();
+    return this.deepClone(snapshot[metric]) as MetricThresholdConfig;
+  }
+
+  /**
+   * Updates the configuration for a specific metric.
+   * Persists to the backend and then to localStorage as a fallback.
+   * @param metric - Key of the metric
+   * @param cfg - New complete configuration for the metric
    */
   updateMetric(metric: EnvironmentMetricKey, cfg: MetricThresholdConfig) {
     const current = this.store$.getValue();
@@ -127,18 +143,12 @@ export class ThresholdsService {
       [metric]: cfg,
     } as Record<EnvironmentMetricKey, MetricThresholdConfig>;
 
-    // Intenta persistir en el backend
     const apiDtos = this.apiThresholds.convertConfigToApi(metric, cfg);
     this.apiThresholds.updateMetricThresholds(metric, apiDtos).subscribe({
-      next: () => {
-        // Success - umbrales actualizados en la BD
-      },
-      error: () => {
-        // Fallo en API, pero mantiene el valor en memoria
-      },
+      next: () => {},
+      error: () => {},
     });
 
-    // Persiste en localStorage como fallback
     const overrides: Partial<Record<EnvironmentMetricKey, MetricThresholdConfig>> = {};
     const defaults = ENV_THRESHOLDS as Record<EnvironmentMetricKey, MetricThresholdConfig>;
     for (const k of Object.keys(next)) {
@@ -155,23 +165,20 @@ export class ThresholdsService {
   }
 
   /**
-   * Restaura los valores por defecto y limpia los overrides.
-   * Intenta restaurar en el backend primero.
+   * Restaures default values and clears overrides.
+   * Attempts to restore in the backend first.
    */
   reset() {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
 
-    // Intenta restaurar todos los umbrales al estado por defecto en la BD
     const metrics = Object.keys(ENV_THRESHOLDS) as EnvironmentMetricKey[];
     for (const metric of metrics) {
       const defaultConfig = ENV_THRESHOLDS[metric];
       const apiDtos = this.apiThresholds.convertConfigToApi(metric, defaultConfig);
       this.apiThresholds.updateMetricThresholds(metric, apiDtos).subscribe({
-        error: () => {
-          // Silenciosamente falla si la API no está disponible
-        },
+        error: () => {},
       });
     }
 

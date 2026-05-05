@@ -16,7 +16,7 @@ async function loadRuntimeConfig(): Promise<RuntimeConfig | null> {
     if (!resp.ok) {
       return null;
     }
-    return await resp.json() as RuntimeConfig;
+    return (await resp.json()) as RuntimeConfig;
   } catch {
     return null;
   }
@@ -25,7 +25,8 @@ async function loadRuntimeConfig(): Promise<RuntimeConfig | null> {
 async function main(): Promise<void> {
   const cfg = await loadRuntimeConfig();
   if (cfg && cfg.GOOGLE_MAPS_API_KEY) {
-    (window as unknown as Record<string, unknown>)['__GOOGLE_MAPS_API_KEY__'] = cfg.GOOGLE_MAPS_API_KEY;
+    (window as unknown as Record<string, unknown>)['__GOOGLE_MAPS_API_KEY__'] =
+      cfg.GOOGLE_MAPS_API_KEY;
   }
   if (cfg && cfg.apiBaseUrl) {
     (window as unknown as Record<string, unknown>)['__API_BASE_URL__'] = cfg.apiBaseUrl;

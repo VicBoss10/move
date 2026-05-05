@@ -85,18 +85,15 @@ export class DeviceService extends BaseDataService<Device> {
   }
 
   /**
-   * Registra un dispositivo completo (Device + Camera si aplica)
-   * @param deviceData - Datos del dispositivo a registrar
-   * @returns Observable<string> con mensaje de confirmación
+   * Registers a complete device (Device + Camera if applicable)
+   * @param deviceData - Data of the device to register
+   * @returns Observable<string> with confirmation message
    */
   register(deviceData: unknown): Observable<RegisterDeviceResponse> {
-    // Aceptamos `unknown` para facilitar llamadas desde formularios; se castea
-    // a `RegisterDevicePayload` al enviar al backend.
     return this.apiService
       .post<RegisterDeviceResponse>(`/${this.endpoint}`, deviceData as RegisterDevicePayload)
       .pipe(
         tap(() => {
-          // Invalidar caché para forzar recarga
           this.invalidateCache();
           this.clearServiceError();
         }),

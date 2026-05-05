@@ -413,7 +413,9 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
    */
   private isSafariOrIos(): boolean {
     const ua = navigator.userAgent;
-    return /iPad|iPhone|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/u.test(ua));
+    return (
+      /iPad|iPhone|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|Edg/u.test(ua))
+    );
   }
 
   /**

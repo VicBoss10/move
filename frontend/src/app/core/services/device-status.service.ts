@@ -84,7 +84,7 @@ export class DeviceStatusService {
   }
 
   /**
-   * Enriquecer un dispositivo con métricas reales
+   * Enrich a device with real metrics
    */
   private enrichDeviceWithMetrics(
     device: Device,
@@ -94,37 +94,30 @@ export class DeviceStatusService {
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    // Datos específicos del dispositivo
     let deviceSensorData: SensorData[] = [];
     let deviceVehiclesDetected: VehicleDetected[] = [];
     let lastActivity: Date | null = null;
 
     if (device.type === DeviceType.SENSOR) {
-      // Para sensores, obtener sus datos ambientales
       deviceSensorData = allSensorData.filter(
         (sd) => sd.deviceId === device.id || sd.device?.id === device.id,
       );
       if (deviceSensorData.length > 0) {
-        // Usar la fecha más reciente de todos los datos disponibles
         lastActivity = new Date(
           Math.max(...deviceSensorData.map((sd) => new Date(sd.timestamp).getTime())),
         );
       }
     } else if (device.type === DeviceType.CAMERA) {
-      // Para cámaras, obtener detecciones del dispositivo
       deviceVehiclesDetected = allVehiclesDetected.filter((vd) => vd.device?.id === device.id);
       if (deviceVehiclesDetected.length > 0) {
-        // Usar la fecha más reciente de todos los datos disponibles
         lastActivity = new Date(
           Math.max(...deviceVehiclesDetected.map((vd) => new Date(vd.timestamp).getTime())),
         );
       }
     }
 
-    // Calcular si está online (dispositivo ACTIVE = online)
     const isOnline = device.state === 'ACTIVE';
 
-    // Calcular métricas específicas por tipo
     const metrics = this.calculateDeviceMetrics(
       device,
       deviceSensorData,
@@ -146,8 +139,8 @@ export class DeviceStatusService {
   }
 
   /**
-   * Calcular métricas - actualmente solo devuelve un objeto vacío
-   * Los datos específicos de sensores se mostrarán en otra vista
+   * Calculate device metrics - currently only returns an empty object
+   * Specific sensor data will be displayed in another view
    */
   private calculateDeviceMetrics(
     _device: Device,
@@ -155,8 +148,6 @@ export class DeviceStatusService {
     _vehiclesDetected: VehicleDetected[],
     _last24Hours: Date,
   ): Partial<DeviceStatusInfo> {
-    // Las tarjetas de estado muestran solo información de estado
-    // Los datos de sensores/cámaras se mostrarán en vistas específicas
     return {};
   }
 }

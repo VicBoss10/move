@@ -7,21 +7,24 @@ import { ApiService } from './api.service';
 import { User, UserSearchCriteria } from '../models/user.model';
 
 /**
- * Test suite para UserService
+ * Test suite for UserService.
  *
- * Cubre:
- * - Creación e inyección de dependencias
- * - Búsqueda de usuarios (search)
- * - Cálculo de estadísticas (getStats)
- * - Observable data$ y error$
- * - Manejo de errores
- * - Validación de criterios de búsqueda
+ * Covers:
+ * - Service instantiation and endpoint configuration
+ * - Cache duration and caching behavior
+ * - Searching users by role, keyword, and combined criteria
+ * - Statistics aggregation (getStats) by user role
+ * - Query parameter building and transformation
+ * - Observable data$ emission on successful search
+ * - Error handling and error$ observable propagation
+ * - Partial and empty search criteria handling
+ * - Role-based filtering and counting
+ * - Inheritance from BaseDataService (data$, error$, cacheData, lastFetch)
  */
 describe('UserService', () => {
   let service: UserService;
   let apiServiceMock: jasmine.SpyObj<ApiService>;
 
-  // Datos de prueba
   const mockUsers: User[] = [
     {
       id: 1,
@@ -54,7 +57,6 @@ describe('UserService', () => {
   ];
 
   beforeEach(() => {
-    // Crear mock de ApiService
     const spy = jasmine.createSpyObj('ApiService', ['get', 'post', 'put', 'delete']);
 
     TestBed.configureTestingModule({
@@ -125,7 +127,6 @@ describe('UserService', () => {
       let emissionCount = 0;
       service.data$.subscribe((users) => {
         emissionCount++;
-        // First emission is empty [], second is results
         if (emissionCount === 2 && users.length > 0) {
           expect(users.length).toBe(2);
           expect(users[0].role).toBe('USER');
@@ -144,7 +145,6 @@ describe('UserService', () => {
       let emissionCount = 0;
       service.error$.subscribe((error) => {
         emissionCount++;
-        // First emission is null (initial)
         if (emissionCount === 1) {
           expect(error).toBeNull();
           done();
@@ -174,16 +174,11 @@ describe('UserService', () => {
 
       apiServiceMock.get.and.returnValue(throwError(() => error));
 
-      service.error$
-        .pipe(
-          skip(1), // Skip initial null emission
-          take(1), // Take only the error emission
-        )
-        .subscribe((err) => {
-          expect(err).toBeDefined();
-          expect(typeof err).toBe('string');
-          done();
-        });
+      service.error$.pipe(skip(1), take(1)).subscribe((err) => {
+        expect(err).toBeDefined();
+        expect(typeof err).toBe('string');
+        done();
+      });
 
       service.search(criteria).subscribe({
         error: () => {}, // Ignore
@@ -193,7 +188,6 @@ describe('UserService', () => {
 
   describe('getStats()', () => {
     it('should return statistics with all roles', () => {
-      // Cargar datos en caché
       service['cacheData'] = mockUsers;
 
       const stats = service.getStats();
@@ -211,7 +205,7 @@ describe('UserService', () => {
 
       const stats = service.getStats();
 
-      expect(stats.lastUpdated.getTime()).toBeCloseTo(now.getTime(), -2); // Within 100ms
+      expect(stats.lastUpdated.getTime()).toBeCloseTo(now.getTime(), -2);
     });
 
     it('should return zero stats for empty cache', () => {
@@ -281,7 +275,6 @@ describe('UserService', () => {
       service.search(criteria).subscribe(() => {
         const callArgs = apiServiceMock.get.calls.mostRecent().args;
         expect(callArgs[0]).toBe('/users/search');
-        // QueryParams object should exist
         expect(callArgs[1]).toBeDefined();
         done();
       });
@@ -326,14 +319,12 @@ describe('UserService', () => {
   describe('Inheritance from BaseDataService', () => {
     it('should inherit data$ observable', () => {
       expect(service.data$).toBeDefined();
-      // Verificar que es un observable (tiene pipe, subscribe, etc.)
       expect(typeof service.data$.subscribe).toBe('function');
       expect(typeof service.data$.pipe).toBe('function');
     });
 
     it('should inherit error$ observable', () => {
       expect(service.error$).toBeDefined();
-      // Verificar que es un observable
       expect(typeof service.error$.subscribe).toBe('function');
       expect(typeof service.error$.pipe).toBe('function');
     });

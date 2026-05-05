@@ -29,7 +29,6 @@ export class SensorDataService extends BaseDataService<SensorData> {
 
   constructor(apiService: ApiService) {
     super(apiService);
-    // Datos de sensores cambian frecuentemente - TTL corta (1 minuto)
     this.cacheDuration = 1 * 60 * 1000;
   }
 
@@ -37,6 +36,7 @@ export class SensorDataService extends BaseDataService<SensorData> {
    * Searches for sensor data matching complex filter criteria.
    * Supports range filtering on all sensor parameters, device/location filtering, and pagination.
    * Automatically handles timestamp string-to-Date conversion.
+   * Updates the reactive data$ stream with search results.
    *
    * @param {SensorDataSearchCriteria} criteria - Advanced search and filter criteria.
    * @returns {Observable<SensorData[]>} Observable with matching sensor readings.
@@ -62,7 +62,9 @@ export class SensorDataService extends BaseDataService<SensorData> {
       map((data) => {
         if (Array.isArray(data)) {
           this.clearServiceError();
-          return this.parseSensorDataArray(data);
+          const parsed = this.parseSensorDataArray(data);
+          this.dataSubject.next(parsed);
+          return parsed;
         }
         console.warn('Backend returned non-JSON response:', data);
         this.setServiceError(null, 'Invalid response from backend for sensor data');
@@ -76,6 +78,7 @@ export class SensorDataService extends BaseDataService<SensorData> {
         ) {
           console.warn('No data available for specified criteria');
           this.clearServiceError();
+          this.dataSubject.next([]);
           return of([]);
         }
         this.setServiceError(error, 'Error searching sensor data');
@@ -85,8 +88,8 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   /**
-   * Obtiene únicamente el registro más reciente usando GET /sensordata/last.
-   * Es una llamada ligera: solo devuelve 1 fila sin descargar toda la tabla.
+   * Obtains the most recent sensor data record using GET /sensordata/last.
+   * This is a lightweight call that returns only 1 record without downloading the entire table.
    * @returns Observable<SensorData>
    */
   getLast(): Observable<SensorData> {
@@ -101,8 +104,8 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   /**
-   * Obtiene el registro de sensor más reciente.
-   * Delega en getLast() para evitar descargar todos los datos.
+   * Obtains the most recent sensor data record.
+   * Delegates to getLast() to avoid downloading all data.
    * @returns Observable<SensorData>
    */
   getLatest(): Observable<SensorData> {
@@ -110,8 +113,8 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   /**
-   * Obtiene estadísticas para los últimos N registros
-   * @param limit - Número de últimos registros a procesar (default 24)
+   * Obtains statistics for the most recent N records.
+   * @param limit - NNumber of recent records to process (default 24)
    * @returns Observable<SensorStats>
    */
   getStatsForPeriod(limit: number = 24): Observable<SensorStats> {
@@ -128,8 +131,8 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   /**
-   * Obtiene el registro más reciente desde el caché (operación síncrona)
-   * Útil si ya se ha cargado antes
+   * Obtains the most recent sensor data record from the cache (synchronous operation).
+   * Useful if the data has already been loaded previously.
    * @returns SensorData | null
    */
   getLatestSync(): SensorData | null {
@@ -168,7 +171,7 @@ export class SensorDataService extends BaseDataService<SensorData> {
       .pipe(map((d) => this.parseSensorData(d)));
   }
 
-  /** Convierte un objeto (posible timestamp string) a `SensorData` con `timestamp: Date`. */
+  /** Converts an object (possible timestamp string) to `SensorData` with `timestamp: Date`. */
   private parseSensorData(d: unknown): SensorData {
     if (!d || typeof d !== 'object' || d === null) return d as SensorData;
     const record = d as Record<string, unknown>;
@@ -182,15 +185,15 @@ export class SensorDataService extends BaseDataService<SensorData> {
     return { ...(record as object), timestamp: ts as Date } as SensorData;
   }
 
-  /** Normaliza un array de respuestas a `SensorData[]`. */
+  /** Normalizes an array of responses to `SensorData[]`. */
   private parseSensorDataArray(arr: unknown): SensorData[] {
     if (!Array.isArray(arr)) return [];
     return arr.map((x) => this.parseSensorData(x));
   }
 
   /**
-   * Calcula estadísticas agregadas de los datos de sensores
-   * @returns SensorStats con promedios, mínimos, máximos
+   * Calculates aggregated statistics for sensor data.
+   * @returns SensorStats with averages, minimums, and maximums.
    */
   getStats(): SensorStats {
     const data = this.getCachedData();
@@ -201,9 +204,9 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   /**
-   * Calcula estadísticas de un conjunto de datos
+   * Calculates statistics for a set of sensor data.
    * @private
-   * @param data - Array de datos para calcular
+   * @param data - Array of data points to calculate statistics for
    * @returns SensorStats
    */
   private calculateStats(data: SensorData[]): SensorStats {
@@ -277,7 +280,7 @@ export class SensorDataService extends BaseDataService<SensorData> {
   }
 
   /**
-   * Devuelve estadísticas vacías cuando no hay datos
+   * Returns empty statistics when no data is available.
    */
   private getEmptyStats(): SensorStats {
     const empty = { current: 0, avg: 0, min: 0, max: 0 };

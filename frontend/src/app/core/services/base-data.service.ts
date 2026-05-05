@@ -92,21 +92,15 @@ export abstract class BaseDataService<T> {
    */
   getAll(): Observable<T[]> {
     const now = Date.now();
-
-    // Caché válido: devolver sin petición HTTP
     if (this.cacheData.length > 0 && now - this.lastFetch < this.cacheDuration) {
       return new Observable((observer) => {
         observer.next(this.cacheData);
         observer.complete();
       });
     }
-
-    // Petición en vuelo: reutilizar para evitar duplicados
     if (this.inFlightGetAll$) {
       return this.inFlightGetAll$;
     }
-
-    // Nueva petición HTTP
     this.inFlightGetAll$ = this.apiService.get<T[]>(`/${this.endpoint}`).pipe(
       tap((data) => {
         this.cacheData = data;
@@ -127,8 +121,8 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Obtiene un elemento por ID
-   * @param id - ID del elemento
+   * Obtains a single element by its ID.
+   * @param id - ID of the element
    * @returns Observable<T>
    */
   getById(id: number): Observable<T> {
@@ -142,8 +136,8 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Crear un nuevo elemento
-   * @param data - Datos del elemento
+   * Creates a new element.
+   * @param data - Data for the new element
    * @returns Observable<T>
    */
   create(data: T): Observable<T> {
@@ -160,8 +154,8 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Actualiza un elemento existente
-   * @param data - Datos actualizados
+   * Updates an existing element.
+   * @param data - Updated data
    * @returns Observable<T>
    */
   update(data: T): Observable<T> {
@@ -178,9 +172,9 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Elimina un elemento por ID
-   * @param id - ID del elemento
-   * @returns Observable
+   * Deletes an element by ID.
+   * @param id - ID of the element
+   * @returns Observable<void>
    */
   delete(id: number): Observable<void> {
     return this.apiService.delete<void>(`/${this.endpoint}/${id}`).pipe(
@@ -196,8 +190,8 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Invalida el caché para forzar nueva petición en próximo getAll()
-   * Se llama automáticamente en create/update/delete
+   * Invalidates the cache to force a new request in the next getAll()
+   * Called automatically on create/update/delete
    * @protected
    */
   protected invalidateCache(): void {
@@ -207,17 +201,17 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Obtiene caché actual (útil para métodos de estadísticas)
+   * Obtains the current cache (useful for statistics methods)
    * @protected
-   * @returns Copia del caché
+   * @returns Copy of the cache
    */
   protected getCachedData(): T[] {
     return [...this.cacheData];
   }
 
   /**
-   * Fuerza un refresh de datos desde el servidor
-   * Invalida caché e inmediatamente hace petición nueva
+   * Forces a refresh of data from the server
+   * Invalidates cache and immediately makes new request
    * @returns Observable<T[]>
    */
   refresh(): Observable<T[]> {
@@ -226,14 +220,14 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Limpia el último error del servicio.
+   * Clears the last error from the service.
    */
   protected clearServiceError(): void {
     this.errorSubject.next(null);
   }
 
   /**
-   * Registra un error en el stream del servicio con un fallback amigable.
+   * Registers an error in the service stream with a user-friendly fallback message.
    */
   protected setServiceError(error: unknown, fallbackMessage: string): void {
     const message = this.extractErrorMessage(error, fallbackMessage);
@@ -241,7 +235,7 @@ export abstract class BaseDataService<T> {
   }
 
   /**
-   * Extrae un mensaje de error seguro para UI/log.
+   * Extracts a safe error message for UI/logging.
    */
   protected extractErrorMessage(error: unknown, fallbackMessage: string): string {
     if (error instanceof Error && error.message) {

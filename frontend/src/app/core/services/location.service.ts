@@ -31,7 +31,6 @@ export class LocationService extends BaseDataService<Location> {
     private vehicleService: VehicleDetectedService,
   ) {
     super(apiService);
-    // Datos de ubicaciones son casi estáticos - TTL largo (1 hora)
     this.cacheDuration = 60 * 60 * 1000;
   }
 
@@ -66,10 +65,10 @@ export class LocationService extends BaseDataService<Location> {
   }
 
   /**
-   * Crea una nueva ubicación.
-   * Override porque el backend retorna texto plano en vez de JSON.
-   * @param data - Datos de la ubicación
-   * @returns Observable<Location> con los datos enviados
+   * Creates a new location.
+   * Override because the backend returns plain text instead of JSON.
+   * @param data - Location data
+   * @returns Observable<Location> with the sent data
    */
   override create(data: Location): Observable<Location> {
     return this.apiService.postText(`/${this.endpoint}`, data).pipe(
@@ -87,9 +86,9 @@ export class LocationService extends BaseDataService<Location> {
   }
 
   /**
-   * Busca ubicaciones con criterios específicos
-   * @param criteria - Criterios de búsqueda
-   * @returns Observable<Location[]>
+   * Searches for locations matching the provided criteria.
+   * @param criteria - Search filter criteria.
+   * @returns Observable<Location[]> with matching locations.
    */
   search(criteria: LocationSearchCriteria): Observable<Location[]> {
     const queryParams = new QueryParamsBuilder()
@@ -114,8 +113,9 @@ export class LocationService extends BaseDataService<Location> {
   }
 
   /**
-   * Obtiene estadísticas de ubicaciones
-   * Incluye conteo de detecciones de vehículos desde VehicleDetectedService
+   * Gets statistics for locations.
+   * Includes vehicle detection counts from VehicleDetectedService.
+   * @returns LocationStats with aggregated data.
    */
   getStats(): LocationStats {
     const locations = this.getCachedData().filter((l) => l.id !== 0);

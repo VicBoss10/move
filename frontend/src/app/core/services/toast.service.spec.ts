@@ -5,11 +5,18 @@ import { ToastService, Toast, ToastVariant } from './toast.service';
 /**
  * Test suite for ToastService.
  *
- * Tests the notification/toast display system including:
- * - Adding toasts with different variants
- * - Auto-dismiss functionality
- * - Manual toast dismissal
- * - Observable stream emissions
+ * Covers:
+ * - Toast creation with message, title, and variant options
+ * - Default and custom timeout configuration
+ * - Auto-dismiss functionality with configurable delays
+ * - Manual toast dismissal by ID
+ * - Bulk clear operations
+ * - Toast variant types (success, error, warning, info)
+ * - Unique ID generation for toast tracking
+ * - Observable toasts$ emissions and state management
+ * - Helper methods (success, error) with preset configurations
+ * - Edge cases (empty messages, rapid shows, very short timeouts)
+ * - Persistence of specific toasts while dismissing others
  */
 describe('ToastService', () => {
   let service: ToastService;

@@ -47,14 +47,14 @@ const CO2_THRESHOLDS = {
 const RING_PALETTES: Record<string, HeatRing[]> = {
   // good: green center fading to lighter greens — barely noticeable
   good: [
-    { radiusFactor: 1.00, color: '#d1fae5', opacity: 0.12 }, // emerald-100
-    { radiusFactor: 0.70, color: '#6ee7b7', opacity: 0.20 }, // emerald-300
+    { radiusFactor: 1.0, color: '#d1fae5', opacity: 0.12 }, // emerald-100
+    { radiusFactor: 0.7, color: '#6ee7b7', opacity: 0.2 }, // emerald-300
     { radiusFactor: 0.45, color: '#34d399', opacity: 0.32 }, // emerald-400
-    { radiusFactor: 0.25, color: '#10b981', opacity: 0.50 }, // emerald-500 center
+    { radiusFactor: 0.25, color: '#10b981', opacity: 0.5 }, // emerald-500 center
   ],
   // moderate: yellow center fading to green
   moderate: [
-    { radiusFactor: 1.00, color: '#10b981', opacity: 0.10 }, // green outer
+    { radiusFactor: 1.0, color: '#10b981', opacity: 0.1 }, // green outer
     { radiusFactor: 0.75, color: '#86efac', opacity: 0.15 }, // green-300
     { radiusFactor: 0.55, color: '#fde68a', opacity: 0.28 }, // yellow-200
     { radiusFactor: 0.35, color: '#fbbf24', opacity: 0.45 }, // amber-400
@@ -62,19 +62,19 @@ const RING_PALETTES: Record<string, HeatRing[]> = {
   ],
   // poor: orange center fading through yellow to green
   poor: [
-    { radiusFactor: 1.00, color: '#10b981', opacity: 0.10 }, // green outer
+    { radiusFactor: 1.0, color: '#10b981', opacity: 0.1 }, // green outer
     { radiusFactor: 0.78, color: '#fbbf24', opacity: 0.18 }, // yellow
-    { radiusFactor: 0.56, color: '#fb923c', opacity: 0.30 }, // orange-400
+    { radiusFactor: 0.56, color: '#fb923c', opacity: 0.3 }, // orange-400
     { radiusFactor: 0.36, color: '#f97316', opacity: 0.48 }, // orange-500
     { radiusFactor: 0.18, color: '#ea580c', opacity: 0.68 }, // orange-600 center
   ],
   // critical: red center fading through orange → yellow → green
   critical: [
-    { radiusFactor: 1.00, color: '#10b981', opacity: 0.10 }, // green outer
-    { radiusFactor: 0.80, color: '#eab308', opacity: 0.18 }, // yellow
-    { radiusFactor: 0.60, color: '#f97316', opacity: 0.30 }, // orange
-    { radiusFactor: 0.40, color: '#ef4444', opacity: 0.45 }, // red-500
-    { radiusFactor: 0.20, color: '#dc2626', opacity: 0.68 }, // red-600 center
+    { radiusFactor: 1.0, color: '#10b981', opacity: 0.1 }, // green outer
+    { radiusFactor: 0.8, color: '#eab308', opacity: 0.18 }, // yellow
+    { radiusFactor: 0.6, color: '#f97316', opacity: 0.3 }, // orange
+    { radiusFactor: 0.4, color: '#ef4444', opacity: 0.45 }, // red-500
+    { radiusFactor: 0.2, color: '#dc2626', opacity: 0.68 }, // red-600 center
   ],
 };
 

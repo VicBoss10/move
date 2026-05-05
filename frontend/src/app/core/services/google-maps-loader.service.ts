@@ -62,7 +62,6 @@ export class GoogleMapsLoaderService {
       return this.loadPromise;
     }
 
-    // Si ya está cargada (por ejemplo, desde Docker/index.html)
     if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
       this.loadPromise = Promise.resolve(true);
       return this.loadPromise;
@@ -77,8 +76,6 @@ export class GoogleMapsLoaderService {
       return this.loadPromise;
     }
 
-    // Usa el bootstrap loader oficial de Google Maps que configura importLibrary()
-    // antes de cargar el script, requerido por @angular/google-maps v20+
     this.loadPromise = new Promise<boolean>((resolve) => {
       try {
         type GoogleObj = { [k: string]: unknown };
@@ -122,7 +119,6 @@ export class GoogleMapsLoaderService {
           };
         }
 
-        // Trigger the load and wait for it
         bootstrap()
           .then(() => {
             console.log('Google Maps API cargada correctamente');
@@ -164,11 +160,9 @@ export class GoogleMapsLoaderService {
    * @returns {Promise<GeoLocationResult | null>} Promise with user coordinates and accuracy, or null if unavailable.
    */
   requestUserLocation(): Promise<GeoLocationResult | null> {
-    // Retornar caché si ya tenemos resultado
     if (this.geoCache) {
       return Promise.resolve(this.geoCache);
     }
-    // Reutilizar promesa si ya está en curso
     if (this.geoPromise) {
       return this.geoPromise;
     }
@@ -189,7 +183,6 @@ export class GoogleMapsLoaderService {
         resolve(result);
       };
 
-      // getCurrentPosition es más rápido que watchPosition para un solo resultado
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const result: GeoLocationResult = {
@@ -210,8 +203,6 @@ export class GoogleMapsLoaderService {
         },
         { enableHighAccuracy: true, timeout: 3000, maximumAge: 60000 },
       );
-
-      // Timeout de seguridad: 3s máximo
       setTimeout(() => done(null), 3500);
     });
 

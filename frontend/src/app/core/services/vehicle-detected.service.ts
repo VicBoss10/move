@@ -26,14 +26,14 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
 
   constructor(apiService: ApiService) {
     super(apiService);
-    // Datos de vehículos son medianamente dinámicos - TTL de 5 minutos
     this.cacheDuration = 5 * 60 * 1000;
   }
 
   /**
-   * Busca vehículos con criterios específicos
-   * @param criteria - Criterios de búsqueda
-   * @returns Observable<VehicleDetected[]>
+   * Searches for detected vehicles matching the provided criteria.
+   * Supports filtering by vehicle type, device IDs, and date range.
+   * @param criteria - Search filter criteria
+   * @returns Observable with matching detected vehicles
    */
   search(criteria: VehicleSearchCriteria): Observable<VehicleDetected[]> {
     const queryParams = new QueryParamsBuilder()
@@ -44,18 +44,14 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
 
     return this.apiService.get<VehicleDetected[]>(`/${this.endpoint}/search`, queryParams).pipe(
       map((data) => {
-        // Si data es un array, usarlo normalmente
         if (Array.isArray(data)) {
           return data;
         }
-        // Si no es array (backend retornó mensaje de texto), retornar array vacío
         console.warn('Backend retornó respuesta no-JSON:', data);
         this.setServiceError(null, 'Respuesta inválida del backend para vehículos');
         return [];
       }),
       catchError((error) => {
-        // Manejo de errores de parsing JSON (cuando backend retorna texto plano)
-        // Esto ocurre cuando no hay datos y el backend retorna un mensaje de texto
         if (
           error &&
           (error.message?.includes('Http failure during parsing') ||
@@ -65,7 +61,6 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
           this.clearServiceError();
           return of([]);
         }
-        // Re-lanzar otros errores
         this.setServiceError(error, 'Error al buscar vehículos');
         return throwError(() => error);
       }),
@@ -77,7 +72,9 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
   }
 
   /**
-   * Obtiene estadísticas de vehículos desde los datos actual
+   * Obtains statistics about detected vehicles based on the currently cached data.
+   * Calculates total count, counts by vehicle type, and today's detections.
+   * @returns VehicleStats with aggregated statistics
    */
   getStats(): VehicleStats {
     const vehicles = this.getCachedData();
