@@ -35,7 +35,7 @@ describe('authRedirectGuard', () => {
     authServiceMock.getToken.and.returnValue(Promise.resolve(undefined));
 
     const result = await TestBed.runInInjectionContext(() =>
-      authRedirectGuard({} as unknown as never, {} as unknown as never)
+      authRedirectGuard({} as unknown as never, {} as unknown as never),
     );
 
     expect(result).toBe(true);
@@ -48,7 +48,7 @@ describe('authRedirectGuard', () => {
     routerMock.parseUrl.and.returnValue(mockUrlTree);
 
     const result = await TestBed.runInInjectionContext(() =>
-      authRedirectGuard({} as unknown as never, {} as unknown as never)
+      authRedirectGuard({} as unknown as never, {} as unknown as never),
     );
 
     expect(routerMock.parseUrl).toHaveBeenCalledWith('/dashboard');
@@ -59,7 +59,7 @@ describe('authRedirectGuard', () => {
     authServiceMock.getToken.and.returnValue(Promise.resolve(''));
 
     const result = await TestBed.runInInjectionContext(() =>
-      authRedirectGuard({} as unknown as never, {} as unknown as never)
+      authRedirectGuard({} as unknown as never, {} as unknown as never),
     );
 
     expect(result).toBe(true);
@@ -69,7 +69,7 @@ describe('authRedirectGuard', () => {
     authServiceMock.getToken.and.returnValue(Promise.resolve(undefined));
 
     await TestBed.runInInjectionContext(() =>
-      authRedirectGuard({} as unknown as never, {} as unknown as never)
+      authRedirectGuard({} as unknown as never, {} as unknown as never),
     );
 
     expect(authServiceMock.getToken).toHaveBeenCalled();
@@ -81,7 +81,7 @@ describe('authRedirectGuard', () => {
     routerMock.parseUrl.and.returnValue(mockUrlTree);
 
     const result = await TestBed.runInInjectionContext(() =>
-      authRedirectGuard({} as unknown as never, {} as unknown as never)
+      authRedirectGuard({} as unknown as never, {} as unknown as never),
     );
 
     expect(result instanceof Object).toBe(true);

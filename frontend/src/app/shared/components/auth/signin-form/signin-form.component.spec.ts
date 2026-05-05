@@ -12,7 +12,13 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-input-field',
   template: `<input [type]="type" [value]="value" (input)="onInput($event)" />`,
-  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => InputFieldStubComponent), multi: true }],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => InputFieldStubComponent),
+      multi: true,
+    },
+  ],
 })
 class InputFieldStubComponent implements ControlValueAccessor {
   @Input() type = 'text';
@@ -47,7 +53,10 @@ class InputFieldStubComponent implements ControlValueAccessor {
 @Component({ selector: 'app-label', template: '<ng-content />' })
 class LabelStubComponent {}
 
-@Component({ selector: 'app-button', template: '<button [disabled]="disabled"><ng-content /></button>' })
+@Component({
+  selector: 'app-button',
+  template: '<button [disabled]="disabled"><ng-content /></button>',
+})
 class ButtonStubComponent {
   @Input() className = '';
   @Input() size = '';
@@ -73,7 +82,13 @@ describe('SigninFormComponent', () => {
     })
       .overrideComponent(SigninFormComponent, {
         set: {
-          imports: [FormsModule, RouterModule, InputFieldStubComponent, LabelStubComponent, ButtonStubComponent],
+          imports: [
+            FormsModule,
+            RouterModule,
+            InputFieldStubComponent,
+            LabelStubComponent,
+            ButtonStubComponent,
+          ],
         },
       })
       .compileComponents();
@@ -149,7 +164,10 @@ describe('SigninFormComponent', () => {
       component.password = 'password123';
       authServiceMock.login.and.returnValue(of(void 0));
       component.onSignIn();
-      expect(authServiceMock.login).toHaveBeenCalledWith('user+test@sub.example.com', 'password123');
+      expect(authServiceMock.login).toHaveBeenCalledWith(
+        'user+test@sub.example.com',
+        'password123',
+      );
     });
   });
 

@@ -7,7 +7,10 @@ import { of, throwError } from 'rxjs';
 import { RegisterLocationViewComponent } from './register-location-view.component';
 import { LocationService } from '../../../../core/services/location.service';
 import { ToastService } from '../../../../core/services/toast.service';
-import { LocationMapPickerComponent, MapCoordinates } from '../location-map-picker/location-map-picker.component';
+import {
+  LocationMapPickerComponent,
+  MapCoordinates,
+} from '../location-map-picker/location-map-picker.component';
 
 /**
  * Test suite for RegisterLocationViewComponent.
@@ -353,7 +356,7 @@ describe('RegisterLocationViewComponent', () => {
 
       expect(toastServiceMock.success).toHaveBeenCalledWith(
         'Location "My Test Location" registered successfully',
-        'Success'
+        'Success',
       );
     }));
 
@@ -414,7 +417,7 @@ describe('RegisterLocationViewComponent', () => {
 
       expect(toastServiceMock.error).toHaveBeenCalledWith(
         'Failed to register location. Please try again.',
-        'Error'
+        'Error',
       );
       expect(component.isLoading$.value).toBe(false);
     }));

@@ -259,7 +259,7 @@ describe('RegisterDeviceFormComponent', () => {
       component.onSubmit();
 
       expect(component.errorMessage$.value).toBe(
-        'Por favor, completa todos los campos requeridos correctamente.'
+        'Por favor, completa todos los campos requeridos correctamente.',
       );
       expect(deviceServiceMock.register).not.toHaveBeenCalled();
     });
@@ -336,7 +336,7 @@ describe('RegisterDeviceFormComponent', () => {
 
       expect(toastServiceMock.success).toHaveBeenCalledWith(
         'El registro de sensores se realiza desde el propio dispositivo (portal cautivo).',
-        'Registro de Sensor'
+        'Registro de Sensor',
       );
       expect(routerMock.navigate).toHaveBeenCalledWith(['/dashboard/devices/device-status']);
     }));
@@ -449,7 +449,8 @@ describe('RegisterDeviceFormComponent', () => {
       component.onSubmit();
       tick(100);
 
-      const callArgs = deviceServiceMock.register.calls.mostRecent().args[0] as CameraRegistrationRequestTestType;
+      const callArgs = deviceServiceMock.register.calls.mostRecent()
+        .args[0] as CameraRegistrationRequestTestType;
       expect(callArgs.name).toBe('Test Camera');
     }));
 
@@ -467,7 +468,8 @@ describe('RegisterDeviceFormComponent', () => {
       component.onSubmit();
       tick(100);
 
-      const callArgs = deviceServiceMock.register.calls.mostRecent().args[0] as CameraRegistrationRequestTestType;
+      const callArgs = deviceServiceMock.register.calls.mostRecent()
+        .args[0] as CameraRegistrationRequestTestType;
       expect(callArgs.source).toBe('rtsp://camera.local/stream');
     }));
   });

@@ -48,7 +48,7 @@ describe('roleGuard', () => {
     } as unknown as ActivatedRouteSnapshot;
 
     const result = await TestBed.runInInjectionContext(() =>
-      roleGuard(route, {} as unknown as never)
+      roleGuard(route, {} as unknown as never),
     );
 
     expect(result).toBe(true);
@@ -64,7 +64,7 @@ describe('roleGuard', () => {
     } as unknown as ActivatedRouteSnapshot;
 
     const result = await TestBed.runInInjectionContext(() =>
-      roleGuard(route, {} as unknown as never)
+      roleGuard(route, {} as unknown as never),
     );
 
     expect(result).toBe(false);
@@ -79,13 +79,11 @@ describe('roleGuard', () => {
       data: { roles: ['ROLE_ADMIN'] },
     } as unknown as ActivatedRouteSnapshot;
 
-    await TestBed.runInInjectionContext(() =>
-      roleGuard(route, {} as unknown as never)
-    );
+    await TestBed.runInInjectionContext(() => roleGuard(route, {} as unknown as never));
 
     expect(toastServiceMock.error).toHaveBeenCalledWith(
       'You do not have permission to access this route',
-      'Access denied'
+      'Access denied',
     );
   });
 
@@ -97,7 +95,7 @@ describe('roleGuard', () => {
     } as unknown as ActivatedRouteSnapshot;
 
     const result = await TestBed.runInInjectionContext(() =>
-      roleGuard(route, {} as unknown as never)
+      roleGuard(route, {} as unknown as never),
     );
 
     expect(result).toBe(false);
@@ -112,7 +110,7 @@ describe('roleGuard', () => {
     } as unknown as ActivatedRouteSnapshot;
 
     const result = await TestBed.runInInjectionContext(() =>
-      roleGuard(route, {} as unknown as never)
+      roleGuard(route, {} as unknown as never),
     );
 
     expect(result).toBe(true);
@@ -128,7 +126,7 @@ describe('roleGuard', () => {
     } as unknown as ActivatedRouteSnapshot;
 
     const result = await TestBed.runInInjectionContext(() =>
-      roleGuard(route, {} as unknown as never)
+      roleGuard(route, {} as unknown as never),
     );
 
     expect(result).toBe(true);
@@ -144,7 +142,7 @@ describe('roleGuard', () => {
     } as unknown as ActivatedRouteSnapshot;
 
     const result = await TestBed.runInInjectionContext(() =>
-      roleGuard(route, {} as unknown as never)
+      roleGuard(route, {} as unknown as never),
     );
 
     expect(result).toBe(true);
@@ -160,7 +158,7 @@ describe('roleGuard', () => {
     } as unknown as ActivatedRouteSnapshot;
 
     const result = await TestBed.runInInjectionContext(() =>
-      roleGuard(route, {} as unknown as never)
+      roleGuard(route, {} as unknown as never),
     );
 
     expect(result).toBe(false);
@@ -174,9 +172,7 @@ describe('roleGuard', () => {
       data: {},
     } as unknown as ActivatedRouteSnapshot;
 
-    await TestBed.runInInjectionContext(() =>
-      roleGuard(route, {} as unknown as never)
-    );
+    await TestBed.runInInjectionContext(() => roleGuard(route, {} as unknown as never));
 
     expect(authServiceMock.getToken).toHaveBeenCalled();
   });

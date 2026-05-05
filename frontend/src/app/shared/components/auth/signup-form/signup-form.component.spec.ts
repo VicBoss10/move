@@ -13,7 +13,13 @@ import { ApiService } from '../../../../core/services/api.service';
 @Component({
   selector: 'app-input-field',
   template: `<input [type]="type" [value]="value" (input)="onInput($event)" />`,
-  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => InputFieldStubComponent), multi: true }],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => InputFieldStubComponent),
+      multi: true,
+    },
+  ],
 })
 class InputFieldStubComponent implements ControlValueAccessor {
   @Input() type = 'text';
@@ -48,7 +54,10 @@ class InputFieldStubComponent implements ControlValueAccessor {
 @Component({ selector: 'app-label', template: '<ng-content />' })
 class LabelStubComponent {}
 
-@Component({ selector: 'app-checkbox', template: `<input type="checkbox" [checked]="checked" (change)="onChange($event)" />` })
+@Component({
+  selector: 'app-checkbox',
+  template: `<input type="checkbox" [checked]="checked" (change)="onChange($event)" />`,
+})
 class CheckboxStubComponent {
   @Input() className = '';
   @Input() checked = false;
@@ -83,7 +92,13 @@ describe('SignupFormComponent', () => {
     })
       .overrideComponent(SignupFormComponent, {
         set: {
-          imports: [FormsModule, RouterModule, InputFieldStubComponent, LabelStubComponent, CheckboxStubComponent],
+          imports: [
+            FormsModule,
+            RouterModule,
+            InputFieldStubComponent,
+            LabelStubComponent,
+            CheckboxStubComponent,
+          ],
         },
       })
       .compileComponents();
@@ -466,7 +481,7 @@ describe('SignupFormComponent', () => {
       component.isChecked = true;
 
       apiServiceMock.post.and.returnValue(
-        throwError(() => ({ error: { message: 'Email already exists' } }))
+        throwError(() => ({ error: { message: 'Email already exists' } })),
       );
 
       component.onSignUp();
@@ -484,7 +499,7 @@ describe('SignupFormComponent', () => {
       component.isChecked = true;
 
       apiServiceMock.post.and.returnValue(
-        throwError(() => ({ error: { error_description: 'Invalid user data' } }))
+        throwError(() => ({ error: { error_description: 'Invalid user data' } })),
       );
 
       component.onSignUp();
@@ -522,7 +537,9 @@ describe('SignupFormComponent', () => {
       component.onSignUp();
       tick();
 
-      expect(component.errorMessage).toBe('Error al registrarse. Verifica los datos e inténtalo de nuevo.');
+      expect(component.errorMessage).toBe(
+        'Error al registrarse. Verifica los datos e inténtalo de nuevo.',
+      );
       expect(component.loading).toBe(false);
     }));
 

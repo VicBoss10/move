@@ -34,7 +34,7 @@ describe('authGuard', () => {
     authServiceMock.getToken.and.returnValue(Promise.resolve('valid-token'));
 
     const result = await TestBed.runInInjectionContext(() =>
-      authGuard({} as unknown as never, {} as unknown as never)
+      authGuard({} as unknown as never, {} as unknown as never),
     );
 
     expect(result).toBe(true);
@@ -45,7 +45,7 @@ describe('authGuard', () => {
     authServiceMock.getToken.and.returnValue(Promise.resolve(undefined));
 
     const result = await TestBed.runInInjectionContext(() =>
-      authGuard({} as unknown as never, {} as unknown as never)
+      authGuard({} as unknown as never, {} as unknown as never),
     );
 
     expect(result).toBe(false);
@@ -56,7 +56,7 @@ describe('authGuard', () => {
     authServiceMock.getToken.and.returnValue(Promise.resolve(''));
 
     const result = await TestBed.runInInjectionContext(() =>
-      authGuard({} as unknown as never, {} as unknown as never)
+      authGuard({} as unknown as never, {} as unknown as never),
     );
 
     expect(result).toBe(false);
@@ -67,7 +67,7 @@ describe('authGuard', () => {
     authServiceMock.getToken.and.returnValue(Promise.resolve('valid-token'));
 
     await TestBed.runInInjectionContext(() =>
-      authGuard({} as unknown as never, {} as unknown as never)
+      authGuard({} as unknown as never, {} as unknown as never),
     );
 
     expect(authServiceMock.getToken).toHaveBeenCalled();
