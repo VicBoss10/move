@@ -75,25 +75,25 @@ export class SystemStatusComponent {
    */
   private readonly defaultStatusCards: StatusCard[] = [
     {
-      label: 'System',
+      label: 'Sistema',
       icon: this.icons.systemIcon,
       status: 'offline',
       primary: '● OFFLINE',
-      secondary: 'No connection',
+      secondary: 'Sin conexión al servidor',
     },
     {
-      label: 'Devices',
+      label: 'Dispositivos',
       icon: this.icons.deviceIcon,
       status: 'offline',
       primary: '0 / 0',
-      secondary: 'No connection',
+      secondary: 'Sin conexión',
     },
     {
-      label: 'Cameras',
+      label: 'Cámaras',
       icon: this.icons.cameraIcon,
       status: 'inactive',
       primary: '0',
-      secondary: 'No connection',
+      secondary: 'Sin conexión',
     },
   ];
 
@@ -124,28 +124,28 @@ export class SystemStatusComponent {
 
         return [
           {
-            label: 'System',
+            label: 'Sistema',
             icon: this.icons.systemIcon,
             status: 'online' as const,
-            primary: '● ONLINE',
+            primary: '● En línea',
             secondary:
               backendAvailable && allDevices.length === 0
-                ? 'Backend available — no devices registered'
-                : `${activeDevicesTotal} active devices`,
+                ? 'Servidor disponible — sin dispositivos registrados'
+                : `${activeDevicesTotal} dispositivos activos`,
           },
           {
-            label: 'Devices',
+            label: 'Sensores',
             icon: this.icons.deviceIcon,
             status: (sensorsActive > 0 ? 'online' : 'offline') as 'online' | 'offline',
             primary: `${sensorsActive} / ${sensorsTotal}`,
-            secondary: 'Active / Registered sensors',
+            secondary: 'Activos / Registrados',
           },
           {
-            label: 'Cameras',
+            label: 'Cámaras',
             icon: this.icons.cameraIcon,
             status: (camerasActive > 0 ? 'active' : 'inactive') as 'active' | 'inactive',
             primary: `${camerasActive} / ${camerasTotal}`,
-            secondary: 'Active / Registered',
+            secondary: 'Activas / Registradas',
           },
         ];
       }),
