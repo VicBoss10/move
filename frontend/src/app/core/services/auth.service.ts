@@ -44,13 +44,6 @@ export class AuthService {
   private readonly clientSecret: string = '';
 
   /**
-   * Seconds before token expiry to trigger proactive refresh.
-   * Ensures continuous authentication without user interruption.
-   * @private
-   */
-  private readonly REFRESH_THRESHOLD_SECONDS = 60;
-
-  /**
    * Currently stored access token in memory.
    * @private
    */
@@ -113,25 +106,22 @@ export class AuthService {
   }
 
   /**
-   * Loads authentication tokens and state from sessionStorage.
-   * Resumes background refresh if a valid session is found.
+   * Loads authentication tokens and state from localStorage.
+   * No automatic refresh scheduled on load.
    * @private
    */
   private loadFromSession(): void {
-    this.accessToken = sessionStorage.getItem('kc_access_token');
-    this.refreshToken = sessionStorage.getItem('kc_refresh_token');
-    const expiry = sessionStorage.getItem('kc_token_expiry');
+    this.accessToken = localStorage.getItem('kc_access_token');
+    this.refreshToken = localStorage.getItem('kc_refresh_token');
+    const expiry = localStorage.getItem('kc_token_expiry');
     this.tokenExpiry = expiry ? parseInt(expiry, 10) : 0;
     const loggedIn = this.isLoggedIn();
     this._isLoggedIn$.next(loggedIn);
-    if (loggedIn && this.refreshToken) {
-      this.scheduleSilentRefresh();
-    }
   }
 
   /**
-   * Stores authentication tokens in memory and sessionStorage.
-   * Schedules next proactive refresh based on token expiry.
+   * Stores authentication tokens in memory and localStorage.
+   * No automatic background refresh scheduled.
    * @private
    * @param {AuthToken} response - Token response from Keycloak.
    */
@@ -141,18 +131,16 @@ export class AuthService {
     this.accessToken = response.access_token;
     this.refreshToken = response.refresh_token ?? null;
     this.tokenExpiry = expiry;
-    sessionStorage.setItem('kc_access_token', response.access_token);
+    localStorage.setItem('kc_access_token', response.access_token);
     if (response.refresh_token) {
-      sessionStorage.setItem('kc_refresh_token', response.refresh_token);
+      localStorage.setItem('kc_refresh_token', response.refresh_token);
     }
-    sessionStorage.setItem('kc_token_expiry', String(expiry));
+    localStorage.setItem('kc_token_expiry', String(expiry));
     this._isLoggedIn$.next(true);
-    this.scheduleSilentRefresh(expiresIn);
   }
 
   /**
-   * Clears authentication tokens from memory and sessionStorage.
-   * Cancels any scheduled background refresh.
+   * Clears authentication tokens from memory and localStorage.
    * @private
    */
   private clearTokens(): void {
@@ -164,33 +152,12 @@ export class AuthService {
       clearTimeout(this.refreshTimerId);
       this.refreshTimerId = null;
     }
-    sessionStorage.removeItem('kc_access_token');
-    sessionStorage.removeItem('kc_refresh_token');
-    sessionStorage.removeItem('kc_token_expiry');
+    localStorage.removeItem('kc_access_token');
+    localStorage.removeItem('kc_refresh_token');
+    localStorage.removeItem('kc_token_expiry');
     this._isLoggedIn$.next(false);
   }
 
-  /**
-   * Schedules a proactive background token refresh.
-   * Refresh occurs REFRESH_THRESHOLD_SECONDS before token expiry.
-   *
-   * @private
-   * @param {number} [expiresIn] - Seconds until token expiry from Keycloak response.
-   *                               If omitted, calculates from stored tokenExpiry timestamp.
-   */
-  private scheduleSilentRefresh(expiresIn?: number): void {
-    if (this.refreshTimerId !== null) {
-      clearTimeout(this.refreshTimerId);
-      this.refreshTimerId = null;
-    }
-    const msUntilExpiry =
-      expiresIn !== undefined ? expiresIn * 1000 : this.tokenExpiry - Date.now();
-    const delay = Math.max(msUntilExpiry - this.REFRESH_THRESHOLD_SECONDS * 1000, 1000);
-    this.refreshTimerId = setTimeout(() => {
-      this.refreshTimerId = null;
-      this.refreshAccessToken().subscribe();
-    }, delay);
-  }
 
   /**
    * Authenticates a user with username and password credentials.
@@ -243,17 +210,17 @@ export class AuthService {
   }
 
   /**
-   * Returns the current access token, refreshing proactively if needed.
-   * Refreshes if within the threshold window or if already expired.
+   * Returns the current access token.
+   * If expired, attempts refresh using refresh token.
    * Multiple concurrent callers share a single refresh request.
    *
    * @returns {Promise<string | undefined>} Promise resolving to the access token or undefined.
    */
   async getToken(): Promise<string | undefined> {
-    if (this.accessToken && Date.now() < this.tokenExpiry - this.REFRESH_THRESHOLD_SECONDS * 1000) {
+    if (this.accessToken && Date.now() < this.tokenExpiry) {
       return this.accessToken;
     }
-    if (this.refreshToken) {
+    if (this.refreshToken && Date.now() >= this.tokenExpiry) {
       const token = await this.refreshAccessToken().toPromise();
       return token ?? undefined;
     }
