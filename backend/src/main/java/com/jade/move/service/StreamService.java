@@ -47,7 +47,7 @@ public class StreamService {
     private final RestTemplate restTemplate;
     private final StreamSessionRepository streamSessionRepository;
 
-    @Value("${python.service.url:http://localhost:5000}")
+    @Value("${python.service.url}")
     private String pythonServiceUrl;
 
     public StreamService(

@@ -18,12 +18,13 @@ export class ApiService implements OnInit {
   /**
    * Backend API base URL loaded from runtime configuration or environment.
    * Injected from window.__API_BASE_URL__ by main.ts from /assets/config.json.
-   * Defaults to http://localhost:8080 for development.
    * @private
    */
   private readonly apiUrl: string =
-    (window as unknown as { __API_BASE_URL__?: string }).__API_BASE_URL__ ??
-    'http://localhost:8080';
+    (window as unknown as { __API_BASE_URL__?: string }).__API_BASE_URL__ ||
+    (() => {
+      throw new Error('__API_BASE_URL__ not configured');
+    })();
 
   /**
    * Subject for tracking HTTP errors across the application.

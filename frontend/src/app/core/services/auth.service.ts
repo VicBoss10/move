@@ -20,12 +20,13 @@ export class AuthService {
   /**
    * Keycloak authentication server URL.
    * Injected from window.__AUTH_BASE_URL__ by main.ts from /assets/config.json.
-   * Defaults to http://localhost:8081 for development.
    * @private
    */
   private readonly keycloakUrl: string =
-    (window as unknown as { __AUTH_BASE_URL__?: string }).__AUTH_BASE_URL__ ??
-    'http://localhost:8081';
+    (window as unknown as { __AUTH_BASE_URL__?: string }).__AUTH_BASE_URL__ ||
+    (() => {
+      throw new Error('__AUTH_BASE_URL__ not configured in config.json');
+    })();
   /**
    * Keycloak realm name for this application.
    * @private
