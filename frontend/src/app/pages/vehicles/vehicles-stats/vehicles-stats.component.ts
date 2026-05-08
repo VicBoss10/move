@@ -14,7 +14,7 @@ import {
 } from '../../../shared/components/vehicles/vehicle-stats-cards/vehicle-stats-cards.component';
 import { VehicleChartComponent } from '../../../shared/components/vehicles/vehicle-chart/vehicle-chart.component';
 import { VehicleTypeChartComponent } from '../../../shared/components/vehicles/vehicle-type-chart/vehicle-type-chart.component';
-import { VehicleHeatmapComponent } from '../../../shared/components/vehicles/vehicle-heatmap/vehicle-heatmap.component';
+import { VehicleBarChartComponent } from '../../../shared/components/vehicles/vehicle-bar-chart/vehicle-bar-chart.component';
 import { VehicleDetectedService } from '../../../core/services/vehicle-detected.service';
 import { VehicleDetected } from '../../../core/models/vehicle.model';
 
@@ -48,7 +48,7 @@ import { VehicleDetected } from '../../../core/models/vehicle.model';
     VehicleStatsCardsComponent,
     VehicleChartComponent,
     VehicleTypeChartComponent,
-    VehicleHeatmapComponent,
+    VehicleBarChartComponent,
   ],
   templateUrl: './vehicles-stats.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

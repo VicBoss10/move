@@ -66,7 +66,7 @@ export class VehicleDetectionChartsComponent implements OnChanges {
 
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
     animation: {
       duration: 750,
       easing: 'easeInOutQuart',

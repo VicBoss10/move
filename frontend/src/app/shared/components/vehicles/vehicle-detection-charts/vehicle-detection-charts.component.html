@@ -102,13 +102,12 @@
 
       <!-- Chart Container -->
       <div class="relative max-w-full overflow-x-auto custom-scrollbar">
-        <div class="animate-fadeIn -ml-5 min-w-[650px] xl:min-w-full pl-2">
+        <div class="animate-fadeIn -ml-5 min-w-[650px] xl:min-w-full pl-2" style="height: 380px; position: relative;">
           <canvas
             baseChart
             type="line"
             [data]="chartData"
             [options]="chartOptions"
-            style="max-height: 380px; position: relative"
           ></canvas>
         </div>
       </div>

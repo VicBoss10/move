@@ -19,26 +19,26 @@
         <div
           class="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800/30 dark:bg-red-900/20"
         >
-          <p class="text-red-700 dark:text-red-400">⚠️ {{ errorMessage }}</p>
+          <p class="text-red-700 dark:text-red-400"> {{ errorMessage }}</p>
         </div>
       </div>
     }
     <!-- Contenido (Mostrar siempre si hay datos) -->
     @if (stats.totalDetected > 0 || !isLoading) {
       <div class="col-span-12 grid grid-cols-12 gap-4 md:gap-6">
-        <!-- Tarjetas de Estadísticas -->
+        <!-- Tarjetas de Estadísticas (fila completa) -->
         <div class="col-span-12">
           <app-vehicle-stats-cards [stats]="stats" />
         </div>
-        <!-- Distribución por tipo + Mapa de calor (misma fila en pantallas grandes) -->
-        <div class="col-span-12 lg:col-span-5">
-          <app-vehicle-type-chart [stats]="stats" />
-        </div>
-        <div class="col-span-12 lg:col-span-7">
-          <app-vehicle-heatmap />
-        </div>
-        <!-- Gráfico de línea temporal -->
+        <!-- Donut por tipo + Bar por tipo (misma fila, mismo ancho) -->
         @if (vehicles$ | async; as vehicles) {
+          <div class="col-span-12 lg:col-span-6">
+            <app-vehicle-type-chart [stats]="stats" />
+          </div>
+          <div class="col-span-12 lg:col-span-6">
+            <app-vehicle-bar-chart [vehicles]="vehicles" />
+          </div>
+          <!-- Detecciones por hora 24h (fila completa) -->
           <div class="col-span-12">
             <app-vehicle-chart [vehicles]="vehicles" />
           </div>

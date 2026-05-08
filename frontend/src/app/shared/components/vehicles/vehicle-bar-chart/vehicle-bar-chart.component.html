@@ -5,21 +5,21 @@
     <h3
       class="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-200"
     >
-      Detecciones por Hora
+      Vehículos por Tipo
     </h3>
     <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-      Tendencia de detecciones en las últimas 24 horas
+      Distribución de tipos de vehículos detectados
     </p>
   </div>
 
   <div class="relative max-w-full overflow-x-auto custom-scrollbar pb-4">
-    <div class="animate-fadeIn -ml-5 min-w-[650px] xl:min-w-full pl-2" style="height: 380px; position: relative;">
-      @if (lineChartData$ | async; as data) {
+    <div class="animate-fadeIn -ml-5 min-w-[400px] xl:min-w-full pl-2" style="height: 380px; position: relative;">
+      @if (barChartData$ | async; as data) {
         <canvas
           baseChart
-          type="line"
+          type="bar"
           [data]="data"
-          [options]="lineChartOptions"
+          [options]="barChartOptions"
         ></canvas>
       }
     </div>
