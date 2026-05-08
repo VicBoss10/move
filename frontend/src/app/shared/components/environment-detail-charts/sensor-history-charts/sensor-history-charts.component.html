@@ -1,0 +1,172 @@
+<!-- Sensor History Charts Component
+     Multi-parameter line chart with parameter selector tabs, statistical summaries,
+     loading/empty states, and dark mode support. Responsive scrollable container
+     on mobile, full width on larger screens. -->
+
+<div
+  class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+>
+  <!-- Header -->
+  <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700 sm:px-6">
+    <h3 class="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-200">
+      Gráfico Histórico de Parámetros
+    </h3>
+    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+      Visualización de tendencias históricas de parámetros ambientales
+    </p>
+  </div>
+
+  <!-- Parameter Selector Tabs -->
+  <div class="border-b border-slate-200 dark:border-slate-700 px-5 sm:px-6 pt-4">
+    <div class="flex gap-2 overflow-x-auto pb-4">
+      @for (param of parameters; track param.value) {
+        <button
+          (click)="onParameterSelect(param.value)"
+          class="relative whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200"
+          [ngClass]="{
+            'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700':
+              selectedParameter !== param.value,
+            'text-white shadow-md': selectedParameter === param.value
+          }"
+          [style]="selectedParameter === param.value ? { backgroundColor: param.color } : {}"
+        >
+          {{ param.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div
+      class="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-6"
+    >
+      <svg
+        class="mb-4 h-10 w-10 animate-spin text-brand-500"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <p class="text-sm text-slate-500 dark:text-slate-400">Cargando datos...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && filteredRecords.length === 0) {
+    <div
+      class="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-6"
+    >
+      <svg
+        class="mb-4 h-12 w-12 text-slate-300 dark:text-slate-700"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+        />
+      </svg>
+      <p class="text-slate-500 dark:text-slate-400">
+        No hay datos disponibles para el rango seleccionado
+      </p>
+    </div>
+  }
+
+  <!-- Chart Content -->
+  @if (!isLoading && filteredRecords.length > 0) {
+    <div class="p-5 sm:p-6">
+      <!-- Statistics Grid -->
+      <div class="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+          <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Promedio</p>
+          <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
+            {{ stats.mean }}
+          </p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {{ getSelectedParameterConfig()?.unit }}
+          </p>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+          <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Máximo</p>
+          <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
+            {{ stats.max }}
+          </p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {{ getSelectedParameterConfig()?.unit }}
+          </p>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+          <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Mínimo</p>
+          <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
+            {{ stats.min }}
+          </p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {{ getSelectedParameterConfig()?.unit }}
+          </p>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+          <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Desv. Est.</p>
+          <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
+            {{ stats.stdDev }}
+          </p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {{ getSelectedParameterConfig()?.unit }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Chart Container -->
+      <div class="relative max-w-full overflow-x-auto custom-scrollbar">
+        <div class="animate-fadeIn -ml-5 min-w-[650px] xl:min-w-full pl-2">
+          <canvas
+            baseChart
+            type="line"
+            [data]="chartData"
+            [options]="chartOptions"
+            style="max-height: 380px; position: relative"
+          ></canvas>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<style>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  button.active {
+    box-shadow: 0 0 0 3px rgba(var(--param-color-rgb), 0.1);
+  }
+</style>

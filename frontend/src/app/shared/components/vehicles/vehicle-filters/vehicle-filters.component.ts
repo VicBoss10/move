@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Output, EventEmitter, ChangeDetectionStrategy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable, of } from 'rxjs';
@@ -6,6 +6,7 @@ import { catchError, map, shareReplay } from 'rxjs/operators';
 import { VehicleSearchCriteria } from '../../../../core/models/vehicle.model';
 import { DeviceService } from '../../../../core/services/device.service';
 import { Device } from '../../../../core/models/device.model';
+import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 
 /**
  * VehicleFiltersComponent (Smart Component)
@@ -38,7 +39,7 @@ import { Device } from '../../../../core/models/device.model';
   templateUrl: './vehicle-filters.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VehicleFiltersComponent {
+export class VehicleFiltersComponent implements OnInit {
   /**
    * Observable stream of all registered devices with current state
    * @type {Observable<Device[]>}
@@ -94,6 +95,18 @@ export class VehicleFiltersComponent {
   endDate: string = '';
 
   /**
+   * Minimum selectable date (first available vehicle detection) in YYYY-MM-DD format.
+   * @type {string}
+   */
+  minDate: string = '';
+
+  /**
+   * Maximum selectable date (last available vehicle detection) in YYYY-MM-DD format.
+   * @type {string}
+   */
+  maxDate: string = '';
+
+  /**
    * Map of locationId to array of associated device IDs for filter queries
    * @type {Map<number, number[]>}
    * @private
@@ -103,9 +116,19 @@ export class VehicleFiltersComponent {
   /**
    * Initializes component with service dependencies and loads device/location data.
    * @param {DeviceService} deviceService - Service for fetching device list
+   * @param {VehicleDetectedService} vehicleService - Service for fetching vehicle detection date bounds
+   * @param {ChangeDetectorRef} cdr - Change detection reference for manual triggering in OnPush mode
    */
-  constructor(private deviceService: DeviceService) {
+  constructor(
+    private deviceService: DeviceService,
+    private vehicleService: VehicleDetectedService,
+    private cdr: ChangeDetectorRef,
+  ) {
     this.initializeDevices();
+  }
+
+  ngOnInit(): void {
+    this.loadDateBounds();
   }
 
   /**
@@ -169,12 +192,10 @@ export class VehicleFiltersComponent {
     }
 
     if (this.startDate) {
-      criteria.start = new Date(this.startDate);
+      criteria.start = new Date(this.startDate + 'T00:00:00');
     }
     if (this.endDate) {
-      const end = new Date(this.endDate);
-      end.setHours(23, 59, 59, 999);
-      criteria.end = end;
+      criteria.end = new Date(this.endDate + 'T23:59:59');
     }
 
     this.filterChange.emit(criteria);
@@ -189,5 +210,39 @@ export class VehicleFiltersComponent {
     this.startDate = '';
     this.endDate = '';
     this.filterChange.emit(null);
+  }
+
+  /**
+   * Loads first and last vehicle detection record timestamps to constrain date picker min/max.
+   * Silently fails on error (no message if no records exist).
+   * @private
+   */
+  private loadDateBounds(): void {
+    this.vehicleService.getFirstRecord().subscribe({
+      next: (r) => {
+        this.minDate = this.toDateString(r.timestamp);
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
+    this.vehicleService.getLastRecord().subscribe({
+      next: (r) => {
+        this.maxDate = this.toDateString(r.timestamp);
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
+  }
+
+  /**
+   * Converts timestamp to ISO 8601 date string (YYYY-MM-DD) for date input binding.
+   * @param {string | number | Date | null | undefined} timestamp - Timestamp to convert
+   * @returns {string} ISO date string or empty string if null
+   * @private
+   */
+  private toDateString(timestamp: string | number | Date | null | undefined): string {
+    if (!timestamp) return '';
+    const d = new Date(timestamp);
+    return d.toISOString().split('T')[0];
   }
 }

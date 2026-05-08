@@ -4,6 +4,15 @@
     <app-history-filters (filterChange)="onFilterChange($event)" />
   </div>
 
+  <!-- Charts -->
+  <div class="col-span-12">
+    <app-sensor-history-charts
+      [filteredRecords]="allRecords"
+      [isLoading]="isLoading"
+      [selectedParameter]="'co2'"
+    />
+  </div>
+
   <!-- Table -->
   <div class="col-span-12">
     <app-sensor-data-table

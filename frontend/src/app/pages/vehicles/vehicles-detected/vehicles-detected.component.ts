@@ -6,17 +6,37 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VehicleTableComponent } from '../../../shared/components/vehicles/vehicle-table/vehicle-table.component';
 import { VehicleFiltersComponent } from '../../../shared/components/vehicles/vehicle-filters/vehicle-filters.component';
+import { VehicleDetectionChartsComponent } from '../../../shared/components/vehicles/vehicle-detection-charts/vehicle-detection-charts.component';
+import { VehicleTableComponent } from '../../../shared/components/vehicles/vehicle-table/vehicle-table.component';
 import { VehicleDetectedService } from '../../../core/services/vehicle-detected.service';
 import { VehicleDetected, VehicleSearchCriteria } from '../../../core/models/vehicle.model';
 import { Observable, of, Subject, BehaviorSubject } from 'rxjs';
 import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 
+/**
+ * VehiclesDetectedComponent (Page/Smart Container)
+ *
+ * Orquesta la visualización de detecciones de vehículos con gráficas y tabla.
+ * Features:
+ * - Filtrado de datos por tipo, ubicación y rango de fechas
+ * - Visualización gráfica de distribución y tendencias mediante VehicleDetectionChartsComponent
+ * - Tabla detallada de detecciones con VehicleTableComponent
+ * - Cálculo de estadísticas por tipo de vehículo
+ * - Gestión centralizada de estado y búsquedas reactivas
+ *
+ * @selector app-vehicles-detected
+ * @standalone true
+ */
 @Component({
   selector: 'app-vehicles-detected',
   standalone: true,
-  imports: [CommonModule, VehicleTableComponent, VehicleFiltersComponent],
+  imports: [
+    CommonModule,
+    VehicleFiltersComponent,
+    VehicleDetectionChartsComponent,
+    VehicleTableComponent,
+  ],
   templateUrl: './vehicles-detected.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

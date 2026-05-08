@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 
 import { HistoryFiltersComponent } from '../../../shared/components/environment-detail-charts/history-filters/history-filters.component';
+import { SensorHistoryChartsComponent } from '../../../shared/components/environment-detail-charts/sensor-history-charts/sensor-history-charts.component';
 import { SensorDataTableComponent } from '../../../shared/components/environment-detail-charts/sensor-data-table/sensor-data-table.component';
 import { SensorDataService } from '../../../core/services/sensor-data.service';
 import { SensorData, SensorDataSearchCriteria } from '../../../core/models/sensor-data.model';
@@ -16,10 +17,13 @@ import { catchError, finalize, takeUntil } from 'rxjs/operators';
 /**
  * EnvironmentalHistoryComponent (Page/Smart Container)
  *
- * Componente de página que orquesta la visualización del historial ambiental:
- * - Llama a SensorDataService para obtener datos
- * - Maneja el estado de filtros y paginación
- * - Renderiza HistoryFiltersComponent y SensorDataTableComponent
+ * Orquesta la visualización del historial ambiental con gráficas y tabla.
+ * Features:
+ * - Filtrado de datos por fecha y parámetros a través de HistoryFiltersComponent
+ * - Visualización gráfica de tendencias mediante SensorHistoryChartsComponent
+ * - Tabla paginada de registros detallados con SensorDataTableComponent
+ * - Gestión centralizada de estado de filtros, paginación y carga
+ * - Integración de múltiples vistas de los mismos datos
  *
  * @selector app-environmental-history
  * @standalone true
@@ -27,7 +31,7 @@ import { catchError, finalize, takeUntil } from 'rxjs/operators';
 @Component({
   selector: 'app-environmental-history',
   standalone: true,
-  imports: [HistoryFiltersComponent, SensorDataTableComponent],
+  imports: [HistoryFiltersComponent, SensorHistoryChartsComponent, SensorDataTableComponent],
   templateUrl: './environmental-history.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -38,7 +42,12 @@ export class EnvironmentalHistoryComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   /**
-   * Registros actuales para la vista
+   * Todos los registros para la gráfica (sin paginación)
+   */
+  allRecords: SensorData[] = [];
+
+  /**
+   * Registros actuales para la tabla (paginados)
    */
   filteredRecords: SensorData[] = [];
 
@@ -58,7 +67,7 @@ export class EnvironmentalHistoryComponent implements OnInit, OnDestroy {
   sortOrder: string = 'desc';
 
   /**
-   * Página actual de resultados
+   * Página actual de resultados de la tabla
    */
   currentPage: number = 0;
 
@@ -68,7 +77,7 @@ export class EnvironmentalHistoryComponent implements OnInit, OnDestroy {
   pageSize: number = 100;
 
   /**
-   * Flag para indicar si hay más datos disponibles
+   * Flag para indicar si hay más datos disponibles en la tabla
    */
   hasMoreData: boolean = true;
 
@@ -87,17 +96,11 @@ export class EnvironmentalHistoryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga datos de sensores con paginación
-   * @param append - Si es true, agrega los datos a los existentes
+   * Carga todos los datos de sensores para la gráfica (sin paginación)
    */
-  private loadSensorData(append: boolean = false): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
+  private loadSensorData(): void {
     const criteria: SensorDataSearchCriteria = {
       ...this.currentCriteria,
-      page: this.currentPage,
-      size: this.pageSize,
     };
 
     this.sensorDataService
@@ -109,25 +112,15 @@ export class EnvironmentalHistoryComponent implements OnInit, OnDestroy {
           this.errorMessage = 'Error al cargar los datos del historial';
           return of([]);
         }),
-        finalize(() => {
-          this.isLoading = false;
-        }),
       )
       .subscribe((data) => {
-        this.hasMoreData = data.length === this.pageSize;
-
         const sortedData = data.sort((a, b) => {
           const dateA = new Date(a.timestamp).getTime();
           const dateB = new Date(b.timestamp).getTime();
           return this.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
         });
 
-        if (append) {
-          this.filteredRecords = [...this.filteredRecords, ...sortedData];
-        } else {
-          this.filteredRecords = sortedData;
-        }
-
+        this.allRecords = sortedData;
         this.cdr.markForCheck();
       });
   }
@@ -140,18 +133,57 @@ export class EnvironmentalHistoryComponent implements OnInit, OnDestroy {
     this.currentCriteria = criteria;
     this.filteredRecords = [];
     this.hasMoreData = true;
-    this.loadSensorData(false);
+    this.loadSensorData();
+    this.loadTablePage();
   }
 
   /**
-   * Carga la siguiente página de resultados
+   * Carga la siguiente página de resultados para la tabla
    */
   loadMore(): void {
     if (!this.hasMoreData || this.isLoading) {
       return;
     }
     this.currentPage++;
-    this.loadSensorData(true);
+    this.loadTablePage();
+  }
+
+  /**
+   * Carga una página de la tabla con paginación de 100 registros
+   */
+  private loadTablePage(): void {
+    this.isLoading = true;
+
+    const criteria: SensorDataSearchCriteria = {
+      ...this.currentCriteria,
+      page: this.currentPage,
+      size: this.pageSize,
+    };
+
+    this.sensorDataService
+      .search(criteria)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error cargando más datos de tabla:', error);
+          this.errorMessage = 'Error al cargar más datos';
+          return of([]);
+        }),
+        finalize(() => {
+          this.isLoading = false;
+        }),
+      )
+      .subscribe((data) => {
+        this.hasMoreData = data.length === this.pageSize;
+
+        if (this.currentPage === 0) {
+          this.filteredRecords = data;
+        } else {
+          this.filteredRecords = [...this.filteredRecords, ...data];
+        }
+
+        this.cdr.markForCheck();
+      });
   }
 
   /**

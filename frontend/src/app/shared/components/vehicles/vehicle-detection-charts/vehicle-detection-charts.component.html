@@ -1,0 +1,134 @@
+<!-- Vehicle Detection Charts Component
+     Line chart showing vehicle detections by type over date range with daily aggregation.
+     Summary statistics for total detections, most common type, and detection rate per day. -->
+
+<div
+  class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-white/[0.03]"
+>
+  <!-- Header -->
+  <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700 sm:px-6">
+    <h3 class="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-200">
+      Detecciones de Vehículos
+    </h3>
+    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+      Tendencia de detecciones por tipo de vehículo
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div
+      class="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-6"
+    >
+      <svg
+        class="mb-4 h-10 w-10 animate-spin text-brand-500"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <p class="text-sm text-slate-500 dark:text-slate-400">Cargando datos...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && vehicleDetections.length === 0) {
+    <div
+      class="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-6"
+    >
+      <svg
+        class="mb-4 h-12 w-12 text-slate-300 dark:text-slate-700"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 12l2 2 4-4M7 20H5a2 2 0 01-2-2V9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 00-2 2v2a2 2 0 002 2h12a2 2 0 002-2v-2a2 2 0 00-2-2h-2.5a1 1 0 00-.8.4"
+        />
+      </svg>
+      <p class="text-slate-500 dark:text-slate-400">
+        No hay detecciones de vehículos para el rango seleccionado
+      </p>
+    </div>
+  }
+
+  <!-- Chart Content -->
+  @if (!isLoading && vehicleDetections.length > 0) {
+    <div class="p-5 sm:p-6">
+      <!-- Summary Statistics Grid -->
+      <div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+          <p class="text-xs font-medium text-slate-600 dark:text-slate-400">
+            Total de Detecciones
+          </p>
+          <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
+            {{ summaryStats.totalDetections }}
+          </p>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+          <p class="text-xs font-medium text-slate-600 dark:text-slate-400">
+            Tipo Más Detectado
+          </p>
+          <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
+            {{ summaryStats.mostCommonType }}
+          </p>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+          <p class="text-xs font-medium text-slate-600 dark:text-slate-400">
+            Tasa de Detección (por día)
+          </p>
+          <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
+            {{ summaryStats.detectionRate }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Chart Container -->
+      <div class="relative max-w-full overflow-x-auto custom-scrollbar">
+        <div class="animate-fadeIn -ml-5 min-w-[650px] xl:min-w-full pl-2">
+          <canvas
+            baseChart
+            type="line"
+            [data]="chartData"
+            [options]="chartOptions"
+            style="max-height: 380px; position: relative"
+          ></canvas>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<style>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.6s ease-out;
+  }
+</style>

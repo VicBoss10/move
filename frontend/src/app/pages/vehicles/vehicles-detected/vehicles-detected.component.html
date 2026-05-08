@@ -1,10 +1,20 @@
 <div class="grid grid-cols-12 gap-4 md:gap-6">
-  <!-- Filtros -->
+  <!-- Filters -->
   <div class="col-span-12">
     <app-vehicle-filters (filterChange)="handleFilterChange($event)" />
   </div>
 
-  <!-- Tabla de Vehículos -->
+  <!-- Charts -->
+  <div class="col-span-12">
+    @if (vehicles$ | async; as vehicles) {
+      <app-vehicle-detection-charts
+        [vehicleDetections]="vehicles"
+        [isLoading]="isLoading"
+      />
+    }
+  </div>
+
+  <!-- Table -->
   <div class="col-span-12">
     <!-- Loading state -->
     @if (isLoading) {

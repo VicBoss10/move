@@ -1,7 +1,8 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { SensorDataSearchCriteria } from '../../../../core/models/sensor-data.model';
+import { SensorDataService } from '../../../../core/services/sensor-data.service';
 
 /**
  * HistoryFiltersComponent (Stateful Component)
@@ -29,8 +30,21 @@ import { SensorDataSearchCriteria } from '../../../../core/models/sensor-data.mo
   standalone: true,
   imports: [FormsModule],
   templateUrl: './history-filters.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HistoryFiltersComponent {
+export class HistoryFiltersComponent implements OnInit {
+  /**
+   * Minimum selectable date (first available sensor data) in YYYY-MM-DD format.
+   * @type {string}
+   */
+  minDate: string = '';
+
+  /**
+   * Maximum selectable date (last available sensor data) in YYYY-MM-DD format.
+   * @type {string}
+   */
+  maxDate: string = '';
+
   /**
    * Start date string in YYYY-MM-DD format for date range filter.
    * @type {string}
@@ -66,6 +80,15 @@ export class HistoryFiltersComponent {
    * @type {EventEmitter<SensorDataSearchCriteria>}
    */
   @Output() filterChange = new EventEmitter<SensorDataSearchCriteria>();
+
+  constructor(
+    private sensorDataService: SensorDataService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadDateBounds();
+  }
 
   /**
    * Array of filterable parameter options with value keys and display labels.
@@ -121,12 +144,10 @@ export class HistoryFiltersComponent {
     const criteria: SensorDataSearchCriteria = {};
 
     if (this.startDate) {
-      criteria.start = new Date(this.startDate);
+      criteria.start = new Date(this.startDate + 'T00:00:00');
     }
     if (this.endDate) {
-      const end = new Date(this.endDate);
-      end.setHours(23, 59, 59, 999);
-      criteria.end = end;
+      criteria.end = new Date(this.endDate + 'T23:59:59');
     }
 
     if (this.selectedParameter !== 'all') {
@@ -208,20 +229,36 @@ export class HistoryFiltersComponent {
   }
 
   /**
-   * Returns minimum selectable date as YYYY-MM-DD string (30 days prior to today).
-   * @returns {string} ISO date string for 30-day lookback window start
+   * Loads first and last sensor data record timestamps to constrain date picker min/max.
+   * Silently fails on error (no message if no records exist).
+   * @private
    */
-  getMinDate(): string {
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    return date.toISOString().split('T')[0];
+  private loadDateBounds(): void {
+    this.sensorDataService.getFirstRecord().subscribe({
+      next: (r) => {
+        this.minDate = this.toDateString(r.timestamp);
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
+    this.sensorDataService.getLastRecord().subscribe({
+      next: (r) => {
+        this.maxDate = this.toDateString(r.timestamp);
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
   }
 
   /**
-   * Returns maximum selectable date as YYYY-MM-DD string (today).
-   * @returns {string} ISO date string for current date
+   * Converts timestamp to ISO 8601 date string (YYYY-MM-DD) for date input binding.
+   * @param {string | number | Date | null | undefined} timestamp - Timestamp to convert
+   * @returns {string} ISO date string or empty string if null
+   * @private
    */
-  getMaxDate(): string {
-    return new Date().toISOString().split('T')[0];
+  private toDateString(timestamp: string | number | Date | null | undefined): string {
+    if (!timestamp) return '';
+    const d = new Date(timestamp);
+    return d.toISOString().split('T')[0];
   }
 }
