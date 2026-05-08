@@ -6,7 +6,7 @@ import { VehicleDetectedService } from '../../../../core/services/vehicle-detect
 import { ComponentColorUtility } from '../../../../core/utils/component-color.utility';
 import { getEnvironmentStatus } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of, combineLatest } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, tap } from 'rxjs/operators';
 
 /**
  * EnvironmentMetric interface for environmental metric card display.
@@ -63,6 +63,7 @@ interface EnvironmentMetric {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EnvironmentMetricsComponent {
+  isLoading = true;
   /**
    * SVG icons for gas, temperature, and vehicle metrics
    */
@@ -145,8 +146,10 @@ export class EnvironmentMetricsComponent {
           },
         ];
       }),
+      tap(() => (this.isLoading = false)),
       catchError((error) => {
         console.error('Error loading environment metrics:', error);
+        this.isLoading = false;
         return of(this.defaultMetrics);
       }),
       shareReplay(1),

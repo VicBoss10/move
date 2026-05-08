@@ -4,7 +4,7 @@ import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 import { DeviceService } from '../../../../core/services/device.service';
 import { Device, DeviceType, DeviceState } from '../../../../core/models/device.model';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, tap } from 'rxjs/operators';
 
 /**
  * StatusCard interface for system component status information.
@@ -55,6 +55,8 @@ interface StatusCard {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SystemStatusComponent {
+  isLoading = true;
+
   /**
    * Observable emitting array of three status cards for system, devices, and cameras
    */
@@ -149,8 +151,10 @@ export class SystemStatusComponent {
           },
         ];
       }),
+      tap(() => (this.isLoading = false)),
       catchError((error) => {
         console.error('Error loading system status:', error);
+        this.isLoading = false;
         return of(this.defaultStatusCards);
       }),
       shareReplay(1),

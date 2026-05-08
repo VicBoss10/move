@@ -16,7 +16,7 @@ import {
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
+import { map, catchError, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 ChartJS.register(
   LineController,
@@ -61,6 +61,8 @@ ChartJS.register(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PollutionChartComponent {
+  isLoading = true;
+
   /**
    * Reference to Chart.js canvas element for programmatic access.
    * @type {BaseChartDirective | undefined}
@@ -242,8 +244,10 @@ export class PollutionChartComponent {
         const startTime = new Date(endTime.getTime() - this.HOURS_WINDOW * 3600000);
         return this.sensorDataService.search({ start: startTime, end: endTime });
       }),
+      tap(() => (this.isLoading = false)),
       catchError((error) => {
         console.error('Error loading particle data:', error);
+        this.isLoading = false;
         return of([]);
       }),
       shareReplay(1),

@@ -9,7 +9,7 @@ import {
 } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of, combineLatest } from 'rxjs';
 import { SensorData } from '../../../../core/models/sensor-data.model';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, tap } from 'rxjs/operators';
 
 /**
  * GasIndicator interface for gas concentration gauge display.
@@ -79,6 +79,8 @@ interface GasIndicator {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GasIndicatorsComponent {
+  isLoading = true;
+
   /**
    * Observable emitting status legend (color and label pairs) synchronized with current thresholds
    */
@@ -153,8 +155,10 @@ export class GasIndicatorsComponent {
 
         return indicators;
       }),
+      tap(() => (this.isLoading = false)),
       catchError((error) => {
         console.error('Error loading gas indicators:', error);
+        this.isLoading = false;
         return of(this.defaultIndicators);
       }),
       shareReplay(1),

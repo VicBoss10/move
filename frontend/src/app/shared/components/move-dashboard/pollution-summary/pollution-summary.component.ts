@@ -8,7 +8,7 @@ import {
   EnvironmentMetricKey,
 } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, tap } from 'rxjs/operators';
 
 /**
  * PollutantRow interface for pollution summary table data.
@@ -72,6 +72,8 @@ interface PollutantRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PollutionSummaryComponent {
+  isLoading = true;
+
   /**
    * Observable emitting array of pollutant rows with daily statistics and status badges
    */
@@ -147,8 +149,10 @@ export class PollutionSummaryComponent {
           };
         });
       }),
+      tap(() => (this.isLoading = false)),
       catchError((error) => {
         console.error('Error loading pollution summary:', error);
+        this.isLoading = false;
         return of(this.defaultPollutionData);
       }),
       shareReplay(1),

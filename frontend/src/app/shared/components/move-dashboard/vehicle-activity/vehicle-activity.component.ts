@@ -14,7 +14,7 @@ import {
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 import { VehicleDetected, VehicleType } from '../../../../core/models/vehicle.model';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { map, catchError, shareReplay, tap } from 'rxjs/operators';
 
 ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend);
 
@@ -55,6 +55,8 @@ ChartJS.register(BarController, BarElement, LinearScale, CategoryScale, Tooltip,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehicleActivityComponent {
+  isLoading = true;
+
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
@@ -184,8 +186,10 @@ export class VehicleActivityComponent {
           return vDate >= todayStart && vDate <= now;
         });
       }),
+      tap(() => (this.isLoading = false)),
       catchError((error) => {
         console.error('Error loading vehicle data:', error);
+        this.isLoading = false;
         return of([]);
       }),
       shareReplay(1),
