@@ -420,7 +420,7 @@ void sendRegistration(const String &mac, const String &name, const String &ssid,
   int httpCode = http.POST(payload);
   Serial.printf("[FW] Register HTTP %d\n", httpCode);
 
-  if (httpCode == 200) {
+  if (httpCode == 201) {
     String resp = http.getString();
     Serial.println("[FW] " + resp);
 
@@ -428,9 +428,15 @@ void sendRegistration(const String &mac, const String &name, const String &ssid,
     if (deviceId > 0) {
       prefs.begin(PREF_NS, false);
       prefs.putInt("device_id", deviceId);
+      prefs.putInt(KEY_QUEUE_COUNT, 0);
       prefs.end();
       nvs_deviceId = deviceId;
       Serial.printf("[FW] deviceId=%d saved\n", deviceId);
+
+      if (LittleFS.exists("/queue.log")) {
+        LittleFS.remove("/queue.log");
+        Serial.println("[FW] queue.log cleared on new registration");
+      }
     }
 
     int idxKc = resp.indexOf("\"keycloakClientInfo\"");
