@@ -33,20 +33,19 @@ ChartJS.register(
 /**
  * GasesComparisonChartComponent (Presentation Component)
  *
- * Displays multi-series line chart comparing three gas concentrations (CO, NO₂, NH₃) over 12-hour sliding window.
+ * Displays multi-series line chart comparing three gas concentrations (CO, NO₂, NH₃) over 24-hour sliding window.
  *
  * Features:
  * - Three-series line chart: CO (purple), NO₂ (amber), NH₃ (cyan) with distinct colors and units
- * - 12-hour sliding window with hourly aggregation: calculates mean concentration per hour, null for empty slots
+ * - 24-hour sliding window with hourly aggregation: calculates mean concentration per hour, null for empty slots
  * - Fetches latest sensor timestamp to determine time window range
  * - Query-based data loading from backend with start/end date filtering
- * - Current gas values observable: latest readings extracted separately with rounded precision (1 decimal)
  * - Chart.js multi-line configuration: semi-transparent fill under each series, point markers
  * - Responsive layout: scrollable container on mobile (min-width 650px), full width on XL screens
  * - Legend display with point-style icons, positioned at top
  * - Tooltip with formatted units: CO (ppm), NO₂ (µg/m³), NH₃ (ppb), black background with white text
  * - Grid styling: light gray lines with reduced opacity, dark mode aware
- * - Y-axis title: "Concentração (µg/m³, ppm, ppb)", X-axis: hourly labels (HH:00 format)
+ * - Y-axis title: "Concentration (µg/m³, ppm, ppb)" in cyan (NH₃ color), X-axis: hourly labels (HH:00 format)
  * - OnPush change detection with async pipe for data subscription
  * - Fallback: displays empty chart on data load error
  *
@@ -71,11 +70,11 @@ export class GasesComparisonChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Time window in hours for data aggregation (12-hour sliding window).
+   * Time window in hours for data aggregation (24-hour sliding window).
    * @type {number}
    * @private
    */
-  private readonly HOURS_WINDOW = 12;
+  private readonly HOURS_WINDOW = 24;
 
   /**
    * Observable stream of aggregated multi-series chart data with hourly labels and averaged gas values.
@@ -84,17 +83,7 @@ export class GasesComparisonChartComponent {
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
   /**
-   * Observable stream of current gas concentrations from latest sensor reading.
-   * @type {Observable<{co: number; no2: number; nh3: number}>}
-   */
-  gasValues$!: Observable<{
-    co: number;
-    no2: number;
-    nh3: number;
-  }>;
-
-  /**
-   * Observable stream of raw sensor data for the 12-hour window, fetched from backend.
+   * Observable stream of raw sensor data for the 24-hour window, fetched from backend.
    * @type {Observable<SensorData[]>}
    * @private
    */
@@ -161,7 +150,7 @@ export class GasesComparisonChartComponent {
           font: {
             size: 11,
           },
-          maxTicksLimit: 12,
+          maxTicksLimit: 24,
         },
       },
       y: {
@@ -171,7 +160,7 @@ export class GasesComparisonChartComponent {
         title: {
           display: true,
           text: 'Concentration (µg/m³, ppm, ppb)',
-          color: '#6B7280',
+          color: '#06b6d4',
           font: {
             weight: 'bold',
           },
@@ -183,7 +172,7 @@ export class GasesComparisonChartComponent {
           color: 'rgba(107, 114, 128, 0.1)',
         },
         ticks: {
-          color: '#6B7280',
+          color: '#06b6d4',
         },
       },
     },
@@ -196,18 +185,17 @@ export class GasesComparisonChartComponent {
 
   /**
    * Initializes component with service dependency and sets up data streams.
-   * Triggers initialization of sensor data, chart data, and gas values observables.
+   * Triggers initialization of sensor data and chart data observables.
    * @param {SensorDataService} sensorDataService - Service for querying historical gas sensor data
    */
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
-    this.initializeGasValues();
   }
 
   /**
    * Fetches the latest sensor timestamp, then queries the backend for all sensor data
-   * within the 12-hour window ending at that timestamp.
+   * within the 24-hour window ending at that timestamp.
    * Errors are caught and return empty array for graceful fallback.
    * @private
    * @returns {void}
@@ -229,7 +217,7 @@ export class GasesComparisonChartComponent {
 
   /**
    * Transforms raw sensor data into hourly-aggregated multi-series chart data.
-   * Groups readings by hour for each gas, calculates average per hour, and creates 12 hourly slots.
+   * Groups readings by hour for each gas, calculates average per hour, and creates 24 hourly slots.
    * Parses timestamps, filters invalid dates, and creates HH:00 format labels.
    * Returns default empty chart on zero or invalid data.
    * @private
@@ -262,7 +250,7 @@ export class GasesComparisonChartComponent {
           0,
         );
 
-        // Create 12 hourly slots backwards from latest hour
+        // Create 24 hourly slots backwards from latest hour
         const slots: { start: Date; end: Date; label: string }[] = [];
         for (let i = this.HOURS_WINDOW - 1; i >= 0; i--) {
           const slotStart = new Date(latestSlotStart.getTime() - i * 3600000);
@@ -340,31 +328,6 @@ export class GasesComparisonChartComponent {
           ],
         };
       }),
-      shareReplay(1),
-    );
-  }
-
-  /**
-   * Extracts current gas concentration values from latest sensor reading.
-   * Rounds CO and NH₃ to 1 decimal, NO₂ to nearest integer per unit conventions.
-   * Returns zero-state on error for graceful fallback.
-   * @private
-   * @returns {void}
-   */
-  private initializeGasValues(): void {
-    this.gasValues$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: SensorData) => ({
-        co: Math.round((latestData?.co || 0) * 10) / 10,
-        no2: Math.round(latestData?.no2 || 0),
-        nh3: Math.round((latestData?.nh3 || 0) * 10) / 10,
-      })),
-      catchError(() =>
-        of({
-          co: 0,
-          no2: 0,
-          nh3: 0,
-        }),
-      ),
       shareReplay(1),
     );
   }

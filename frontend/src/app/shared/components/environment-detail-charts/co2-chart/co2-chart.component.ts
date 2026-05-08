@@ -32,11 +32,11 @@ ChartJS.register(
 /**
  * Co2ChartComponent (Presentation Component)
  *
- * Displays a dynamic line chart showing CO₂ concentration trends over the last 12 hours,
+ * Displays a dynamic line chart showing CO₂ concentration trends over the last 24 hours,
  * with hourly averages. Uses Chart.js for rendering with responsive, dark-mode-aware styling.
  *
  * Features:
- * - 12-hour sliding window of CO₂ data, grouped and averaged by hour
+ * - 24-hour sliding window of CO₂ data, grouped and averaged by hour
  * - Fetches latest sensor timestamp to determine time window range
  * - Query-based data loading from backend with start/end date filtering
  * - Hourly slot aggregation: calculates mean CO₂ per hour, null for empty slots
@@ -70,11 +70,11 @@ export class Co2ChartComponent {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   /**
-   * Time window in hours for data aggregation (12-hour sliding window).
+   * Time window in hours for data aggregation (24-hour sliding window).
    * @type {number}
    * @private
    */
-  private readonly HOURS_WINDOW = 12;
+  private readonly HOURS_WINDOW = 24;
 
   /**
    * Observable stream of aggregated chart data with hourly labels and averaged CO₂ values.
@@ -83,7 +83,7 @@ export class Co2ChartComponent {
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
   /**
-   * Observable stream of raw sensor data for the 12-hour window, fetched from backend.
+   * Observable stream of raw sensor data for the 24-hour window, fetched from backend.
    * @type {Observable<SensorData[]>}
    * @private
    */
@@ -150,7 +150,7 @@ export class Co2ChartComponent {
           font: {
             size: 11,
           },
-          maxTicksLimit: 12,
+          maxTicksLimit: 24,
         },
       },
       y: {
@@ -200,7 +200,7 @@ export class Co2ChartComponent {
 
   /**
    * Fetches the latest sensor timestamp, then queries the backend for all sensor data
-   * within the 12-hour window ending at that timestamp.
+   * within the 24-hour window ending at that timestamp.
    * Errors are caught and return empty array for graceful fallback.
    * @private
    */
@@ -221,7 +221,7 @@ export class Co2ChartComponent {
 
   /**
    * Transforms raw sensor data into hourly-aggregated chart data.
-   * Groups readings by hour, calculates average CO₂ per hour, and creates 12 hourly slots.
+   * Groups readings by hour, calculates average CO₂ per hour, and creates 24 hourly slots.
    * Parses timestamps, filters invalid dates, and creates HH:00 format labels.
    * Returns default empty chart on zero or invalid data.
    * @private

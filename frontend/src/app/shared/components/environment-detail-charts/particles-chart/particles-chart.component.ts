@@ -44,8 +44,8 @@ ChartJS.register(
  * - Responsive grid layout with automatic overflow scrolling on small screens (min-width 650px)
  * - Max-height 380px with responsive sizing
  * - Tooltip with fixed 1 decimal format for both series
- * - X-axis shows hourly labels (HH:00 format) with max 12 ticks
- * - Y-axis displays "Partículas (µg/m³)" title with grid overlay
+ * - X-axis shows hourly labels (HH:00 format) with max 24 ticks
+ * - Y-axis displays "Particles (µg/m³)" title in indigo (PM2.5 color) with grid overlay
  * - Fade-in animation on chart load (CSS @keyframes)
  * - Chart.js Line controller with OnPush change detection and async pipe subscription
  * - Fallback: displays zero-state on data load error
@@ -82,15 +82,6 @@ export class ParticlesChartComponent {
    * @type {Observable<ChartConfiguration<'line'>['data']>}
    */
   chartData$!: Observable<ChartConfiguration<'line'>['data']>;
-
-  /**
-   * Observable stream of current PM2.5 and PM10 values from latest sensor reading.
-   * @type {Observable<{ pm25: number; pm10: number }>}
-   */
-  pmValues$!: Observable<{
-    pm25: number;
-    pm10: number;
-  }>;
 
   /**
    * Shared Observable of historical sensor data for the 24-hour window with hourly aggregation.
@@ -169,7 +160,7 @@ export class ParticlesChartComponent {
         title: {
           display: true,
           text: 'Particles (µg/m³)',
-          color: '#6B7280',
+          color: '#6366f1',
           font: {
             weight: 'bold',
           },
@@ -181,7 +172,7 @@ export class ParticlesChartComponent {
           color: 'rgba(107, 114, 128, 0.1)',
         },
         ticks: {
-          color: '#6B7280',
+          color: '#6366f1',
         },
       },
     },
@@ -198,14 +189,13 @@ export class ParticlesChartComponent {
   };
 
   /**
-   * Initializes component with service dependency and sets up three data streams.
-   * Triggers initialization of sensor data, chart data, and current PM values observables.
+   * Initializes component with service dependency and sets up data streams.
+   * Triggers initialization of sensor data and chart data observables.
    * @param {SensorDataService} sensorDataService - Service for querying particle sensor data
    */
   constructor(private sensorDataService: SensorDataService) {
     this.initializeSensorData();
     this.initializeChartData();
-    this.initializePMValues();
   }
 
   /**
@@ -326,28 +316,6 @@ export class ParticlesChartComponent {
           ],
         };
       }),
-      shareReplay(1),
-    );
-  }
-
-  /**
-   * Initializes observable of current PM2.5 and PM10 values from latest sensor reading.
-   * Rounds values to 1 decimal place; returns zero-state on error.
-   * @private
-   * @returns {void}
-   */
-  private initializePMValues(): void {
-    this.pmValues$ = this.sensorDataService.getLatest().pipe(
-      map((latestData: SensorData) => ({
-        pm25: Math.round((latestData?.pm25 || 0) * 10) / 10,
-        pm10: Math.round((latestData?.pm10 || 0) * 10) / 10,
-      })),
-      catchError(() =>
-        of({
-          pm25: 0,
-          pm10: 0,
-        }),
-      ),
       shareReplay(1),
     );
   }
