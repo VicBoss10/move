@@ -224,10 +224,10 @@ public class SensorDataService {
     private void updateDeviceStateIfInactive(Integer deviceId) {
         if (deviceId == null) return;
         deviceRepository.findById(deviceId).ifPresent(device -> {
-            if (device.getState() == DeviceState.INACTIVE) {
+            if (device.getState() == DeviceState.INACTIVE || device.getState() == DeviceState.PROVISIONAL) {
                 device.setState(DeviceState.ACTIVE);
                 deviceRepository.save(device);
-                log.info("Device {} transitioned INACTIVE -> ACTIVE (data received)", deviceId);
+                log.info("Device {} transitioned {} -> ACTIVE (data received)", deviceId, device.getState());
             }
         });
     }
