@@ -11,8 +11,8 @@ import { VehicleDetectionChartsComponent } from '../../../shared/components/vehi
 import { VehicleTableComponent } from '../../../shared/components/vehicles/vehicle-table/vehicle-table.component';
 import { VehicleDetectedService } from '../../../core/services/vehicle-detected.service';
 import { VehicleDetected, VehicleSearchCriteria } from '../../../core/models/vehicle.model';
-import { Observable, of, Subject, BehaviorSubject } from 'rxjs';
-import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, Subject, BehaviorSubject, combineLatest } from 'rxjs';
+import { catchError, map, shareReplay, switchMap, tap, startWith } from 'rxjs/operators';
 
 /**
  * VehiclesDetectedComponent (Page/Smart Container)
@@ -55,6 +55,11 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
    * Observable que emite los vehículos detectados (ordenados por fecha)
    */
   vehicles$!: Observable<VehicleDetected[]>;
+  /**
+   * Observable que emite el total global de vehículos (sin filtros)
+   * para calcular porcentajes respecto al universo total
+   */
+  totalVehicles$!: Observable<number>;
   /** Estadísticas por tipo derivadas de `vehicles$` */
   stats$!: Observable<
     Array<{ type: string; count: number; percent: number; trend?: number[]; trendMax?: number }>
@@ -122,11 +127,18 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
       shareReplay(1),
     );
 
-    // Derivar estadísticas por tipo
-    this.stats$ = this.vehicles$.pipe(
-      map((vehicles) => {
+    // Obtener el total global de vehículos (sin filtros) para calcular porcentajes consistentes
+    this.totalVehicles$ = this.vehicleDetectedService.getAll().pipe(
+      map((data) => (Array.isArray(data) ? data.length : 0)),
+      catchError(() => of(0)),
+      startWith(0),
+      shareReplay(1),
+    );
+
+    // Derivar estadísticas por tipo usando tanto vehículos filtrados como total global
+    this.stats$ = combineLatest([this.vehicles$, this.totalVehicles$]).pipe(
+      map(([vehicles, totalGlobal]) => {
         const types = ['CAR', 'BUS', 'MOTORCYCLE', 'BICYCLE', 'TRUCK'];
-        const total = vehicles.length;
         // Prepare 12-hour slots for trend (last 12 hours)
         const now = new Date();
         const slots: { start: Date; end: Date }[] = [];
@@ -150,7 +162,8 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
                 ).length,
             );
             const trendMax = Math.max(...trend, 1);
-            const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+            // Porcentaje respecto al total global, no al total filtrado
+            const percent = totalGlobal > 0 ? Math.round((count / totalGlobal) * 100) : 0;
             return { type: t, count, percent, trend, trendMax };
           })
           .filter((s) => s.count > 0);
