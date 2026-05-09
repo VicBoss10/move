@@ -34,6 +34,27 @@ ChartJS.register(
   Filler,
 );
 
+/**
+ * VehicleChartComponent (Presentational Component)
+ *
+ * Displays a 24-hour rolling window of vehicle detections as an hourly line chart.
+ * Receives raw vehicle detection records from parent component, slots them into one-hour buckets
+ * relative to the current time, and renders the per-hour totals as a single time series.
+ *
+ * Features:
+ * - Rolling 24-hour window built from the current clock time, with hour labels (HH:00)
+ * - Single-series line chart with smooth tension and filled translucent background (blue)
+ * - Custom tooltip showing hourly detection count
+ * - Empty hours rendered as null gaps so they don't draw a zero baseline
+ * - Reactive data stream via Observable + shareReplay for async pipe consumption
+ * - OnPush change detection driven by @Input vehicles
+ *
+ * @selector app-vehicle-chart
+ * @standalone true
+ * @imports CommonModule, BaseChartDirective
+ * @example
+ * <app-vehicle-chart [vehicles]="vehicleDetections" />
+ */
 @Component({
   selector: 'app-vehicle-chart',
   standalone: true,
@@ -42,12 +63,31 @@ ChartJS.register(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehicleChartComponent implements OnChanges {
+  /**
+   * Input array of vehicle detection records to plot.
+   * Records outside the rolling 24-hour window are ignored when bucketing.
+   * @type {VehicleDetected[]}
+   */
   @Input() vehicles: VehicleDetected[] = [];
 
+  /**
+   * Size of the rolling time window (in hours) used to build the hourly slots.
+   * @type {number}
+   */
   private readonly HOURS_WINDOW = 24;
 
+  /**
+   * Reactive stream of line chart data, rebuilt in ngOnChanges from the latest vehicles input.
+   * Consumed in the template through the async pipe.
+   * @type {Observable<ChartConfiguration<'line'>['data']>}
+   */
   lineChartData$!: Observable<ChartConfiguration<'line'>['data']>;
 
+  /**
+   * Line chart configuration: responsive layout, custom legend, tooltip formatting, and
+   * grid/tick styling for both axes.
+   * @type {ChartConfiguration<'line'>['options']}
+   */
   lineChartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -109,11 +149,21 @@ export class VehicleChartComponent implements OnChanges {
     },
   };
 
+  /**
+   * Empty chart data placeholder returned when no detections are available.
+   * @type {ChartConfiguration<'line'>['data']}
+   */
   private readonly defaultLineData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [],
   };
 
+  /**
+   * Angular lifecycle hook triggered when @Input vehicles changes.
+   * Rebuilds lineChartData$ as a fresh observable that emits the recomputed chart data,
+   * shared with all template subscribers via shareReplay.
+   * @param {SimpleChanges} changes - Change detection object
+   */
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['vehicles']) {
       this.lineChartData$ = of(this.vehicles).pipe(
@@ -123,6 +173,14 @@ export class VehicleChartComponent implements OnChanges {
     }
   }
 
+  /**
+   * Builds the line chart dataset from the input detections.
+   * Creates one-hour slots ending at the current hour for the last HOURS_WINDOW hours, counts
+   * detections falling into each slot, and emits null for empty slots so the line breaks instead
+   * of plotting a zero baseline.
+   * @param {VehicleDetected[]} vehicles - Source detection records to bucket by hour
+   * @returns {ChartConfiguration<'line'>['data']} Chart data with hour labels and per-hour counts
+   */
   private buildLineChartData(vehicles: VehicleDetected[]): ChartConfiguration<'line'>['data'] {
     if (!vehicles || vehicles.length === 0) {
       return this.defaultLineData;

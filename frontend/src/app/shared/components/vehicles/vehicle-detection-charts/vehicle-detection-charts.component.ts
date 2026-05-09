@@ -34,6 +34,30 @@ ChartJS.register(
   Filler,
 );
 
+/**
+ * VehicleDetectionChartsComponent (Presentational Component)
+ *
+ * Displays daily vehicle detection trends as a multi-series line chart broken down by vehicle type.
+ * Receives raw vehicle detection records from parent component, aggregates them by day, and renders
+ * one line per vehicle type. Also computes summary statistics (total detections, most common type,
+ * detection rate per day) for display alongside the chart.
+ *
+ * Features:
+ * - Multi-line chart with five vehicle type series: CAR (blue), BUS (red), MOTORCYCLE (orange), BICYCLE (green), TRUCK (purple)
+ * - Daily aggregation grouping detections by ISO date key
+ * - Smooth tension lines with filled background and translucent area color
+ * - Custom tooltip showing detection count per type with localized labels
+ * - Summary stats: total detections, most common vehicle type, daily detection rate
+ * - Loading state input for parent-controlled spinner display
+ * - OnPush change detection with manual chart update on input changes
+ * - Empty state handling when no detections are present
+ *
+ * @selector app-vehicle-detection-charts
+ * @standalone true
+ * @imports CommonModule, BaseChartDirective
+ * @example
+ * <app-vehicle-detection-charts [vehicleDetections]="detections" [isLoading]="loading" />
+ */
 @Component({
   selector: 'app-vehicle-detection-charts',
   standalone: true,
@@ -42,16 +66,40 @@ ChartJS.register(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehicleDetectionChartsComponent implements OnChanges {
+  /**
+   * Reference to the underlying ng2-charts directive instance.
+   * Used to manually trigger chart updates after input changes in OnPush mode.
+   * @type {BaseChartDirective | undefined}
+   */
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
+  /**
+   * Input array of vehicle detection records to plot.
+   * Source data is grouped by day and split per vehicle type before rendering.
+   * @type {VehicleDetected[]}
+   */
   @Input() vehicleDetections: VehicleDetected[] = [];
+
+  /**
+   * Input flag indicating whether the parent is still loading data.
+   * Used by the template to render a loading state instead of the chart.
+   * @type {boolean}
+   */
   @Input() isLoading: boolean = false;
 
+  /**
+   * Line chart data object, rebuilt in updateChartData when vehicleDetections changes.
+   * @type {ChartConfiguration<'line'>['data']}
+   */
   chartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [],
   };
 
+  /**
+   * Color mapping for each vehicle type used as line/border color in the chart.
+   * @type {{ [key: string]: string }}
+   */
   private readonly vehicleTypeColors: { [key: string]: string } = {
     CAR: '#3b82f6',
     BUS: '#ef4444',
@@ -60,10 +108,25 @@ export class VehicleDetectionChartsComponent implements OnChanges {
     TRUCK: '#8b5cf6',
   };
 
+  /**
+   * Canonical ordered list of vehicle type keys that drive dataset generation.
+   * @type {string[]}
+   */
   private readonly allVehicleTypes = ['CAR', 'BUS', 'MOTORCYCLE', 'BICYCLE', 'TRUCK'];
 
+  /**
+   * Aggregated summary statistics computed from the input detections.
+   * @property {number} totalDetections - Total number of detections in the input set
+   * @property {string} mostCommonType - Localized label of the vehicle type with highest count
+   * @property {number} detectionRate - Average detections per day across the input range
+   */
   summaryStats = { totalDetections: 0, mostCommonType: '', detectionRate: 0 };
 
+  /**
+   * Line chart configuration: responsive layout, animated transitions, custom legend, tooltip
+   * formatting, and grid/tick styling for both axes.
+   * @type {ChartConfiguration<'line'>['options']}
+   */
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -178,6 +241,12 @@ export class VehicleDetectionChartsComponent implements OnChanges {
 
   constructor() {}
 
+  /**
+   * Angular lifecycle hook triggered when @Input vehicleDetections changes.
+   * Rebuilds the chart datasets, recomputes summary statistics, and forces a chart refresh
+   * without animation to keep the view in sync under OnPush change detection.
+   * @param {SimpleChanges} changes - Change detection object
+   */
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['vehicleDetections']) {
       this.updateChartData();
@@ -186,6 +255,12 @@ export class VehicleDetectionChartsComponent implements OnChanges {
     }
   }
 
+  /**
+   * Rebuilds chartData from the current vehicleDetections input.
+   * Sorts detections chronologically, aggregates them by day, then produces one dataset per
+   * vehicle type with the per-day counts. Resets to empty data when no detections are present.
+   * @returns {void}
+   */
   private updateChartData(): void {
     if (!this.vehicleDetections || this.vehicleDetections.length === 0) {
       this.chartData = { labels: [], datasets: [] };
@@ -231,6 +306,11 @@ export class VehicleDetectionChartsComponent implements OnChanges {
     };
   }
 
+  /**
+   * Groups detection records into a Map keyed by ISO date (YYYY-MM-DD) preserving insertion order.
+   * @param {VehicleDetected[]} data - Sorted detection records to aggregate
+   * @returns {Map<string, VehicleDetected[]>} Map of date keys to detections falling on that day
+   */
   private aggregateDataByDay(data: VehicleDetected[]): Map<string, VehicleDetected[]> {
     const dailyMap = new Map<string, VehicleDetected[]>();
 
@@ -245,6 +325,12 @@ export class VehicleDetectionChartsComponent implements OnChanges {
     return dailyMap;
   }
 
+  /**
+   * Computes summary statistics from the current vehicleDetections input.
+   * Determines total detections, the most common vehicle type (localized label), and the average
+   * detection rate per day across the input range. Falls back to safe defaults when empty.
+   * @returns {void}
+   */
   private calculateSummaryStats(): void {
     const total = this.vehicleDetections.length;
 
@@ -272,6 +358,11 @@ export class VehicleDetectionChartsComponent implements OnChanges {
     };
   }
 
+  /**
+   * Calculates the inclusive number of days spanned by the current detections.
+   * Returns 1 when fewer than two records exist to avoid division-by-zero downstream.
+   * @returns {number} Number of days between earliest and latest detection (minimum 1)
+   */
   private calculateDayRange(): number {
     if (this.vehicleDetections.length < 2) return 1;
 
@@ -282,6 +373,12 @@ export class VehicleDetectionChartsComponent implements OnChanges {
     return Math.max(1, Math.ceil(daysDiff));
   }
 
+  /**
+   * Maps a vehicle type key to its localized Spanish label for display.
+   * Returns the original key when no mapping exists.
+   * @param {string} type - Vehicle type key (CAR, BUS, MOTORCYCLE, BICYCLE, TRUCK)
+   * @returns {string} Localized vehicle type label
+   */
   private getVehicleTypeLabel(type: string): string {
     const labels: { [key: string]: string } = {
       CAR: 'Auto',
@@ -293,6 +390,12 @@ export class VehicleDetectionChartsComponent implements OnChanges {
     return labels[type] || type;
   }
 
+  /**
+   * Converts a hex color string (#RRGGBB) to a comma-separated "r, g, b" string.
+   * Used to build translucent rgba() backgrounds from the per-type border color.
+   * @param {string} hex - Hex color in #RRGGBB or RRGGBB form
+   * @returns {string | null} Comma-separated RGB string, or null when the input is invalid
+   */
   private hexToRgb(hex: string): string | null {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     if (!result) return null;

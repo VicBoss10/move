@@ -161,6 +161,35 @@ const PERIODS: { key: PeriodKey; label: string; hours: number }[] = [
 const VEHICLE_COLOR = '#6366f1';
 
 /**
+ * Brand color palette aligned with the app's global CSS variables.
+ * @constant BRAND
+ */
+const BRAND = {
+  brand25: [242, 251, 245] as [number, number, number],
+  brand50: [233, 247, 239] as [number, number, number],
+  brand100: [209, 240, 224] as [number, number, number],
+  brand200: [163, 224, 193] as [number, number, number],
+  brand400: [79, 187, 122] as [number, number, number],
+  brand500: [46, 164, 79] as [number, number, number],
+  brand600: [37, 138, 65] as [number, number, number],
+  brand700: [30, 111, 53] as [number, number, number],
+  brand800: [23, 84, 41] as [number, number, number],
+  brand900: [17, 50, 37] as [number, number, number],
+  brand950: [4, 32, 22] as [number, number, number],
+  gray50: [248, 250, 249] as [number, number, number],
+  gray100: [241, 245, 243] as [number, number, number],
+  gray200: [227, 232, 230] as [number, number, number],
+  gray300: [208, 213, 221] as [number, number, number],
+  gray400: [152, 162, 179] as [number, number, number],
+  gray500: [102, 112, 133] as [number, number, number],
+  gray600: [71, 84, 103] as [number, number, number],
+  gray700: [52, 64, 84] as [number, number, number],
+  gray800: [29, 41, 57] as [number, number, number],
+  gray900: [16, 24, 40] as [number, number, number],
+  white: [255, 255, 255] as [number, number, number],
+};
+
+/**
  * DataExportComponent
  *
  * Interactive PDF report generation tool for environmental analysis.
@@ -349,27 +378,21 @@ export class DataExportComponent implements OnDestroy {
         MX,
         20,
       );
-      const corrH = CW * 0.65;
+      // Keep aspect ratio matching the matrix canvas so cells stay square.
+      // Canvas is ~1158×1190 (≈ 0.973); apply the same ratio to the PDF area.
+      const corrH = CW / 0.973;
       doc.addImage(corrImg, 'PNG', MX, y, CW, corrH);
       y += corrH + 6;
       // Interpretation callout box
-      doc.setFillColor(240, 253, 244); // green-50
-      doc.roundedRect(MX, y, CW, 16, 2, 2, 'F');
-      doc.setFillColor(34, 197, 94); // green-500 left accent
-      doc.rect(MX, y, 3, 16, 'F');
-      doc.setDrawColor(187, 247, 208); // green-200 border
-      doc.setLineWidth(0.3);
-      doc.roundedRect(MX, y, CW, 16, 2, 2, 'S');
-      doc.setFontSize(7.5);
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(55, 65, 81);
-      doc.text(
-        'Interpretacion: valores cercanos a +1 indican correlacion positiva fuerte; ' +
-          'cercanos a -1, correlacion negativa fuerte. ' +
-          'La diagonal es siempre 1.00 (autocorrelacion).',
-        MX + 7,
-        y + 10,
-        { maxWidth: CW - 9 },
+      this.calloutBox(
+        doc,
+        MX,
+        y,
+        CW,
+        20,
+        'Como interpretar la matriz',
+        'Valores cercanos a +1 indican correlacion positiva fuerte; cercanos a -1, ' +
+          'correlacion negativa fuerte. La diagonal es siempre 1.00 (autocorrelacion).',
       );
       this.pageFooter(doc, PW, PH, 3);
 
@@ -386,28 +409,10 @@ export class DataExportComponent implements OnDestroy {
       doc.addImage(lagImg, 'PNG', MX, y, CW, lagH);
       y += lagH + 8;
       if (lagInfo.best) {
-        // Styled callout for best lag
-        doc.setFillColor(240, 253, 244); // green-50
-        doc.roundedRect(MX, y, CW, 26, 2, 2, 'F');
-        doc.setFillColor(34, 197, 94); // green left bar
-        doc.rect(MX, y, 3, 26, 'F');
-        doc.setDrawColor(187, 247, 208);
-        doc.setLineWidth(0.3);
-        doc.roundedRect(MX, y, CW, 26, 2, 2, 'S');
-        doc.setFontSize(9.5);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(22, 163, 74); // green-600
         const lagSign = lagInfo.best.lag > 0 ? '+' : '';
-        doc.text(
-          `Mejor rezago: ${lagSign}${lagInfo.best.lag} h   |   r = ${lagInfo.best.r.toFixed(4)}`,
-          MX + 7,
-          y + 9,
-        );
-        doc.setFontSize(7.5);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(55, 65, 81);
-        doc.text(lagInfo.text, MX + 7, y + 18, { maxWidth: CW - 9 });
-        y += 31;
+        const heading = `Mejor rezago: ${lagSign}${lagInfo.best.lag} h  ·  r = ${lagInfo.best.r.toFixed(4)}`;
+        this.calloutBox(doc, MX, y, CW, 28, heading, lagInfo.text);
+        y += 33;
       }
       y = this.lagTable(doc, MX, y, CW, lagInfo.top5);
       this.pageFooter(doc, PW, PH, 4);
@@ -520,20 +525,25 @@ export class DataExportComponent implements OnDestroy {
             label: `${metric.pdfLabel} (${metric.pdfUnit})`,
             data: avgs,
             borderColor: metric.color,
-            backgroundColor: metric.color + '33',
+            backgroundColor: metric.color + '22',
             fill: true,
-            tension: 0.3,
-            pointRadius: 2,
+            tension: 0.35,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            borderWidth: 2.5,
             yAxisID: 'y',
           },
           {
-            label: 'Vehiculos',
+            label: 'Vehiculos detectados',
             data: vCnts,
             borderColor: VEHICLE_COLOR,
-            backgroundColor: VEHICLE_COLOR + '33',
+            backgroundColor: 'transparent',
             fill: false,
-            tension: 0.3,
-            pointRadius: 2,
+            tension: 0.35,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            borderWidth: 2,
+            borderDash: [6, 4],
             yAxisID: 'y1',
           },
         ],
@@ -541,25 +551,56 @@ export class DataExportComponent implements OnDestroy {
       options: {
         responsive: false,
         animation: false,
+        layout: { padding: { top: 24, right: 24, bottom: 16, left: 16 } },
         plugins: {
-          legend: { display: true, position: 'top', labels: { font: { size: 14 }, padding: 16 } },
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              font: { size: 13, weight: 500 },
+              padding: 18,
+              boxWidth: 18,
+              boxHeight: 8,
+              usePointStyle: false,
+              color: '#475467',
+            },
+          },
         },
         scales: {
-          x: { display: true, ticks: { font: { size: 10 }, maxRotation: 45 } },
+          x: {
+            display: true,
+            border: { display: false },
+            grid: { display: false },
+            ticks: { font: { size: 11 }, color: '#98a2b3', maxRotation: 0, autoSkip: true },
+          },
           y: {
             type: 'linear',
             position: 'left',
+            border: { display: false },
+            grid: { color: '#f1f5f3', drawTicks: false },
+            ticks: { font: { size: 11 }, color: '#98a2b3', padding: 6 },
             title: {
               display: true,
               text: `${metric.pdfLabel} (${metric.pdfUnit})`,
-              font: { size: 12 },
+              font: { size: 11, weight: 'bold' },
+              color: '#667085',
+              padding: { bottom: 8 },
             },
           },
           y1: {
             type: 'linear',
             position: 'right',
-            title: { display: true, text: 'Vehiculos', font: { size: 12 } },
+            border: { display: false },
             grid: { drawOnChartArea: false },
+            ticks: { font: { size: 11 }, color: '#98a2b3', padding: 6 },
+            title: {
+              display: true,
+              text: 'Vehiculos',
+              font: { size: 11, weight: 'bold' },
+              color: '#667085',
+              padding: { bottom: 8 },
+            },
           },
         },
       },
@@ -622,59 +663,145 @@ export class DataExportComponent implements OnDestroy {
       }
     }
 
-    const cellW = 110;
-    const cellH = 70;
-    const labelW = 170;
-    const headerH = 90;
-    const cW = labelW + n * cellW;
-    const cH = headerH + n * cellH;
+    // Layout: aspect ratio matches PDF placement (CW × CW*0.78 ≈ 1.28)
+    // Canvas 1500 × 1170 keeps things crisp with room for labels.
+    const cellSize = 102;
+    const cellGap = 3;
+    const labelLeftW = 200;
+    const labelTopH = 200;
+    const padR = 16;
+    const padB = 48;
+    const matrixSide = n * cellSize + (n - 1) * cellGap;
+    const cW = labelLeftW + matrixSide + padR;
+    const cH = labelTopH + matrixSide + padB;
+
     const canvas = document.createElement('canvas');
     canvas.width = cW;
     canvas.height = cH;
     const ctx = canvas.getContext('2d')!;
 
+    // Clean white background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, cW, cH);
 
     const pdfLabels = [...METRICS.map((m) => m.pdfLabel), 'Vehiculos'];
 
-    ctx.fillStyle = '#374151';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.textAlign = 'center';
+    // ─── Top column labels (rotated -45°) ─────────────────────────────
+    ctx.fillStyle = '#344054'; // gray-700
+    ctx.font = '600 22px Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
     for (let j = 0; j < n; j++) {
+      const cx = labelLeftW + j * (cellSize + cellGap) + cellSize / 2;
+      const cy = labelTopH - 14;
       ctx.save();
-      ctx.translate(labelW + j * cellW + cellW / 2, headerH - 12);
-      ctx.rotate(-Math.PI / 6);
+      ctx.translate(cx, cy);
+      ctx.rotate(-Math.PI / 4);
       ctx.fillText(pdfLabels[j], 0, 0);
       ctx.restore();
     }
 
+    // ─── Left row labels (horizontal, right-aligned) ──────────────────
+    ctx.fillStyle = '#344054';
+    ctx.font = '600 22px Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
     for (let i = 0; i < n; i++) {
-      ctx.fillStyle = '#374151';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(pdfLabels[i], labelW - 14, headerH + i * cellH + cellH / 2 + 7);
+      const cy = labelTopH + i * (cellSize + cellGap) + cellSize / 2;
+      ctx.fillText(pdfLabels[i], labelLeftW - 14, cy);
+    }
 
+    // ─── Subtle frame hairline around the matrix area ─────────────────
+    ctx.strokeStyle = '#e3e8e6'; // gray-200
+    ctx.lineWidth = 1;
+    ctx.strokeRect(labelLeftW - 4, labelTopH - 4, matrixSide + 8, matrixSide + 8);
+
+    // ─── Cells (rounded corners, gap-separated) ───────────────────────
+    for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         const r = matrix[i][j];
-        const x = labelW + j * cellW;
-        const y = headerH + i * cellH;
+        const x = labelLeftW + j * (cellSize + cellGap);
+        const y = labelTopH + i * (cellSize + cellGap);
 
         ctx.fillStyle = this.corrColor(r);
-        ctx.fillRect(x + 2, y + 2, cellW - 4, cellH - 4);
+        this.roundedRect(ctx, x, y, cellSize, cellSize, 6);
+        ctx.fill();
 
-        ctx.strokeStyle = '#e5e7eb';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x + 2, y + 2, cellW - 4, cellH - 4);
+        // Diagonal cell: subtle inner ring to highlight
+        if (i === j) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+          ctx.lineWidth = 2;
+          this.roundedRect(ctx, x + 5, y + 5, cellSize - 10, cellSize - 10, 4);
+          ctx.stroke();
+        }
 
-        ctx.fillStyle = Math.abs(r) > 0.6 ? '#ffffff' : '#1f2937';
-        ctx.font = '20px sans-serif';
+        // Coefficient value
+        ctx.fillStyle = Math.abs(r) > 0.4 ? '#ffffff' : '#1d2939';
+        ctx.font = '600 22px Helvetica, Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(r.toFixed(2), x + cellW / 2, y + cellH / 2 + 7);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(r.toFixed(2), x + cellSize / 2, y + cellSize / 2 + 1);
       }
     }
 
+    // ─── Color legend (compact gradient strip below matrix) ───────────
+    const legendY = labelTopH + matrixSide + 14;
+    const legendW = matrixSide;
+    const legendX = labelLeftW;
+    const legendH = 6;
+    const stops: [number, string][] = [
+      [-1, '#1e3a8a'],
+      [-0.5, '#60a5fa'],
+      [0, '#f1f5f3'],
+      [0.5, '#4fbb7a'],
+      [1, '#113225'],
+    ];
+    const grad = ctx.createLinearGradient(legendX, 0, legendX + legendW, 0);
+    for (const [pos, color] of stops) {
+      grad.addColorStop((pos + 1) / 2, color);
+    }
+    ctx.fillStyle = grad;
+    this.roundedRect(ctx, legendX, legendY, legendW, legendH, 3);
+    ctx.fill();
+
+    // Legend ticks
+    ctx.fillStyle = '#667085';
+    ctx.font = '14px Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const tickVals = [-1, -0.5, 0, 0.5, 1];
+    for (const t of tickVals) {
+      const x = legendX + ((t + 1) / 2) * legendW;
+      ctx.fillText(t.toFixed(1), x, legendY + legendH + 4);
+    }
+
     return canvas.toDataURL('image/png');
+  }
+
+  /**
+   * Path helper for rounded rectangles on canvas.
+   * @private
+   */
+  private roundedRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number,
+  ): void {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + h - rr);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    ctx.lineTo(x + rr, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.closePath();
   }
 
   /**
@@ -689,7 +816,7 @@ export class DataExportComponent implements OnDestroy {
   private chartLag(data: ReportData, metric: MetricOption): string {
     const info = this.lagResults(data, metric);
     const colors = info.lags.map((l) =>
-      l.lag === info.best?.lag ? '#f59e0b' : Math.abs(l.r) > 0.3 ? '#3b82f6' : '#d1d5db',
+      l.lag === info.best?.lag ? '#2ea44f' : Math.abs(l.r) > 0.3 ? '#7bd69a' : '#e3e8e6',
     );
 
     return this.offscreenChart(1400, 600, {
@@ -701,25 +828,57 @@ export class DataExportComponent implements OnDestroy {
             label: 'Correlacion cruzada (r)',
             data: info.lags.map((l) => l.r),
             backgroundColor: colors,
-            borderColor: colors.map((c) => (c === '#d1d5db' ? '#9ca3af' : c)),
-            borderWidth: 1,
-            borderRadius: 3,
+            borderColor: colors,
+            borderWidth: 0,
+            borderRadius: 4,
+            barPercentage: 0.85,
           },
         ],
       },
       options: {
         responsive: false,
         animation: false,
-        plugins: { legend: { display: true, position: 'top', labels: { font: { size: 13 } } } },
+        layout: { padding: { top: 24, right: 24, bottom: 16, left: 16 } },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              font: { size: 13, weight: 500 },
+              padding: 16,
+              boxWidth: 18,
+              boxHeight: 8,
+              color: '#475467',
+            },
+          },
+        },
         scales: {
           x: {
             display: true,
-            title: { display: true, text: 'Rezago (horas)', font: { size: 12 } },
-            ticks: { font: { size: 10 } },
+            border: { display: false },
+            grid: { display: false },
+            title: {
+              display: true,
+              text: 'Rezago (horas)',
+              font: { size: 11, weight: 'bold' },
+              color: '#667085',
+              padding: { top: 8 },
+            },
+            ticks: { font: { size: 10 }, color: '#98a2b3' },
           },
           y: {
             display: true,
-            title: { display: true, text: 'Coeficiente r', font: { size: 12 } },
+            border: { display: false },
+            grid: { color: '#f1f5f3', drawTicks: false },
+            title: {
+              display: true,
+              text: 'Coeficiente r',
+              font: { size: 11, weight: 'bold' },
+              color: '#667085',
+              padding: { bottom: 8 },
+            },
+            ticks: { font: { size: 11 }, color: '#98a2b3', padding: 6 },
             min: -1,
             max: 1,
           },
@@ -741,24 +900,26 @@ export class DataExportComponent implements OnDestroy {
     return this.offscreenChart(1400, 600, {
       type: 'bar',
       data: {
-        labels: rows.map((r) => r.label),
+        labels: rows.map((r) => this.truncateLabel(r.label, 18)),
         datasets: [
           {
             label: `${metric.pdfLabel} promedio (${metric.pdfUnit})`,
             data: rows.map((r) => r.avg),
-            backgroundColor: metric.color + 'B3',
-            borderColor: metric.color,
-            borderWidth: 1.5,
+            backgroundColor: metric.color + 'CC',
+            borderColor: 'transparent',
+            borderWidth: 0,
             borderRadius: 4,
+            barPercentage: 0.7,
             yAxisID: 'y',
           },
           {
             label: 'Vehiculos detectados',
             data: rows.map((r) => r.vehicles),
-            backgroundColor: VEHICLE_COLOR + 'B3',
-            borderColor: VEHICLE_COLOR,
-            borderWidth: 1.5,
+            backgroundColor: VEHICLE_COLOR + 'CC',
+            borderColor: 'transparent',
+            borderWidth: 0,
             borderRadius: 4,
+            barPercentage: 0.7,
             yAxisID: 'y1',
           },
         ],
@@ -766,27 +927,68 @@ export class DataExportComponent implements OnDestroy {
       options: {
         responsive: false,
         animation: false,
-        plugins: { legend: { display: true, position: 'top', labels: { font: { size: 13 } } } },
+        layout: { padding: { top: 24, right: 24, bottom: 16, left: 16 } },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              font: { size: 13, weight: 500 },
+              padding: 16,
+              boxWidth: 18,
+              boxHeight: 8,
+              color: '#475467',
+            },
+          },
+        },
         scales: {
-          x: { display: true, ticks: { font: { size: 11 }, maxRotation: 30 } },
+          x: {
+            display: true,
+            border: { display: false },
+            grid: { display: false },
+            ticks: { font: { size: 11 }, color: '#98a2b3', maxRotation: 25 },
+          },
           y: {
             type: 'linear',
             position: 'left',
+            border: { display: false },
+            grid: { color: '#f1f5f3', drawTicks: false },
+            ticks: { font: { size: 11 }, color: '#98a2b3', padding: 6 },
             title: {
               display: true,
               text: `${metric.pdfLabel} (${metric.pdfUnit})`,
-              font: { size: 12 },
+              font: { size: 11, weight: 'bold' },
+              color: '#667085',
+              padding: { bottom: 8 },
             },
           },
           y1: {
             type: 'linear',
             position: 'right',
-            title: { display: true, text: 'Vehiculos', font: { size: 12 } },
+            border: { display: false },
             grid: { drawOnChartArea: false },
+            ticks: { font: { size: 11 }, color: '#98a2b3', padding: 6 },
+            title: {
+              display: true,
+              text: 'Vehiculos',
+              font: { size: 11, weight: 'bold' },
+              color: '#667085',
+              padding: { bottom: 8 },
+            },
           },
         },
       },
     });
+  }
+
+  /**
+   * Truncate label to a reasonable display length.
+   * @private
+   */
+  private truncateLabel(s: string, max: number): string {
+    if (!s) return '';
+    return s.length > max ? s.substring(0, max - 1) + '…' : s;
   }
 
   /**
@@ -956,82 +1158,153 @@ export class DataExportComponent implements OnDestroy {
     pw: number,
     ph: number,
   ): void {
-    doc.setFillColor(15, 23, 42);
+    // ── Clean white canvas ─────────────────────────────────────────────
+    doc.setFillColor(...BRAND.white);
     doc.rect(0, 0, pw, ph, 'F');
 
-    doc.setFillColor(34, 197, 94);
-    doc.rect(0, 0, pw, 7, 'F');
+    // ── Side ribbon (full height, brand) ───────────────────────────────
+    doc.setFillColor(...BRAND.brand500);
+    doc.rect(0, 0, 4, ph, 'F');
+    doc.setFillColor(...BRAND.brand700);
+    doc.rect(4, 0, 1.2, ph, 'F');
 
-    doc.setFillColor(22, 163, 74);
-    doc.rect(0, 7, 5, ph - 7, 'F');
-
-    const cardX = pw / 2 - 78;
-    const cardW = 156;
-    const cardH = 215;
-    doc.setFillColor(30, 41, 59);
-    doc.roundedRect(cardX, 40, cardW, cardH, 5, 5, 'F');
-    doc.setFillColor(34, 197, 94);
-    doc.roundedRect(cardX, 40, cardW, 6, 5, 5, 'F');
-    doc.rect(cardX, 43, cardW, 3, 'F');
+    // ── Header bar with logo + brand mark ──────────────────────────────
+    const padX = 22;
+    const headerY = 24;
 
     if (logo) {
-      doc.addImage(logo, 'PNG', pw / 2 - 16, 58, 32, 32);
+      doc.addImage(logo, 'PNG', padX, headerY - 6, 13, 13);
     }
-
-    doc.setFontSize(54);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(34, 197, 94);
-    doc.text('MOVE', pw / 2, 115, { align: 'center' });
-
-    doc.setFontSize(9.5);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 116, 139);
-    doc.text('Sistema de Monitoreo Ambiental', pw / 2, 124, { align: 'center' });
-
-    doc.setDrawColor(34, 197, 94);
-    doc.setLineWidth(0.8);
-    doc.line(pw / 2 - 46, 130, pw / 2 + 46, 130);
-
     doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(248, 250, 252);
-    doc.text('Informe de Analisis Ambiental', pw / 2, 141, { align: 'center' });
+    doc.setTextColor(...BRAND.brand700);
+    doc.text('MOVE', padX + 17, headerY + 1);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...BRAND.gray500);
+    doc.text('Sistema de Monitoreo Ambiental', padX + 17, headerY + 6, { charSpace: 0.3 });
 
-    const [mR, mG, mB] = this.hexRgb(metric.color);
-    doc.setFillColor(mR, mG, mB);
-    doc.roundedRect(pw / 2 - 33, 147, 66, 11, 3, 3, 'F');
-    doc.setFontSize(8.5);
+    // Right side: report number / date
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...BRAND.gray400);
+    doc.text(
+      'REPORTE TECNICO',
+      pw - padX,
+      headerY + 1,
+      { align: 'right', charSpace: 1 },
+    );
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(255, 255, 255);
-    doc.text(`${metric.pdfLabel}  ·  ${metric.pdfUnit}`, pw / 2, 154, { align: 'center' });
+    doc.setTextColor(...BRAND.gray700);
+    doc.text(
+      this.fmtDateShort(new Date()),
+      pw - padX,
+      headerY + 6,
+      { align: 'right' },
+    );
 
-    const details: [string, string][] = [
-      ['Periodo', period.label],
-      ['Desde', this.fmtDate(start)],
-      ['Hasta', this.fmtDate(end)],
-      ['Generado', this.fmtDate(new Date())],
+    // Hairline rule under header
+    doc.setDrawColor(...BRAND.gray200);
+    doc.setLineWidth(0.3);
+    doc.line(padX, headerY + 12, pw - padX, headerY + 12);
+
+    // ── Editorial main title block ─────────────────────────────────────
+    const titleY = 90;
+
+    // Eyebrow: pre-title category
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.brand600);
+    doc.text('INFORME · ANALISIS AMBIENTAL', padX, titleY, { charSpace: 1.6 });
+
+    // Massive title
+    doc.setFontSize(34);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.gray900);
+    doc.text('Calidad del Aire', padX, titleY + 18);
+    doc.text('y Trafico Urbano', padX, titleY + 32);
+
+    // Brand accent rule
+    doc.setDrawColor(...BRAND.brand500);
+    doc.setLineWidth(1.2);
+    doc.line(padX, titleY + 40, padX + 28, titleY + 40);
+
+    // Subtitle / lead paragraph
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...BRAND.gray600);
+    doc.text(
+      `Estudio del comportamiento de ${metric.pdfLabel} (${metric.pdfUnit}) y su relacion`,
+      padX,
+      titleY + 50,
+    );
+    doc.text(
+      `con el flujo vehicular durante ${period.label.toLowerCase()}.`,
+      padX,
+      titleY + 56,
+    );
+
+    // ── Detail meta rows (clean editorial table) ───────────────────────
+    const metaY = 196;
+    const metaCols: [string, string][] = [
+      ['CONTAMINANTE', `${metric.pdfLabel} · ${metric.pdfUnit}`],
+      ['PERIODO', period.label],
+      ['DESDE', this.fmtDate(start)],
+      ['HASTA', this.fmtDate(end)],
     ];
-    let dy = 170;
-    for (const [lbl, val] of details) {
-      doc.setDrawColor(51, 65, 85);
-      doc.setLineWidth(0.2);
-      doc.line(cardX + 10, dy - 3, cardX + cardW - 10, dy - 3);
-      doc.setFontSize(7.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 116, 139);
-      doc.text(lbl, cardX + 14, dy + 2);
+
+    // Top rule
+    doc.setDrawColor(...BRAND.gray800);
+    doc.setLineWidth(0.6);
+    doc.line(padX, metaY, pw - padX, metaY);
+
+    let my = metaY;
+    const metaRowH = 11;
+    for (let i = 0; i < metaCols.length; i++) {
+      const [lbl, val] = metaCols[i];
+      my += metaRowH;
+
+      doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(226, 232, 240);
-      doc.text(val, cardX + cardW - 14, dy + 2, { align: 'right' });
-      dy += 11;
+      doc.setTextColor(...BRAND.gray500);
+      doc.text(lbl, padX, my, { charSpace: 0.6 });
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...BRAND.gray900);
+      doc.text(val, pw - padX, my, { align: 'right' });
+
+      // Hairline divider between rows
+      doc.setDrawColor(...BRAND.gray200);
+      doc.setLineWidth(0.2);
+      doc.line(padX, my + 3, pw - padX, my + 3);
     }
 
-    doc.setFontSize(7.5);
+    // ── Footer ─────────────────────────────────────────────────────────
+    doc.setDrawColor(...BRAND.gray200);
+    doc.setLineWidth(0.3);
+    doc.line(padX, ph - 22, pw - padX, ph - 22);
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.brand700);
+    doc.text('MOVE', padX, ph - 16);
+    const fmoveW = doc.getTextWidth('MOVE');
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(71, 85, 105);
-    doc.text('Documento generado automaticamente por el sistema MOVE', pw / 2, ph - 12, {
-      align: 'center',
-    });
+    doc.setTextColor(...BRAND.gray500);
+    doc.text('·  Reporte tecnico generado automaticamente', padX + fmoveW + 2, ph - 16);
+
+    doc.setFontSize(7);
+    doc.setTextColor(...BRAND.gray400);
+    doc.text('Pagina 1 de 5', pw - padX, ph - 16, { align: 'right' });
+  }
+
+  /**
+   * Formats date as compact ISO-like (YYYY-MM-DD).
+   * @private
+   */
+  private fmtDateShort(d: Date): string {
+    return d.toISOString().slice(0, 10);
   }
 
   /**
@@ -1046,24 +1319,48 @@ export class DataExportComponent implements OnDestroy {
    * @returns {number} Y-position after header.
    */
   private pageHeader(doc: jsPDF, title: string, subtitle: string, mx: number, my: number): number {
-    doc.setFillColor(34, 197, 94);
-    doc.rect(mx, my, 3.5, 16, 'F');
+    const pw = 215.9;
 
-    doc.setFontSize(17);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(15, 23, 42);
-    doc.text(title, mx + 8, my + 8);
+    // Side ribbon (matches cover)
+    doc.setFillColor(...BRAND.brand500);
+    doc.rect(0, 0, 4, 279.4, 'F');
+    doc.setFillColor(...BRAND.brand700);
+    doc.rect(4, 0, 1.2, 279.4, 'F');
 
+    // Top brand mark
     doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.brand700);
+    doc.text('MOVE', mx, my);
+    const moveW = doc.getTextWidth('MOVE');
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 116, 139);
-    doc.text(subtitle, mx + 8, my + 14.5);
+    doc.setTextColor(...BRAND.gray400);
+    doc.text('·  Sistema de Monitoreo Ambiental', mx + moveW + 2, my);
 
-    doc.setDrawColor(229, 231, 235);
+    // Right: section eyebrow
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.gray400);
+    doc.text(subtitle.toUpperCase(), pw - mx, my, { align: 'right', charSpace: 0.6 });
+
+    // Hairline rule
+    doc.setDrawColor(...BRAND.gray200);
     doc.setLineWidth(0.3);
-    doc.line(mx, my + 19, 215.9 - mx, my + 19);
+    doc.line(mx, my + 4, pw - mx, my + 4);
 
-    return my + 27;
+    // Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.gray900);
+    doc.text(title, mx, my + 16);
+
+    // Brand accent under title
+    doc.setDrawColor(...BRAND.brand500);
+    doc.setLineWidth(1.2);
+    doc.line(mx, my + 20, mx + 18, my + 20);
+
+    return my + 28;
   }
 
   /**
@@ -1076,17 +1373,25 @@ export class DataExportComponent implements OnDestroy {
    * @param {number} pageNum - Current page number.
    */
   private pageFooter(doc: jsPDF, pw: number, ph: number, pageNum: number): void {
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, ph - 11, pw, 11, 'F');
-    doc.setFillColor(34, 197, 94);
-    doc.rect(0, ph - 11, 5, 11, 'F');
+    const mx = 20;
+    // Hairline rule
+    doc.setDrawColor(...BRAND.gray200);
+    doc.setLineWidth(0.3);
+    doc.line(mx, ph - 14, pw - mx, ph - 14);
 
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.brand700);
+    doc.text('MOVE', mx, ph - 8);
+    const moveW = doc.getTextWidth('MOVE');
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(148, 163, 184);
-    doc.text('MOVE — Sistema de Monitoreo Ambiental', 10, ph - 4.5);
-    doc.setTextColor(34, 197, 94);
-    doc.text(`Pagina ${pageNum} de 5`, pw - 10, ph - 4.5, { align: 'right' });
+    doc.setTextColor(...BRAND.gray400);
+    doc.text('·  Reporte tecnico generado automaticamente', mx + moveW + 2, ph - 8);
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.gray500);
+    doc.text(`Pagina ${pageNum} de 5`, pw - mx, ph - 8, { align: 'right' });
   }
 
   /**
@@ -1107,37 +1412,95 @@ export class DataExportComponent implements OnDestroy {
     cw: number,
     stats: { label: string; value: string }[],
   ): number {
-    const colW = cw / stats.length;
-    const boxH = 27;
+    // Section eyebrow
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.brand600);
+    doc.text('RESUMEN ESTADISTICO', mx, y, { charSpace: 1 });
+    doc.setDrawColor(...BRAND.gray800);
+    doc.setLineWidth(0.5);
+    doc.line(mx, y + 3, mx + cw, y + 3);
 
-    doc.setFillColor(240, 253, 244);
-    doc.roundedRect(mx, y, cw, boxH, 3, 3, 'F');
-    doc.setFillColor(34, 197, 94);
-    doc.roundedRect(mx, y, cw, 4, 3, 3, 'F');
-    doc.rect(mx, y + 2, cw, 2, 'F');
-    doc.setDrawColor(187, 247, 208);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(mx, y, cw, boxH, 3, 3, 'S');
+    y += 8;
+
+    const colW = cw / stats.length;
+    const boxH = 26;
 
     for (let i = 0; i < stats.length; i++) {
-      const cx = mx + i * colW + colW / 2;
+      const x = mx + i * colW;
+      const cx = x + colW / 2;
+
+      // Vertical hairline divider between columns (not before first)
       if (i > 0) {
-        doc.setDrawColor(167, 243, 208);
+        doc.setDrawColor(...BRAND.gray200);
         doc.setLineWidth(0.3);
-        doc.line(mx + i * colW, y + 6, mx + i * colW, y + boxH - 3);
+        doc.line(x, y + 3, x, y + boxH - 3);
       }
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(107, 114, 128);
-      doc.text(stats[i].label, cx, y + 13, { align: 'center' });
-      doc.setFontSize(11);
+
+      // Big bold value
+      doc.setFontSize(15);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(22, 163, 74);
-      doc.text(stats[i].value, cx, y + 22, { align: 'center' });
+      doc.setTextColor(...BRAND.gray900);
+      doc.text(stats[i].value, cx, y + 12, { align: 'center' });
+
+      // Small uppercase label
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...BRAND.gray500);
+      doc.text(stats[i].label.toUpperCase(), cx, y + 20, { align: 'center', charSpace: 0.6 });
     }
+
+    // Bottom hairline
+    doc.setDrawColor(...BRAND.gray200);
+    doc.setLineWidth(0.3);
+    doc.line(mx, y + boxH, mx + cw, y + boxH);
 
     doc.setFont('helvetica', 'normal');
     return y + boxH + 6;
+  }
+
+  /**
+   * Renders a brand-styled callout box with optional heading and body text.
+   *
+   * @private
+   * @param {jsPDF} doc - jsPDF document instance.
+   * @param {number} x - Left position in mm.
+   * @param {number} y - Top position in mm.
+   * @param {number} w - Width in mm.
+   * @param {number} h - Height in mm.
+   * @param {string} heading - Bold heading.
+   * @param {string} body - Body text.
+   */
+  private calloutBox(
+    doc: jsPDF,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    heading: string,
+    body: string,
+  ): void {
+    // Subtle background
+    doc.setFillColor(...BRAND.gray50);
+    doc.roundedRect(x, y, w, h, 1.5, 1.5, 'F');
+
+    // Brand accent bar (left)
+    doc.setFillColor(...BRAND.brand500);
+    doc.rect(x, y, 1.6, h, 'F');
+
+    // Heading
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BRAND.gray900);
+    doc.text(heading, x + 7, y + 7);
+
+    // Body
+    if (body) {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...BRAND.gray600);
+      doc.text(body, x + 7, y + 13, { maxWidth: w - 10, lineHeightFactor: 1.45 });
+    }
   }
 
   /**
@@ -1158,56 +1521,95 @@ export class DataExportComponent implements OnDestroy {
     cw: number,
     top5: { lag: number; r: number }[],
   ): number {
-    doc.setFontSize(9.5);
+    // Section eyebrow
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 163, 74);
-    doc.text('Top 5 rezagos con mayor correlacion', mx, y);
-    y += 6;
+    doc.setTextColor(...BRAND.brand600);
+    doc.text('TOP 5 REZAGOS CON MAYOR CORRELACION', mx, y, { charSpace: 1 });
+    doc.setDrawColor(...BRAND.gray800);
+    doc.setLineWidth(0.5);
+    doc.line(mx, y + 3, mx + cw, y + 3);
+    y += 8;
 
-    doc.setFillColor(15, 23, 42);
-    doc.rect(mx, y, cw, 8, 'F');
-    doc.setFontSize(7.5);
+    // Column positions
+    const cols = {
+      rank: mx + 4,
+      lag: mx + 18,
+      r: mx + 60,
+      intensity: mx + 105,
+      sentido: mx + 152,
+    };
+
+    // Header (no fill, just hairlines)
+    doc.setFontSize(6.5);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(148, 163, 184);
-    doc.text('Rezago', mx + 5, y + 5.5);
-    doc.text('Coeficiente r', mx + 46, y + 5.5);
-    doc.text('Intensidad', mx + 96, y + 5.5);
-    doc.text('Sentido', mx + 140, y + 5.5);
-    y += 9;
-
-    doc.setFont('helvetica', 'normal');
-    for (let i = 0; i < top5.length; i++) {
-      const lag = top5[i];
-      doc.setFillColor(i % 2 === 0 ? 240 : 249, i % 2 === 0 ? 253 : 250, i % 2 === 0 ? 244 : 251);
-      doc.rect(mx, y - 1, cw, 7.5, 'F');
-
-      doc.setFontSize(8.5);
-      doc.setTextColor(17, 24, 39);
-      doc.text(`${lag.lag > 0 ? '+' : ''}${lag.lag} h`, mx + 5, y + 4.5);
-
-      const absR = Math.abs(lag.r);
-      if (absR > 0.7) doc.setTextColor(22, 163, 74);
-      else if (absR > 0.4) doc.setTextColor(217, 119, 6);
-      else doc.setTextColor(107, 114, 128);
-      doc.setFont('helvetica', 'bold');
-      doc.text(lag.r.toFixed(4), mx + 46, y + 4.5);
-      doc.setFont('helvetica', 'normal');
-
-      doc.setTextColor(55, 65, 81);
-      const str = absR > 0.7 ? 'Fuerte' : absR > 0.4 ? 'Moderada' : 'Debil';
-      doc.text(str, mx + 96, y + 4.5);
-
-      const dir = lag.r >= 0 ? 'Positiva' : 'Negativa';
-      doc.setTextColor(lag.r >= 0 ? 22 : 99, lag.r >= 0 ? 163 : 102, lag.r >= 0 ? 74 : 241);
-      doc.text(dir, mx + 140, y + 4.5);
-
-      y += 7.5;
-    }
-
-    doc.setDrawColor(187, 247, 208);
+    doc.setTextColor(...BRAND.gray500);
+    doc.text('#', cols.rank, y, { charSpace: 0.4 });
+    doc.text('REZAGO', cols.lag, y, { charSpace: 0.4 });
+    doc.text('COEFICIENTE r', cols.r, y, { charSpace: 0.4 });
+    doc.text('INTENSIDAD', cols.intensity, y, { charSpace: 0.4 });
+    doc.text('SENTIDO', cols.sentido, y, { charSpace: 0.4 });
+    y += 3;
+    doc.setDrawColor(...BRAND.gray300);
     doc.setLineWidth(0.3);
     doc.line(mx, y, mx + cw, y);
-    return y + 6;
+    y += 1;
+
+    // Body rows
+    const rowH = 9;
+    for (let i = 0; i < top5.length; i++) {
+      const lag = top5[i];
+      const absR = Math.abs(lag.r);
+      const rowMid = y + rowH / 2 + 1.2;
+
+      // Rank
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...BRAND.gray400);
+      doc.text(`${i + 1}`, cols.rank, rowMid);
+
+      // Lag
+      const lagText = `${lag.lag > 0 ? '+' : ''}${lag.lag} h`;
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...BRAND.gray900);
+      doc.text(lagText, cols.lag, rowMid);
+
+      // r value (color-coded by strength)
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      if (absR > 0.7) doc.setTextColor(...BRAND.brand700);
+      else if (absR > 0.4) doc.setTextColor(217, 119, 6);
+      else doc.setTextColor(...BRAND.gray500);
+      doc.text(lag.r.toFixed(4), cols.r, rowMid);
+
+      // Intensity (small dot + text — no badge)
+      const intensity = absR > 0.7 ? 'Fuerte' : absR > 0.4 ? 'Moderada' : 'Debil';
+      const intensityColor: [number, number, number] =
+        absR > 0.7 ? BRAND.brand500 : absR > 0.4 ? [217, 119, 6] : BRAND.gray400;
+      doc.setFillColor(...intensityColor);
+      doc.circle(cols.intensity + 1, rowMid - 1.2, 1.2, 'F');
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...BRAND.gray700);
+      doc.text(intensity, cols.intensity + 5, rowMid);
+
+      // Sentido
+      const dir = lag.r >= 0 ? 'Positiva' : 'Negativa';
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      if (lag.r >= 0) doc.setTextColor(...BRAND.brand700);
+      else doc.setTextColor(99, 102, 241);
+      doc.text(dir, cols.sentido, rowMid);
+
+      // Hairline divider
+      y += rowH;
+      doc.setDrawColor(...BRAND.gray100);
+      doc.setLineWidth(0.2);
+      doc.line(mx, y, mx + cw, y);
+    }
+
+    return y + 4;
   }
 
   /**
@@ -1238,99 +1640,116 @@ export class DataExportComponent implements OnDestroy {
     }[],
     metric: MetricOption,
   ): number {
-    doc.setFontSize(9.5);
+    // Section eyebrow
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 163, 74);
-    doc.text('Ranking de ubicaciones', mx, y);
-    y += 6;
+    doc.setTextColor(...BRAND.brand600);
+    doc.text('RANKING DE UBICACIONES', mx, y, { charSpace: 1 });
+    doc.setDrawColor(...BRAND.gray800);
+    doc.setLineWidth(0.5);
+    doc.line(mx, y + 3, mx + cw, y + 3);
+    y += 8;
 
-    doc.setFillColor(15, 23, 42);
-    doc.rect(mx, y, cw, 8, 'F');
-    doc.setFontSize(7.5);
+    // Column layout: cw = 175.9mm
+    const cols = {
+      rank: { x: mx + 5, w: 8 },
+      label: { x: mx + 14, w: 62 },
+      avg: { x: mx + 76, w: 30 },
+      min: { x: mx + 106, w: 22 },
+      max: { x: mx + 128, w: 22 },
+      vehic: { x: mx + 150, w: 26 },
+    };
+
+    // Header (no fill, just hairlines)
+    doc.setFontSize(6.5);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(148, 163, 184);
-    const c = [mx + 4, mx + 16, mx + 72, mx + 106, mx + 134, mx + 158];
-    doc.text('#', c[0], y + 5.5);
-    doc.text('Ubicacion', c[1], y + 5.5);
-    doc.text(`Promedio (${metric.pdfUnit})`, c[2], y + 5.5);
-    doc.text('Min', c[3], y + 5.5);
-    doc.text('Max', c[4], y + 5.5);
-    doc.text('Vehiculos', c[5], y + 5.5);
-    y += 9;
-
-    const [mR, mG, mB] = this.hexRgb(metric.color);
-    const medalBg: [number, number, number][] = [
-      [254, 252, 232],
-      [248, 250, 252],
-      [253, 244, 234],
-    ];
-    const medalFg: [number, number, number][] = [
-      [234, 179, 8],
-      [148, 163, 184],
-      [180, 120, 68],
-    ];
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    for (let i = 0; i < rows.length && y < 260; i++) {
-      const row = rows[i];
-      const rowH = 7.5;
-
-      if (i < 3) {
-        const [br, bg, bb] = medalBg[i];
-        doc.setFillColor(br, bg, bb);
-      } else {
-        doc.setFillColor(i % 2 === 0 ? 240 : 249, i % 2 === 0 ? 253 : 250, i % 2 === 0 ? 244 : 251);
-      }
-      doc.rect(mx, y - 1, cw, rowH, 'F');
-
-      if (i < 3) {
-        const [ar, ag, ab] = medalFg[i];
-        doc.setFillColor(ar, ag, ab);
-        doc.rect(mx, y - 1, 3, rowH, 'F');
-      }
-
-      if (i < 3) {
-        const [br, bg, bb] = medalFg[i];
-        doc.setFillColor(br, bg, bb);
-        doc.roundedRect(c[0] - 1, y - 0.5, 8, 5.5, 1.5, 1.5, 'F');
-        doc.setFontSize(7);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(255, 255, 255);
-        doc.text(`${i + 1}`, c[0] + 3, y + 3.5, { align: 'center' });
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8.5);
-      } else {
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(107, 114, 128);
-        doc.text(`${i + 1}`, c[0], y + 4.5);
-      }
-
-      doc.setTextColor(17, 24, 39);
-      doc.text(row.label.substring(0, 26), c[1], y + 4.5);
-
-      doc.setFillColor(mR, mG, mB);
-      doc.setTextColor(mR, mG, mB);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${row.avg}`, c[2], y + 4.5);
-      doc.setFont('helvetica', 'normal');
-
-      doc.setTextColor(75, 85, 99);
-      doc.text(`${row.min}`, c[3], y + 4.5);
-      doc.text(`${row.max}`, c[4], y + 4.5);
-
-      doc.setTextColor(99, 102, 241);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${row.vehicles}`, c[5], y + 4.5);
-      doc.setFont('helvetica', 'normal');
-
-      y += rowH;
-    }
-
-    doc.setDrawColor(187, 247, 208);
+    doc.setTextColor(...BRAND.gray500);
+    doc.text('#', cols.rank.x, y, { charSpace: 0.4 });
+    doc.text('UBICACION', cols.label.x, y, { charSpace: 0.4 });
+    doc.text(`PROMEDIO (${metric.pdfUnit})`, cols.avg.x + cols.avg.w - 2, y, {
+      align: 'right',
+      charSpace: 0.4,
+    });
+    doc.text('MIN', cols.min.x + cols.min.w - 2, y, { align: 'right', charSpace: 0.4 });
+    doc.text('MAX', cols.max.x + cols.max.w - 2, y, { align: 'right', charSpace: 0.4 });
+    doc.text('VEHIC.', cols.vehic.x + cols.vehic.w - 2, y, { align: 'right', charSpace: 0.4 });
+    y += 3;
+    doc.setDrawColor(...BRAND.gray300);
     doc.setLineWidth(0.3);
     doc.line(mx, y, mx + cw, y);
-    return y + 6;
+    y += 1;
+
+    const [mR, mG, mB] = this.hexRgb(metric.color);
+    const medalFg: [number, number, number][] = [
+      [217, 167, 7], // gold
+      [148, 163, 184], // silver
+      [180, 120, 68], // bronze
+    ];
+
+    const rowH = 9;
+    const maxY = 258;
+
+    for (let i = 0; i < rows.length && y + rowH < maxY; i++) {
+      const row = rows[i];
+      const rowMid = y + rowH / 2 + 1.2;
+
+      // Subtle alternating zebra (very light)
+      if (i % 2 === 0) {
+        doc.setFillColor(...BRAND.gray50);
+        doc.rect(mx, y - 1, cw, rowH, 'F');
+      }
+
+      // Rank: small medal dot for top 3, plain number otherwise
+      if (i < 3) {
+        doc.setFillColor(...medalFg[i]);
+        doc.circle(cols.rank.x + 1, rowMid - 1.2, 2, 'F');
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...BRAND.white);
+        doc.text(`${i + 1}`, cols.rank.x + 1, rowMid - 0.2, { align: 'center' });
+      } else {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...BRAND.gray400);
+        doc.text(`${i + 1}`, cols.rank.x, rowMid);
+      }
+
+      // Location label
+      const maxChars = 32;
+      let label = row.label;
+      if (label.length > maxChars) label = label.substring(0, maxChars - 1) + '…';
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', i < 3 ? 'bold' : 'normal');
+      doc.setTextColor(...BRAND.gray900);
+      doc.text(label, cols.label.x, rowMid);
+
+      // Avg
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(mR, mG, mB);
+      doc.text(`${row.avg}`, cols.avg.x + cols.avg.w - 2, rowMid, { align: 'right' });
+
+      // Min / Max
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...BRAND.gray500);
+      doc.text(`${row.min}`, cols.min.x + cols.min.w - 2, rowMid, { align: 'right' });
+      doc.text(`${row.max}`, cols.max.x + cols.max.w - 2, rowMid, { align: 'right' });
+
+      // Vehicles
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(99, 102, 241);
+      doc.text(`${row.vehicles}`, cols.vehic.x + cols.vehic.w - 2, rowMid, { align: 'right' });
+
+      y += rowH;
+      // Hairline divider
+      doc.setDrawColor(...BRAND.gray100);
+      doc.setLineWidth(0.2);
+      doc.line(mx, y, mx + cw, y);
+    }
+
+    return y + 4;
   }
 
   /**
@@ -1443,11 +1862,14 @@ export class DataExportComponent implements OnDestroy {
    * @returns {string} Hex color string.
    */
   private corrColor(r: number): string {
-    if (r >= 0.8) return '#065f46';
-    if (r >= 0.6) return '#059669';
-    if (r >= 0.4) return '#34d399';
-    if (r >= 0.2) return '#a7f3d0';
-    if (r > -0.2) return '#f3f4f6';
+    // Positive: brand green ramp (aligned with --color-brand-* palette)
+    if (r >= 0.8) return '#113225'; // brand-900
+    if (r >= 0.6) return '#1e6f35'; // brand-700
+    if (r >= 0.4) return '#4fbb7a'; // brand-400
+    if (r >= 0.2) return '#a3e0c1'; // brand-200
+    // Neutral
+    if (r > -0.2) return '#f1f5f3'; // gray-100
+    // Negative: blue ramp
     if (r > -0.4) return '#bfdbfe';
     if (r > -0.6) return '#60a5fa';
     if (r > -0.8) return '#2563eb';
