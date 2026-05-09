@@ -10,18 +10,6 @@
     <p class="text-sm text-gray-500 dark:text-gray-400">Tipos de vehículos detectados hoy</p>
   </div>
 
-  <!-- Loading spinner -->
-  @if (isLoading) {
-    <div class="flex items-center justify-center py-16">
-      <div class="flex flex-col items-center gap-3">
-        <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-brand-500 dark:border-gray-700 dark:border-t-brand-500"
-        ></div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Cargando actividad vehicular...</p>
-      </div>
-    </div>
-  }
-
   <!-- Chart container with bar graph and scrollable overflow -->
   <div class="max-w-full overflow-x-auto custom-scrollbar">
     <div class="-ml-5 min-w-[650px] xl:min-w-full pl-2">
@@ -45,6 +33,15 @@
             </div>
           </div>
         }
+      } @else {
+        <div class="flex items-center justify-center py-16">
+          <div class="flex flex-col items-center gap-3">
+            <div
+              class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-brand-500 dark:border-gray-700 dark:border-t-brand-500"
+            ></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Cargando actividad vehicular...</p>
+          </div>
+        </div>
       }
     </div>
   </div>

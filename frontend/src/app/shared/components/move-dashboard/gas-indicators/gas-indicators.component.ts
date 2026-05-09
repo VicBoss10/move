@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { ThresholdsService } from '../../../../core/services/thresholds.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import {
   getEnvironmentStatusFromConfig,
   getMetricGaugePercentageFromConfig,
@@ -9,7 +10,7 @@ import {
 } from '../../../../core/config/environment-thresholds.config';
 import { Observable, of, combineLatest } from 'rxjs';
 import { SensorData } from '../../../../core/models/sensor-data.model';
-import { map, catchError, shareReplay, tap } from 'rxjs/operators';
+import { map, catchError, shareReplay, tap, take } from 'rxjs/operators';
 
 /**
  * GasIndicator interface for gas concentration gauge display.
@@ -81,25 +82,17 @@ interface GasIndicator {
 export class GasIndicatorsComponent {
   isLoading = true;
 
-  /**
-   * Observable emitting status legend (color and label pairs) synchronized with current thresholds
-   */
   statusLegend$: Observable<{ color: string; label: string }[]>;
-
-  /**
-   * Observable emitting array of four gas indicators (CO2, CO, NO2, NH3) with gauges and status
-   */
   gasIndicators$!: Observable<GasIndicator[]>;
+  isStale$!: Observable<boolean>;
 
-  /**
-   * Default empty indicators array for error fallback
-   * @private
-   */
   private readonly defaultIndicators: GasIndicator[] = [];
+  private readonly ONE_HOUR_MS = 3600000;
 
   constructor(
     private sensorDataService: SensorDataService,
     private thresholds: ThresholdsService,
+    private toastService: ToastService,
   ) {
     this.statusLegend$ = this.thresholds
       .getAll()
@@ -108,18 +101,32 @@ export class GasIndicatorsComponent {
           all['co2'].levels.map((level) => ({ color: level.color, label: level.label })),
         ),
       );
-    this.initializeGasIndicators();
+
+    const latestSensor$ = this.sensorDataService.getLatest().pipe(shareReplay(1));
+
+    this.isStale$ = latestSensor$.pipe(
+      map((latest) => {
+        if (!latest?.timestamp) return true;
+        return new Date().getTime() - new Date(latest.timestamp).getTime() > this.ONE_HOUR_MS;
+      }),
+      catchError(() => of(true)),
+      shareReplay(1),
+    );
+
+    this.isStale$.pipe(take(1)).subscribe((stale) => {
+      if (stale) {
+        this.toastService.show(
+          'Algunos componentes pueden mostrar información desactualizada.',
+          { title: 'Sin datos recientes', variant: 'warning', timeout: 8000 },
+        );
+      }
+    });
+
+    this.initializeGasIndicators(latestSensor$);
   }
 
-  /**
-   * Initializes gas indicators observable combining latest sensor data with dynamic threshold config
-   * @private
-   */
-  private initializeGasIndicators(): void {
-    this.gasIndicators$ = combineLatest([
-      this.sensorDataService.getLatest(),
-      this.thresholds.getAll(),
-    ]).pipe(
+  private initializeGasIndicators(latestSensor$: Observable<SensorData>): void {
+    this.gasIndicators$ = combineLatest([latestSensor$, this.thresholds.getAll()]).pipe(
       map(([latest, allThresholds]) => {
         const gasConfigs: { key: EnvironmentMetricKey; field: string; color: string }[] = [
           { key: 'co2', field: 'co2', color: '#10b981' },

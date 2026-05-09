@@ -16,7 +16,7 @@ import {
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 import { Observable, of } from 'rxjs';
-import { map, catchError, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { map, catchError, shareReplay, tap } from 'rxjs/operators';
 
 ChartJS.register(
   LineController,
@@ -80,12 +80,8 @@ export class PollutionChartComponent {
    * @type {Observable<number>}
    */
   avgPm25$!: Observable<number>;
-
-  /**
-   * Observable stream of average PM10 concentration (µg/m³) over 12-hour window.
-   * @type {Observable<number>}
-   */
   avgPm10$!: Observable<number>;
+  hasData$!: Observable<boolean>;
 
   /**
    * Observable stream of raw sensor data for the 12-hour window, fetched from backend.
@@ -230,26 +226,21 @@ export class PollutionChartComponent {
     this.initializeAverages();
   }
 
-  /**
-   * Fetches the latest sensor timestamp, then queries the backend for all sensor data
-   * within the 12-hour window ending at that timestamp.
-   * Errors are caught and return empty array for graceful fallback.
-   * @private
-   * @returns {void}
-   */
   private initializeSensorData(): void {
-    this.sensorData$ = this.sensorDataService.getLatest().pipe(
-      switchMap((latest) => {
-        const endTime = new Date(latest.timestamp);
-        const startTime = new Date(endTime.getTime() - this.HOURS_WINDOW * 3600000);
-        return this.sensorDataService.search({ start: startTime, end: endTime });
-      }),
+    const endTime = new Date();
+    const startTime = new Date(endTime.getTime() - this.HOURS_WINDOW * 3600000);
+    this.sensorData$ = this.sensorDataService.search({ start: startTime, end: endTime }).pipe(
       tap(() => (this.isLoading = false)),
       catchError((error) => {
         console.error('Error loading particle data:', error);
         this.isLoading = false;
         return of([]);
       }),
+      shareReplay(1),
+    );
+
+    this.hasData$ = this.sensorData$.pipe(
+      map((data) => data.length > 0),
       shareReplay(1),
     );
   }

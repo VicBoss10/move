@@ -40,37 +40,40 @@
           ></canvas>
         </div>
       </div>
-      <!-- Statistics footer with average PM 2.5 and PM 10 values -->
-      <div class="mt-6 grid grid-cols-2 gap-4 border-t border-gray-200 pt-4 dark:border-gray-800">
-        <div class="text-center">
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">PM 2.5 Promedio</p>
-          <p
-            class="mt-1 text-sm font-bold"
-            [class]="(avgPm25$ | async) ? 'text-red-600 dark:text-red-400' : 'text-gray-400'"
-          >
-            {{ avgPm25$ | async | number: '1.1-1' }} µg/m³
-          </p>
-        </div>
-        <div class="text-center">
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">PM 10 Promedio</p>
-          <p
-            class="mt-1 text-sm font-bold"
-            [class]="(avgPm10$ | async) ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'"
-          >
-            {{ avgPm10$ | async | number: '1.1-1' }} µg/m³
-          </p>
-        </div>
-      </div>
     } @else {
-      <!-- Empty state when no chart data is available -->
+      <!-- Empty state when no chart data in the last 12 hours -->
       <div class="py-12 flex items-center justify-center">
         <div class="text-center">
-          <p class="text-gray-500 dark:text-gray-400">Sin datos disponibles</p>
+          <p class="text-gray-500 dark:text-gray-400">Sin datos en las últimas 12 horas</p>
           <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
-            Verifica tu conexión con el servidor
+            No se han recibido lecturas recientes del sensor
           </p>
         </div>
       </div>
     }
+  }
+
+  <!-- Statistics footer: only shown when there is recent data -->
+  @if (hasData$ | async) {
+    <div class="mt-6 grid grid-cols-2 gap-4 border-t border-gray-200 pt-4 dark:border-gray-800">
+      <div class="text-center">
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">PM 2.5 Promedio</p>
+        <p
+          class="mt-1 text-sm font-bold"
+          [class]="(avgPm25$ | async) ? 'text-red-600 dark:text-red-400' : 'text-gray-400'"
+        >
+          {{ avgPm25$ | async | number: '1.1-1' }} µg/m³
+        </p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">PM 10 Promedio</p>
+        <p
+          class="mt-1 text-sm font-bold"
+          [class]="(avgPm10$ | async) ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'"
+        >
+          {{ avgPm10$ | async | number: '1.1-1' }} µg/m³
+        </p>
+      </div>
+    </div>
   }
 </div>

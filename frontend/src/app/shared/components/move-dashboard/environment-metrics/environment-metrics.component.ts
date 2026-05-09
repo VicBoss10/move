@@ -64,9 +64,10 @@ interface EnvironmentMetric {
 })
 export class EnvironmentMetricsComponent {
   isLoading = true;
-  /**
-   * SVG icons for gas, temperature, and vehicle metrics
-   */
+  isStale$!: Observable<boolean>;
+
+  private readonly ONE_HOUR_MS = 3600000;
+
   public readonly icons = {
     gasIcon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2C7.44772 2 7 2.44772 7 3V6C7 7.10457 7.89543 8 9 8H10V19C10 20.1046 10.8954 21 12 21C13.1046 21 14 20.1046 14 19V8H15C16.1046 8 17 7.10457 17 6V3C17 2.44772 16.5523 2 16 2H8ZM6 10C5.44772 10 5 10.4477 5 11V19C5 20.1046 5.89543 21 7 21C8.10457 21 9 20.1046 9 19V11C9 10.4477 8.55228 10 8 10H6ZM18 10C17.4477 10 17 10.4477 17 11V19C17 20.1046 17.8954 21 19 21C20.1046 21 21 20.1046 21 19V11C21 10.4477 20.5523 10 20 10H18Z" fill="currentColor"/></svg>`,
     temperatureIcon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C10.9 2 10 2.9 10 4V13C10 14.66 8.66 16 7 16C5.34 16 4 14.66 4 13C4 10.24 6.04 7.94 8.79 7.1C8.92 7.06 9 6.94 9 6.8V4C9 2.9 9.9 2 11 2H13C14.1 2 15 2.9 15 4V6.8C15 6.94 15.08 7.06 15.21 7.1C17.96 7.94 20 10.24 20 13C20 14.66 18.66 16 17 16C15.34 16 14 14.66 14 13V4C14 2.9 13.1 2 12 2Z" fill="currentColor"/></svg>`,
@@ -93,6 +94,14 @@ export class EnvironmentMetricsComponent {
     private sensorDataService: SensorDataService,
     private vehicleService: VehicleDetectedService,
   ) {
+    this.isStale$ = this.sensorDataService.getLast().pipe(
+      map((latest) => {
+        if (!latest?.timestamp) return true;
+        return new Date().getTime() - new Date(latest.timestamp).getTime() > this.ONE_HOUR_MS;
+      }),
+      catchError(() => of(true)),
+      shareReplay(1),
+    );
     this.initializeMetrics();
   }
 
