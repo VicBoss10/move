@@ -29,11 +29,12 @@ import { VehicleDetectedService } from '../../../../core/services/vehicle-detect
 import { BehaviorSubject } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { ToastService } from '../../../../core/services/toast.service';
+import { ModalComponent } from '../../ui/modal/modal.component';
 
 @Component({
   selector: 'app-delete-data-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalComponent],
   templateUrl: './delete-data-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

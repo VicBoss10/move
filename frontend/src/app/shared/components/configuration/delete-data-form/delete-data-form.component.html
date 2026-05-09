@@ -286,59 +286,56 @@
     </div>
   </div>
 
-  <!-- Confirmation modal for destructive deletion actions -->
+</div>
+
+<!-- Confirmation modal for destructive deletion actions -->
+<app-modal
+  [isOpen]="confirmVisible"
+  (close)="cancelConfirm()"
+  [showCloseButton]="false"
+  className="max-w-md mx-4"
+>
   @if (confirmVisible) {
-    <div
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      (click)="cancelConfirm()"
-    >
-      <div
-        class="mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-gray-900"
-        (click)="$event.stopPropagation()"
-      >
-        <!-- Modal Header -->
+    <div class="p-6">
+      <div class="flex items-start gap-3 mb-4">
         <div
-          class="flex items-center gap-3 border-b border-gray-200 px-6 py-4 dark:border-gray-700"
+          class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30"
         >
-          <div
-            class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30"
+          <svg
+            class="h-5 w-5 text-red-600 dark:text-red-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <svg
-              class="h-5 w-5 text-red-600 dark:text-red-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-          </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+        <div>
           <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ confirmTitle }}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ confirmDesc }}</p>
         </div>
-        <!-- Modal Body -->
-        <div class="px-6 py-4">
-          <p class="text-sm text-gray-600 dark:text-gray-400">{{ confirmDesc }}</p>
-        </div>
-        <!-- Modal Footer -->
-        <div class="flex justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-gray-700">
-          <button
-            (click)="cancelConfirm()"
-            class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            Cancelar
-          </button>
-          <button
-            (click)="confirmAction()"
-            class="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
-          >
-            Sí, eliminar
-          </button>
-        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="cancelConfirm()"
+          class="px-4 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          (click)="confirmAction()"
+          class="px-4 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm font-medium"
+        >
+          Sí, eliminar
+        </button>
       </div>
     </div>
   }
-</div>
+</app-modal>
