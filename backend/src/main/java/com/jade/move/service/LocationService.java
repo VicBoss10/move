@@ -35,7 +35,7 @@ public class LocationService {
      * @return list of all locations
      */
     public List<Location> getAllLocations() {
-        return locationRepository.findAll();
+        return locationRepository.findByIdNot(0);
     }
 
     /**
@@ -142,10 +142,10 @@ public class LocationService {
                     criteria.getLatitude(),
                     criteria.getLongitude(),
                     criteria.getRadiusKm()
-            );
+            ).stream().filter(l -> l.getId() != 0).toList();
         }
 
         Specification<Location> spec = LocationSpecification.buildSpecification(criteria);
-        return locationRepository.findAll(spec);
+        return locationRepository.findAll(spec).stream().filter(l -> l.getId() != 0).toList();
     }
 }

@@ -14,6 +14,7 @@ public interface LocationRepository extends JpaRepository<Location, Integer>, Jp
     Location findByDescription(String description);
     List<Location> findByDescriptionContaining(String keyword);
     List<Location> findByLatitudeAndLongitude(Double latitude, Double longitude);
+    List<Location> findByIdNot(Integer id);
 
     @Query(value = "SELECT * FROM locations l WHERE " +
             "(6371 * acos(cos(radians(:latitude)) * cos(radians(l.latitude)) * " +
