@@ -339,6 +339,14 @@ export const routes: Routes = [
     title: 'Registrarse',
   },
   {
+    path: 'auth/callback',
+    loadComponent: () =>
+      import('./pages/auth-pages/auth-callback/auth-callback.component').then(
+        (m) => m.AuthCallbackComponent,
+      ),
+    title: 'Autenticando...',
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/other-page/not-found/not-found.component').then((m) => m.NotFoundComponent),

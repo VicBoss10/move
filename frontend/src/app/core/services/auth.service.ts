@@ -106,6 +106,23 @@ export class AuthService {
   }
 
   /**
+   * Constructs the Keycloak authorization endpoint URL.
+   * @private
+   */
+  private get authUrl(): string {
+    return `${this.keycloakUrl}/realms/${this.realm}/protocol/openid-connect/auth`;
+  }
+
+  /**
+   * Redirect URI where Keycloak returns the authorization code.
+   * Must be registered as an allowed redirect URI in Keycloak client settings.
+   * @private
+   */
+  private get redirectUri(): string {
+    return `${window.location.origin}/auth/callback`;
+  }
+
+  /**
    * Loads authentication tokens and state from localStorage.
    * No automatic refresh scheduled on load.
    * @private
@@ -198,6 +215,85 @@ export class AuthService {
         .subscribe();
     }
     this.router.navigate(['/signin']);
+  }
+
+  /**
+   * Redirects the browser to Keycloak's Google identity provider login.
+   * Stores a PKCE code verifier and random state in sessionStorage for validation on callback.
+   * The redirect URI must be registered in the Keycloak client's "Valid Redirect URIs".
+   */
+  loginWithGoogle(): void {
+    const state = this.generateRandomString(32);
+    const codeVerifier = this.generateRandomString(64);
+
+    sessionStorage.setItem('oauth_state', state);
+    sessionStorage.setItem('oauth_code_verifier', codeVerifier);
+
+    this.generateCodeChallenge(codeVerifier).then((codeChallenge) => {
+      const params = new URLSearchParams({
+        client_id: this.clientId,
+        response_type: 'code',
+        scope: 'openid profile email',
+        redirect_uri: this.redirectUri,
+        state,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
+        kc_idp_hint: 'google',
+      });
+      window.location.href = `${this.authUrl}?${params.toString()}`;
+    });
+  }
+
+  /**
+   * Exchanges the authorization code from Keycloak's callback for tokens.
+   * Validates the state parameter to prevent CSRF attacks.
+   *
+   * @param {string} code - Authorization code from the callback URL.
+   * @param {string} state - State parameter from the callback URL for CSRF validation.
+   * @returns {Observable<void>} Completes when tokens are stored.
+   */
+  handleOAuthCallback(code: string, state: string): Observable<void> {
+    const savedState = sessionStorage.getItem('oauth_state');
+    const codeVerifier = sessionStorage.getItem('oauth_code_verifier');
+
+    sessionStorage.removeItem('oauth_state');
+    sessionStorage.removeItem('oauth_code_verifier');
+
+    if (state !== savedState || !codeVerifier) {
+      return new Observable((observer) => {
+        observer.error(new Error('OAuth state mismatch'));
+      });
+    }
+
+    const body = new HttpParams()
+      .set('grant_type', 'authorization_code')
+      .set('client_id', this.clientId)
+      .set('code', code)
+      .set('redirect_uri', this.redirectUri)
+      .set('code_verifier', codeVerifier);
+
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+
+    return this.http.post<AuthToken>(this.tokenUrl, body.toString(), { headers }).pipe(
+      tap((response) => this.storeTokens(response)),
+      map(() => undefined),
+    );
+  }
+
+  private generateRandomString(length: number): string {
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('').slice(0, length);
+  }
+
+  private async generateCodeChallenge(verifier: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
   }
 
   /**

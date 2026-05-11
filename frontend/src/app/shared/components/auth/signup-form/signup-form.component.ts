@@ -196,4 +196,8 @@ export class SignupFormComponent {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
+
+  onGoogleSignUp(): void {
+    this.auth.loginWithGoogle();
+  }
 }
