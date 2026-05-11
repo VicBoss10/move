@@ -95,10 +95,10 @@ export class HistoryFiltersComponent implements OnInit {
    * @type {Array<{value: string; label: string}>}
    */
   parameters = [
-    { value: 'all', label: 'All parameters' },
+    { value: 'all', label: 'Todos los parámetros' },
     { value: 'co2', label: 'CO₂' },
-    { value: 'temperature', label: 'Temperature' },
-    { value: 'humidity', label: 'Humidity' },
+    { value: 'temperature', label: 'Temperatura' },
+    { value: 'humidity', label: 'Humedad' },
     { value: 'pm25', label: 'PM2.5' },
     { value: 'pm10', label: 'PM10' },
     { value: 'gases', label: 'Gases' },

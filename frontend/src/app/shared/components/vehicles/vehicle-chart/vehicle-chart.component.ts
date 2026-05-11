@@ -212,7 +212,7 @@ export class VehicleChartComponent implements OnChanges {
       labels,
       datasets: [
         {
-          label: 'Hourly detections',
+          label: 'Detecciones por hora',
           data: detectionCounts,
           borderColor: '#3b82f6',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',

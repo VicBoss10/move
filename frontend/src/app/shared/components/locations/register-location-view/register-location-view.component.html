@@ -57,12 +57,12 @@
       </div>
 
       <div class="pb-6 border-b border-gray-200 dark:border-gray-700 space-y-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Coordenadas GPS</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Selecciona la ubicación en el mapa</h3>
 
         <!-- Mapa para seleccionar ubicación -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Seleccionar en el mapa
+            Clickea en el mapa para seleccionar la ubicación
           </label>
           <app-location-map-picker
             [initialLatitude]="locationForm.get('latitude')?.value || null"

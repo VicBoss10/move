@@ -135,7 +135,6 @@ export class RegisterDeviceFormComponent implements OnDestroy {
   streamTypes = [
     { id: 'RTSP', label: 'RTSP Stream', description: 'Protocolo de streaming en tiempo real' },
     { id: 'URL', label: 'HTTP/HTTPS URL', description: 'Imagen o video vía HTTP' },
-    { id: 'USB', label: 'Dispositivo USB', description: 'Cámara USB conectada' },
     { id: 'YOUTUBE', label: 'YouTube', description: 'Stream de YouTube' },
   ];
 

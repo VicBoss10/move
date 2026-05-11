@@ -147,10 +147,10 @@ export class EnvironmentMetricsComponent {
             secondaryValue: latestSensor?.humidity?.toFixed(0) + '%',
           },
           {
-            label: 'Vehicles',
+            label: 'Vehículos',
             icon: this.icons.vehicleIcon,
             value: stats?.todayDetections?.toString() || '0',
-            unit: 'today',
+            unit: 'hoy',
             status: 'normal' as const,
           },
         ];
