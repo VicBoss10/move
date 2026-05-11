@@ -191,13 +191,12 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
   /**
    * Cleanup lifecycle hook.
-   * Stops video viewing and clears timeouts before destruction.
-   * Detection continues running on backend until explicitly stopped.
+   * Stops video viewing and stream session before destruction.
    * @returns {void}
    */
   ngOnDestroy(): void {
     if (this.isViewing) {
-      this.stopViewing();
+      this.stopViewingAndStream();
     }
     if (this.touchControlsTimeoutRef !== null) {
       clearTimeout(this.touchControlsTimeoutRef);
@@ -228,9 +227,17 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
             this.selectedCamera &&
             !this.cameras.find((cc) => cc.id === this.selectedCamera?.id)
           ) {
+            if (this.isViewing) {
+              this.stopViewingAndStream();
+            } else if (this.sessionId) {
+              this.cameraService.stopStream(this.sessionId).pipe(takeUntil(this.destroy$)).subscribe({
+                error: (err) => console.warn('Error stopping orphan session:', err),
+              });
+              this.sessionId = null;
+              this.feedUrl = null;
+            }
             this.selectedCamera = null;
             this.streamUrl = null;
-            this.sessionId = null;
             this.detectionActive = false;
             this.isViewing = false;
           }
@@ -259,7 +266,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }
 
     if (this.isViewing) {
-      this.stopViewing();
+      this.stopViewingAndStream();
     }
 
     this.selectedCamera = camera;
@@ -276,8 +283,13 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (res: StreamResponse) => {
-            this.sessionId = res?.sessionId || null;
-            this.feedUrl = this.toAbsoluteApiUrl(res?.streamUrl || null);
+            if (res?.status === 'active' && res?.sessionId) {
+              this.sessionId = res.sessionId;
+              this.feedUrl = this.toAbsoluteApiUrl(res.streamUrl);
+            } else {
+              this.sessionId = null;
+              this.feedUrl = null;
+            }
             this.isLoading = false;
             this.changeDetectorRef.markForCheck();
           },
@@ -325,6 +337,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
   /**
    * Stops video stream viewing and clears polling/timeouts.
+   * Does not stop the backend stream session.
    * @returns {void}
    */
   stopViewing(): void {
@@ -337,6 +350,25 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }
     this.stopSnapshotPolling();
     this.changeDetectorRef.markForCheck();
+  }
+
+  /**
+   * Stops video stream viewing and terminates the backend session.
+   * Called when the user explicitly stops or the component is destroyed.
+   * @returns {void}
+   */
+  stopViewingAndStream(): void {
+    this.stopViewing();
+    if (this.sessionId) {
+      this.cameraService
+        .stopStream(this.sessionId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          error: (err) => console.warn('Error stopping stream session:', err),
+        });
+      this.sessionId = null;
+      this.feedUrl = null;
+    }
   }
 
   /**

@@ -183,7 +183,7 @@ public class StreamService {
             Map<String, Object> body = pythonResponse.getBody();
             if (pythonResponse.getStatusCode() == HttpStatus.OK && body != null) {
                 String message = body.get("message") != null ? body.get("message").toString() : "Stream stopped";
-                markSessionStopped(sessionId);
+                deleteSession(sessionId);
                 return new StreamStopResponse(message, sessionId);
             } else {
                 throw new RuntimeException("Failed to stop stream in Python service");
@@ -191,7 +191,7 @@ public class StreamService {
 
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                markSessionStopped(sessionId);
+                deleteSession(sessionId);
                 throw new EntityNotFoundException("Stream session not found: " + sessionId);
             }
             throw new RuntimeException("Python service error: " + e.getMessage(), e);
@@ -247,7 +247,7 @@ public class StreamService {
 
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                markSessionStopped(sessionId);
+                deleteSession(sessionId);
                 throw new EntityNotFoundException("Stream session not found: " + sessionId);
             }
             throw new RuntimeException("Python service error: " + e.getMessage(), e);
@@ -406,21 +406,19 @@ public class StreamService {
 
     private void syncPersistedSession(String sessionId, String status, String streamType) {
         streamSessionRepository.findBySessionId(sessionId).ifPresent(session -> {
-            session.setStatus(status);
-            session.setStreamType(streamType);
             if (STATUS_STOPPED.equalsIgnoreCase(status)) {
-                session.setStoppedAt(LocalDateTime.now());
+                streamSessionRepository.delete(session);
+            } else {
+                session.setStatus(status);
+                session.setStreamType(streamType);
+                streamSessionRepository.save(session);
             }
-            streamSessionRepository.save(session);
         });
     }
 
-    private void markSessionStopped(String sessionId) {
-        streamSessionRepository.findBySessionId(sessionId).ifPresent(session -> {
-            session.setStatus(STATUS_STOPPED);
-            session.setStoppedAt(LocalDateTime.now());
-            streamSessionRepository.save(session);
-        });
+    private void deleteSession(String sessionId) {
+        streamSessionRepository.findBySessionId(sessionId)
+                .ifPresent(streamSessionRepository::delete);
     }
 
     private void stopStreamInPython(String sessionId) {

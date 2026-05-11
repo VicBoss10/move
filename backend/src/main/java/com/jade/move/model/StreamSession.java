@@ -28,7 +28,7 @@ public class StreamSession {
 
     /** Associated device entity. */
     @ManyToOne
-    @JoinColumn(name = "device_id", nullable = false)
+    @JoinColumn(name = "device_id", nullable = false, foreignKey = @ForeignKey(foreignKeyDefinition = "FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE"))
     private Device device;
 
     /** Unique session identifier from streaming service. */
