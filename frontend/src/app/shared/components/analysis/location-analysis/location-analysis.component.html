@@ -15,24 +15,6 @@
   <!-- Period range selector -->
   <app-period-range-selector (periodChange)="onPeriodChange($event)" />
 
-  <!-- Metric selector -->
-  <div
-    class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
-  >
-    <div class="flex flex-wrap items-center gap-2 p-5 sm:p-6">
-      <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Contaminante:</span>
-      <select
-        [ngModel]="currentMetric"
-        (ngModelChange)="setMetric($event)"
-        class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-      >
-        @for (m of metrics; track m.key) {
-          <option [value]="m.key">{{ m.label }} ({{ m.unit }})</option>
-        }
-      </select>
-    </div>
-  </div>
-
   <!-- No period selected placeholder -->
   @if (!hasPeriod && !isLoading) {
     <div

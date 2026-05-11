@@ -19,42 +19,6 @@
   <!-- Filter form with vehicle type, location, and date selectors -->
   <div class="p-5 sm:p-6">
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-      <!-- Tipo de Vehículo -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Tipo de Vehículo
-        </label>
-        <select
-          [(ngModel)]="selectedType"
-          class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-        >
-          <option value="">Todos los tipos</option>
-          @for (type of vehicleTypes; track type) {
-            <option [value]="type.value">
-              {{ type.label }}
-            </option>
-          }
-        </select>
-      </div>
-
-      <!-- Ubicación -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Ubicación
-        </label>
-        <select
-          [(ngModel)]="selectedLocationId"
-          class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-        >
-          <option value="">Todas las ubicaciones</option>
-          @for (location of locations$ | async; track location.locationId) {
-            <option [value]="location!.locationId">
-              {{ location!.label }}
-            </option>
-          }
-        </select>
-      </div>
-
       <!-- Fecha Inicio -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -81,6 +45,42 @@
           [max]="maxDate"
           class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
         />
+      </div>
+
+      <!-- Ubicación -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Ubicación
+        </label>
+        <select
+          [(ngModel)]="selectedLocationId"
+          class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        >
+          <option value="">Todas las ubicaciones</option>
+          @for (location of locations$ | async; track location.locationId) {
+            <option [value]="location!.locationId">
+              {{ location!.label }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <!-- Tipo de Vehículo -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Tipo de Vehículo
+        </label>
+        <select
+          [(ngModel)]="selectedType"
+          class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        >
+          <option value="">Todos los tipos</option>
+          @for (type of vehicleTypes; track type) {
+            <option [value]="type.value">
+              {{ type.label }}
+            </option>
+          }
+        </select>
       </div>
     </div>
 

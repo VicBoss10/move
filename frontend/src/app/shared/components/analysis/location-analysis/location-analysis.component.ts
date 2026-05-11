@@ -148,16 +148,9 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
   /** Called by PeriodRangeSelectorComponent when the user selects or applies a period. */
   onPeriodChange(range: PeriodRange): void {
     this.currentRange = range;
+    this.currentMetric = range.metric;
     this.hasPeriod = true;
-    this.load$.next({ start: range.start, end: range.end, metric: this.currentMetric });
-  }
-
-  /** Updates selected metric; re-runs analysis if a range is already active. */
-  setMetric(m: MetricKey): void {
-    this.currentMetric = m;
-    if (this.currentRange) {
-      this.load$.next({ start: this.currentRange.start, end: this.currentRange.end, metric: m });
-    }
+    this.load$.next({ start: range.start, end: range.end, metric: range.metric });
   }
 
   private loadAndAggregate(start: Date, end: Date, metricKey: MetricKey) {

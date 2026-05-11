@@ -8,14 +8,39 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable, of } from 'rxjs';
+import { catchError, map, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
+import { DeviceService } from '../../../../core/services/device.service';
+import { Device } from '../../../../core/models/device.model';
 
 /**
  * Emitted value when the user selects a period.
  */
+export type MetricKey = 'co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3';
+
+export interface MetricOption {
+  key: MetricKey;
+  label: string;
+  unit: string;
+}
+
+export const METRICS: MetricOption[] = [
+  { key: 'co2', label: 'CO₂', unit: 'ppm' },
+  { key: 'pm25', label: 'PM2.5', unit: 'µg/m³' },
+  { key: 'pm10', label: 'PM10', unit: 'µg/m³' },
+  { key: 'temperature', label: 'Temperatura', unit: '°C' },
+  { key: 'humidity', label: 'Humedad', unit: '%' },
+  { key: 'co', label: 'CO', unit: 'ppm' },
+  { key: 'no2', label: 'NO₂', unit: 'ppb' },
+  { key: 'nh3', label: 'NH₃', unit: 'ppb' },
+];
+
 export interface PeriodRange {
   start: Date;
   end: Date;
+  locationDeviceIds?: number[];
+  metric: MetricKey;
 }
 
 interface QuickOption {
@@ -81,10 +106,27 @@ export class PeriodRangeSelectorComponent implements OnInit {
   /** Validation error message shown below the date inputs. Empty when valid. */
   dateError: string = '';
 
+  /** Observable stream of unique locations aggregated from devices. */
+  locations$!: Observable<{ locationId: number; label: string; deviceIds: number[] }[]>;
+
+  /** Currently selected location ID (empty string = all locations). */
+  selectedLocationId: string = '';
+
+  /** Currently selected metric key. */
+  selectedMetric: MetricKey = 'co2';
+
+  /** Available metrics for the parameter selector. */
+  readonly metrics = METRICS;
+
+  private locationDeviceMap = new Map<number, number[]>();
+
   constructor(
     private readonly sensorDataService: SensorDataService,
+    private readonly deviceService: DeviceService,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.initializeLocations();
+  }
 
   ngOnInit(): void {
     this.loadDateBounds();
@@ -103,7 +145,7 @@ export class PeriodRangeSelectorComponent implements OnInit {
     const end = new Date();
     const start = new Date(end.getTime() - option.hours * 3_600_000);
 
-    this.periodChange.emit({ start, end });
+    this.periodChange.emit({ start, end, locationDeviceIds: this.resolveLocationDeviceIds(), metric: this.selectedMetric });
     this.cdr.markForCheck();
   }
 
@@ -147,7 +189,7 @@ export class PeriodRangeSelectorComponent implements OnInit {
       return;
     }
 
-    this.periodChange.emit({ start, end });
+    this.periodChange.emit({ start, end, locationDeviceIds: this.resolveLocationDeviceIds(), metric: this.selectedMetric });
     this.cdr.markForCheck();
   }
 
@@ -158,6 +200,8 @@ export class PeriodRangeSelectorComponent implements OnInit {
     this.selectedQuick = null;
     this.startDate = '';
     this.endDate = '';
+    this.selectedLocationId = '';
+    this.selectedMetric = 'co2';
     this.dateError = '';
     this.cdr.markForCheck();
   }
@@ -166,6 +210,32 @@ export class PeriodRangeSelectorComponent implements OnInit {
    * Loads the earliest and latest sensor record timestamps to constrain the date pickers.
    * Silently ignores errors (pickers remain unconstrained).
    */
+  private initializeLocations(): void {
+    this.locations$ = this.deviceService.getAll().pipe(
+      catchError(() => of([])),
+      map((devices: Device[]) => {
+        const locationMap = new Map<number, { label: string; deviceIds: number[] }>();
+        for (const device of devices) {
+          const locId = device.location.id;
+          if (!locationMap.has(locId)) {
+            locationMap.set(locId, { label: device.location.description || `Location ${locId}`, deviceIds: [] });
+          }
+          locationMap.get(locId)!.deviceIds.push(device.id);
+        }
+        this.locationDeviceMap.clear();
+        locationMap.forEach((value, key) => this.locationDeviceMap.set(key, value.deviceIds));
+        return Array.from(locationMap.entries()).map(([locationId, { label, deviceIds }]) => ({ locationId, label, deviceIds }));
+      }),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+  }
+
+  private resolveLocationDeviceIds(): number[] | undefined {
+    if (!this.selectedLocationId) return undefined;
+    const id = Number(this.selectedLocationId);
+    return isNaN(id) ? undefined : this.locationDeviceMap.get(id);
+  }
+
   private loadDateBounds(): void {
     this.sensorDataService.getFirstRecord().subscribe({
       next: (r) => {

@@ -238,11 +238,6 @@ export class DataExportComponent implements OnDestroy {
   hasPeriod = false;
 
   /**
-   * Currently selected metric for detailed analysis.
-   */
-  selectedMetric: MetricKey = 'co2';
-
-  /**
    * True while PDF generation is in progress.
    */
   isGenerating = false;
@@ -280,16 +275,6 @@ export class DataExportComponent implements OnDestroy {
   }
 
   /**
-   * Updates the selected metric for analysis.
-   *
-   * @param {MetricKey} m - New metric key.
-   */
-  setMetric(m: MetricKey): void {
-    this.selectedMetric = m;
-    this.cdr.markForCheck();
-  }
-
-  /**
    * Orchestrates the complete PDF generation process.
    * Fetches data, creates charts, assembles pages, and triggers download.
    *
@@ -307,7 +292,7 @@ export class DataExportComponent implements OnDestroy {
       const data = await this.fetchData();
       this.tick(10, 'Generando gráfico de series temporales…');
 
-      const metric = METRICS.find((m) => m.key === this.selectedMetric)!;
+      const metric = METRICS.find((m) => m.key === this.selectedRange!.metric)!;
       const { start, end } = this.selectedRange!;
 
       // 2. Gráficos
