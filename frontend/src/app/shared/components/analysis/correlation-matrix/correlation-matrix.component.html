@@ -1,6 +1,6 @@
 <!-- Pearson Correlation Matrix Analysis Component
      Displays environmental variables vs vehicle traffic correlation matrix.
-     User can select 24h / 7d / 30d period and view color-coded results. -->
+     User selects a custom or quick-preset period to view color-coded results. -->
 
 <div class="space-y-6">
   <!-- Page header with title and description -->
@@ -11,225 +11,239 @@
     </p>
   </div>
 
-  <!-- Period selector controls -->
-  <div
-    class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
-  >
-    <div class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-sm font-medium text-gray-600 dark:text-gray-400"
-          >Período de análisis:</span
-        >
-        @for (p of periods; track p) {
-          <button
-            (click)="setPeriod(p.key)"
-            [ngClass]="
-              currentPeriod === p.key
-                ? 'bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700'
-                : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-            "
-            class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150"
-          >
-            {{ p.label }}
-          </button>
-        }
-      </div>
-      @if (!isLoading && sampleSize > 0) {
-        <span class="text-xs text-gray-400 dark:text-gray-500">
-          {{ sampleSize }} intervalos · n mínimo para Pearson = 2
-        </span>
-      }
-    </div>
-  </div>
+  <!-- Period range selector -->
+  <app-period-range-selector (periodChange)="onPeriodChange($event)" />
 
-  <!-- Main correlation matrix card -->
-  <div
-    class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
-  >
-    <!-- Card header with title and loading indicator -->
+  <!-- No period selected placeholder -->
+  @if (!hasPeriod && !isLoading) {
     <div
-      class="flex items-start justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6"
+      class="flex h-48 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
     >
-      <div>
-        <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">
-          Correlaciones cruzadas (r de Pearson)
-        </h2>
-        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-          Los valores van de −1 (correlación negativa perfecta) a +1 (correlación positiva perfecta)
+      <div class="flex flex-col items-center gap-3 text-center">
+        <svg
+          class="h-10 w-10 text-gray-300 dark:text-gray-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5"
+          />
+        </svg>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Selecciona un período para visualizar el análisis
         </p>
       </div>
-      @if (isLoading) {
-        <div class="flex items-center gap-1.5 text-xs text-gray-400">
-          <svg class="h-4 w-4 animate-spin text-brand-500" viewBox="0 0 24 24" fill="none">
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-          </svg>
-          Calculando…
-        </div>
-      }
     </div>
+  }
 
-    <div class="p-5 sm:p-6">
-      <!-- Error state: display if data loading failed -->
-      @if (hasError && !isLoading) {
-        <div class="flex flex-col items-center justify-center gap-3 py-16 text-center">
-          <svg class="h-10 w-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 9v2m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0z"
-            />
-          </svg>
-          <p class="text-sm text-red-500">{{ errorMsg }}</p>
-        </div>
-      }
-
-      <!-- Empty state: insufficient data to compute correlations -->
-      @if (!isLoading && !hasError && sampleSize < 2) {
-        <div class="flex flex-col items-center justify-center gap-3 py-16 text-center">
-          <svg
-            class="h-10 w-10 text-gray-300 dark:text-gray-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="1.5"
-          >
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-          </svg>
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            Datos insuficientes para calcular correlaciones en el período seleccionado
+  @if (hasPeriod) {
+    <!-- Main correlation matrix card -->
+    <div
+      class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+    >
+      <!-- Card header with title and loading indicator -->
+      <div
+        class="flex items-start justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6"
+      >
+        <div>
+          <h2 class="text-base font-semibold text-gray-800 dark:text-white/90">
+            Correlaciones cruzadas (r de Pearson)
+          </h2>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            Los valores van de −1 (correlación negativa perfecta) a +1 (correlación positiva perfecta)
           </p>
         </div>
-      }
+        <div class="flex flex-col items-end gap-1">
+          @if (isLoading) {
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+              <svg class="h-4 w-4 animate-spin text-brand-500" viewBox="0 0 24 24" fill="none">
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              Calculando…
+            </div>
+          }
+          @if (!isLoading && sampleSize > 0) {
+            <span class="text-xs text-gray-400 dark:text-gray-500">
+              {{ sampleSize }} intervalos · n mínimo para Pearson = 2
+            </span>
+          }
+        </div>
+      </div>
 
-      <!-- Matrix table: Pearson coefficients with color-coded cells -->
-      @if (!isLoading && !hasError && sampleSize >= 2) {
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="min-w-full border-separate border-spacing-1 text-center text-xs">
-            <thead>
-              <tr>
-                <th
-                  class="w-20 min-w-[5rem] py-1 pr-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400"
-                >
-                  Variable
-                </th>
-                @for (v of variables; track v) {
-                  <th
-                    class="min-w-[4.5rem] px-1 py-1 font-semibold text-gray-600 dark:text-gray-300"
-                  >
-                    {{ v.shortLabel }}
-                  </th>
-                }
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of matrix; track row; let ri = $index) {
+      <div class="p-5 sm:p-6">
+        <!-- Error state: display if data loading failed -->
+        @if (hasError && !isLoading) {
+          <div class="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <svg
+              class="h-10 w-10 text-red-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0z"
+              />
+            </svg>
+            <p class="text-sm text-red-500">{{ errorMsg }}</p>
+          </div>
+        }
+
+        <!-- Empty state: insufficient data to compute correlations -->
+        @if (!isLoading && !hasError && sampleSize < 2) {
+          <div class="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <svg
+              class="h-10 w-10 text-gray-300 dark:text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Datos insuficientes para calcular correlaciones en el período seleccionado
+            </p>
+          </div>
+        }
+
+        <!-- Matrix table: Pearson coefficients with color-coded cells -->
+        @if (!isLoading && !hasError && sampleSize >= 2) {
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="min-w-full border-separate border-spacing-1 text-center text-xs">
+              <thead>
                 <tr>
-                  <td
-                    class="whitespace-nowrap pr-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300"
+                  <th
+                    class="w-20 min-w-[5rem] py-1 pr-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400"
                   >
-                    {{ variables[ri].shortLabel }}
-                    <span class="block text-[10px] font-normal text-gray-400">{{
-                      variables[ri].unit
-                    }}</span>
-                  </td>
-                  @for (cell of row; track cell; let ci = $index) {
-                    <td
-                      class="relative rounded-md px-1 py-2 font-semibold transition-transform duration-100 hover:scale-105"
-                      [ngClass]="[
-                        cell.color,
-                        cell.textColor,
-                        isDiagonal(ri, ci) ? 'opacity-60' : '',
-                      ]"
-                      [title]="
-                        variables[ri].label +
-                        ' vs ' +
-                        variables[ci].label +
-                        ' → r = ' +
-                        cell.label +
-                        ' (n=' +
-                        cell.n +
-                        ')'
-                      "
+                    Variable
+                  </th>
+                  @for (v of variables; track v) {
+                    <th
+                      class="min-w-[4.5rem] px-1 py-1 font-semibold text-gray-600 dark:text-gray-300"
                     >
-                      {{ cell.label }}
-                    </td>
+                      {{ v.shortLabel }}
+                    </th>
                   }
                 </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
+              </thead>
+              <tbody>
+                @for (row of matrix; track row; let ri = $index) {
+                  <tr>
+                    <td
+                      class="whitespace-nowrap pr-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300"
+                    >
+                      {{ variables[ri].shortLabel }}
+                      <span class="block text-[10px] font-normal text-gray-400">{{
+                        variables[ri].unit
+                      }}</span>
+                    </td>
+                    @for (cell of row; track cell; let ci = $index) {
+                      <td
+                        class="relative rounded-md px-1 py-2 font-semibold transition-transform duration-100 hover:scale-105"
+                        [ngClass]="[
+                          cell.color,
+                          cell.textColor,
+                          isDiagonal(ri, ci) ? 'opacity-60' : '',
+                        ]"
+                        [title]="
+                          variables[ri].label +
+                          ' vs ' +
+                          variables[ci].label +
+                          ' → r = ' +
+                          cell.label +
+                          ' (n=' +
+                          cell.n +
+                          ')'
+                        "
+                      >
+                        {{ cell.label }}
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
     </div>
-  </div>
 
-  <!-- Legend and interpretation guide (displayed when matrix has data) -->
-  @if (!isLoading && !hasError && sampleSize >= 2) {
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <!-- Color scale legend -->
-      <div
-        class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
-      >
-        <h3 class="mb-3 text-sm font-semibold text-gray-800 dark:text-white/90">Escala de color</h3>
-        <ul class="space-y-2">
-          @for (l of legend; track l) {
-            <li class="flex items-center gap-3">
-              <span class="h-5 w-10 shrink-0 rounded" [ngClass]="l.color"></span>
-              <span class="text-xs text-gray-600 dark:text-gray-400">{{ l.text }}</span>
+    <!-- Legend and interpretation guide (displayed when matrix has data) -->
+    @if (!isLoading && !hasError && sampleSize >= 2) {
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <!-- Color scale legend -->
+        <div
+          class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+        >
+          <h3 class="mb-3 text-sm font-semibold text-gray-800 dark:text-white/90">
+            Escala de color
+          </h3>
+          <ul class="space-y-2">
+            @for (l of legend; track l) {
+              <li class="flex items-center gap-3">
+                <span class="h-5 w-10 shrink-0 rounded" [ngClass]="l.color"></span>
+                <span class="text-xs text-gray-600 dark:text-gray-400">{{ l.text }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+        <!-- Interpretation guide for reading correlation results -->
+        <div
+          class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+        >
+          <h3 class="mb-3 text-sm font-semibold text-gray-800 dark:text-white/90">
+            Cómo interpretar
+          </h3>
+          <ul class="space-y-2 text-xs text-gray-600 dark:text-gray-400">
+            <li class="flex items-start gap-2">
+              <span class="mt-0.5 shrink-0 text-emerald-500">▲</span>
+              <span
+                >Un valor cercano a <strong>+1</strong> indica que ambas variables suben y bajan
+                juntas (ej. más vehículos → más CO₂).</span
+              >
             </li>
-          }
-        </ul>
+            <li class="flex items-start gap-2">
+              <span class="mt-0.5 shrink-0 text-blue-500">▼</span>
+              <span
+                >Un valor cercano a <strong>−1</strong> indica relación inversa (ej. más humedad →
+                menos PM2.5).</span
+              >
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-0.5 shrink-0 text-gray-400">◆</span>
+              <span
+                >Valores entre <strong>−0.3 y +0.3</strong> sugieren relación débil o nula entre las
+                variables.</span
+              >
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-0.5 shrink-0 text-gray-400">⚠</span>
+              <span
+                >Correlación <strong>no implica causalidad</strong>. Variables externas (meteorología,
+                hora, etc.) pueden actuar como confundidores.</span
+              >
+            </li>
+          </ul>
+        </div>
       </div>
-      <!-- Interpretation guide for reading correlation results -->
-      <div
-        class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
-      >
-        <h3 class="mb-3 text-sm font-semibold text-gray-800 dark:text-white/90">
-          Cómo interpretar
-        </h3>
-        <ul class="space-y-2 text-xs text-gray-600 dark:text-gray-400">
-          <li class="flex items-start gap-2">
-            <span class="mt-0.5 shrink-0 text-emerald-500">▲</span>
-            <span
-              >Un valor cercano a <strong>+1</strong> indica que ambas variables suben y bajan
-              juntas (ej. más vehículos → más CO₂).</span
-            >
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="mt-0.5 shrink-0 text-blue-500">▼</span>
-            <span
-              >Un valor cercano a <strong>−1</strong> indica relación inversa (ej. más humedad →
-              menos PM2.5).</span
-            >
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="mt-0.5 shrink-0 text-gray-400">◆</span>
-            <span
-              >Valores entre <strong>−0.3 y +0.3</strong> sugieren relación débil o nula entre las
-              variables.</span
-            >
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="mt-0.5 shrink-0 text-gray-400">⚠</span>
-            <span
-              >Correlación <strong>no implica causalidad</strong>. Variables externas (meteorología,
-              hora, etc.) pueden actuar como confundidores.</span
-            >
-          </li>
-        </ul>
-      </div>
-    </div>
+    }
   }
 </div>

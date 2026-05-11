@@ -8,6 +8,8 @@ keycloak/*-import*.json
 #docs
 docs/*
 
+/PRD.md
+
 #claude
 CLAUDE.md
 

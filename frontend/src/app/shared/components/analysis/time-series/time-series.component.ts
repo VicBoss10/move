@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatest, of, Subject } from 'rxjs';
+import { combineLatest, of, Subject } from 'rxjs';
 import { catchError, switchMap, takeUntil } from 'rxjs/operators';
 import { BaseChartDirective } from 'ng2-charts';
 import {
@@ -27,6 +27,10 @@ import { SensorDataService } from '../../../../core/services/sensor-data.service
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 import { VehicleDetected } from '../../../../core/models/vehicle.model';
+import {
+  PeriodRangeSelectorComponent,
+  PeriodRange,
+} from '../period-range-selector/period-range-selector.component';
 
 ChartJS.register(
   LineController,
@@ -39,34 +43,9 @@ ChartJS.register(
   Filler,
 );
 
-/**
- * Environmental metric key type for time series analysis.
- * Represents available air quality and weather parameters.
- * @typedef {('co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3')} MetricKey
- */
 type MetricKey = 'co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3';
-
-/**
- * Time period key for data aggregation and analysis.
- * @typedef {('24h' | '7d' | '30d')} PeriodKey
- */
-type PeriodKey = '24h' | '7d' | '30d';
-
-/**
- * Time granularity key for slot-based aggregation.
- * @typedef {('hour' | '4h' | 'day')} GranularityKey
- */
 type GranularityKey = 'hour' | '4h' | 'day';
 
-/**
- * Configuration and styling for a single environmental metric.
- * @interface MetricOption
- * @property {MetricKey} key - Unique identifier for the metric
- * @property {string} label - Human-readable display label (e.g., 'CO₂')
- * @property {string} unit - Measurement unit (e.g., 'ppm', 'µg/m³')
- * @property {string} border - Hex color for line and axis text
- * @property {string} bg - RGBA background color for line fill area
- */
 interface MetricOption {
   key: MetricKey;
   label: string;
@@ -75,39 +54,12 @@ interface MetricOption {
   bg: string;
 }
 
-/**
- * Current filter state for period and metric selection.
- * @interface FilterState
- * @property {PeriodKey} period - Selected time period
- * @property {MetricKey} metric - Selected environmental metric
- */
-interface FilterState {
-  period: PeriodKey;
-  metric: MetricKey;
-}
-
-/**
- * Time slot for data aggregation (hourly, 4-hourly, or daily).
- * @interface TimeSlot
- * @property {Date} start - Start of the time slot
- * @property {Date} end - End of the time slot
- * @property {string} label - Human-readable slot label for display
- */
 interface TimeSlot {
   start: Date;
   end: Date;
   label: string;
 }
 
-/**
- * Aggregated statistics for time series visualization.
- * @interface TimeSeriesStats
- * @property {number} metricMin - Minimum metric value in period
- * @property {number} metricAvg - Average metric value in period
- * @property {number} metricMax - Maximum metric value in period
- * @property {number} vehicleTotal - Total vehicle detections in period
- * @property {MetricOption} metricOption - Configuration for displayed metric
- */
 interface TimeSeriesStats {
   metricMin: number;
   metricAvg: number;
@@ -116,12 +68,6 @@ interface TimeSeriesStats {
   metricOption: MetricOption;
 }
 
-/**
- * Catalog of available environmental metrics.
- * Each metric includes display label, unit, and color coding for charts.
- * @type {MetricOption[]}
- * @const
- */
 const METRICS: MetricOption[] = [
   { key: 'co2', label: 'CO₂', unit: 'ppm', border: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
   { key: 'pm25', label: 'PM2.5', unit: 'µg/m³', border: '#a855f7', bg: 'rgba(168, 85, 247, 0.1)' },
@@ -145,57 +91,23 @@ const METRICS: MetricOption[] = [
   { key: 'nh3', label: 'NH₃', unit: 'ppb', border: '#14b8a6', bg: 'rgba(20, 184, 166, 0.1)' },
 ];
 
-/**
- * Color value for vehicle detection line in charts.
- * @type {string}
- * @const
- */
 const VEHICLE_BORDER = '#6366f1';
-
-/**
- * RGBA background color for vehicle detection line fill area.
- * @type {string}
- * @const
- */
 const VEHICLE_BG = 'rgba(99, 102, 241, 0.08)';
 
 /**
- * Available time periods for data aggregation and filtering.
- * @type {{key: PeriodKey; label: string}[]}
- * @const
- */
-const PERIODS: { key: PeriodKey; label: string }[] = [
-  { key: '24h', label: 'Últimas 24h' },
-  { key: '7d', label: 'Últimos 7 días' },
-  { key: '30d', label: 'Últimos 30 días' },
-];
-
-/**
- * TimeSeriesComponent (Smart Component)
+ * TimeSeriesComponent
  *
- * Visualiza la evolución temporal de un contaminante ambiental
- * superpuesto con el conteo de vehículos detectados en el mismo período.
- * Permite identificar correlaciones entre tráfico y calidad del aire.
- *
- * Características:
- * - Gráfico de líneas dual-eje (contaminante izq. / vehículos der.)
- * - Filtros: período (24h/7d/30d) + métrica seleccionable
- * - Estadísticas: min/avg/max del contaminante + total de vehículos
- * - Agregación horaria/4h/diaria según el período
- * - Dark mode support
+ * Visualizes temporal evolution of a pollutant overlaid with vehicle counts.
+ * Period is selected via the shared PeriodRangeSelectorComponent.
+ * Granularity (hourly / 4h / daily) is derived automatically from the selected range.
  *
  * @selector app-time-series
  * @standalone true
- * @imports CommonModule, FormsModule, BaseChartDirective
- * @returns Gráfico de series de tiempo con filtros
- *
- * @example
- * <app-time-series />
  */
 @Component({
   selector: 'app-time-series',
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseChartDirective],
+  imports: [CommonModule, FormsModule, BaseChartDirective, PeriodRangeSelectorComponent],
   templateUrl: './time-series.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -203,94 +115,37 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   readonly metrics = METRICS;
-  readonly periods = PERIODS;
 
-  /**
-   * Observable emitting current filter state (period and metric selection).
-   * @type {BehaviorSubject<FilterState>}
-   * @private
-   */
-  private readonly filters$ = new BehaviorSubject<FilterState>({
-    period: '24h',
-    metric: 'co2',
-  });
-
-  /**
-   * Subject for managing subscriptions and cleanup on component destruction.
-   * @type {Subject<void>}
-   * @private
-   */
+  private readonly load$ = new Subject<{ start: Date; end: Date; metric: MetricKey }>();
   private readonly destroy$ = new Subject<void>();
+  private currentRange: { start: Date; end: Date } | null = null;
 
-  /**
-   * Loading state indicator.
-   * @type {boolean}
-   */
-  isLoading = true;
-
-  /**
-   * Error flag for data loading failures.
-   * @type {boolean}
-   */
+  /** True once the user has selected at least one period. */
+  hasPeriod = false;
+  /** Currently selected metric key (bound to the metric select). */
+  currentMetric: MetricKey = 'co2';
+  isLoading = false;
   hasError = false;
-
-  /**
-   * Error message displayed to user when hasError is true.
-   * @type {string}
-   */
   errorMsg = '';
-
-  /**
-   * Chart.js data configuration for dual-axis line chart.
-   * @type {ChartConfiguration<'line'>['data']}
-   */
   chartData: ChartConfiguration<'line'>['data'] = { labels: [], datasets: [] };
-
-  /**
-   * Chart.js options configuration for responsive and styled line chart.
-   * @type {ChartConfiguration<'line'>['options']}
-   */
   chartOptions: ChartConfiguration<'line'>['options'] = this.buildChartOptions(METRICS[0]);
-
-  /**
-   * Aggregated statistics for the current time series (min/avg/max/total).
-   * @type {TimeSeriesStats | null}
-   */
   stats: TimeSeriesStats | null = null;
 
-  /**
-   * Returns the current filter state (period and metric).
-   * @returns {FilterState} Current filter values
-   */
-  get currentFilter(): FilterState {
-    return this.filters$.value;
-  }
-
-  /**
-   * Initializes the component with service dependencies.
-   * @param {SensorDataService} sensorDataService - Sensor measurement service
-   * @param {VehicleDetectedService} vehicleService - Vehicle detection service
-   * @param {ChangeDetectorRef} cdr - Angular change detection reference
-   */
   constructor(
     private readonly sensorDataService: SensorDataService,
     private readonly vehicleService: VehicleDetectedService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  /**
-   * Initializes data pipeline and subscriptions on component creation.
-   * Subscribes to filter changes and loads time series data accordingly.
-   */
   ngOnInit(): void {
-    this.filters$
+    this.load$
       .pipe(
         takeUntil(this.destroy$),
-        switchMap((filters) => {
+        switchMap((f) => {
           this.isLoading = true;
           this.hasError = false;
           this.cdr.markForCheck();
-          return this.fetchAndAggregate(filters);
+          return this.fetchAndAggregate(f.start, f.end, f.metric);
         }),
       )
       .subscribe(({ chartData, chartOptions, stats }) => {
@@ -302,41 +157,33 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Cleanup lifecycle hook.
-   * Unsubscribes from all observables via destroy$ subject.
-   */
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  /**
-   * Updates the period filter and triggers data reload.
-   * @param {PeriodKey} period - Time period ('24h', '7d', or '30d')
-   */
-  setPeriod(period: PeriodKey): void {
-    this.filters$.next({ ...this.filters$.value, period });
+  /** Called by PeriodRangeSelectorComponent when the user selects or applies a period. */
+  onPeriodChange(range: PeriodRange): void {
+    this.currentRange = range;
+    this.hasPeriod = true;
+    this.load$.next({ start: range.start, end: range.end, metric: this.currentMetric });
   }
 
-  /**
-   * Updates the metric filter and triggers data reload.
-   * @param {MetricKey} metric - Environmental metric key
-   */
+  /** Updates selected metric; re-runs analysis if a range is already active. */
   setMetric(metric: MetricKey): void {
-    this.filters$.next({ ...this.filters$.value, metric });
+    this.currentMetric = metric;
+    if (this.currentRange) {
+      this.load$.next({
+        start: this.currentRange.start,
+        end: this.currentRange.end,
+        metric,
+      });
+    }
   }
 
-  /**
-   * Fetches sensor and vehicle data, aggregates into time slots, and computes statistics.
-   * Returns chart data and aggregated stats for the selected period and metric.
-   * @param {FilterState} filters - Current filter state (period and metric)
-   * @returns {Observable<{chartData: ChartConfiguration<'line'>['data']; chartOptions: ChartConfiguration<'line'>['options']; stats: TimeSeriesStats}>} Time series chart configuration and statistics
-   * @private
-   */
-  private fetchAndAggregate(filters: FilterState) {
-    const { start, end, granularity } = this.periodConfig(filters.period);
-    const metricOption = METRICS.find((m) => m.key === filters.metric)!;
+  private fetchAndAggregate(start: Date, end: Date, metricKey: MetricKey) {
+    const granularity = this.granularityFor(start, end);
+    const metricOption = METRICS.find((m) => m.key === metricKey)!;
 
     const sensor$ = this.sensorDataService
       .search({ start, end, size: 10000 })
@@ -370,7 +217,6 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
           const [sensorData, vehicleData] = result;
           const slots = this.buildSlots(start, end, granularity);
 
-          // Aggregate sensor metric per slot (average)
           const metricPoints: (number | null)[] = slots.map((slot) => {
             const inSlot = sensorData.filter(
               (d) =>
@@ -378,11 +224,10 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
                 new Date(d.timestamp).getTime() < slot.end.getTime(),
             );
             if (inSlot.length === 0) return null;
-            const sum = inSlot.reduce((acc, d) => acc + ((d[filters.metric] as number) ?? 0), 0);
+            const sum = inSlot.reduce((acc, d) => acc + ((d[metricKey] as number) ?? 0), 0);
             return Math.round((sum / inSlot.length) * 100) / 100;
           });
 
-          // Aggregate vehicle count per slot
           const vehicleCounts: number[] = slots.map(
             (slot) =>
               vehicleData.filter(
@@ -432,7 +277,6 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
             ],
           };
 
-          // Compute stats
           const validMetric = metricPoints.filter((v): v is number => v !== null);
           const metricMin = validMetric.length ? Math.min(...validMetric) : 0;
           const metricMax = validMetric.length ? Math.max(...validMetric) : 0;
@@ -441,13 +285,7 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
             : 0;
           const vehicleTotal = vehicleCounts.reduce((a, b) => a + b, 0);
 
-          const stats: TimeSeriesStats = {
-            metricMin,
-            metricAvg,
-            metricMax,
-            vehicleTotal,
-            metricOption,
-          };
+          const stats: TimeSeriesStats = { metricMin, metricAvg, metricMax, vehicleTotal, metricOption };
 
           return of({ chartData, chartOptions: this.buildChartOptions(metricOption), stats });
         }),
@@ -455,12 +293,16 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Builds and configures Chart.js options for dual-axis line chart display.
-   * Includes separate Y-axes for metric values and vehicle counts, legend, tooltips, and responsive sizing.
-   * @param {MetricOption} m - Metric configuration for left Y-axis labeling and color
-   * @returns {ChartConfiguration<'line'>['options']} Chart.js options object
-   * @private
+   * Selects aggregation granularity based on the selected date range duration.
+   * ≤ 2 days → hourly · ≤ 14 days → 4h · > 14 days → daily
    */
+  private granularityFor(start: Date, end: Date): GranularityKey {
+    const diffMs = end.getTime() - start.getTime();
+    if (diffMs <= 2 * 24 * 3_600_000) return 'hour';
+    if (diffMs <= 14 * 24 * 3_600_000) return '4h';
+    return 'day';
+  }
+
   private buildChartOptions(m: MetricOption): ChartConfiguration<'line'>['options'] {
     return {
       responsive: true,
@@ -522,34 +364,6 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
     };
   }
 
-  /**
-   * Determines time boundaries and granularity level for the selected period.
-   * Returns adjusted date range (now - N days) and appropriate time slot granularity.
-   * @param {PeriodKey} period - Time period ('24h', '7d', or '30d')
-   * @returns {{start: Date; end: Date; granularity: GranularityKey}} Time range and granularity
-   * @private
-   */
-  private periodConfig(period: PeriodKey): { start: Date; end: Date; granularity: GranularityKey } {
-    const end = new Date();
-    switch (period) {
-      case '7d':
-        return { start: new Date(end.getTime() - 7 * 24 * 3_600_000), end, granularity: '4h' };
-      case '30d':
-        return { start: new Date(end.getTime() - 30 * 24 * 3_600_000), end, granularity: 'day' };
-      default:
-        return { start: new Date(end.getTime() - 24 * 3_600_000), end, granularity: 'hour' };
-    }
-  }
-
-  /**
-   * Generates sequential time slots from start to end date at specified granularity.
-   * Aligns slot boundaries to granularity boundaries (e.g., start of hour for 'hour').
-   * @param {Date} start - Start of time range
-   * @param {Date} end - End of time range
-   * @param {GranularityKey} granularity - Slot size ('hour', '4h', or 'day')
-   * @returns {TimeSlot[]} Array of time slots with labels
-   * @private
-   */
   private buildSlots(start: Date, end: Date, granularity: GranularityKey): TimeSlot[] {
     const slotMs: Record<GranularityKey, number> = {
       hour: 3_600_000,
@@ -558,7 +372,6 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
     };
     const ms = slotMs[granularity];
 
-    // Align to floor of granularity
     let cursor = new Date(Math.floor(start.getTime() / ms) * ms);
     const slots: TimeSlot[] = [];
 
@@ -571,14 +384,6 @@ export class TimeSeriesComponent implements OnInit, OnDestroy {
     return slots;
   }
 
-  /**
-   * Generates human-readable label for a time slot based on granularity.
-   * Formats as "day weekday HH:MM" for hourly, "day HH" for 4-hourly, and "dd Mon" for daily.
-   * @param {Date} d - Date marking the start of the time slot
-   * @param {GranularityKey} granularity - Time granularity level
-   * @returns {string} Formatted label for display in chart
-   * @private
-   */
   private slotLabel(d: Date, granularity: GranularityKey): string {
     switch (granularity) {
       case 'day':

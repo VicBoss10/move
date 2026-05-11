@@ -25,6 +25,10 @@ import { VehicleDetectedService } from '../../../../core/services/vehicle-detect
 import { Location } from '../../../../core/models/location.model';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 import { VehicleDetected } from '../../../../core/models/vehicle.model';
+import {
+  PeriodRangeSelectorComponent,
+  PeriodRange,
+} from '../period-range-selector/period-range-selector.component';
 
 ChartJS.register(
   LineController,
@@ -46,10 +50,10 @@ ChartJS.register(
 type MetricKey = 'co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3';
 
 /**
- * Time period key type.
- * @typedef {'24h' | '7d' | '30d'} PeriodKey
+ * Environmental metric key type.
+ * @typedef {'co2' | 'pm25' | 'pm10' | 'temperature' | 'humidity' | 'co' | 'no2' | 'nh3'} MetricKey
+ * (Re-declared here for clarity; identical to the one used in other analysis components.)
  */
-type PeriodKey = '24h' | '7d' | '30d';
 
 /**
  * Metric display and PDF configuration.
@@ -143,16 +147,6 @@ const METRICS: MetricOption[] = [
   { key: 'nh3', label: 'NH₃', pdfLabel: 'NH3', unit: 'ppb', pdfUnit: 'ppb', color: '#14b8a6' },
 ];
 
-/**
- * Available report time periods.
- * @constant PERIODS
- * @type {Array<{key: PeriodKey, label: string, hours: number}>}
- */
-const PERIODS: { key: PeriodKey; label: string; hours: number }[] = [
-  { key: '24h', label: 'Últimas 24 h', hours: 24 },
-  { key: '7d', label: 'Últimos 7 días', hours: 168 },
-  { key: '30d', label: 'Últimos 30 días', hours: 720 },
-];
 
 /**
  * Vehicle count chart color.
@@ -220,7 +214,7 @@ const BRAND = {
 @Component({
   selector: 'app-data-export',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PeriodRangeSelectorComponent],
   templateUrl: './data-export.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -237,16 +231,11 @@ export class DataExportComponent implements OnDestroy {
    */
   readonly metrics = METRICS;
 
-  /**
-   * Available time periods for report generation.
-   * @readonly
-   */
-  readonly periods = PERIODS;
+  /** Active date range set by PeriodRangeSelectorComponent. Null until the user selects one. */
+  selectedRange: PeriodRange | null = null;
 
-  /**
-   * Currently selected analysis period.
-   */
-  selectedPeriod: PeriodKey = '7d';
+  /** True once the user has selected at least one period. */
+  hasPeriod = false;
 
   /**
    * Currently selected metric for detailed analysis.
@@ -283,13 +272,10 @@ export class DataExportComponent implements OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * Updates the selected time period.
-   *
-   * @param {PeriodKey} p - New period key.
-   */
-  setPeriod(p: PeriodKey): void {
-    this.selectedPeriod = p;
+  /** Called by PeriodRangeSelectorComponent when the user selects or applies a period. */
+  onPeriodChange(range: PeriodRange): void {
+    this.selectedRange = range;
+    this.hasPeriod = true;
     this.cdr.markForCheck();
   }
 
@@ -322,11 +308,10 @@ export class DataExportComponent implements OnDestroy {
       this.tick(10, 'Generando gráfico de series temporales…');
 
       const metric = METRICS.find((m) => m.key === this.selectedMetric)!;
-      const period = PERIODS.find((p) => p.key === this.selectedPeriod)!;
-      const { start, end } = this.dateRange();
+      const { start, end } = this.selectedRange!;
 
       // 2. Gráficos
-      const tsImg = this.chartTimeSeries(data, metric, period);
+      const tsImg = this.chartTimeSeries(data, metric);
       this.tick(25, 'Generando matriz de correlación…');
 
       const corrImg = this.chartCorrelationMatrix(data);
@@ -352,7 +337,7 @@ export class DataExportComponent implements OnDestroy {
       const CW = PW - 2 * MX;
 
       // ── Portada ─────────────────────────────────────────────────────────
-      this.pageCover(doc, logoUrl, metric, period, start, end, PW, PH);
+      this.pageCover(doc, logoUrl, metric, start, end, PW, PH);
 
       // ── Series temporales ───────────────────────────────────────────────
       doc.addPage('letter', 'portrait');
@@ -436,7 +421,7 @@ export class DataExportComponent implements OnDestroy {
 
       // 5. Descargar
       const dateStr = new Date().toISOString().slice(0, 10);
-      doc.save(`MOVE_Informe_${metric.pdfLabel}_${period.key}_${dateStr}.pdf`);
+      doc.save(`MOVE_Informe_${metric.pdfLabel}_${dateStr}.pdf`);
 
       this.tick(100, 'Informe generado correctamente');
       setTimeout(() => {
@@ -485,14 +470,15 @@ export class DataExportComponent implements OnDestroy {
    * @param {{key: PeriodKey, hours: number}} period - Analysis period.
    * @returns {string} PNG chart image as dataURL.
    */
-  private chartTimeSeries(
-    data: ReportData,
-    metric: MetricOption,
-    period: { key: PeriodKey; hours: number },
-  ): string {
+  private chartTimeSeries(data: ReportData, metric: MetricOption): string {
     const { start, end } = this.dateRange();
+    const durationMs = end.getTime() - start.getTime();
     const bucketMs =
-      period.key === '24h' ? 3_600_000 : period.key === '7d' ? 4 * 3_600_000 : 24 * 3_600_000;
+      durationMs <= 24 * 3_600_000
+        ? 3_600_000
+        : durationMs <= 14 * 24 * 3_600_000
+          ? 4 * 3_600_000
+          : 24 * 3_600_000;
 
     const buckets = this.timeBuckets(start, end, bucketMs);
     const mVals = new Array(buckets.length).fill(0);
@@ -514,7 +500,7 @@ export class DataExportComponent implements OnDestroy {
     }
 
     const avgs = mVals.map((s, i) => (mCnts[i] ? +(s / mCnts[i]).toFixed(2) : 0));
-    const labels = buckets.map((b) => this.bucketLabel(b, period.key));
+    const labels = buckets.map((b) => this.bucketLabel(b, bucketMs));
 
     return this.offscreenChart(1400, 700, {
       type: 'line',
@@ -1152,7 +1138,6 @@ export class DataExportComponent implements OnDestroy {
     doc: jsPDF,
     logo: string,
     metric: MetricOption,
-    period: { key: PeriodKey; label: string },
     start: Date,
     end: Date,
     pw: number,
@@ -1239,7 +1224,7 @@ export class DataExportComponent implements OnDestroy {
       titleY + 50,
     );
     doc.text(
-      `con el flujo vehicular durante ${period.label.toLowerCase()}.`,
+      `con el flujo vehicular en el período ${this.fmtDateShort(start)} – ${this.fmtDateShort(end)}.`,
       padX,
       titleY + 56,
     );
@@ -1248,7 +1233,6 @@ export class DataExportComponent implements OnDestroy {
     const metaY = 196;
     const metaCols: [string, string][] = [
       ['CONTAMINANTE', `${metric.pdfLabel} · ${metric.pdfUnit}`],
-      ['PERIODO', period.label],
       ['DESDE', this.fmtDate(start)],
       ['HASTA', this.fmtDate(end)],
     ];
@@ -1766,15 +1750,11 @@ export class DataExportComponent implements OnDestroy {
   }
 
   /**
-   * Computes start and end dates for selected period.
-   *
-   * @private
-   * @returns {{start: Date, end: Date}} Date range.
+   * Returns the active date range set by the period selector.
+   * Only called after the user has selected a period (selectedRange is non-null).
    */
   private dateRange(): { start: Date; end: Date } {
-    const end = new Date();
-    const hours = PERIODS.find((p) => p.key === this.selectedPeriod)!.hours;
-    return { start: new Date(end.getTime() - hours * 3_600_000), end };
+    return this.selectedRange!;
   }
 
   /**
@@ -1804,9 +1784,11 @@ export class DataExportComponent implements OnDestroy {
    * @param {PeriodKey} p - Period for formatting context.
    * @returns {string} Formatted label.
    */
-  private bucketLabel(d: Date, p: PeriodKey): string {
-    if (p === '24h') return d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-    if (p === '7d') return d.toLocaleDateString('es', { weekday: 'short', hour: '2-digit' });
+  private bucketLabel(d: Date, bucketMs: number): string {
+    if (bucketMs === 3_600_000)
+      return d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+    if (bucketMs === 4 * 3_600_000)
+      return d.toLocaleDateString('es', { weekday: 'short', hour: '2-digit' });
     return d.toLocaleDateString('es', { day: '2-digit', month: 'short' });
   }
 
