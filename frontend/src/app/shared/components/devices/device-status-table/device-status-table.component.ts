@@ -10,7 +10,6 @@ import {
 import { DeviceService } from '../../../../core/services/device.service';
 import { LocationService } from '../../../../core/services/location.service';
 import { CameraService } from '../../../../core/services/camera.service';
-import { SensorService } from '../../../../core/services/sensor.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { Device, DeviceType, DeviceState } from '../../../../core/models/device.model';
 import { Camera, StreamType } from '../../../../core/models/camera.model';
@@ -134,7 +133,6 @@ export class DeviceStatusTableComponent {
    * @param {DeviceService} deviceService - Service for device CRUD operations
    * @param {LocationService} locationService - Service for location list retrieval
    * @param {CameraService} cameraService - Service for camera-specific operations
-   * @param {SensorService} sensorService - Service for sensor-specific operations
    * @param {ToastService} toastService - Service for displaying user notifications
    * @param {FormBuilder} fb - Angular FormBuilder for reactive form creation
    * @param {ChangeDetectorRef} cdr - Change detection reference for manual triggering in OnPush mode
@@ -144,7 +142,6 @@ export class DeviceStatusTableComponent {
     private deviceService: DeviceService,
     private locationService: LocationService,
     private cameraService: CameraService,
-    private sensorService: SensorService,
     private toastService: ToastService,
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
@@ -316,17 +313,8 @@ export class DeviceStatusTableComponent {
 
     const name = this.deleteTarget.name;
     const deviceId = this.deleteTarget.id;
-    const isCamera = this.deleteTarget.type === DeviceType.CAMERA;
 
-    const deleteOp$ = isCamera
-      ? this.cameraService.getCameraByDeviceId(deviceId).pipe(
-          switchMap((camera) => this.cameraService.delete(camera.id)),
-          switchMap(() => this.deviceService.delete(deviceId)),
-        )
-      : this.sensorService.getSensorByDeviceId(deviceId).pipe(
-          switchMap((sensor) => this.sensorService.delete(sensor.id)),
-          switchMap(() => this.deviceService.delete(deviceId)),
-        );
+    const deleteOp$ = this.deviceService.delete(deviceId);
 
     deleteOp$.subscribe({
       next: () => {
