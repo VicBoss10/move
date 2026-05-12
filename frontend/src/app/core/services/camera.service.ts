@@ -156,4 +156,20 @@ export class CameraService extends BaseDataService<Camera> {
       }),
     );
   }
+
+  /**
+   * Clears all active streaming sessions from the database.
+   * WARNING: This will terminate all active streams.
+   *
+   * @returns {Observable<any>} Observable with clear confirmation.
+   */
+  clearAllSessions(): Observable<any> {
+    return this.apiService.delete('/streams/clear-all').pipe(
+      tap(() => this.clearServiceError()),
+      catchError((error) => {
+        this.setServiceError(error, 'Error clearing stream sessions');
+        return throwError(() => error);
+      }),
+    );
+  }
 }

@@ -172,6 +172,28 @@ public class StreamController {
         }
 
     @Operation(
+            summary = "Clear all stream sessions / Limpiar todas las sesiones de stream",
+            description = "Clears all active streaming sessions from the database. Use with caution as this will stop all active streams. / Limpia todas las sesiones de streaming activas de la base de datos. Usar con cuidado ya que detendrá todos los streams activos."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sessions cleared successfully / Sesiones limpiadas exitosamente"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+        /**
+         * Clears all streaming sessions from the database.
+         * WARNING: This will remove all active stream sessions and may interrupt active streams.
+         *
+         * @return response with cleared session count
+         */
+        @DeleteMapping("/clear-all")
+        public ResponseEntity<Map<String, Object>> clearAllSessions() {
+                streamService.clearAllSessions();
+                Map<String, Object> response = new HashMap<>();
+                response.put("message", "All stream sessions cleared");
+                return ResponseEntity.ok(response);
+        }
+
+    @Operation(
             summary = "Check detection service health / Verificar salud del servicio de detección",
             description = "Checks if the Python vehicle detection service is running and available. Always returns 200 with status in JSON body. / Verifica si el servicio de detección de vehículos Python está corriendo. Siempre retorna 200 con el estado en el body."
     )

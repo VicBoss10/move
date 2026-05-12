@@ -107,14 +107,6 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       ],
     },
     {
-      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 9h10M7 13h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
-      name: 'Logs del Sistema',
-      subItems: [
-        { name: 'Eventos', path: '/blank' },
-        { name: 'Errores', path: '/blank' },
-      ],
-    },
-    {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M2 19V5a2 2 0 0 1 2-2h7v16H4a2 2 0 0 1-2-2Zm20 0V5a2 2 0 0 0-2-2h-7v16h7a2 2 0 0 0 2-2Z" stroke="currentColor" stroke-width="2" fill="none"/></svg>`,
       name: 'Ayuda y Documentación',
       subItems: [

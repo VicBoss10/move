@@ -338,14 +338,12 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
    * @returns {void}
    */
   stopDetectionForCamera(camera: Camera): void {
-    // Validar que la cámara esté activa
     if (camera.device.state !== DeviceState.ACTIVE || this.isLoading(camera.id)) {
       return;
     }
 
     this.loadingStates.set(camera.id, true);
     this.changeDetectorRef.markForCheck();
-    // 1) Intentar obtener la sesión activa en el VDS y detenerla
     this.cameraService
       .getActiveStreamByDevice(camera.device.id)
       .pipe(takeUntil(this.destroy$))
@@ -358,8 +356,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
               .pipe(takeUntil(this.destroy$))
               .subscribe({
                 next: () => {
-                  console.log(`Stopped session ${sessionId} for device ${camera.id}`);
-                  // Luego actualizar el estado en la BD
+                  console.log(`Stopped session ${sessionId} for device ${camera.id}`);                  
                   const deviceUpdate: Partial<Device> = {
                     id: camera.device.id,
                     state: DeviceState.INACTIVE,
@@ -384,8 +381,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
                     });
                 },
                 error: (err) => {
-                  console.error('Error stopping VDS session', err);
-                  // Even if stop fails, update device state to INACTIVE to keep DB consistent
+                  console.error('Error stopping VDS session', err);                  
                   const deviceUpdate: Partial<Device> = {
                     id: camera.device.id,
                     state: DeviceState.INACTIVE,
@@ -407,8 +403,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
                     });
                 },
               });
-          } else {
-            // No hay sesión activa: solo actualizar estado
+          } else {            
             const deviceUpdate: Partial<Device> = {
               id: camera.device.id,
               state: DeviceState.INACTIVE,
@@ -430,8 +425,7 @@ export class CameraFiltersTableComponent implements OnInit, OnDestroy {
               });
           }
         },
-        error: (err) => {
-          // Error consultando VDS: intentar solo actualizar DB para evitar bloqueo del usuario
+        error: (err) => {          
           console.warn('Error querying VDS for active session, updating device state anyway', err);
           const deviceUpdate: Partial<Device> = {
             id: camera.device.id,

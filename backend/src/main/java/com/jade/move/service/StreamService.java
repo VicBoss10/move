@@ -421,6 +421,11 @@ public class StreamService {
                 .ifPresent(streamSessionRepository::delete);
     }
 
+    @Transactional
+    public void clearAllSessions() {
+        streamSessionRepository.deleteAll();
+    }
+
     private void stopStreamInPython(String sessionId) {
         try {
             restTemplate.exchange(
