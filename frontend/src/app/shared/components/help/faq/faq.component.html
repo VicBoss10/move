@@ -1,5 +1,5 @@
 <!-- FAQ Component
-     Displays frequently asked questions organized into collapsible sections covering devices, security, thresholds, troubleshooting, and administration -->
+     Displays frequently asked questions organized into collapsible sections -->
 
 <div class="space-y-6">
   <!-- Page header with title and description -->
@@ -24,8 +24,9 @@
     </div>
   </div>
 
-  <!-- FAQ sections by topic -->
   <div class="space-y-6">
+
+    <!-- DEVICES -->
     <section>
       <div class="flex items-center gap-2 mb-4">
         <div
@@ -41,13 +42,14 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M9 17V7m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0V5a2 2 0 012 2v2a2 2 0 01-2 2h2a2 2 0 01-2-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2v10"
+              d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"
             />
           </svg>
         </div>
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Dispositivos</h3>
       </div>
       <div class="space-y-3 ml-1">
+
         <details
           class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
         >
@@ -55,85 +57,19 @@
             class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
           >
             <span>¿Qué tipos de dispositivos puedo registrar?</span>
-            <span
-              class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform"
-              >▼</span
-            >
-          </summary>
-          <div
-            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3"
-          >
-            Puedes registrar cámaras (streams RTSP/HTTP/MJPEG) y sensores ambientales (CO₂,
-            PM2.5/PM10, temperatura, humedad). Asigna cada dispositivo a una
-            <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">Ubicación</code>
-            para facilitar análisis y filtrado.
-          </div>
-        </details>
-
-        <details
-          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
-        >
-          <summary
-            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
-          >
-            <span>¿Qué configuración recomiendan para cámaras?</span>
-            <span
-              class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform"
-              >▼</span
-            >
-          </summary>
-          <div
-            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3"
-          >
-            Para detección, use resolución <strong>≥720p</strong> y <strong>15–20 FPS</strong>. RTSP
-            ofrece mejor latencia para modelos en tiempo real. Ajusta bitrate y FPS según la
-            capacidad de la red y CPU del detector.
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <section>
-      <div class="flex items-center gap-2 mb-4">
-        <div
-          class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center"
-        >
-          <svg
-            class="w-4 h-4 text-red-600 dark:text-red-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Streams y Seguridad</h3>
-      </div>
-      <div class="space-y-3 ml-1">
-        <details
-          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
-        >
-          <summary
-            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
-          >
-            <span>¿Cómo configuro un stream seguro?</span>
-            <span
-              class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform"
-              >▼</span
-            >
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div
             class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2"
           >
-            <p>✓ No expongas credenciales en URLs públicas</p>
-            <p>✓ Usa red privada o VPN/túneles para RTSP con credenciales</p>
-            <p>
-              ✓ Cambia contraseñas por defecto y usa <strong>HTTPS/TLS</strong> donde sea posible
+            <p>El sistema trabaja con dos tipos de dispositivos:</p>
+            <ul class="space-y-1 ml-3">
+              <li><strong>Cámaras</strong> — para detectar y contar vehículos automáticamente con IA.</li>
+              <li><strong>Sensores ambientales</strong> — para medir la calidad del aire (CO₂, partículas, temperatura y humedad).</li>
+            </ul>
+            <p class="mt-2">
+              Asigna siempre una
+              <strong>ubicación</strong> a cada dispositivo para que sus datos aparezcan en los mapas y análisis por zona.
             </p>
           </div>
         </details>
@@ -144,22 +80,348 @@
           <summary
             class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
           >
-            <span>¿Qué protocolos son compatibles?</span>
-            <span
-              class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform"
-              >▼</span
-            >
+            <span>¿Qué estados puede tener un dispositivo?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2"
+          >
+            <ul class="space-y-2">
+              <li class="flex gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></span>
+                <span><strong>Activo</strong> — enviando datos con normalidad. Visible en el panel y en los análisis.</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-gray-400 mt-1.5 flex-shrink-0"></span>
+                <span><strong>Inactivo</strong> — desactivado manualmente. Sus datos históricos se conservan, pero ya no genera nuevas lecturas.</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-yellow-400 mt-1.5 flex-shrink-0"></span>
+                <span><strong>Provisional</strong> — recién registrado, pendiente de configuración o validación.</span>
+              </li>
+            </ul>
+          </div>
+        </details>
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>¿Por qué es importante asignar una ubicación al dispositivo?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div
             class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3"
           >
-            <p class="mb-2"><strong>Cámaras:</strong> RTSP, HTTP(S), MJPEG</p>
-            <p><strong>Sensores:</strong> HTTP/HTTPS o integraciones específicas del dispositivo</p>
+            Sin ubicación, el sistema no sabe de qué zona provienen los datos. Esto significa que el dispositivo no aparecerá en el análisis por ubicación ni en los mapas de calor, y sus lecturas quedarán excluidas de las comparativas entre zonas.
           </div>
         </details>
+
       </div>
     </section>
 
+    <!-- ANALYSIS -->
+    <section>
+      <div class="flex items-center gap-2 mb-4">
+        <div
+          class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center"
+        >
+          <svg
+            class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Análisis de datos</h3>
+      </div>
+      <div class="space-y-3 ml-1">
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>¿Qué tipos de análisis ofrece el sistema?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-3"
+          >
+            <div>
+              <p class="font-semibold text-gray-900 dark:text-white">Series temporales</p>
+              <p class="text-xs mt-0.5 text-gray-500 dark:text-gray-400">Muestra cómo han evolucionado los niveles de contaminación y el conteo de vehículos a lo largo del tiempo. Puedes ver el gráfico por horas o por días.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900 dark:text-white">Matriz de correlación</p>
+              <p class="text-xs mt-0.5 text-gray-500 dark:text-gray-400">Calcula si el tráfico y los distintos contaminantes suben y bajan al mismo tiempo. Un número cercano a 1 indica que están muy relacionados.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900 dark:text-white">Análisis de rezagos</p>
+              <p class="text-xs mt-0.5 text-gray-500 dark:text-gray-400">Mide cuánto tiempo tarda la contaminación en reaccionar tras un cambio en el tráfico. Por ejemplo, si un pico de vehículos provoca un aumento de CO₂ media hora después.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900 dark:text-white">Análisis por ubicación</p>
+              <p class="text-xs mt-0.5 text-gray-500 dark:text-gray-400">Compara entre todas las zonas monitoreadas: cuál tiene más tráfico, cuál tiene peor calidad del aire y cómo se ordenan en un ranking.</p>
+            </div>
+          </div>
+        </details>
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>¿Cómo selecciono el período que quiero analizar?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3"
+          >
+            Todos los análisis tienen un selector de período en la parte superior. Puedes elegir rangos rápidos (última semana, último mes) o definir unas fechas concretas de inicio y fin. El análisis se actualiza automáticamente al cambiar el período.
+          </div>
+        </details>
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>¿Cómo interpreto los números de la matriz de correlación?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2"
+          >
+            <p>Cada número va de <strong>-1 a +1</strong>:</p>
+            <ul class="space-y-1.5 ml-3">
+              <li><strong>Cerca de +1</strong> — cuando sube el tráfico, ese contaminante también sube. Relación fuerte y directa.</li>
+              <li><strong>Cerca de 0</strong> — no hay relación clara entre el tráfico y ese contaminante.</li>
+              <li><strong>Cerca de -1</strong> — cuando sube el tráfico, ese contaminante baja. Muy poco habitual.</li>
+            </ul>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Un número alto no significa que el tráfico sea la única causa. Usa el análisis de rezagos para ver si existe un efecto con retardo en el tiempo.</p>
+          </div>
+        </details>
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>El análisis tarda mucho en cargar, ¿qué hago?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-1.5"
+          >
+            <p>Cuando hay muchos datos, los cálculos pueden tardar unos segundos. Si la carga es muy lenta:</p>
+            <ul class="space-y-1 ml-3">
+              <li>Prueba con un período más corto (empieza con los últimos 7 días).</li>
+              <li>Selecciona solo una ubicación en lugar de varias a la vez.</li>
+            </ul>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- AIR QUALITY -->
+    <section>
+      <div class="flex items-center gap-2 mb-4">
+        <div
+          class="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center"
+        >
+          <svg
+            class="w-4 h-4 text-teal-600 dark:text-teal-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Calidad del aire</h3>
+      </div>
+      <div class="space-y-3 ml-1">
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>¿Qué mide cada sensor?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3"
+          >
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                  <th class="pb-2 pr-4">Métrica</th>
+                  <th class="pb-2 pr-4">Unidad</th>
+                  <th class="pb-2">Qué significa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-gray-100 dark:border-gray-800">
+                  <td class="py-1.5 pr-4 font-semibold">CO₂</td>
+                  <td class="py-1.5 pr-4">ppm</td>
+                  <td class="py-1.5">Dióxido de carbono, indicador del impacto del tráfico</td>
+                </tr>
+                <tr class="border-b border-gray-100 dark:border-gray-800">
+                  <td class="py-1.5 pr-4 font-semibold">PM2.5</td>
+                  <td class="py-1.5 pr-4">μg/m³</td>
+                  <td class="py-1.5">Partículas muy finas que penetran en los pulmones</td>
+                </tr>
+                <tr class="border-b border-gray-100 dark:border-gray-800">
+                  <td class="py-1.5 pr-4 font-semibold">PM10</td>
+                  <td class="py-1.5 pr-4">μg/m³</td>
+                  <td class="py-1.5">Partículas más gruesas (polvo, humo)</td>
+                </tr>
+                <tr class="border-b border-gray-100 dark:border-gray-800">
+                  <td class="py-1.5 pr-4 font-semibold">Temperatura</td>
+                  <td class="py-1.5 pr-4">°C</td>
+                  <td class="py-1.5">Temperatura ambiente del entorno</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 pr-4 font-semibold">Humedad</td>
+                  <td class="py-1.5 pr-4">%</td>
+                  <td class="py-1.5">Humedad relativa del aire</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>¿Qué valores se consideran normales?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2"
+          >
+            <p class="text-xs text-gray-500 dark:text-gray-400">Valores orientativos según guías internacionales de calidad del aire (OMS):</p>
+            <ul class="space-y-1.5 ml-2">
+              <li><strong>CO₂</strong>: en exteriores urbanos suele estar entre 400–600 ppm. Por encima de 1.000 ppm empieza a ser relevante.</li>
+              <li><strong>PM2.5</strong>: por debajo de 15 μg/m³ es bueno. Por encima de 35 μg/m³ se considera elevado.</li>
+              <li><strong>PM10</strong>: por debajo de 45 μg/m³ es bueno. Por encima de 100 μg/m³ se considera elevado.</li>
+            </ul>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Ajusta los umbrales del sistema en <strong>Configuración → Umbrales de alerta</strong> según los estándares de tu región.</p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- EXPORT -->
+    <section>
+      <div class="flex items-center gap-2 mb-4">
+        <div
+          class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center"
+        >
+          <svg
+            class="w-4 h-4 text-green-600 dark:text-green-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Exportar informe</h3>
+      </div>
+      <div class="space-y-3 ml-1">
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>¿Cómo genero un informe en PDF?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2"
+          >
+            <ol class="space-y-1.5 ml-1">
+              <li class="flex gap-2">
+                <span class="font-bold text-green-600 dark:text-green-400">1.</span>
+                Ve a <strong>Análisis → Exportar informe PDF</strong>.
+              </li>
+              <li class="flex gap-2">
+                <span class="font-bold text-green-600 dark:text-green-400">2.</span>
+                Selecciona el período que quieres incluir en el informe.
+              </li>
+              <li class="flex gap-2">
+                <span class="font-bold text-green-600 dark:text-green-400">3.</span>
+                Pulsa <strong>Generar informe PDF</strong>. El sistema mostrará una barra de progreso mientras lo prepara (puede tardar unos segundos).
+              </li>
+              <li class="flex gap-2">
+                <span class="font-bold text-green-600 dark:text-green-400">4.</span>
+                Cuando termine, el PDF se descargará automáticamente a tu dispositivo.
+              </li>
+            </ol>
+          </div>
+        </details>
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>¿Qué contiene el informe PDF?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2"
+          >
+            <p>El informe incluye automáticamente las cuatro secciones de análisis del sistema:</p>
+            <ul class="space-y-1 ml-3">
+              <li>Evolución temporal de contaminantes y tráfico.</li>
+              <li>Matriz de correlación entre todas las variables.</li>
+              <li>Análisis de rezagos temporales.</li>
+              <li>Comparativa de contaminación y tráfico por ubicación.</li>
+            </ul>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Todo con portada, gráficos y tablas resumen, listo para presentar o archivar.</p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- THRESHOLDS -->
     <section>
       <div class="flex items-center gap-2 mb-4">
         <div
@@ -179,39 +441,57 @@
             />
           </svg>
         </div>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Umbrales y Alertas</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Umbrales y alertas</h3>
       </div>
       <div class="space-y-3 ml-1">
+
         <details
           class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
         >
           <summary
             class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
           >
-            <span>¿Cómo funcionan los umbrales de alerta?</span>
-            <span
-              class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform"
-              >▼</span
-            >
+            <span>¿Para qué sirven los umbrales de alerta?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div
-            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3"
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2"
           >
-            Define niveles (bueno/moderado/elevado/crítico) por métrica. El sistema compara lecturas
-            contra esos límites y genera alertas que puedes revisar en notificaciones o exportar
-            para auditoría.
+            <p>
+              Los umbrales le dicen al sistema a partir de qué valor una lectura debe considerarse preocupante. Puedes definirlos en <strong>Configuración → Umbrales de alerta</strong> para cada contaminante.
+            </p>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+              <div class="bg-green-50 dark:bg-green-900/10 rounded p-2 text-xs text-center">
+                <span class="block font-semibold text-green-700 dark:text-green-400">Bueno</span>
+                <span class="text-green-600 dark:text-green-500">Sin alerta</span>
+              </div>
+              <div class="bg-yellow-50 dark:bg-yellow-900/10 rounded p-2 text-xs text-center">
+                <span class="block font-semibold text-yellow-700 dark:text-yellow-400">Moderado</span>
+                <span class="text-yellow-600 dark:text-yellow-500">Aviso informativo</span>
+              </div>
+              <div class="bg-orange-50 dark:bg-orange-900/10 rounded p-2 text-xs text-center">
+                <span class="block font-semibold text-orange-700 dark:text-orange-400">Elevado</span>
+                <span class="text-orange-600 dark:text-orange-500">Alerta de atención</span>
+              </div>
+              <div class="bg-red-50 dark:bg-red-900/10 rounded p-2 text-xs text-center">
+                <span class="block font-semibold text-red-700 dark:text-red-400">Crítico</span>
+                <span class="text-red-600 dark:text-red-500">Alerta urgente</span>
+              </div>
+            </div>
           </div>
         </details>
+
       </div>
     </section>
 
+    <!-- TROUBLESHOOTING -->
     <section>
       <div class="flex items-center gap-2 mb-4">
         <div
-          class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center"
+          class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center"
         >
           <svg
-            class="w-4 h-4 text-green-600 dark:text-green-400"
+            class="w-4 h-4 text-orange-600 dark:text-orange-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -224,47 +504,68 @@
             />
           </svg>
         </div>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          Operación y Troubleshooting
-        </h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Solución de problemas</h3>
       </div>
       <div class="space-y-3 ml-1">
+
         <details
           class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
         >
           <summary
             class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
           >
-            <span>Mi dispositivo no envía datos, ¿qué reviso?</span>
-            <span
-              class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform"
-              >▼</span
-            >
+            <span>Un dispositivo no está enviando datos, ¿qué reviso?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div
             class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2"
           >
             <div class="flex gap-2">
-              <span class="text-green-600 dark:text-green-400">1.</span>
-              <p>Verifica conectividad de red entre dispositivo y backend</p>
+              <span class="text-orange-600 dark:text-orange-400 font-bold">1.</span>
+              <p>Ve a <strong>Dispositivos → Estado de dispositivos</strong> y comprueba su estado. Si aparece como "Inactivo", puede que haya sido desactivado manualmente.</p>
             </div>
             <div class="flex gap-2">
-              <span class="text-green-600 dark:text-green-400">2.</span>
-              <p>Revisa credenciales y rutas de stream (RTSP/HTTP)</p>
+              <span class="text-orange-600 dark:text-orange-400 font-bold">2.</span>
+              <p>Mira el campo <em>"Último dato recibido"</em>. Si lleva más de unos minutos sin actualizarse, hay un problema de conectividad.</p>
             </div>
             <div class="flex gap-2">
-              <span class="text-green-600 dark:text-green-400">3.</span>
-              <p>Consulta logs del dispositivo y del backend</p>
-            </div>
-            <div class="flex gap-2">
-              <span class="text-green-600 dark:text-green-400">4.</span>
-              <p>Comprueba el estado en la tabla de dispositivos del panel</p>
+              <span class="text-orange-600 dark:text-orange-400 font-bold">3.</span>
+              <p>Verifica que el dispositivo esté encendido y con acceso a la red donde está instalado el sistema.</p>
             </div>
           </div>
         </details>
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>No veo datos en el panel aunque los dispositivos están activos</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2"
+          >
+            <div class="flex gap-2">
+              <span class="text-orange-600 dark:text-orange-400 font-bold">1.</span>
+              <p>Comprueba que el rango de fechas del panel incluye el período actual. Si el filtro apunta a fechas antiguas, no verás datos recientes.</p>
+            </div>
+            <div class="flex gap-2">
+              <span class="text-orange-600 dark:text-orange-400 font-bold">2.</span>
+              <p>Asegúrate de que los dispositivos tienen una ubicación asignada; sin ella algunos widgets los omiten.</p>
+            </div>
+            <div class="flex gap-2">
+              <span class="text-orange-600 dark:text-orange-400 font-bold">3.</span>
+              <p>Recarga la página. En ocasiones basta con eso para que los datos más recientes aparezcan.</p>
+            </div>
+          </div>
+        </details>
+
       </div>
     </section>
 
+    <!-- ADMINISTRATION -->
     <section>
       <div class="flex items-center gap-2 mb-4">
         <div
@@ -293,36 +594,56 @@
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Administración</h3>
       </div>
       <div class="space-y-3 ml-1">
+
         <details
           class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
         >
           <summary
             class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
           >
-            <span>¿Quién puede gestionar usuarios y configuraciones?</span>
-            <span
-              class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform"
-              >▼</span
-            >
+            <span>¿Qué puede hacer cada tipo de usuario?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div
-            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3"
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3 space-y-3"
           >
-            <p class="mb-2">
-              Operaciones sensibles están protegidas por roles en <strong>Keycloak</strong>.
-            </p>
             <div
-              class="bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-lg p-3 mt-2"
+              class="bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-lg p-3"
             >
-              <p class="text-purple-900 dark:text-purple-300 text-xs">
-                ✓ Solo usuarios con rol
-                <code class="bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">admin</code> pueden
-                acceder a la gestión de usuarios y parámetros del sistema
+              <p class="font-semibold text-purple-900 dark:text-purple-300 text-sm mb-1">Administrador</p>
+              <p class="text-xs text-purple-800 dark:text-purple-400">
+                Acceso completo: puede ver todos los datos, usar los análisis, gestionar dispositivos y ubicaciones, configurar alertas, gestionar usuarios y generar informes PDF.
+              </p>
+            </div>
+            <div
+              class="bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg p-3"
+            >
+              <p class="font-semibold text-gray-900 dark:text-white text-sm mb-1">Usuario</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                Solo visualización: puede ver el panel de inicio, los datos de ambiente (CO₂, partículas, temperatura, humedad), los vehículos detectados y el streaming de cámaras. No puede modificar ninguna configuración.
               </p>
             </div>
           </div>
         </details>
+
+        <details
+          class="group bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+        >
+          <summary
+            class="cursor-pointer list-none font-medium text-gray-900 dark:text-white flex items-center justify-between"
+          >
+            <span>¿Cómo gestiono los usuarios de la plataforma?</span>
+            <span class="text-gray-600 dark:text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div
+            class="mt-4 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600 pt-3"
+          >
+            <p>Ve a <strong>Configuración → Usuarios</strong>. Desde ahí puedes ver la lista de usuarios registrados. Solo los administradores tienen acceso a esta sección.</p>
+          </div>
+        </details>
+
       </div>
     </section>
+
   </div>
 </div>

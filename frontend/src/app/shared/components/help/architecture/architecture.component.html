@@ -1,5 +1,5 @@
 <!-- System Architecture Component
-     Displays a comprehensive system architecture overview with visual cards describing primary components, communication, deployment, and security -->
+     Displays a system overview with components, data flow, and roles -->
 
 <div class="space-y-6">
   <!-- Page header with title and description -->
@@ -11,14 +11,14 @@
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.452a6 6 0 00-5.011 1.595m7.383 8.5h.001"
+            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm12 0a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
           />
         </svg>
       </div>
       <div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Arquitectura del Sistema</h1>
         <p class="text-gray-600 dark:text-gray-400">
-          Componentes, comunicación y recomendaciones de despliegue
+          Qué piezas forman MOVE y cómo se comunican entre sí
         </p>
       </div>
     </div>
@@ -26,6 +26,8 @@
 
   <!-- Architecture info cards grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- Components -->
     <div
       class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow"
     >
@@ -47,48 +49,58 @@
             />
           </svg>
         </div>
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Componentes Principales</h3>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Partes del sistema</h3>
       </div>
-      <ul class="space-y-3">
+      <ul class="space-y-4">
         <li class="flex gap-3">
-          <span class="text-blue-600 dark:text-blue-400 font-bold mt-1">•</span>
+          <span class="text-blue-600 dark:text-blue-400 font-bold mt-0.5">•</span>
           <div>
-            <p class="font-semibold text-gray-900 dark:text-white text-sm">Frontend (Angular)</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Interfaz de usuario, dashboards y formularios
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">Panel web (lo que ves)</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+              La interfaz desde la que consultas datos, ves gráficas, gestionas dispositivos y generas informes.
             </p>
           </div>
         </li>
         <li class="flex gap-3">
-          <span class="text-blue-600 dark:text-blue-400 font-bold mt-1">•</span>
+          <span class="text-blue-600 dark:text-blue-400 font-bold mt-0.5">•</span>
           <div>
-            <p class="font-semibold text-gray-900 dark:text-white text-sm">Backend (Spring Boot)</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              API REST, seguridad y lógica de negocio
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">Servidor principal</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+              Recibe los datos de los dispositivos, los almacena y los pone a disposición del panel web de forma segura.
             </p>
           </div>
         </li>
         <li class="flex gap-3">
-          <span class="text-blue-600 dark:text-blue-400 font-bold mt-1">•</span>
+          <span class="text-blue-600 dark:text-blue-400 font-bold mt-0.5">•</span>
           <div>
-            <p class="font-semibold text-gray-900 dark:text-white text-sm">Detector (Python)</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Procesamiento de streams y generación de eventos
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">Servicio de detección de vehículos (IA)</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+              Analiza el vídeo de las cámaras y cuenta los vehículos que aparecen. Funciona de forma automática en segundo plano.
             </p>
           </div>
         </li>
         <li class="flex gap-3">
-          <span class="text-blue-600 dark:text-blue-400 font-bold mt-1">•</span>
+          <span class="text-blue-600 dark:text-blue-400 font-bold mt-0.5">•</span>
           <div>
-            <p class="font-semibold text-gray-900 dark:text-white text-sm">Base de Datos</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Eventos, dispositivos, ubicaciones y usuarios
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">Base de datos</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+              Guarda todas las lecturas de los sensores, los vehículos detectados, los dispositivos y los usuarios.
+            </p>
+          </div>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-blue-600 dark:text-blue-400 font-bold mt-0.5">•</span>
+          <div>
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">Sistema de inicio de sesión</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+              Gestiona quién puede acceder y con qué permisos. Los usuarios se autentican una sola vez y el sistema verifica su identidad en cada acción.
             </p>
           </div>
         </li>
       </ul>
     </div>
 
+    <!-- Data flow -->
     <div
       class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow"
     >
@@ -110,23 +122,41 @@
             />
           </svg>
         </div>
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Comunicación</h3>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Cómo circulan los datos</h3>
       </div>
-      <p class="text-gray-600 dark:text-gray-400 leading-relaxed text-sm mb-4">
-        Los detectores envían eventos al backend mediante
-        <span class="font-semibold text-gray-900 dark:text-white">HTTP</span> o un
-        <span class="font-semibold text-gray-900 dark:text-white">broker</span> (opcional) para
-        desacoplar procesamiento.
-      </p>
-      <div
-        class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
-      >
-        <p class="text-sm text-blue-900 dark:text-blue-300">
-          ✓ Protección de API con JWT y Keycloak
-        </p>
-      </div>
+      <ol class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+        <li class="flex gap-3">
+          <span
+            class="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 font-bold"
+            >1</span
+          >
+          <span>Las <strong class="text-gray-900 dark:text-white">cámaras</strong> graban el tráfico y el servicio de IA cuenta los vehículos automáticamente.</span>
+        </li>
+        <li class="flex gap-3">
+          <span
+            class="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 font-bold"
+            >2</span
+          >
+          <span>Los <strong class="text-gray-900 dark:text-white">sensores ambientales</strong> miden la calidad del aire y envían las lecturas al servidor.</span>
+        </li>
+        <li class="flex gap-3">
+          <span
+            class="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 font-bold"
+            >3</span
+          >
+          <span>El <strong class="text-gray-900 dark:text-white">servidor</strong> guarda todo, calcula los análisis y los pone disponibles para consulta.</span>
+        </li>
+        <li class="flex gap-3">
+          <span
+            class="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 font-bold"
+            >4</span
+          >
+          <span>Tú abres el <strong class="text-gray-900 dark:text-white">panel web</strong>, inicia sesión y visualizas los datos o genera un informe.</span>
+        </li>
+      </ol>
     </div>
 
+    <!-- Deployment -->
     <div
       class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow"
     >
@@ -144,32 +174,29 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M13 10V3L4 14h7v7l9-11h-7z"
+              d="M5 12h14M12 5l7 7-7 7"
             />
           </svg>
         </div>
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Despliegue & Escalabilidad</h3>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Dónde se ejecuta</h3>
       </div>
-      <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+      <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
         <li class="flex gap-2">
-          <span class="text-green-600 dark:text-green-400">→</span> Escale horizontalmente
-          detectores y backend
+          <span class="text-green-600 dark:text-green-400 font-bold flex-shrink-0">→</span>
+          <span>Todos los servicios del servidor corren en <strong class="text-gray-900 dark:text-white">contenedores Docker</strong>, lo que facilita su instalación y mantenimiento.</span>
         </li>
         <li class="flex gap-2">
-          <span class="text-green-600 dark:text-green-400">→</span> Use Docker y
-          Kubernetes/docker-compose
+          <span class="text-green-600 dark:text-green-400 font-bold flex-shrink-0">→</span>
+          <span>El acceso desde internet es seguro gracias a <strong class="text-gray-900 dark:text-white">Cloudflare Tunnel</strong>, sin necesidad de abrir puertos en el router.</span>
         </li>
         <li class="flex gap-2">
-          <span class="text-green-600 dark:text-green-400">→</span> Almacenamiento en caché para
-          consultas intensivas
-        </li>
-        <li class="flex gap-2">
-          <span class="text-green-600 dark:text-green-400">→</span> Particionado de datos por
-          ubicación/fecha
+          <span class="text-green-600 dark:text-green-400 font-bold flex-shrink-0">→</span>
+          <span>El servicio de detección de vehículos puede correr en una máquina separada con más potencia gráfica si hace falta.</span>
         </li>
       </ul>
     </div>
 
+    <!-- Security & roles -->
     <div
       class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow"
     >
@@ -191,22 +218,36 @@
             />
           </svg>
         </div>
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Seguridad & Operación</h3>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Acceso y seguridad</h3>
       </div>
-      <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+      <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
         <li class="flex gap-2">
-          <span class="text-red-600 dark:text-red-400">🔒</span> Proteja endpoints con roles
-          Keycloak
+          <span class="text-red-500 dark:text-red-400 flex-shrink-0">🔒</span>
+          <span>Toda la comunicación entre el navegador y el servidor va <strong class="text-gray-900 dark:text-white">cifrada</strong>.</span>
         </li>
         <li class="flex gap-2">
-          <span class="text-red-600 dark:text-red-400">🔒</span> Audite accesos y mantenga
-          certificados TLS
+          <span class="text-red-500 dark:text-red-400 flex-shrink-0">🔒</span>
+          <span>Cada usuario inicia sesión con sus propias credenciales. La sesión expira automáticamente por seguridad.</span>
         </li>
         <li class="flex gap-2">
-          <span class="text-red-600 dark:text-red-400">🔒</span> Monitorice latencia y tasa de
-          eventos
+          <span class="text-red-500 dark:text-red-400 flex-shrink-0">🔒</span>
+          <span>El sistema controla qué puede hacer cada usuario según su tipo de cuenta.</span>
         </li>
       </ul>
+      <div class="space-y-2">
+        <div
+          class="flex items-center justify-between bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-lg px-3 py-2"
+        >
+          <span class="text-xs font-semibold text-purple-900 dark:text-purple-300">Administrador</span>
+          <span class="text-xs text-purple-800 dark:text-purple-400">Acceso completo al sistema</span>
+        </div>
+        <div
+          class="flex items-center justify-between bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2"
+        >
+          <span class="text-xs font-semibold text-gray-900 dark:text-white">Usuario</span>
+          <span class="text-xs text-gray-600 dark:text-gray-400">Solo visualización de datos</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>

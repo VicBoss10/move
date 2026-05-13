@@ -59,7 +59,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
     },
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="13" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M17 9l4-2v10l-4-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-      name: 'Cámara',
+      name: 'Cámaras',
       subItems: [
         { name: 'Estado del Modelo', path: '/dashboard/cameras/model-status' },
         { name: 'Streaming', path: '/dashboard/cameras/streaming' },

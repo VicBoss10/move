@@ -1,5 +1,5 @@
 <!-- How It Works Component
-     Displays a visual step-by-step walkthrough of system data flow and architecture stages, plus practical tips -->
+     Displays a visual step-by-step walkthrough of system data flow and user workflows -->
 
 <div class="space-y-6">
   <!-- Page header with title and description -->
@@ -17,7 +17,9 @@
       </div>
       <div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Cómo Funciona</h1>
-        <p class="text-gray-600 dark:text-gray-400">Flujo de datos y componentes del sistema</p>
+        <p class="text-gray-600 dark:text-gray-400">
+          Qué hace el sistema y cómo sacarle partido
+        </p>
       </div>
     </div>
   </div>
@@ -46,25 +48,25 @@
           </svg>
         </div>
         <div class="flex-1">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">1. Flujo de Datos</h3>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">1. Los dispositivos recogen los datos</h3>
           <p class="text-gray-600 dark:text-gray-400 mb-3">
-            Los dispositivos (cámaras y sensores) envían datos al sistema:
+            Los puntos de monitoreo instalados en cada ubicación registran dos tipos de información de forma continua:
           </p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div
               class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
             >
-              <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">Cámaras</p>
+              <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">Tráfico de vehículos</p>
               <p class="text-xs text-blue-800 dark:text-blue-400 mt-1">
-                RTSP/HTTP para video en tiempo real
+                Una cámara graba el tráfico y la IA cuenta los vehículos que pasan en tiempo real.
               </p>
             </div>
             <div
               class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
             >
-              <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">Sensores</p>
+              <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">Calidad del aire</p>
               <p class="text-xs text-blue-800 dark:text-blue-400 mt-1">
-                Lecturas periódicas de CO₂, temperatura, etc.
+                Un sensor mide CO₂, partículas (PM2.5 y PM10), temperatura y humedad.
               </p>
             </div>
           </div>
@@ -95,22 +97,23 @@
         </div>
         <div class="flex-1">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
-            2. Detección de Vehículos (ML)
+            2. El sistema procesa y guarda la información
           </h3>
           <p class="text-gray-600 dark:text-gray-400 mb-3">
-            El microservicio Python procesa streams en tiempo real:
+            Todo lo que captan los dispositivos llega al sistema, que lo organiza y almacena para poder consultarlo después:
           </p>
           <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <li class="flex gap-2">
-              <span class="text-purple-600 dark:text-purple-400">→</span> Extrae frames de video
+              <span class="text-purple-600 dark:text-purple-400">→</span>
+              <span>Cada lectura queda guardada con la hora exacta y la ubicación del dispositivo.</span>
             </li>
             <li class="flex gap-2">
-              <span class="text-purple-600 dark:text-purple-400">→</span> Ejecuta modelos ML
-              (YOLO11n)
+              <span class="text-purple-600 dark:text-purple-400">→</span>
+              <span>Los datos se pueden consultar por período (hoy, última semana, último mes…).</span>
             </li>
             <li class="flex gap-2">
-              <span class="text-purple-600 dark:text-purple-400">→</span> Emite eventos con clase,
-              bounding box y score
+              <span class="text-purple-600 dark:text-purple-400">→</span>
+              <span>El sistema calcula automáticamente promedios, máximos y mínimos.</span>
             </li>
           </ul>
         </div>
@@ -134,25 +137,34 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M5 13l4 4L19 7"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
           </svg>
         </div>
         <div class="flex-1">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
-            3. Backend & Seguridad
+            3. Tú analizas y obtienes conclusiones
           </h3>
-          <p class="text-gray-600 dark:text-gray-400 mb-3">Spring Boot procesa y almacena datos:</p>
-          <div
-            class="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-3"
-          >
-            <p class="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">
-              ✓ API REST protegida por Keycloak
-            </p>
-            <p class="text-xs text-green-800 dark:text-green-400">
-              Enriquece eventos con metadatos (ubicación, timestamp, confianza) y aplica reglas de
-              umbral/alerta
-            </p>
+          <p class="text-gray-600 dark:text-gray-400 mb-3">
+            Desde el panel de análisis puedes explorar los datos de cuatro formas distintas:
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded">
+              <strong class="block text-gray-900 dark:text-white">Series temporales</strong>
+              Cómo evolucionan los niveles a lo largo del tiempo
+            </div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded">
+              <strong class="block text-gray-900 dark:text-white">Matriz de correlación</strong>
+              Si el tráfico y la contaminación suben o bajan juntos
+            </div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded">
+              <strong class="block text-gray-900 dark:text-white">Análisis de rezagos</strong>
+              Cuánto tarda la contaminación en reaccionar al tráfico
+            </div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded">
+              <strong class="block text-gray-900 dark:text-white">Análisis por ubicación</strong>
+              Qué zonas tienen más tráfico o peor calidad del aire
+            </div>
           </div>
         </div>
       </div>
@@ -175,79 +187,163 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
         </div>
         <div class="flex-1">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
-            4. Visualización & Análisis
+            4. Exportas un informe con los resultados
           </h3>
           <p class="text-gray-600 dark:text-gray-400 mb-3">
-            Angular consume la API para mostrar dashboards interactivos:
+            Cuando hayas seleccionado el período que te interesa, puedes generar un informe en PDF que incluye los cuatro análisis anteriores listos para compartir o archivar.
           </p>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <div
-              class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded"
-            >
-              Series temporales
-            </div>
-            <div
-              class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded"
-            >
-              Análisis por ubicación
-            </div>
-            <div
-              class="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 p-2 rounded"
-            >
-              Mapas de calor
-            </div>
+          <div
+            class="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-lg p-3"
+          >
+            <p class="text-xs text-orange-800 dark:text-orange-300">
+              El PDF se genera automáticamente con portada, gráficos y tablas resumen. No necesitas hacer nada más que seleccionar el período y pulsar "Generar informe".
+            </p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Practical tips section -->
-  <div
-    class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10 p-6"
-  >
-    <div class="flex items-start gap-3">
-      <svg
-        class="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <div>
-        <h3 class="text-lg font-bold text-amber-900 dark:text-amber-300 mb-3">
-          Consejos Prácticos
+  <!-- User workflows section -->
+  <div class="space-y-3">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Tareas habituales</h2>
+    <p class="text-sm text-gray-600 dark:text-gray-400">
+      Guías paso a paso para las acciones más comunes en la plataforma.
+    </p>
+
+    <div
+      class="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/10 p-5"
+    >
+      <div class="flex items-start gap-3 mb-3">
+        <svg
+          class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+        <h3 class="text-base font-bold text-blue-900 dark:text-blue-300">
+          Revisar si el tráfico está afectando la calidad del aire
         </h3>
-        <ul class="space-y-2 text-sm text-amber-800 dark:text-amber-200">
-          <li class="flex gap-2">
-            <span class="font-bold">→</span> Prefiera <strong>RTSP</strong> para baja latencia en
-            detección en tiempo real
-          </li>
-          <li class="flex gap-2">
-            <span class="font-bold">→</span> Use resolución <strong>≥720p</strong> y
-            <strong>15–20 FPS</strong> para la mayoría de modelos
-          </li>
-          <li class="flex gap-2">
-            <span class="font-bold">→</span> Configure umbrales de alerta en la UI
-          </li>
-          <li class="flex gap-2">
-            <span class="font-bold">→</span> Asigne dispositivos a <strong>ubicaciones</strong> para
-            contextualizar eventos y mejorar análisis
-          </li>
-        </ul>
       </div>
+      <ol class="space-y-1.5 text-sm text-blue-800 dark:text-blue-200 ml-8">
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">1.</span>
+          Abre el <strong>Panel de inicio</strong> para ver un resumen rápido: vehículos detectados hoy, niveles actuales de contaminación y estado de los dispositivos.
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">2.</span>
+          Ve a <strong>Análisis → Matriz de correlación</strong>, elige un período (por ejemplo los últimos 7 días) y selecciona una o varias ubicaciones.
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">3.</span>
+          Revisa los resultados: cuanto más cerca de 1 sea el valor, más ligado está ese contaminante al tráfico en esa zona.
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">4.</span>
+          Si quieres saber con cuántos minutos de retraso reacciona la contaminación, ve a <strong>Análisis → Rezagos</strong> con el mismo período.
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">5.</span>
+          Cuando tengas las conclusiones, ve a <strong>Análisis → Exportar informe PDF</strong> para guardarlas en un documento listo para compartir.
+        </li>
+      </ol>
+    </div>
+
+    <div
+      class="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/10 p-5"
+    >
+      <div class="flex items-start gap-3 mb-3">
+        <svg
+          class="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+        <h3 class="text-base font-bold text-purple-900 dark:text-purple-300">
+          Gestionar dispositivos y puntos de monitoreo
+        </h3>
+      </div>
+      <ol class="space-y-1.5 text-sm text-purple-800 dark:text-purple-200 ml-8">
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">1.</span>
+          Ve a <strong>Dispositivos → Estado de dispositivos</strong> para ver la lista completa con su estado actual y cuándo fue la última vez que enviaron datos.
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">2.</span>
+          Si un dispositivo lleva mucho tiempo sin enviar datos, comprueba su conexión de red y que la URL esté bien configurada en su ficha.
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">3.</span>
+          Para añadir un nuevo dispositivo, ve a <strong>Dispositivos → Registrar dispositivo</strong> y rellena el formulario. Recuerda asignarle una ubicación para que sus datos aparezcan en los análisis por zona.
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">4.</span>
+          Si necesitas crear o editar las ubicaciones disponibles, ve a <strong>Ubicaciones → Puntos de monitoreo</strong>.
+        </li>
+      </ol>
+    </div>
+
+    <div
+      class="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10 p-5"
+    >
+      <div class="flex items-start gap-3 mb-3">
+        <svg
+          class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
+        </svg>
+        <h3 class="text-base font-bold text-green-900 dark:text-green-300">
+          Configurar los avisos de alerta
+        </h3>
+      </div>
+      <ol class="space-y-1.5 text-sm text-green-800 dark:text-green-200 ml-8">
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">1.</span>
+          Ve a <strong>Configuración → Umbrales de alerta</strong>.
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">2.</span>
+          Para cada contaminante (CO₂, PM2.5, PM10…) puedes definir los valores a partir de los cuales el sistema considera que el nivel es moderado, elevado o crítico.
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold flex-shrink-0">3.</span>
+          Guarda los cambios. A partir de ese momento, las lecturas que superen esos valores generarán una alerta visible en el panel de inicio.
+        </li>
+      </ol>
     </div>
   </div>
 </div>
