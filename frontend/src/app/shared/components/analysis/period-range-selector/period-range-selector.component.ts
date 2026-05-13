@@ -8,10 +8,11 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, of } from 'rxjs';
+import { Observable, of, firstValueFrom } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { DeviceService } from '../../../../core/services/device.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { Device } from '../../../../core/models/device.model';
 
 /**
@@ -118,11 +119,15 @@ export class PeriodRangeSelectorComponent implements OnInit {
   /** Available metrics for the parameter selector. */
   readonly metrics = METRICS;
 
+  /** True while a data-existence check is in progress (blocks duplicate submissions). */
+  isValidating = false;
+
   private locationDeviceMap = new Map<number, number[]>();
 
   constructor(
     private readonly sensorDataService: SensorDataService,
     private readonly deviceService: DeviceService,
+    private readonly toastService: ToastService,
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.initializeLocations();
@@ -133,17 +138,39 @@ export class PeriodRangeSelectorComponent implements OnInit {
   }
 
   /**
-   * Activates a quick preset, clears custom inputs, and emits the resolved range immediately.
+   * Activates a quick preset, fills the date inputs, validates that data exists,
+   * and emits the resolved range. Shows a warning toast if no data is found.
    */
-  selectQuick(key: string): void {
+  async selectQuick(key: string): Promise<void> {
+    if (this.isValidating) return;
+
     this.selectedQuick = key;
-    this.startDate = '';
-    this.endDate = '';
     this.dateError = '';
 
     const option = QUICK_OPTIONS.find((o) => o.key === key)!;
     const end = new Date();
     const start = new Date(end.getTime() - option.hours * 3_600_000);
+
+    this.startDate = this.toDateString(start);
+    this.endDate = this.toDateString(end);
+
+    this.isValidating = true;
+    this.cdr.markForCheck();
+
+    const check = await firstValueFrom(
+      this.sensorDataService.search({ start, end, size: 1 }).pipe(catchError(() => of([]))),
+    );
+
+    this.isValidating = false;
+
+    if (check.length === 0) {
+      this.toastService.show('No hay datos de sensores en el período seleccionado.', {
+        title: 'Sin datos',
+        variant: 'warning',
+      });
+      this.cdr.markForCheck();
+      return;
+    }
 
     this.periodChange.emit({ start, end, locationDeviceIds: this.resolveLocationDeviceIds(), metric: this.selectedMetric });
     this.cdr.markForCheck();
@@ -160,10 +187,12 @@ export class PeriodRangeSelectorComponent implements OnInit {
   }
 
   /**
-   * Validates the custom date range and emits if valid.
-   * Errors are displayed inline and no event is emitted on failure.
+   * Validates the custom date range, checks that data exists, and emits if valid.
+   * Errors are displayed inline; a toast is shown when the period has no sensor data.
    */
-  applyCustomRange(): void {
+  async applyCustomRange(): Promise<void> {
+    if (this.isValidating) return;
+
     this.dateError = '';
 
     if (!this.startDate || !this.endDate) {
@@ -185,6 +214,24 @@ export class PeriodRangeSelectorComponent implements OnInit {
     today.setHours(23, 59, 59, 999);
     if (end > today) {
       this.dateError = 'La fecha de fin no puede ser en el futuro.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.isValidating = true;
+    this.cdr.markForCheck();
+
+    const check = await firstValueFrom(
+      this.sensorDataService.search({ start, end, size: 1 }).pipe(catchError(() => of([]))),
+    );
+
+    this.isValidating = false;
+
+    if (check.length === 0) {
+      this.toastService.show('No hay datos de sensores en el período seleccionado.', {
+        title: 'Sin datos',
+        variant: 'warning',
+      });
       this.cdr.markForCheck();
       return;
     }

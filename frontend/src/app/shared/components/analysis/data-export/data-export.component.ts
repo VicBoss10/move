@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, forkJoin, of } from 'rxjs';
+import { Subject, forkJoin, firstValueFrom, of } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
 import {
   Chart as ChartJS,
@@ -22,9 +22,12 @@ import jsPDF from 'jspdf';
 import { LocationService } from '../../../../core/services/location.service';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
+import { DeviceService } from '../../../../core/services/device.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { Location } from '../../../../core/models/location.model';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 import { VehicleDetected } from '../../../../core/models/vehicle.model';
+import { Device, DeviceType } from '../../../../core/models/device.model';
 import {
   PeriodRangeSelectorComponent,
   PeriodRange,
@@ -154,6 +157,22 @@ const METRICS: MetricOption[] = [
  */
 const VEHICLE_COLOR = '#6366f1';
 
+const VEHICLE_TYPES_EXPORT = [
+  { key: 'CAR', label: 'Coche' },
+  { key: 'TRUCK', label: 'Camión' },
+  { key: 'BUS', label: 'Autobús' },
+  { key: 'MOTORCYCLE', label: 'Moto' },
+  { key: 'BICYCLE', label: 'Bicicleta' },
+] as const;
+
+type VehicleTypeKey = (typeof VEHICLE_TYPES_EXPORT)[number]['key'];
+
+const QUICK_EXPORT_OPTIONS = [
+  { label: 'Últimas 24h', hours: 24 },
+  { label: 'Últimos 7 días', hours: 168 },
+  { label: 'Últimos 30 días', hours: 720 },
+];
+
 /**
  * Brand color palette aligned with the app's global CSS variables.
  * @constant BRAND
@@ -218,7 +237,7 @@ const BRAND = {
   templateUrl: './data-export.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DataExportComponent implements OnDestroy {
+export class DataExportComponent implements OnDestroy, OnInit {
   /**
    * Subject for cleanup on component destruction.
    * @private
@@ -230,6 +249,9 @@ export class DataExportComponent implements OnDestroy {
    * @readonly
    */
   readonly metrics = METRICS;
+
+  /** Controls whether the PDF section or the raw data export section is shown. */
+  exportMode: 'pdf' | 'raw' = 'pdf';
 
   /** Active date range set by PeriodRangeSelectorComponent. Null until the user selects one. */
   selectedRange: PeriodRange | null = null;
@@ -252,12 +274,44 @@ export class DataExportComponent implements OnDestroy {
    */
   progressMsg = '';
 
+  // ── Raw data export state ────────────────────────────────────────────────
+
+  rawDataType: 'sensor' | 'vehicle' = 'sensor';
+  rawFormat: 'csv' | 'json' = 'csv';
+  rawStartDate = '';
+  rawEndDate = '';
+  rawDateError = '';
+  rawMinDate = '';
+  rawMaxDate = '';
+  isExporting = false;
+
+  allDevices: Device[] = [];
+  selectedDeviceIds = new Set<number>();
+  selectedMetrics = new Set<MetricKey>(ALL_METRIC_KEYS);
+  selectedVehicleTypes = new Set<VehicleTypeKey>(['CAR', 'TRUCK', 'BUS', 'MOTORCYCLE', 'BICYCLE']);
+
+  readonly vehicleTypesExport = VEHICLE_TYPES_EXPORT;
+  readonly quickExportOptions = QUICK_EXPORT_OPTIONS;
+
   constructor(
     private readonly locationService: LocationService,
     private readonly sensorDataService: SensorDataService,
     private readonly vehicleService: VehicleDetectedService,
+    private readonly deviceService: DeviceService,
+    private readonly toastService: ToastService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
+
+  ngOnInit(): void {
+    this.sensorDataService.getFirstRecord().subscribe({
+      next: (r) => { this.rawMinDate = this.toDateInputString(new Date(r.timestamp)); this.cdr.markForCheck(); },
+      error: () => {},
+    });
+    this.sensorDataService.getLastRecord().subscribe({
+      next: (r) => { this.rawMaxDate = this.toDateInputString(new Date(r.timestamp)); this.cdr.markForCheck(); },
+      error: () => {},
+    });
+  }
 
   /**
    * Cleans up resources on component destruction.
@@ -1906,5 +1960,297 @@ export class DataExportComponent implements OnDestroy {
     } catch {
       return '';
     }
+  }
+
+  // ── Raw data export ──────────────────────────────────────────────────────
+
+  get filteredDevices(): Device[] {
+    const targetType = this.rawDataType === 'sensor' ? DeviceType.SENSOR : DeviceType.CAMERA;
+    return this.allDevices.filter((d) => d.type === targetType);
+  }
+
+  get allDevicesSelected(): boolean {
+    return this.filteredDevices.length > 0 && this.filteredDevices.every((d) => this.selectedDeviceIds.has(d.id));
+  }
+
+  get allMetricsSelected(): boolean {
+    return ALL_METRIC_KEYS.every((k) => this.selectedMetrics.has(k));
+  }
+
+  get allVehicleTypesSelected(): boolean {
+    return VEHICLE_TYPES_EXPORT.every((t) => this.selectedVehicleTypes.has(t.key));
+  }
+
+  get canExport(): boolean {
+    const hasDateRange = !!this.rawStartDate && !!this.rawEndDate && !this.rawDateError;
+    const hasSelection =
+      this.rawDataType === 'sensor' ? this.selectedMetrics.size > 0 : this.selectedVehicleTypes.size > 0;
+    return hasDateRange && hasSelection && !this.isExporting;
+  }
+
+  setExportMode(mode: 'pdf' | 'raw'): void {
+    this.exportMode = mode;
+    if (mode === 'raw' && this.allDevices.length === 0) {
+      this.deviceService
+        .getAll()
+        .pipe(catchError(() => of([] as Device[])), takeUntil(this.destroy$))
+        .subscribe((devices) => {
+          this.allDevices = devices;
+          this.cdr.markForCheck();
+        });
+    }
+    this.cdr.markForCheck();
+  }
+
+  setRawDataType(type: 'sensor' | 'vehicle'): void {
+    this.rawDataType = type;
+    this.selectedDeviceIds.clear();
+    this.cdr.markForCheck();
+  }
+
+  toggleDevice(id: number): void {
+    if (this.selectedDeviceIds.has(id)) {
+      this.selectedDeviceIds.delete(id);
+    } else {
+      this.selectedDeviceIds.add(id);
+    }
+    this.cdr.markForCheck();
+  }
+
+  toggleAllDevices(): void {
+    if (this.allDevicesSelected) {
+      this.selectedDeviceIds.clear();
+    } else {
+      this.filteredDevices.forEach((d) => this.selectedDeviceIds.add(d.id));
+    }
+    this.cdr.markForCheck();
+  }
+
+  toggleMetric(key: MetricKey): void {
+    if (this.selectedMetrics.has(key)) {
+      this.selectedMetrics.delete(key);
+    } else {
+      this.selectedMetrics.add(key);
+    }
+    this.cdr.markForCheck();
+  }
+
+  toggleAllMetrics(): void {
+    if (this.allMetricsSelected) {
+      this.selectedMetrics.clear();
+    } else {
+      ALL_METRIC_KEYS.forEach((k) => this.selectedMetrics.add(k));
+    }
+    this.cdr.markForCheck();
+  }
+
+  toggleVehicleType(key: VehicleTypeKey): void {
+    if (this.selectedVehicleTypes.has(key)) {
+      this.selectedVehicleTypes.delete(key);
+    } else {
+      this.selectedVehicleTypes.add(key);
+    }
+    this.cdr.markForCheck();
+  }
+
+  toggleAllVehicleTypes(): void {
+    if (this.allVehicleTypesSelected) {
+      this.selectedVehicleTypes.clear();
+    } else {
+      VEHICLE_TYPES_EXPORT.forEach((t) => this.selectedVehicleTypes.add(t.key));
+    }
+    this.cdr.markForCheck();
+  }
+
+  selectRawQuick(hours: number): void {
+    const end = new Date();
+    const start = new Date(end.getTime() - hours * 3_600_000);
+    this.rawEndDate = this.toDateInputString(end);
+    this.rawStartDate = this.toDateInputString(start);
+    this.rawDateError = '';
+    this.cdr.markForCheck();
+  }
+
+  onRawDateChange(): void {
+    this.rawDateError = '';
+    this.cdr.markForCheck();
+  }
+
+  private validateRawDates(): boolean {
+    this.rawDateError = '';
+    if (!this.rawStartDate || !this.rawEndDate) {
+      this.rawDateError = 'Debes seleccionar tanto la fecha de inicio como la de fin.';
+      this.cdr.markForCheck();
+      return false;
+    }
+    const start = new Date(this.rawStartDate + 'T00:00:00');
+    const end = new Date(this.rawEndDate + 'T23:59:59');
+    if (start > end) {
+      this.rawDateError = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
+      this.cdr.markForCheck();
+      return false;
+    }
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    if (end > today) {
+      this.rawDateError = 'La fecha de fin no puede ser en el futuro.';
+      this.cdr.markForCheck();
+      return false;
+    }
+    return true;
+  }
+
+  async exportRawData(): Promise<void> {
+    if (!this.validateRawDates()) return;
+
+    this.isExporting = true;
+    this.cdr.markForCheck();
+
+    try {
+      const start = new Date(this.rawStartDate + 'T00:00:00');
+      const end = new Date(this.rawEndDate + 'T23:59:59');
+      const deviceIds = this.selectedDeviceIds.size > 0 ? Array.from(this.selectedDeviceIds) : undefined;
+      const ext = this.rawFormat;
+      const mime = ext === 'csv' ? 'text/csv;charset=utf-8;' : 'application/json';
+
+      if (this.rawDataType === 'sensor') {
+        const data = await firstValueFrom(
+          this.sensorDataService.search({ start, end, size: 10000 }).pipe(catchError(() => of([] as SensorData[]))),
+        );
+        const filtered = deviceIds ? data.filter((d) => deviceIds.includes(d.device?.id ?? d.deviceId)) : data;
+        if (filtered.length === 0) {
+          this.toastService.show('No se encontraron registros de sensores para el período y filtros seleccionados.', {
+            title: 'Sin datos',
+            variant: 'warning',
+          });
+          return;
+        }
+        const content =
+          ext === 'csv'
+            ? this.buildSensorCsv(filtered)
+            : this.buildSensorJson(filtered, start, end, deviceIds);
+        this.downloadFile(content, `sensores_${this.rawStartDate}_${this.rawEndDate}.${ext}`, mime);
+      } else {
+        const data = await firstValueFrom(
+          this.vehicleService.search({ start, end, deviceIds }).pipe(catchError(() => of([] as VehicleDetected[]))),
+        );
+        const filtered =
+          this.selectedVehicleTypes.size < VEHICLE_TYPES_EXPORT.length
+            ? data.filter((v) => this.selectedVehicleTypes.has(v.vehicleType as VehicleTypeKey))
+            : data;
+        if (filtered.length === 0) {
+          this.toastService.show('No se encontraron detecciones de vehículos para el período y filtros seleccionados.', {
+            title: 'Sin datos',
+            variant: 'warning',
+          });
+          return;
+        }
+        const content =
+          ext === 'csv'
+            ? this.buildVehicleCsv(filtered)
+            : this.buildVehicleJson(filtered, start, end, deviceIds);
+        this.downloadFile(content, `vehiculos_${this.rawStartDate}_${this.rawEndDate}.${ext}`, mime);
+      }
+    } finally {
+      this.isExporting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private buildSensorCsv(data: SensorData[]): string {
+    const metricCols = METRICS.filter((m) => this.selectedMetrics.has(m.key));
+    const header = [
+      'timestamp',
+      'device_id',
+      'device_name',
+      'location',
+      ...metricCols.map((m) => `${m.pdfLabel}_${m.pdfUnit}`),
+    ].join(',');
+    const rows = data.map((d) => {
+      const ts = new Date(d.timestamp).toISOString();
+      const name = d.device?.name ?? '';
+      const loc = d.device?.location?.description ?? '';
+      const vals = metricCols.map((m) => d[m.key] ?? '');
+      return [ts, d.device?.id ?? d.deviceId, `"${name}"`, `"${loc}"`, ...vals].join(',');
+    });
+    return [header, ...rows].join('\n');
+  }
+
+  private buildVehicleCsv(data: VehicleDetected[]): string {
+    const header = ['timestamp', 'device_id', 'device_name', 'location', 'vehicle_type'].join(',');
+    const rows = data.map((v) => {
+      const ts = new Date(v.timestamp).toISOString();
+      const name = v.device?.name ?? '';
+      const loc = v.device?.location?.description ?? v.location?.description ?? '';
+      return [ts, v.device?.id ?? '', `"${name}"`, `"${loc}"`, v.vehicleType].join(',');
+    });
+    return [header, ...rows].join('\n');
+  }
+
+  private buildSensorJson(data: SensorData[], start: Date, end: Date, deviceIds?: number[]): string {
+    const metricCols = METRICS.filter((m) => this.selectedMetrics.has(m.key));
+    const exportedData = data.map((d) => {
+      const record: Record<string, unknown> = {
+        timestamp: new Date(d.timestamp).toISOString(),
+        device_id: d.device?.id ?? d.deviceId,
+        device_name: d.device?.name ?? null,
+        location: d.device?.location?.description ?? null,
+      };
+      for (const m of metricCols) {
+        record[m.key] = d[m.key] ?? null;
+      }
+      return record;
+    });
+    return JSON.stringify(
+      {
+        exportedAt: new Date().toISOString(),
+        type: 'sensor_data',
+        period: { start: start.toISOString(), end: end.toISOString() },
+        devices: deviceIds ?? 'all',
+        metrics: metricCols.map((m) => ({ key: m.key, label: m.pdfLabel, unit: m.pdfUnit })),
+        data: exportedData,
+      },
+      null,
+      2,
+    );
+  }
+
+  private buildVehicleJson(data: VehicleDetected[], start: Date, end: Date, deviceIds?: number[]): string {
+    const exportedData = data.map((v) => ({
+      timestamp: new Date(v.timestamp).toISOString(),
+      device_id: v.device?.id ?? null,
+      device_name: v.device?.name ?? null,
+      location: v.device?.location?.description ?? v.location?.description ?? null,
+      vehicle_type: v.vehicleType,
+    }));
+    return JSON.stringify(
+      {
+        exportedAt: new Date().toISOString(),
+        type: 'vehicle_detections',
+        period: { start: start.toISOString(), end: end.toISOString() },
+        devices: deviceIds ?? 'all',
+        vehicle_types: Array.from(this.selectedVehicleTypes),
+        data: exportedData,
+      },
+      null,
+      2,
+    );
+  }
+
+  private downloadFile(content: string, filename: string, mimeType: string): void {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private toDateInputString(d: Date): string {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

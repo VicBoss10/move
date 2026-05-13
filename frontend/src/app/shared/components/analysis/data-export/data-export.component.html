@@ -1,125 +1,524 @@
-<!-- PDF Export Component
-     Generates professional PDF reports with environmental analysis data,
-     charts, statistics, and location-based rankings. -->
-
 <div class="space-y-6">
-  <!-- Page header with title and description -->
+  <!-- Page header -->
   <div class="flex flex-col gap-1">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Exportar Informe PDF</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Exportar datos</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400">
-      Genera un informe completo en formato PDF con todos los análisis del sistema MOVE.
+      Genera un informe PDF completo o descarga los datos brutos en CSV o JSON para análisis externo.
     </p>
   </div>
 
-  <!-- Period range selector -->
-  <app-period-range-selector (periodChange)="onPeriodChange($event)" />
-
-  <!-- Report contents description -->
-  <div
-    class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
-  >
-    <h2 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-200">
-      Contenido del informe
-    </h2>
-    <p class="mb-4 text-xs text-gray-400 dark:text-gray-500">
-      El PDF incluirá una portada y las siguientes secciones, todas generadas con los datos del
-      período y contaminante seleccionados.
-    </p>
-
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
-        <span
-          class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
-          >1</span
+  <!-- Mode selector -->
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <button
+      (click)="setExportMode('pdf')"
+      [ngClass]="
+        exportMode === 'pdf'
+          ? 'border-brand-500 bg-brand-50 dark:border-brand-600 dark:bg-brand-900/20'
+          : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700 dark:hover:bg-white/[0.06]'
+      "
+      class="flex items-start gap-4 rounded-2xl border p-5 text-left transition-colors duration-150"
+    >
+      <span
+        [ngClass]="
+          exportMode === 'pdf'
+            ? 'bg-brand-100 text-brand-600 dark:bg-brand-900/40 dark:text-brand-400'
+            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+        "
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </span>
+      <div>
+        <p
+          [ngClass]="exportMode === 'pdf' ? 'text-brand-700 dark:text-brand-300' : 'text-gray-800 dark:text-white/90'"
+          class="text-sm font-semibold"
         >
-        <div>
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Series Temporales</p>
-          <p class="text-xs text-gray-400">Evolución del contaminante y vehículos en el tiempo</p>
-        </div>
+          Informe PDF
+        </p>
+        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          Análisis completo con gráficos, correlaciones y rankings por ubicación
+        </p>
       </div>
+    </button>
 
-      <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
-        <span
-          class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400"
-          >2</span
+    <button
+      (click)="setExportMode('raw')"
+      [ngClass]="
+        exportMode === 'raw'
+          ? 'border-brand-500 bg-brand-50 dark:border-brand-600 dark:bg-brand-900/20'
+          : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-gray-700 dark:hover:bg-white/[0.06]'
+      "
+      class="flex items-start gap-4 rounded-2xl border p-5 text-left transition-colors duration-150"
+    >
+      <span
+        [ngClass]="
+          exportMode === 'raw'
+            ? 'bg-brand-100 text-brand-600 dark:bg-brand-900/40 dark:text-brand-400'
+            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+        "
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      </span>
+      <div>
+        <p
+          [ngClass]="exportMode === 'raw' ? 'text-brand-700 dark:text-brand-300' : 'text-gray-800 dark:text-white/90'"
+          class="text-sm font-semibold"
         >
-        <div>
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Matriz de Correlación</p>
-          <p class="text-xs text-gray-400">Pearson entre todas las variables ambientales (9×9)</p>
-        </div>
+          Datos brutos
+        </p>
+        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          Registros sin procesar en CSV o JSON para análisis externo
+        </p>
       </div>
+    </button>
+  </div>
 
-      <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
-        <span
-          class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"
-          >3</span
-        >
-        <div>
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Análisis de Rezagos</p>
-          <p class="text-xs text-gray-400">
-            Cross-correlación con desfase temporal de −12 h a +12 h
-          </p>
+  <!-- ── PDF section ──────────────────────────────────────────────────────── -->
+  @if (exportMode === 'pdf') {
+    <app-period-range-selector (periodChange)="onPeriodChange($event)" />
+
+    <div
+      class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+    >
+      <h2 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-200">
+        Contenido del informe
+      </h2>
+      <p class="mb-4 text-xs text-gray-400 dark:text-gray-500">
+        El PDF incluirá una portada y las siguientes secciones, todas generadas con los datos del
+        período y contaminante seleccionados.
+      </p>
+
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
+          <span
+            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
+            >1</span
+          >
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Series Temporales</p>
+            <p class="text-xs text-gray-400">Evolución del contaminante y vehículos en el tiempo</p>
+          </div>
         </div>
-      </div>
 
-      <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
-        <span
-          class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
-          >4</span
-        >
-        <div>
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Análisis por Ubicación</p>
-          <p class="text-xs text-gray-400">
-            Comparativa de contaminantes y tráfico por zona geográfica
-          </p>
+        <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
+          <span
+            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400"
+            >2</span
+          >
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Matriz de Correlación</p>
+            <p class="text-xs text-gray-400">Pearson entre todas las variables ambientales (9×9)</p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
+          <span
+            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"
+            >3</span
+          >
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Análisis de Rezagos</p>
+            <p class="text-xs text-gray-400">
+              Cross-correlación con desfase temporal de −12 h a +12 h
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/40">
+          <span
+            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+            >4</span
+          >
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Análisis por Ubicación</p>
+            <p class="text-xs text-gray-400">
+              Comparativa de contaminantes y tráfico por zona geográfica
+            </p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Generate button or progress indicator -->
-  @if (!isGenerating) {
-    <button
-      (click)="generatePdf()"
-      [disabled]="!selectedRange"
-      class="flex items-center justify-center gap-2.5 rounded-2xl bg-brand-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-brand-600 dark:hover:bg-brand-700"
-    >
-      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v10m-5-5 5 5 5-5M5 19h14" />
-      </svg>
-      Generar Informe PDF
-    </button>
-  } @else {
+    @if (!isGenerating) {
+      <button
+        (click)="generatePdf()"
+        [disabled]="!selectedRange"
+        class="flex items-center justify-center gap-2.5 rounded-2xl bg-brand-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-brand-600 dark:hover:bg-brand-700"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v10m-5-5 5 5 5-5M5 19h14" />
+        </svg>
+        Generar Informe PDF
+      </button>
+    } @else {
+      <div
+        class="rounded-2xl border border-brand-200 bg-brand-50 p-5 dark:border-brand-800 dark:bg-brand-900/20"
+      >
+        <div class="mb-3 flex items-center gap-3">
+          <div
+            class="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"
+          ></div>
+          <span class="text-sm font-medium text-brand-700 dark:text-brand-300">{{
+            progressMsg
+          }}</span>
+        </div>
+        <div class="h-2.5 w-full overflow-hidden rounded-full bg-brand-100 dark:bg-brand-900/50">
+          <div
+            class="h-full rounded-full bg-brand-500 transition-all duration-300"
+            [style.width.%]="progress"
+          ></div>
+        </div>
+        <p class="mt-2 text-right text-xs text-brand-600 dark:text-brand-400">{{ progress }}%</p>
+      </div>
+    }
+
     <div
-      class="rounded-2xl border border-brand-200 bg-brand-50 p-5 dark:border-brand-800 dark:bg-brand-900/20"
+      class="rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40"
     >
-      <div class="mb-3 flex items-center gap-3">
-        <div
-          class="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"
-        ></div>
-        <span class="text-sm font-medium text-brand-700 dark:text-brand-300">{{
-          progressMsg
-        }}</span>
-      </div>
-      <div class="h-2.5 w-full overflow-hidden rounded-full bg-brand-100 dark:bg-brand-900/50">
-        <div
-          class="h-full rounded-full bg-brand-500 transition-all duration-300"
-          [style.width.%]="progress"
-        ></div>
-      </div>
-      <p class="mt-2 text-right text-xs text-brand-600 dark:text-brand-400">{{ progress }}%</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500">
+        <strong class="text-gray-500 dark:text-gray-400">Nota:</strong>
+        El informe se genera en formato PDF tamaño carta (8.5 × 11 in). Incluye portada con logotipo,
+        gráficos de alta resolución y tablas resumen. La matriz de correlación siempre incluye las 9
+        variables; el resto de secciones utiliza el contaminante seleccionado.
+      </p>
     </div>
   }
 
-  <!-- Information note -->
-  <div
-    class="rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40"
-  >
-    <p class="text-xs text-gray-400 dark:text-gray-500">
-      <strong class="text-gray-500 dark:text-gray-400">Nota:</strong>
-      El informe se genera en formato PDF tamaño carta (8.5 × 11 in). Incluye portada con logotipo,
-      gráficos de alta resolución y tablas resumen. La matriz de correlación siempre incluye las 9
-      variables; el resto de secciones utiliza el contaminante seleccionado.
-    </p>
-  </div>
+  <!-- ── Raw data section ─────────────────────────────────────────────────── -->
+  @if (exportMode === 'raw') {
+
+    <!-- Data type toggle -->
+    <div
+      class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+    >
+      <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Tipo de datos</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Selecciona qué registros quieres exportar
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2 p-5 sm:p-6">
+        <button
+          (click)="setRawDataType('sensor')"
+          [ngClass]="
+            rawDataType === 'sensor'
+              ? 'bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700'
+              : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+          "
+          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors duration-150"
+        >
+          Lecturas de sensores
+        </button>
+        <button
+          (click)="setRawDataType('vehicle')"
+          [ngClass]="
+            rawDataType === 'vehicle'
+              ? 'bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700'
+              : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+          "
+          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors duration-150"
+        >
+          Detecciones de vehículos
+        </button>
+      </div>
+    </div>
+
+    <!-- Period -->
+    <div
+      class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+    >
+      <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Período</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Define el rango de fechas de los datos a exportar
+        </p>
+      </div>
+      <div class="p-5 sm:p-6">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Período rápido:</span>
+          @for (opt of quickExportOptions; track opt.hours) {
+            <button
+              (click)="selectRawQuick(opt.hours)"
+              class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 transition-colors duration-150 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              {{ opt.label }}
+            </button>
+          }
+        </div>
+
+        <div class="my-5 flex items-center gap-3">
+          <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+          <span class="text-xs text-gray-400 dark:text-gray-500">o rango personalizado</span>
+          <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Fecha inicio
+            </label>
+            <input
+              type="date"
+              [(ngModel)]="rawStartDate"
+              (ngModelChange)="onRawDateChange()"
+              [min]="rawMinDate"
+              [max]="rawMaxDate"
+              class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Fecha fin
+            </label>
+            <input
+              type="date"
+              [(ngModel)]="rawEndDate"
+              (ngModelChange)="onRawDateChange()"
+              [min]="rawMinDate"
+              [max]="rawMaxDate"
+              class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+        </div>
+
+        @if (rawDateError) {
+          <p class="mt-3 text-sm text-red-500">{{ rawDateError }}</p>
+        }
+      </div>
+    </div>
+
+    <!-- Device selector -->
+    <div
+      class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+    >
+      <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Dispositivos</h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              @if (rawDataType === 'sensor') {
+                Sensores disponibles — sin selección se exportan todos
+              } @else {
+                Cámaras disponibles — sin selección se exportan todas
+              }
+            </p>
+          </div>
+          @if (filteredDevices.length > 0) {
+            <button
+              (click)="toggleAllDevices()"
+              class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+            >
+              {{ allDevicesSelected ? 'Deseleccionar todos' : 'Seleccionar todos' }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="p-5 sm:p-6">
+        @if (filteredDevices.length === 0) {
+          <p class="text-sm text-gray-400 dark:text-gray-500">
+            @if (allDevices.length === 0) {
+              Cargando dispositivos…
+            } @else {
+              No hay dispositivos de este tipo registrados.
+            }
+          </p>
+        } @else {
+          <div class="flex flex-wrap gap-3">
+            @for (device of filteredDevices; track device.id) {
+              <label
+                class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 transition-colors duration-150"
+                [ngClass]="
+                  selectedDeviceIds.has(device.id)
+                    ? 'border-brand-400 bg-brand-50 dark:border-brand-600 dark:bg-brand-900/20'
+                    : 'border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/40 dark:hover:border-gray-600'
+                "
+              >
+                <input
+                  type="checkbox"
+                  [checked]="selectedDeviceIds.has(device.id)"
+                  (change)="toggleDevice(device.id)"
+                  class="h-4 w-4 rounded border-gray-300 accent-brand-500 dark:border-gray-600"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ device.name }}
+                </span>
+                @if (device.location.description) {
+                  <span class="text-xs text-gray-400 dark:text-gray-500">
+                    · {{ device.location.description }}
+                  </span>
+                }
+              </label>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Metrics (sensor) or vehicle types (vehicle) -->
+    @if (rawDataType === 'sensor') {
+      <div
+        class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+      >
+        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
+                Métricas a incluir
+              </h3>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Columnas que aparecerán en el archivo exportado
+              </p>
+            </div>
+            <button
+              (click)="toggleAllMetrics()"
+              class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+            >
+              {{ allMetricsSelected ? 'Deseleccionar todas' : 'Seleccionar todas' }}
+            </button>
+          </div>
+        </div>
+        <div class="p-5 sm:p-6">
+          <div class="flex flex-wrap gap-3">
+            @for (metric of metrics; track metric.key) {
+              <label
+                class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 transition-colors duration-150"
+                [ngClass]="
+                  selectedMetrics.has(metric.key)
+                    ? 'border-brand-400 bg-brand-50 dark:border-brand-600 dark:bg-brand-900/20'
+                    : 'border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/40 dark:hover:border-gray-600'
+                "
+              >
+                <input
+                  type="checkbox"
+                  [checked]="selectedMetrics.has(metric.key)"
+                  (change)="toggleMetric(metric.key)"
+                  class="h-4 w-4 rounded border-gray-300 accent-brand-500 dark:border-gray-600"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ metric.label }}
+                </span>
+                <span class="text-xs text-gray-400 dark:text-gray-500">{{ metric.unit }}</span>
+              </label>
+            }
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div
+        class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+      >
+        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
+                Tipos de vehículo
+              </h3>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Filtra las detecciones por tipo de vehículo
+              </p>
+            </div>
+            <button
+              (click)="toggleAllVehicleTypes()"
+              class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+            >
+              {{ allVehicleTypesSelected ? 'Deseleccionar todos' : 'Seleccionar todos' }}
+            </button>
+          </div>
+        </div>
+        <div class="p-5 sm:p-6">
+          <div class="flex flex-wrap gap-3">
+            @for (vt of vehicleTypesExport; track vt.key) {
+              <label
+                class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 transition-colors duration-150"
+                [ngClass]="
+                  selectedVehicleTypes.has(vt.key)
+                    ? 'border-brand-400 bg-brand-50 dark:border-brand-600 dark:bg-brand-900/20'
+                    : 'border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/40 dark:hover:border-gray-600'
+                "
+              >
+                <input
+                  type="checkbox"
+                  [checked]="selectedVehicleTypes.has(vt.key)"
+                  (change)="toggleVehicleType(vt.key)"
+                  class="h-4 w-4 rounded border-gray-300 accent-brand-500 dark:border-gray-600"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ vt.label }}
+                </span>
+              </label>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Format selector -->
+    <div
+      class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+    >
+      <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+        <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Formato</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Elige el formato del archivo descargado
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2 p-5 sm:p-6">
+        <button
+          (click)="rawFormat = 'csv'"
+          [ngClass]="
+            rawFormat === 'csv'
+              ? 'bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700'
+              : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+          "
+          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors duration-150"
+        >
+          CSV
+        </button>
+        <button
+          (click)="rawFormat = 'json'"
+          [ngClass]="
+            rawFormat === 'json'
+              ? 'bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700'
+              : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+          "
+          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors duration-150"
+        >
+          JSON
+        </button>
+      </div>
+    </div>
+
+    <!-- Export button -->
+    <button
+      (click)="exportRawData()"
+      [disabled]="!canExport"
+      class="flex items-center justify-center gap-2.5 rounded-2xl bg-brand-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-brand-600 dark:hover:bg-brand-700"
+    >
+      @if (isExporting) {
+        <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+        Exportando…
+      } @else {
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v10m-5-5 5 5 5-5M5 19h14" />
+        </svg>
+        Exportar {{ rawFormat === 'csv' ? 'CSV' : 'JSON' }}
+      }
+    </button>
+
+    <!-- Note -->
+    <div
+      class="rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/40"
+    >
+      <p class="text-xs text-gray-400 dark:text-gray-500">
+        <strong class="text-gray-500 dark:text-gray-400">Nota:</strong>
+        Los datos se descargan directamente en tu navegador. Si no seleccionas dispositivos concretos
+        se incluirán todos los disponibles. Períodos muy largos pueden generar archivos grandes.
+      </p>
+    </div>
+  }
 </div>
