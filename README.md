@@ -107,6 +107,7 @@ Este proyecto combina servicios Docker (backend, frontend, Keycloak y bases de d
     - **Backend API:** [http://localhost:8080](http://localhost:8080)
     - **Keycloak:** [http://localhost:8081](http://localhost:8081)
     - **pgAdmin:** [http://localhost:5050](http://localhost:5050)
+    - **Swagger UI:** [http://localhost:8080/docs](http://localhost:8080/docs)
 
 
 ### Perfiles Disponibles
@@ -129,6 +130,17 @@ El archivo `docker-compose.yml` define los servicios orquestados:
 -   `keycloak`: Servidor de identidad y gestión de acceso.
 -   `move_db` & `keycloak_db`: Instancias de PostgreSQL (datos persistentes en volúmenes).
 -   `pgadmin`: Interfaz web para administración de BD.
+
+### Documentación de la API (Swagger / OpenAPI)
+
+El backend expone documentación interactiva de todos sus endpoints mediante **SpringDoc OpenAPI**.
+
+| Recurso | URL |
+| :--- | :--- |
+| **Swagger UI** (interfaz interactiva) | [http://localhost:8080/docs](http://localhost:8080/docs) |
+| **OpenAPI JSON** (especificación raw) | [http://localhost:8080/docs/swagger-ui/index.html](http://localhost:8080/docs) |
+
+Desde Swagger UI puedes explorar todos los endpoints, ver los esquemas de request/response y ejecutar llamadas directamente contra la API. Para endpoints protegidos, utiliza el botón **Authorize** e introduce el Bearer token obtenido desde Keycloak.
 
 ### Detener la Aplicación
 
