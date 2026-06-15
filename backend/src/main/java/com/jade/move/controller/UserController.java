@@ -1,5 +1,6 @@
 package com.jade.move.controller;
 
+import com.jade.move.dto.ResetTemporaryPasswordRequest;
 import com.jade.move.dto.UserRegistrationRequest;
 import com.jade.move.service.KeycloakAdminService;
 import com.jade.move.util.ResponseBuilder;
@@ -33,6 +34,30 @@ public class UserController {
         public UserController(KeycloakAdminService keycloakAdminService) {
                 this.keycloakAdminService = keycloakAdminService;
         }
+
+    /**
+     * Resets a temporary password for a user who cannot log in because their account is not fully set up.
+     * Verifies the current (temporary) password against Keycloak before applying the new one.
+     *
+     * @param request email, current temporary password, and new password
+     * @return confirmation map
+     */
+    @Operation(
+            summary = "Reset temporary password / Cambiar contraseña temporal",
+            description = "Public endpoint for users with a temporary password to set a permanent one. / Endpoint público para que los usuarios con contraseña temporal establezcan una permanente."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Password reset successfully / Contraseña actualizada exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Invalid credentials or account already set up / Credenciales inválidas o cuenta ya configurada"),
+            @ApiResponse(responseCode = "404", description = "User not found / Usuario no encontrado")
+    })
+    @PostMapping("/reset-temporary-password")
+    public ResponseEntity<Map<String, String>> resetTemporaryPassword(
+            @Valid @RequestBody ResetTemporaryPasswordRequest request) {
+        keycloakAdminService.validateAndResetTemporaryPassword(
+                request.getEmail(), request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+    }
 
     /**
      * Lists all Keycloak users.

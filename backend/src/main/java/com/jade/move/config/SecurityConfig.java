@@ -58,6 +58,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 
                 .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                .requestMatchers(HttpMethod.POST, "/users/reset-temporary-password").permitAll()
 
                 .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/users/{id}").hasAnyRole("ADMIN", "USER")

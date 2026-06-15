@@ -1,5 +1,6 @@
 package com.jade.move.service;
 
+import com.jade.move.exception.BadRequestException;
 import com.jade.move.exception.ConflictException;
 import com.jade.move.exception.EntityNotFoundException;
 
@@ -17,8 +18,15 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import jakarta.ws.rs.NotFoundException;
 
@@ -42,15 +50,23 @@ public class KeycloakAdminService {
     private static final Logger log = LoggerFactory.getLogger(KeycloakAdminService.class);
 
     private final Keycloak keycloakAdminClient;
+    private final RestTemplate restTemplate;
 
     @Value("${keycloak.realm:move}")
     private String realm;
 
+    @Value("${keycloak.server-url}")
+    private String keycloakServerUrl;
+
+    @Value("${keycloak.frontend-client-id:move-frontend}")
+    private String frontendClientId;
+
     @Value("${keycloak.user-roles:user}")
     private String defaultRole;
 
-    public KeycloakAdminService(Keycloak keycloakAdminClient) {
+    public KeycloakAdminService(Keycloak keycloakAdminClient, RestTemplate restTemplate) {
         this.keycloakAdminClient = keycloakAdminClient;
+        this.restTemplate = restTemplate;
     }
 
     /**
@@ -143,7 +159,7 @@ public class KeycloakAdminService {
         var realmResource = keycloakAdminClient.realm(realm);
         var userRoles = realmResource.users().get(userId).roles().realmLevel();
 
-        // Quitar roles existentes user y admin
+        // Remove existing user/admin roles
         List<String> toRemoveNames = List.of("user", "admin");
         List<RoleRepresentation> currentRoles = userRoles.listAll().stream()
                 .filter(r -> toRemoveNames.contains(r.getName()))
@@ -152,7 +168,7 @@ public class KeycloakAdminService {
             userRoles.remove(currentRoles);
         }
 
-        // Asignar el nuevo rol
+        // Assign the new role
         RoleRepresentation role = realmResource.roles().get(newRole).toRepresentation();
         userRoles.add(Collections.singletonList(role));
     }
@@ -176,7 +192,7 @@ public class KeycloakAdminService {
     }
 
     /**
-     * Asigna el rol por defecto al usuario
+     * Assigns the default realm role to a newly created user.
      */
     private void assignDefaultRole(String userId) {
         try {
@@ -185,12 +201,15 @@ public class KeycloakAdminService {
             realmResource.users().get(userId).roles().realmLevel()
                     .add(Collections.singletonList(role));
         } catch (Exception e) {
-            log.warn("No se pudo asignar rol '{}' al usuario {}: {}", defaultRole, userId, e.getMessage());
+            log.warn("Could not assign role '{}' to user {}: {}", defaultRole, userId, e.getMessage());
         }
     }
 
     /**
-     * Busca un usuario por username
+     * Finds a user by exact username match.
+     *
+     * @param username username to search for
+     * @return user representation, or {@code null} if not found
      */
     public UserRepresentation getUserByUsername(String username) {
         var users = keycloakAdminClient.realm(realm).users().searchByUsername(username, true);
@@ -198,7 +217,9 @@ public class KeycloakAdminService {
     }
 
     /**
-     * Elimina un usuario de Keycloak
+     * Permanently deletes a user from Keycloak.
+     *
+     * @param userId user identifier
      */
     @Transactional
     public void deleteUser(String userId) {
@@ -206,7 +227,61 @@ public class KeycloakAdminService {
     }
 
     /**
-     * Actualiza contraseña de usuario
+     * Verifies that the provided credentials belong to an account with a temporary password
+     * and, if so, sets the new password as permanent.
+     *
+     * <p>Verification is done by calling the Keycloak token endpoint:</p>
+     * <ul>
+     *   <li>HTTP 200 — account already has a permanent password — rejects with {@link BadRequestException}</li>
+     *   <li>HTTP 400 with "Account is not fully set up" — valid temporary password — proceeds</li>
+     *   <li>Any other error — invalid credentials — rejects with {@link BadRequestException}</li>
+     * </ul>
+     *
+     * @param email           user email, also used as Keycloak username
+     * @param currentPassword the current temporary password to verify
+     * @param newPassword     the new permanent password to set
+     * @throws BadRequestException     if credentials are invalid or the account is already fully set up
+     * @throws EntityNotFoundException if no user is found for the given email
+     */
+    @Transactional
+    public void validateAndResetTemporaryPassword(String email, String currentPassword, String newPassword) {
+        String tokenUrl = keycloakServerUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "password");
+        body.add("client_id", frontendClientId);
+        body.add("username", email);
+        body.add("password", currentPassword);
+        body.add("scope", "openid");
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+        try {
+            restTemplate.postForEntity(tokenUrl, request, String.class);
+            throw new BadRequestException("Account is already fully set up");
+        } catch (HttpClientErrorException e) {
+            String responseBody = e.getResponseBodyAsString();
+            if (!responseBody.contains("Account is not fully set up")) {
+                throw new BadRequestException("Invalid credentials");
+            }
+        }
+
+        var users = keycloakAdminClient.realm(realm).users().searchByEmail(email, true);
+        if (users.isEmpty()) {
+            throw new EntityNotFoundException("User not found with email: " + email);
+        }
+
+        updatePassword(users.get(0).getId(), newPassword);
+    }
+
+    /**
+     * Updates a user's password in Keycloak, marking it as non-temporary.
+     *
+     * @param userId      user identifier
+     * @param newPassword new password value
      */
     @Transactional
     public void updatePassword(String userId, String newPassword) {
@@ -240,7 +315,7 @@ public class KeycloakAdminService {
             String createdId = CreatedResponseUtil.getCreatedId(response);
 
             ClientRepresentation created = realmResource.clients().get(createdId).toRepresentation();
-            // Obtener secreto del client
+            // Retrieve the client secret
             CredentialRepresentation secretRep = realmResource.clients().get(createdId).getSecret();
             String secret = secretRep != null ? secretRep.getValue() : null;
 
