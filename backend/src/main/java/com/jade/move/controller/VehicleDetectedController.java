@@ -182,6 +182,14 @@ public class VehicleDetectedController {
          *
          * @return 204 No Content response
          */
+        @Operation(
+                summary = "Delete all vehicle detections / Eliminar todas las detecciones de vehículos",
+                description = "Permanently deletes all vehicle detection records from the system. This action cannot be undone. / Elimina permanentemente todos los registros de detección de vehículos del sistema. Esta acción no se puede deshacer."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "204", description = "All vehicle detections deleted successfully / Todas las detecciones de vehículos eliminadas exitosamente"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
         @DeleteMapping
         public ResponseEntity<Void> deleteAllVehicleDetected() {
                 vehicleDetectedService.deleteAllVehicleDetected();
@@ -195,6 +203,15 @@ public class VehicleDetectedController {
          * @param end end timestamp (inclusive)
          * @return 204 No Content response
          */
+        @Operation(
+                summary = "Delete vehicle detections by date range / Eliminar detecciones de vehículos por rango de fecha",
+                description = "Permanently deletes all vehicle detection records within a specified date-time range (inclusive). This action cannot be undone. / Elimina permanentemente todos los registros de detección de vehículos dentro de un rango de fecha-hora especificado (inclusive). Esta acción no se puede deshacer."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "204", description = "Vehicle detections within range deleted successfully / Detecciones de vehículos dentro del rango eliminadas exitosamente"),
+                @ApiResponse(responseCode = "400", description = "Invalid date range parameters / Parámetros de rango de fecha inválidos"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
         @DeleteMapping("/range")
         public ResponseEntity<Void> deleteVehicleDetectedByRange(
                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
@@ -208,6 +225,14 @@ public class VehicleDetectedController {
          *
          * @return first detection record
          */
+        @Operation(
+                summary = "Get first vehicle detection / Obtener la primera detección de vehículo",
+                description = "Retrieves the earliest vehicle detection record in the system by timestamp. Useful for determining when vehicle monitoring started. / Obtiene el registro de detección de vehículo más antiguo en el sistema por marca de tiempo. Útil para determinar cuándo comenzó el monitoreo de vehículos."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "First vehicle detection retrieved successfully or no detections found / Primera detección de vehículo obtenida exitosamente o no se encontraron detecciones"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
         @GetMapping("/first")
         public ResponseEntity<?> getFirstVehicleDetected() {
                 return ResponseEntity.ok(vehicleDetectedService.getFirstRecord());
@@ -218,6 +243,14 @@ public class VehicleDetectedController {
          *
          * @return last detection record
          */
+        @Operation(
+                summary = "Get last vehicle detection / Obtener la última detección de vehículo",
+                description = "Retrieves the most recent vehicle detection record in the system by timestamp. Useful for checking the latest vehicle activity. / Obtiene el registro de detección de vehículo más reciente en el sistema por marca de tiempo. Útil para verificar la actividad de vehículos más reciente."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Last vehicle detection retrieved successfully or no detections found / Última detección de vehículo obtenida exitosamente o no se encontraron detecciones"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
         @GetMapping("/last")
         public ResponseEntity<?> getLastVehicleDetected() {
                 return ResponseEntity.ok(vehicleDetectedService.getLastRecord());

@@ -25,7 +25,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/thresholds")
 @RequiredArgsConstructor
-@Tag(name = "Thresholds", description = "Manage environment thresholds")
+@Tag(name = "Umbrales", description = "Gestión de umbrales de métricas ambientales / Manage environment thresholds")
 public class EnvironmentThresholdController {
 
     private final EnvironmentThresholdService thresholdService;
@@ -36,9 +36,10 @@ public class EnvironmentThresholdController {
      * @return list of all available thresholds
      */
     @GetMapping
-    @Operation(summary = "Get all thresholds")
+    @Operation(summary = "Get all thresholds / Obtener todos los umbrales",
+               description = "Retrieves all registered environment thresholds from the system. / Obtiene todos los umbrales de métricas ambientales registrados en el sistema.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Thresholds retrieved successfully"),
+        @ApiResponse(responseCode = "200", description = "Thresholds retrieved successfully / Umbrales obtenidos exitosamente"),
     })
     public ResponseEntity<List<EnvironmentThresholdDto>> getAllThresholds() {
         return ResponseEntity.ok(thresholdService.getAllThresholds());
@@ -50,9 +51,10 @@ public class EnvironmentThresholdController {
      * @return map with metrics as keys and threshold lists as values
      */
     @GetMapping("/grouped")
-    @Operation(summary = "Get thresholds grouped by metric")
+    @Operation(summary = "Get thresholds grouped by metric / Obtener umbrales agrupados por métrica",
+               description = "Retrieves all thresholds organized and grouped by environmental metric. / Obtiene todos los umbrales organizados y agrupados por métrica ambiental.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Grouped thresholds retrieved successfully"),
+        @ApiResponse(responseCode = "200", description = "Grouped thresholds retrieved successfully / Umbrales agrupados obtenidos exitosamente"),
     })
     public ResponseEntity<Map<String, List<EnvironmentThresholdDto>>> getThresholdsGrouped() {
         return ResponseEntity.ok(thresholdService.getThresholdsGroupedByMetric());
@@ -65,9 +67,10 @@ public class EnvironmentThresholdController {
      * @return list of thresholds for that metric
      */
     @GetMapping("/metric/{metric}")
-    @Operation(summary = "Get thresholds for specific metric")
+    @Operation(summary = "Get thresholds for specific metric / Obtener umbrales para una métrica específica",
+               description = "Retrieves all thresholds configured for a specific environmental metric (CO2, PM2.5, temperature, etc.). / Obtiene todos los umbrales configurados para una métrica ambiental específica (CO2, PM2.5, temperatura, etc.).")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Thresholds retrieved successfully"),
+        @ApiResponse(responseCode = "200", description = "Thresholds retrieved successfully / Umbrales obtenidos exitosamente"),
     })
     public ResponseEntity<List<EnvironmentThresholdDto>> getThresholdsByMetric(@PathVariable String metric) {
         return ResponseEntity.ok(thresholdService.getThresholdsForMetric(metric));
@@ -83,10 +86,11 @@ public class EnvironmentThresholdController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create a new threshold")
+    @Operation(summary = "Create a new threshold / Crear un nuevo umbral",
+               description = "Creates a new threshold for an environmental metric. Requires ADMIN role authorization. / Crea un nuevo umbral para una métrica ambiental. Requiere autorización de rol ADMIN.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Threshold created successfully"),
-        @ApiResponse(responseCode = "403", description = "Unauthorized"),
+        @ApiResponse(responseCode = "201", description = "Threshold created successfully / Umbral creado exitosamente"),
+        @ApiResponse(responseCode = "403", description = "Unauthorized / No autorizado"),
     })
     public ResponseEntity<EnvironmentThresholdDto> createThreshold(@RequestBody EnvironmentThresholdDto dto) {
         EnvironmentThresholdDto created = thresholdService.createThreshold(dto);
@@ -104,11 +108,12 @@ public class EnvironmentThresholdController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update a threshold")
+    @Operation(summary = "Update a threshold / Actualizar un umbral",
+               description = "Updates an existing threshold with new values. Requires ADMIN role authorization. / Actualiza un umbral existente con nuevos valores. Requiere autorización de rol ADMIN.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Threshold updated successfully"),
-        @ApiResponse(responseCode = "403", description = "Unauthorized"),
-        @ApiResponse(responseCode = "404", description = "Threshold not found"),
+        @ApiResponse(responseCode = "200", description = "Threshold updated successfully / Umbral actualizado exitosamente"),
+        @ApiResponse(responseCode = "403", description = "Unauthorized / No autorizado"),
+        @ApiResponse(responseCode = "404", description = "Threshold not found / Umbral no encontrado"),
     })
     public ResponseEntity<EnvironmentThresholdDto> updateThreshold(@PathVariable Integer id, @RequestBody EnvironmentThresholdDto dto) {
         EnvironmentThresholdDto updated = thresholdService.updateThreshold(id, dto);
@@ -125,10 +130,11 @@ public class EnvironmentThresholdController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Delete a threshold")
+    @Operation(summary = "Delete a threshold / Eliminar un umbral",
+               description = "Permanently deletes a specific threshold from the system. Requires ADMIN role authorization. / Elimina permanentemente un umbral específico del sistema. Requiere autorización de rol ADMIN.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Threshold deleted successfully"),
-        @ApiResponse(responseCode = "403", description = "Unauthorized"),
+        @ApiResponse(responseCode = "204", description = "Threshold deleted successfully / Umbral eliminado exitosamente"),
+        @ApiResponse(responseCode = "403", description = "Unauthorized / No autorizado"),
     })
     public ResponseEntity<Void> deleteThreshold(@PathVariable Integer id) {
         thresholdService.deleteThreshold(id);
@@ -146,10 +152,11 @@ public class EnvironmentThresholdController {
      */
     @PutMapping("/metric/{metric}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update all thresholds for a metric")
+    @Operation(summary = "Update all thresholds for a metric / Actualizar todos los umbrales para una métrica",
+               description = "Updates all thresholds associated with a specific metric in a single operation. Requires ADMIN role authorization. / Actualiza todos los umbrales asociados con una métrica específica en una única operación. Requiere autorización de rol ADMIN.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Thresholds updated successfully"),
-        @ApiResponse(responseCode = "403", description = "Unauthorized"),
+        @ApiResponse(responseCode = "200", description = "Thresholds updated successfully / Umbrales actualizados exitosamente"),
+        @ApiResponse(responseCode = "403", description = "Unauthorized / No autorizado"),
     })
     public ResponseEntity<List<EnvironmentThresholdDto>> updateMetricThresholds(
         @PathVariable String metric,
@@ -169,10 +176,11 @@ public class EnvironmentThresholdController {
      */
     @DeleteMapping("/metric/{metric}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Delete all thresholds for a metric")
+    @Operation(summary = "Delete all thresholds for a metric / Eliminar todos los umbrales para una métrica",
+               description = "Permanently deletes all thresholds associated with a specific environmental metric. Requires ADMIN role authorization. / Elimina permanentemente todos los umbrales asociados con una métrica ambiental específica. Requiere autorización de rol ADMIN.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Thresholds deleted successfully"),
-        @ApiResponse(responseCode = "403", description = "Unauthorized"),
+        @ApiResponse(responseCode = "204", description = "Thresholds deleted successfully / Umbrales eliminados exitosamente"),
+        @ApiResponse(responseCode = "403", description = "Unauthorized / No autorizado"),
     })
     public ResponseEntity<Void> deleteMetricThresholds(@PathVariable String metric) {
         thresholdService.deleteThresholdsForMetric(metric);

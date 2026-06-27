@@ -279,6 +279,14 @@ public class SensorDataController {
          *
          * @return 204 No Content response
          */
+        @Operation(
+                summary = "Delete all sensor data / Eliminar todos los datos de sensores",
+                description = "Permanently deletes all sensor data records from the system. This action cannot be undone. / Elimina permanentemente todos los registros de datos de sensores del sistema. Esta acción no se puede deshacer."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "204", description = "All sensor data deleted successfully / Todos los datos de sensores eliminados exitosamente"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
         @DeleteMapping
         public ResponseEntity<Void> deleteAllSensorData() {
                 sensorDataService.deleteAllSensorData();
@@ -292,6 +300,15 @@ public class SensorDataController {
          * @param end end timestamp (inclusive)
          * @return 204 No Content response
          */
+        @Operation(
+                summary = "Delete sensor data by date range / Eliminar datos de sensores por rango de fecha",
+                description = "Permanently deletes all sensor data records within a specified date-time range (inclusive). This action cannot be undone. / Elimina permanentemente todos los registros de datos de sensores dentro de un rango de fecha-hora especificado (inclusive). Esta acción no se puede deshacer."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "204", description = "Sensor data within range deleted successfully / Datos de sensores dentro del rango eliminados exitosamente"),
+                @ApiResponse(responseCode = "400", description = "Invalid date range parameters / Parámetros de rango de fecha inválidos"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
         @DeleteMapping("/range")
         public ResponseEntity<Void> deleteSensorDataByRange(
                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
@@ -305,6 +322,14 @@ public class SensorDataController {
          *
          * @return first sensor data record
          */
+        @Operation(
+                summary = "Get first sensor data record / Obtener el primer registro de datos de sensores",
+                description = "Retrieves the earliest sensor data record in the system by timestamp. Useful for determining the data collection start date. / Obtiene el registro de datos de sensores más antiguo en el sistema por marca de tiempo. Útil para determinar la fecha de inicio de la recopilación de datos."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "First sensor data record retrieved successfully or no data found / Primer registro de datos de sensores obtenido exitosamente o no se encontraron datos"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
         @GetMapping("/first")
         public ResponseEntity<?> getFirstSensorData() {
                 return ResponseEntity.ok(sensorDataService.getFirstRecord());
@@ -315,6 +340,14 @@ public class SensorDataController {
          *
          * @return last sensor data record
          */
+        @Operation(
+                summary = "Get last sensor data record / Obtener el último registro de datos de sensores",
+                description = "Retrieves the most recent sensor data record in the system by timestamp. Useful for determining the latest measurements. / Obtiene el registro de datos de sensores más reciente en el sistema por marca de tiempo. Útil para determinar las mediciones más recientes."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Last sensor data record retrieved successfully or no data found / Último registro de datos de sensores obtenido exitosamente o no se encontraron datos"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
         @GetMapping("/last")
         public ResponseEntity<?> getLastSensorData() {
                 return ResponseEntity.ok(sensorDataService.getLastRecord());
