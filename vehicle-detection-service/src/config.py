@@ -1,27 +1,58 @@
-"""Configuración centralizada para el servicio de detección de vehículos"""
+"""
+Configuration module for vehicle detection service.
+
+Central configuration management for the vehicle detection service. Loads settings
+from environment variables with sensible defaults. Handles YOLO model configuration,
+video source options, Flask API settings, and stream encoding parameters.
+
+Attributes:
+    BASE_DIR (Path): Base directory of the service
+    YOLO_MODEL_PATH (Path): Path to the YOLO model file
+    VEHICLE_CLASSES (set): Set of vehicle classes to detect
+    DIST_THRESHOLD (int): Distance threshold for vehicle deduplication (pixels)
+    TIME_THRESHOLD (float): Time threshold for deduplication (seconds)
+    LINE_TOLERANCE (int): Tolerance for line crossing detection (pixels)
+    DEFAULT_VIDEO_URL (str): Default YouTube video URL for demo
+    DEFAULT_CAMERA_INDEX (int): Default camera index (0 = system default)
+    BACKEND_URL (str): Base URL of the backend API
+    BACKEND_TIMEOUT (int): HTTP timeout for backend requests (seconds)
+    SEND_DETECTIONS_ENABLED (bool): Whether to send detections to backend
+    FLASK_HOST (str): Flask server host address
+    FLASK_PORT (int): Flask server port
+    FLASK_DEBUG (bool): Flask debug mode
+    STREAM_MAX_FPS (int): Maximum FPS for streaming (encoding throttle)
+    STREAM_JPEG_QUALITY (int): JPEG compression quality (1-100)
+    STREAM_MAX_WIDTH (int): Maximum width for stream encoding (pixels)
+    YOLO_DEVICE (str): Device for inference ('cuda' if GPU available, else 'cpu')
+"""
 import os
 from pathlib import Path
 import torch
 
 BASE_DIR = Path(__file__).parent.parent
 
-# Cargar variables de entorno desde .env automáticamente (si existe)
+# Load environment variables from .env if available
 try:
     from dotenv import load_dotenv
     _env_file = BASE_DIR.parent / ".env"
     if _env_file.exists():
         load_dotenv(dotenv_path=_env_file, override=False)
 except ImportError:
-    pass  # python-dotenv no instalado, continuar con env del sistema
+    pass
+
+# ============================================================================
+# YOLO & DETECTION SETTINGS
+# ============================================================================
 
 YOLO_MODEL_PATH = BASE_DIR / "models" / "yolo11n.pt"
-
 VEHICLE_CLASSES = {"car", "truck", "bus", "motorcycle", "bicycle"}
-
-CONFIDENCE_THRESHOLD = 0.25
 DIST_THRESHOLD = 50
 TIME_THRESHOLD = 1.0
 LINE_TOLERANCE = 5
+
+# ============================================================================
+# DEFAULT VIDEO SOURCES
+# ============================================================================
 
 DEFAULT_VIDEO_URL = "https://youtu.be/dzxoZoH192c"
 DEFAULT_CAMERA_INDEX = 0
@@ -49,37 +80,43 @@ YTDLP_DOWNLOAD_OPTIONS = {
     }
 }
 
+# ============================================================================
+# VISUALIZATION SETTINGS (OpenCV drawing)
+# ============================================================================
+
 LINE_COLOR = (0, 0, 255)
 LINE_THICKNESS = 2
 BBOX_COLOR = (0, 255, 0)
 BBOX_THICKNESS = 2
-
-# Píxeles desde la línea de conteo para dibujar bbox+texto completo.
-# Vehículos fuera de esta zona sólo muestran un punto pequeño.
-# Reduce llamadas a cv2.putText cuando hay muchos vehículos en pantalla.
 DRAW_PROXIMITY_PX = 100
 
+# ============================================================================
+# BACKEND INTEGRATION
+# ============================================================================
+
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://api.moveiot.online")
-DEVICE_ID = 1
 BACKEND_TIMEOUT = 5
 SEND_DETECTIONS_ENABLED = True
+
+# ============================================================================
+# FLASK API SERVER SETTINGS
+# ============================================================================
 
 FLASK_HOST = os.environ.get("FLASK_HOST", "0.0.0.0")
 FLASK_PORT = int(os.environ.get("FLASK_PORT", "5000"))
 FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
 
-# Stream encoding a 20 fps
+# ============================================================================
+# STREAM ENCODING SETTINGS
+# ============================================================================
+
 STREAM_MAX_FPS = 15
-# JPEG quality - 70 da buena calidad visual para 720p
 STREAM_JPEG_QUALITY = 60
-# Detectar cada 8 frames = ~2.5 detecciones/s, libera CPU para encoding
-DETECTION_SKIP_FRAMES = 2
-
-# Redimensionar ancho máximo para encoding (1280 = 720p, buena calidad)
 STREAM_MAX_WIDTH = 640
-
-# Intervalo (segundos) para loguear métricas simples (fps, frames procesados)
 METRICS_LOG_INTERVAL = 120
 
-# Dispositivo para inferencia YOLO: 'cuda' si hay GPU disponible, sino 'cpu'
+# ============================================================================
+# INFERENCE DEVICE
+# ============================================================================
+
 YOLO_DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'

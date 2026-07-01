@@ -1,5 +1,12 @@
 """
-Detector de vehículos usando YOLO
+Vehicle detection and counting using YOLO.
+
+Provides vehicle detection with deduplication logic to avoid counting the
+same vehicle multiple times. Uses spatial-temporal distance thresholds to
+identify unique vehicles crossing a detection line.
+
+Classes:
+    VehicleDetector: YOLO-based vehicle detector with counting
 """
 from ultralytics import YOLO
 import time
@@ -9,23 +16,67 @@ from typing import List, Tuple
 
 class VehicleDetector:
     """
-    Clase para detectar y contar vehículos en frames de video usando YOLO.
-    
-    Implementa lógica de deduplicación para evitar contar el mismo vehículo
-    múltiples veces basándose en distancia espacial y temporal.
+    Vehicle detection and counting using YOLO.
+
+    Detects and counts vehicles in video frames with spatial-temporal
+    deduplication. Maintains a sliding window of recent vehicle centers
+    to avoid counting the same vehicle multiple times as it moves across
+    frames. Counts vehicles only when their center crosses a specified
+    horizontal line.
+
+    Deduplication:
+        Uses two thresholds to identify duplicates:
+        - DIST_THRESHOLD: Distance in pixels between centers
+        - TIME_THRESHOLD: Time window in seconds for recent detections
+
+        If a new detection's center is within distance threshold of any
+        recent detection (within time window), it's considered a duplicate.
+
+    Optimization notes:
+        - Uses bit shifts (>>) for division (faster than /)
+        - Converts all coordinates once for efficiency
+        - Deque for O(k) removal of expired detections
+
+    Examples:
+        >>> from config import *
+        >>> detector = VehicleDetector(
+        ...     model_path=YOLO_MODEL_PATH,
+        ...     vehicle_classes=VEHICLE_CLASSES,
+        ...     dist_threshold=DIST_THRESHOLD,
+        ...     time_threshold=TIME_THRESHOLD
+        ... )
+        >>> while True:
+        ...     ret, frame = cap.read()
+        ...     if not ret: break
+        ...     detector.clean_old_detections()
+        ...     results = detector.detect(frame)
+        ...     detections = detector.get_vehicle_detections(results)
+        ...     for (xyxy, label, conf, cx, cy) in detections:
+        ...         if detector.update_count(cx, cy, line_y):
+        ...             print(f"Vehicle counted: {label}")
+
+    Attributes:
+        model (YOLO): YOLO model instance
+        vehicle_classes (set): Set of class names to detect as vehicles
+        dist_threshold (int): Distance threshold for deduplication (pixels)
+        time_threshold (float): Time threshold for deduplication (seconds)
+        line_tolerance (int): Tolerance for line crossing detection (pixels)
+        vehicle_count (int): Total vehicle count
+        recent_centers (deque): Recent vehicle centers with timestamps
     """
     
-    def __init__(self, model_path: str, vehicle_classes: set, 
+    def __init__(self, model_path: str, vehicle_classes: set,
                  dist_threshold: int, time_threshold: float, line_tolerance: int = 5):
         """
-        Inicializa el detector de vehículos.
-        
+        Initializes the vehicle detector.
+
         Args:
-            model_path: Ruta al archivo del modelo YOLO (.pt)
-            vehicle_classes: Set de clases a considerar como vehículos
-            dist_threshold: Distancia en píxeles para deduplicación
-            time_threshold: Tiempo en segundos para deduplicación
-            line_tolerance: Tolerancia en píxeles para cruce de línea
+            model_path (str): Path to YOLO model file (.pt)
+            vehicle_classes (set): Set of class names to detect as vehicles
+            dist_threshold (int): Distance threshold for deduplication (pixels)
+            time_threshold (float): Time window for deduplication (seconds)
+            line_tolerance (int): Tolerance for line crossing detection (pixels).
+                Default: 5
         """
         self.model = YOLO(str(model_path), verbose=False)
         self.vehicle_classes = vehicle_classes
@@ -38,26 +89,29 @@ class VehicleDetector:
     
     def detect(self, frame):
         """
-        Ejecuta detección YOLO en un frame.
-        
+        Runs YOLO detection on a video frame.
+
         Args:
-            frame: Frame de video (numpy array)
-            
+            frame: Video frame as numpy array (BGR format from OpenCV)
+
         Returns:
-            results: Resultados de YOLO con detecciones
+            YOLO detection results object with bounding boxes and confidence
         """
         return self.model(frame, verbose=False)
     
-    def get_vehicle_detections(self, results):
+    def get_vehicle_detections(self, results) -> List[Tuple]:
         """
-        Filtra detecciones para obtener solo vehículos.
-        Optimizado para evitar conversiones CPU innecesarias.
-        
+        Filters YOLO detections to extract only vehicle detections.
+
+        Extracts bounding boxes and metadata for vehicles only (filters out
+        other classes). Optimized to convert all coordinates once for efficiency.
+
         Args:
-            results: Resultados de YOLO
-            
+            results: YOLO detection results (from model() call)
+
         Returns:
-            Lista de tuplas (xyxy, label, confidence, center_x, center_y)
+            List of tuples: (xyxy, label, confidence, center_x, center_y)
+            where xyxy is (x1, y1, x2, y2) as int tuple
         """
         boxes = results[0].boxes
         names = results[0].names
@@ -87,14 +141,19 @@ class VehicleDetector:
     
     def _is_duplicate(self, center_x: int, center_y: int) -> bool:
         """
-        Verifica si un centro ya fue contado recientemente.
+        Checks if a vehicle center was recently detected (deduplication).
+
+        Looks up the center in recent_centers using spatial distance threshold.
+        If found within DIST_THRESHOLD pixels and TIME_THRESHOLD seconds,
+        the detection is considered a duplicate of the same vehicle.
 
         Args:
-            center_x: Coordenada X del centro
-            center_y: Coordenada Y del centro
+            center_x (int): X coordinate of vehicle center
+            center_y (int): Y coordinate of vehicle center (unused, kept for
+                symmetry with update_count)
 
         Returns:
-            True si es un duplicado, False si es nuevo
+            bool: True if duplicate found, False if new detection
         """
         for (x, y, t) in self.recent_centers:
             if abs(center_x - x) < self.dist_threshold:
@@ -103,15 +162,22 @@ class VehicleDetector:
     
     def update_count(self, center_x: int, center_y: int, line_y: int) -> bool:
         """
-        Actualiza el contador si el vehículo cruza la línea.
-        
+        Updates vehicle count if center crosses the counting line.
+
+        Increments the counter only if:
+        1. Vehicle center is within LINE_TOLERANCE of the counting line (Y-axis)
+        2. Vehicle is not a duplicate (by distance/time thresholds)
+
+        When a new vehicle is counted, its center is added to recent_centers
+        with current timestamp for future deduplication.
+
         Args:
-            center_x: Coordenada X del centro del vehículo
-            center_y: Coordenada Y del centro del vehículo
-            line_y: Posición Y de la línea de conteo
-            
+            center_x (int): X coordinate of vehicle center
+            center_y (int): Y coordinate of vehicle center
+            line_y (int): Y position of the counting line
+
         Returns:
-            True si se incrementó el contador, False si no
+            bool: True if counter was incremented (new vehicle), False otherwise
         """
         if abs(center_y - line_y) < self.line_tolerance:
             if not self._is_duplicate(center_x, center_y):
@@ -120,27 +186,35 @@ class VehicleDetector:
                 return True
         return False
     
-    def clean_old_detections(self):
+    def clean_old_detections(self) -> None:
         """
-        Elimina detecciones antiguas según el umbral de tiempo.
-        Optimizado con deque: O(k) donde k es el número de elementos antiguos.
+        Removes expired detections from the recent centers buffer.
+
+        Removes detections older than TIME_THRESHOLD seconds. Should be called
+        before processing each frame to maintain accurate deduplication window.
+
+        Time complexity: O(k) where k = number of expired detections
+        (deque.popleft is O(1) per removal)
         """
         now = time.time()
         while self.recent_centers and now - self.recent_centers[0][2] >= self.time_threshold:
             self.recent_centers.popleft()
-    
+
     def get_count(self) -> int:
         """
-        Retorna el conteo total de vehículos.
-        
+        Returns the total vehicle count.
+
         Returns:
-            Número total de vehículos contados
+            int: Total number of vehicles counted
         """
         return self.vehicle_count
-    
-    def reset_count(self):
+
+    def reset_count(self) -> None:
         """
-        Reinicia el contador y limpia detecciones.
+        Resets the vehicle counter and clears detection history.
+
+        Clears recent_centers buffer and resets vehicle_count to 0.
+        Useful for starting a new counting session.
         """
         self.vehicle_count = 0
         self.recent_centers.clear()

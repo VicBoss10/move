@@ -1,5 +1,12 @@
 """
-Clase base abstracta para fuentes de video
+Abstract base class for video sources.
+
+Defines the interface contract for different video source implementations
+(USB cameras, URL streams, RTSP, local files). All VideoSource subclasses
+must implement the open() method and provide consistent access to frame data.
+
+Classes:
+    VideoSource: Abstract base class for all video sources
 """
 from abc import ABC, abstractmethod
 import cv2
@@ -8,71 +15,87 @@ from typing import Optional
 
 class VideoSource(ABC):
     """
-    Clase base abstracta para diferentes fuentes de video.
-    
-    Define la interfaz común que deben implementar todas las fuentes
-    de video (cámara, stream, archivo, etc.)
+    Abstract base class for video sources.
+
+    Defines the common interface that all video source implementations must
+    follow. Provides shared functionality for frame access and FPS detection.
+
+    Subclasses should implement the open() method to handle source-specific
+    initialization (camera index for USB, URL extraction for streams, etc.).
+
+    Thread safety:
+        VideoCapture is not thread-safe; external synchronization required
+        when multiple threads access the same VideoSource.
+
+    Attributes:
+        capture (cv2.VideoCapture): OpenCV video capture object
+        is_open (bool): Whether the source is currently open
     """
     
     def __init__(self):
-        """Inicializa la fuente de video."""
+        """Initializes the video source."""
         self.capture: Optional[cv2.VideoCapture] = None
         self.is_open = False
-    
+
     @abstractmethod
     def open(self) -> bool:
         """
-        Abre la fuente de video.
-        
+        Opens the video source.
+
+        Subclasses must implement source-specific initialization logic.
+
         Returns:
-            True si se abrió exitosamente, False en caso contrario
+            bool: True if opened successfully, False otherwise
         """
         pass
-    
+
     def get_capture(self) -> Optional[cv2.VideoCapture]:
         """
-        Retorna el objeto VideoCapture de OpenCV.
-        
+        Returns the OpenCV VideoCapture object.
+
         Returns:
-            VideoCapture si está abierto, None en caso contrario
+            cv2.VideoCapture: If open, None otherwise
         """
         return self.capture if self.is_open else None
-    
+
     def get_fps(self) -> float:
         """
-        Obtiene los FPS del video.
-        
+        Gets the video frame rate (FPS).
+
         Returns:
-            FPS del video, 30 por defecto si no se puede determinar
+            float: FPS of the video, 30.0 as default if unavailable
         """
         if self.capture and self.is_open:
             fps = self.capture.get(cv2.CAP_PROP_FPS)
             return fps if fps > 0 else 30.0
         return 30.0
-    
+
     def read_frame(self):
         """
-        Lee un frame del video.
-        
+        Reads a single frame from the video source.
+
         Returns:
-            Tupla (ret, frame) donde ret es bool y frame es numpy array
+            Tuple[bool, Optional[np.ndarray]]: (ret, frame) where ret indicates
+                success and frame is the BGR image as numpy array
         """
         if self.capture and self.is_open:
             return self.capture.read()
         return False, None
-    
+
     def release(self):
-        """Libera los recursos del video."""
+        """Releases video source resources."""
         if self.capture:
             self.capture.release()
             self.is_open = False
-    
+
     def get_frame_dimensions(self):
         """
-        Obtiene las dimensiones del frame.
-        
+        Gets the dimensions of video frames.
+
+        Reads one frame to determine dimensions.
+
         Returns:
-            Tupla (height, width) o None si no está disponible
+            Tuple[int, int]: (height, width) in pixels, or None if unavailable
         """
         if self.capture and self.is_open:
             ret, frame = self.capture.read()

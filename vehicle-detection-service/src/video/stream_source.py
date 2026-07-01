@@ -1,5 +1,12 @@
 """
-Fuente de video desde streams (YouTube, archivos, RTSP, etc.)
+Video source for streams, YouTube URLs, and local video files.
+
+Provides implementation for URL-based video sources including YouTube videos,
+RTSP streams, and local video files. Uses yt-dlp to extract direct stream
+URLs from YouTube with fallback to local download.
+
+Classes:
+    StreamSource: URL-based video source
 """
 import cv2
 import yt_dlp
@@ -12,87 +19,113 @@ logger = logging.getLogger(__name__)
 
 class StreamSource(VideoSource):
     """
-    Fuente de video desde streams, URLs de YouTube o archivos locales.
-    
-    Maneja la extracción de URLs reales de YouTube usando yt-dlp y
-    la apertura de archivos de video locales o streams RTSP.
+    Video source for streaming URLs, YouTube videos, and local files.
+
+    Implements VideoSource interface for network streams and files.
+    For YouTube URLs, uses yt-dlp to extract the actual stream URL.
+    Falls back to downloading the video if direct streaming fails.
+    For local files and RTSP streams, opens directly with OpenCV.
+
+    Examples:
+        >>> # YouTube video
+        >>> source = StreamSource("https://youtu.be/xxxxx", ytdlp_options, download_opts)
+        >>> if source.open():
+        ...     cap = source.get_capture()
+        ...
+        >>> # Local file
+        >>> source = StreamSource("./video.mp4", {}, {})
+        >>> if source.open():
+        ...     cap = source.get_capture()
+
+    Attributes:
+        url (str): YouTube URL, RTSP URL, or local file path
+        ytdlp_options (dict): Options for yt-dlp info extraction
+        ytdlp_download_options (dict): Options for yt-dlp download fallback
+        stream_url (str): Resolved stream URL after open()
     """
     
     def __init__(self, url: str, ytdlp_options: dict, ytdlp_download_options: dict):
         """
-        Inicializa la fuente de stream.
-        
+        Initializes the stream source.
+
         Args:
-            url: URL de YouTube, archivo local o stream RTSP
-            ytdlp_options: Opciones para yt-dlp (extracción de info)
-            ytdlp_download_options: Opciones para yt-dlp (descarga)
+            url (str): YouTube URL, local file path, or RTSP stream URL
+            ytdlp_options (dict): Options for yt-dlp info extraction
+            ytdlp_download_options (dict): Options for yt-dlp download fallback
         """
         super().__init__()
         self.url = url
         self.ytdlp_options = ytdlp_options
         self.ytdlp_download_options = ytdlp_download_options
         self.stream_url: Optional[str] = None
-    
+
     def _is_youtube_url(self) -> bool:
         """
-        Verifica si la URL es de YouTube.
-        
+        Checks if the URL is a YouTube link.
+
         Returns:
-            True si es URL de YouTube, False en caso contrario
+            bool: True if YouTube URL, False otherwise
         """
         return 'youtube.com' in self.url or 'youtu.be' in self.url
-    
+
     def _extract_youtube_url(self) -> Optional[str]:
         """
-        Extrae la URL real del stream de YouTube.
-        
+        Extracts the actual stream URL from a YouTube video.
+
+        Uses yt-dlp to fetch video info and extract the stream URL without
+        downloading the entire video.
+
         Returns:
-            URL del stream o None si falla
+            str: Stream URL, or None if extraction fails
         """
         try:
-            logger.info("Extrayendo información del video de YouTube...")
+            logger.info("Extracting YouTube video info...")
             with yt_dlp.YoutubeDL(self.ytdlp_options) as ydl:
                 info = ydl.extract_info(self.url, download=False)
-                logger.info(f"✓ Video encontrado: {info.get('title', 'sin título')}")
+                logger.info(f"✓ Video found: {info.get('title', 'untitled')}")
                 return info['url']
         except Exception as e:
-            logger.error(f"Error al extraer URL de YouTube: {e}")
+            logger.error(f"Error extracting YouTube URL: {e}")
             return None
-    
+
     def _download_youtube_video(self) -> Optional[str]:
         """
-        Descarga el video de YouTube localmente como fallback.
-        
+        Downloads a YouTube video locally as fallback.
+
+        If direct stream URL extraction fails, attempts to download the video
+        for local playback.
+
         Returns:
-            Ruta al archivo descargado o None si falla
+            str: Path to downloaded file, or None if download fails
         """
-        logger.warning("No se pudo obtener stream directo, descargando video...")
-        
+        logger.warning("Direct stream unavailable, downloading video...")
+
         try:
             with yt_dlp.YoutubeDL(self.ytdlp_download_options) as ydl:
                 ydl.download([self.url])
-            
+
             downloaded_file = self.ytdlp_download_options.get('outtmpl', 'downloaded_video.mp4')
-            logger.info("✓ Video descargado exitosamente")
+            logger.info("✓ Video downloaded successfully")
             return downloaded_file
         except Exception as e:
-            logger.error(f"Error descargando video: {e}")
-            print("\nAlternativa: Intenta con un archivo local:")
-            print("  python src/main.py stream ./tu-video.mp4")
+            logger.error(f"Error downloading video: {e}")
+            print("\nAlternative: Try with a local file:")
+            print("  python src/main.py stream ./your-video.mp4")
             return None
-    
+
     def open(self) -> bool:
         """
-        Abre la fuente de stream.
-        
-        Para URLs de YouTube, intenta extraer el stream directo.
-        Si falla, intenta descargar el video.
-        Para archivos locales o streams RTSP, los abre directamente.
-        
+        Opens the stream source.
+
+        Strategy:
+        1. If YouTube URL: Extract stream URL with yt-dlp
+        2. If extraction fails: Download video locally
+        3. If local file/RTSP: Open directly with OpenCV
+
         Returns:
-            True si se abrió exitosamente, False en caso contrario
+            bool: True if opened successfully, False otherwise
         """
-        logger.info(f"Obteniendo URL del stream: {self.url}")
+        logger.info(f"Getting stream URL: {self.url}")
         
         if self._is_youtube_url():
             self.stream_url = self._extract_youtube_url()
@@ -105,17 +138,17 @@ class StreamSource(VideoSource):
         else:
             self.stream_url = self.url
         
-        logger.info("Abriendo stream...")
+        logger.info("Opening stream...")
         self.capture = cv2.VideoCapture(self.stream_url)
         self.is_open = self.capture.isOpened()
-        
+
         if self.is_open:
-            logger.info("✓ Video/stream abierto exitosamente")
+            logger.info("✓ Video/stream opened successfully")
             return True
         else:
-            logger.error("No se pudo abrir el video/stream")
+            logger.error("Could not open video/stream")
             return False
-    
+
     def __str__(self) -> str:
-        """Representación en string de la fuente."""
+        """String representation of the stream source."""
         return f"StreamSource(url={self.url})"

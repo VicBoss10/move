@@ -1,5 +1,10 @@
 """
-Fuente de video desde cámara USB/webcam
+Video source for USB cameras and webcams.
+
+Provides implementation for USB camera input using OpenCV's VideoCapture.
+
+Classes:
+    CameraSource: USB camera video source
 """
 import cv2
 import logging
@@ -10,41 +15,54 @@ logger = logging.getLogger(__name__)
 
 class CameraSource(VideoSource):
     """
-    Fuente de video desde cámara USB o webcam.
-    
-    Maneja la apertura y lectura de frames desde dispositivos de cámara
-    conectados al sistema.
+    Video source for USB cameras and webcams.
+
+    Implements VideoSource interface for local USB camera devices.
+    Uses OpenCV's VideoCapture with numeric device index to access
+    system cameras.
+
+    Examples:
+        >>> camera = CameraSource(0)  # Default camera
+        >>> if camera.open():
+        ...     cap = camera.get_capture()
+        ...     fps = camera.get_fps()
+        ... else:
+        ...     print("Could not open camera")
+
+    Attributes:
+        camera_index (int): System camera device index (0 = default)
     """
     
     def __init__(self, camera_index: int = 0):
         """
-        Inicializa la fuente de cámara.
-        
+        Initializes the camera source.
+
         Args:
-            camera_index: Índice de la cámara (0 para cámara por defecto)
+            camera_index (int): System camera device index. Default: 0
+                (system default camera)
         """
         super().__init__()
         self.camera_index = camera_index
-    
+
     def open(self) -> bool:
         """
-        Abre la cámara especificada.
-        
+        Opens the specified camera device.
+
         Returns:
-            True si se abrió exitosamente, False en caso contrario
+            bool: True if opened successfully, False otherwise
         """
-        logger.info(f"Abriendo cámara {self.camera_index}...")
-        
+        logger.info(f"Opening camera {self.camera_index}...")
+
         self.capture = cv2.VideoCapture(self.camera_index)
         self.is_open = self.capture.isOpened()
-        
+
         if self.is_open:
-            logger.info("✓ Cámara abierta exitosamente")
+            logger.info("✓ Camera opened successfully")
             return True
         else:
-            logger.error(f"No se pudo abrir la cámara {self.camera_index}")
+            logger.error(f"Could not open camera {self.camera_index}")
             return False
-    
+
     def __str__(self) -> str:
-        """Representación en string de la fuente."""
+        """String representation of the camera source."""
         return f"CameraSource(index={self.camera_index})"

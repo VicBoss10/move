@@ -1,5 +1,12 @@
 """
-Cliente HTTP para comunicación con el backend Spring Boot
+HTTP client for backend Spring Boot communication.
+
+Manages HTTP requests to the backend REST API for sending vehicle detection
+events. Handles Keycloak authentication via client_credentials flow, request
+timeouts, and error recovery.
+
+Classes:
+    BackendClient: HTTP client for backend communication
 """
 import os
 import time
@@ -11,19 +18,33 @@ from .models import VehicleDetectedEvent
 
 class BackendClient:
     """
-    Cliente HTTP para enviar detecciones de vehículos al backend.
-    
-    Maneja la comunicación con el API REST del backend Spring Boot,
-    incluyendo manejo de errores, timeouts y logging.
+    HTTP client for sending vehicle detection events to the backend API.
+
+    Manages communication with the Spring Boot backend REST API. Handles
+    Keycloak OAuth2 client_credentials authentication (cached), request
+    timeouts, connection errors, and detailed logging.
+
+    Environment Variables:
+        KEYCLOAK_TOKEN_URL: OAuth2 token endpoint (default: auth.moveiot.online)
+        VEHICLE_CLIENT_ID: OAuth2 client ID for this service
+        VEHICLE_CLIENT_SECRET: OAuth2 client secret for this service
+
+    Attributes:
+        base_url (str): Backend API base URL
+        timeout (int): Request timeout in seconds
+        kc_token_url (str): Keycloak token endpoint URL
+        client_id (str): OAuth2 client ID
+        client_secret (str): OAuth2 client secret
     """
     
     def __init__(self, base_url: str, timeout: int = 5):
         """
-        Inicializa el cliente del backend.
-        
+        Initializes the backend API client.
+
         Args:
-            base_url: URL base del backend (ej: http://localhost:8080)
-            timeout: Tiempo máximo de espera en segundos
+            base_url (str): Base URL of the backend API
+                (e.g., http://localhost:8080)
+            timeout (int): Request timeout in seconds. Default: 5
         """
         self.base_url = base_url.rstrip('/')
         self.timeout = timeout
@@ -43,12 +64,13 @@ class BackendClient:
     
     def health_check(self) -> bool:
         """
-        Verifica si el backend está disponible.
-        
-        Intenta conectarse al endpoint base del backend.
-        
+        Checks if the backend is available and healthy.
+
+        Attempts to connect to the backend base URL to verify availability.
+        Updates internal availability flag.
+
         Returns:
-            True si el backend responde, False en caso contrario
+            bool: True if backend responds with status < 500, False otherwise
         """
         try:
             response = requests.get(
@@ -68,13 +90,18 @@ class BackendClient:
     
     def send_detection(self, event: VehicleDetectedEvent) -> bool:
         """
-        Envía una detección de vehículo al backend.
-        
+        Sends a vehicle detection event to the backend API.
+
+        Posts the detection event to the backend's /vehicles endpoint.
+        Handles OAuth2 authentication, timeouts, and connection errors.
+        Includes detailed error logging for debugging.
+
         Args:
-            event: Evento con los datos de la detección
-            
+            event (VehicleDetectedEvent): Detection event with vehicle type,
+                timestamp, and device ID
+
         Returns:
-            True si se envió exitosamente, False en caso contrario
+            bool: True if sent successfully (HTTP 200/201), False otherwise
         """
         endpoint = f"{self.base_url}/vehicles"
         
@@ -123,9 +150,15 @@ class BackendClient:
             return False
 
     def _get_token(self) -> Optional[str]:
-        """Obtener y cachear un access_token usando client_credentials.
+        """
+        Gets and caches an access token using OAuth2 client_credentials flow.
 
-        Retorna None si no hay credenciales configuradas o si falla la petición.
+        Fetches a new token from Keycloak if the cached token is expired
+        (with 10-second buffer). Returns None if credentials are not configured
+        or if token endpoint fails.
+
+        Returns:
+            str: Access token for Authorization header, or None if unavailable
         """
         try:
             if self._token and time.time() < self._token_expiry - 10:
@@ -158,14 +191,14 @@ class BackendClient:
     
     def is_available(self) -> bool:
         """
-        Retorna si el backend está disponible según el último health check.
-        
+        Checks if the backend is available based on last health check.
+
         Returns:
-            True si está disponible, False en caso contrario
+            bool: True if available, False otherwise
         """
         return self._is_available
-    
+
     def __str__(self) -> str:
-        """Representación en string del cliente."""
-        status = "disponible" if self._is_available else "no disponible"
+        """String representation of the backend client."""
+        status = "available" if self._is_available else "unavailable"
         return f"BackendClient({self.base_url}, {status})"
