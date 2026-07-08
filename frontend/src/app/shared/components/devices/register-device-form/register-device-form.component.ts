@@ -9,12 +9,14 @@ import {
   AbstractControl,
   ValidationErrors,
   ValidatorFn,
+  AsyncValidatorFn,
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
-import { map, catchError, shareReplay, takeUntil } from 'rxjs/operators';
+import { map, catchError, shareReplay, takeUntil, first } from 'rxjs/operators';
 import { LocationService } from '../../../../core/services/location.service';
 import { DeviceService } from '../../../../core/services/device.service';
+import { CameraService } from '../../../../core/services/camera.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { DeviceState, DeviceType } from '../../../../core/models/device.model';
 import { Location as AppLocation } from '../../../../core/models/location.model';
@@ -28,16 +30,19 @@ import { ToastService } from '../../../../core/services/toast.service';
  *
  * Features:
  * - Device type selector (CAMERA vs SENSOR) with conditional form sections
- * - Camera registration: name, location, initial state, stream type, and source URL configuration
+ * - Camera registration: name, location, stream type, and source URL configuration
+ * - Initial state always set to INACTIVE (activated in device management workflow)
  * - Sensor registration: displays multi-step instructional guides with LED indicator images and troubleshooting
  * - Dynamic validator updates based on selected device type (camera requires stream config, sensor does not)
  * - Custom validators: trimmedTextValidator (no blank-only values), positiveIntegerValidator, sourceByStreamTypeValidator
- * - Stream type validation: RTSP (rtsp:// prefix), URL (http/https), YouTube (youtube.com/youtu.be), USB (numeric index or /dev/video*)
+ * - Async validators: sourceNotDuplicatedValidator (prevents duplicate camera streams in the system)
+ * - Stream type validation: RTSP (rtsp:// prefix), URL (http/https), YouTube (www.youtube.com or https://, auto-prefixed)
+ * - Duplicate stream detection: queries CameraService to verify source URL isn't already registered
  * - Captive portal LED simulation: blinking LED image toggle when SENSOR type is selected
  * - Reactive form with BehaviorSubject for isLoading, successMessage, errorMessage, selectedType
  * - Location list loading with error fallback to empty array
  * - Router navigation to device-status page on successful registration or when sensor info is shown
- * - Toast notifications for success and error feedback
+ * - Toast notifications for success and error feedback (including validation errors)
  * - Dark mode support via Tailwind CSS dark: prefix
  * - OnPush change detection with manual ChangeDetectorRef triggers
  * - OnDestroy cleanup: stops LED blinking interval and completes destroy Subject
@@ -163,6 +168,7 @@ export class RegisterDeviceFormComponent implements OnDestroy {
     private fb: FormBuilder,
     private locationService: LocationService,
     private deviceService: DeviceService,
+    private cameraService: CameraService,
     private apiService: ApiService,
     private router: Router,
     private toastService: ToastService,
@@ -180,9 +186,9 @@ export class RegisterDeviceFormComponent implements OnDestroy {
       ],
       type: ['', Validators.required],
       locationId: ['', [Validators.required, this.positiveIntegerValidator()]],
-      state: ['ACTIVE', Validators.required],
+      state: ['INACTIVE', Validators.required],
       streamType: [''],
-      source: ['', [this.sourceByStreamTypeValidator()]],
+      source: ['', [this.sourceByStreamTypeValidator()], [this.sourceNotDuplicatedValidator()]],
     });
 
     this.locations$ = this.locationService.getAll().pipe(
@@ -287,7 +293,6 @@ export class RegisterDeviceFormComponent implements OnDestroy {
    */
   onSubmit(): void {
     if (!this.deviceForm.valid) {
-      this.errorMessage$.next('Por favor, completa todos los campos requeridos correctamente.');
       return;
     }
 
@@ -299,27 +304,28 @@ export class RegisterDeviceFormComponent implements OnDestroy {
     const baseData = {
       name: String(formValue.name).trim(),
       type: formValue.type as DeviceType,
-      state: (formValue.state as DeviceState) || DeviceState.ACTIVE,
+      state: DeviceState.INACTIVE,
       locationId: Number(formValue.locationId),
     };
 
     if (baseData.type === DeviceType.SENSOR) {
       this.isLoading$.next(false);
-      this.toastService.success(
-        'El registro de sensores se realiza desde el propio dispositivo (portal cautivo).',
-        'Registro de Sensor',
-      );
       setTimeout(() => {
         this.router.navigate(['/dashboard/devices/device-status']);
-      }, 900);
+      }, 500);
       return;
+    }
+
+    let source = String(formValue.source).trim();
+    if (formValue.streamType === 'YOUTUBE' && !source.toLowerCase().startsWith('http')) {
+      source = 'https://' + source;
     }
 
     const payload = {
       ...baseData,
       type: DeviceType.CAMERA,
       streamType: formValue.streamType,
-      source: String(formValue.source).trim(),
+      source,
     };
 
     this.deviceService
@@ -329,7 +335,7 @@ export class RegisterDeviceFormComponent implements OnDestroy {
         next: (_response) => {
           this.isLoading$.next(false);
           const typeName = 'Cámara';
-          const guidance = 'Para iniciar la detección dirígete a Cámara → Streaming.';
+          const guidance = 'Para iniciar la detección dirígete a Cámara → Estado del modelo y activa la cámara.';
           this.successMessage$.next(`${typeName} registrado(a) exitosamente. ${guidance}`);
           this.toastService.success(`${typeName} registrado(a) exitosamente. ${guidance}`, 'Éxito');
 
@@ -352,7 +358,7 @@ export class RegisterDeviceFormComponent implements OnDestroy {
    * Resets form to initial state and clears success/error messages.
    */
   resetForm(): void {
-    this.deviceForm.reset({ state: 'ACTIVE' });
+    this.deviceForm.reset({ state: 'INACTIVE' });
     this.selectedType$.next('');
     this.errorMessage$.next(null);
     this.successMessage$.next(null);
@@ -421,8 +427,7 @@ export class RegisterDeviceFormComponent implements OnDestroy {
    * Validates source URL/path format based on selected stream type.
    * RTSP: must start with rtsp://
    * URL: must be valid http/https URL
-   * YOUTUBE: must be valid http/https URL containing youtube.com or youtu.be domain
-   * USB: must be numeric index or /dev/video* Linux device path
+   * YOUTUBE: accepts both complete https:// URLs and www.youtube.com/ URLs (adds https:// automatically on submit)
    * @returns {ValidatorFn} Validation function
    * @private
    */
@@ -449,14 +454,12 @@ export class RegisterDeviceFormComponent implements OnDestroy {
       }
 
       if (streamType === 'YOUTUBE') {
-        const isYouTube = this.isValidHttpUrl(source) && /(youtube\.com|youtu\.be)/i.test(source);
+        let urlToValidate = source;
+        if (!source.toLowerCase().startsWith('http://') && !source.toLowerCase().startsWith('https://')) {
+          urlToValidate = 'https://' + source;
+        }
+        const isYouTube = this.isValidHttpUrl(urlToValidate) && /(youtube\.com|youtu\.be)/i.test(urlToValidate);
         return isYouTube ? null : { invalidYouTubeSource: true };
-      }
-
-      if (streamType === 'USB') {
-        const isUsbIndex = /^\d+$/.test(source);
-        const isLinuxDevice = /^\/dev\/video\d+$/i.test(source);
-        return isUsbIndex || isLinuxDevice ? null : { invalidUsbSource: true };
       }
 
       return null;
@@ -476,5 +479,35 @@ export class RegisterDeviceFormComponent implements OnDestroy {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Asynchronous validator to check if a camera stream source (URL) is already registered.
+   * Queries the backend to verify that no camera with the same source URL exists.
+   * Returns sourceAlreadyExists error if a duplicate is found.
+   * Only validates if streamType is CAMERA and source has a value.
+   * @returns {AsyncValidatorFn} Async validation function
+   * @private
+   */
+  private sourceNotDuplicatedValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      const sourceValue = control.value;
+      const streamType = control.parent?.get('streamType')?.value;
+
+      if (!sourceValue || !streamType) {
+        return of(null);
+      }
+
+      return this.cameraService.getAll().pipe(
+        first(),
+        map((cameras) => {
+          const sourceExists = cameras.some(
+            (camera) => camera.source?.toLowerCase() === sourceValue.trim().toLowerCase(),
+          );
+          return sourceExists ? { sourceAlreadyExists: true } : null;
+        }),
+        catchError(() => of(null)),
+      );
+    };
   }
 }

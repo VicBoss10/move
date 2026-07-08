@@ -98,25 +98,6 @@
               }
             </div>
 
-            <div>
-              <label
-                for="state"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Estado Inicial *
-              </label>
-              <select
-                id="state"
-                formControlName="state"
-                class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-500/30 transition"
-              >
-                @for (state of states; track state) {
-                  <option [value]="state.id">
-                    {{ state.label }}
-                  </option>
-                }
-              </select>
-            </div>
           </div>
         </div>
       }
@@ -190,6 +171,18 @@
                   }
                   @if (deviceForm.get('source')?.hasError('minlength')) {
                     <span>La URL debe tener al menos 5 caracteres</span>
+                  }
+                  @if (deviceForm.get('source')?.hasError('invalidRtspSource')) {
+                    <span>La URL RTSP debe comenzar con rtsp://</span>
+                  }
+                  @if (deviceForm.get('source')?.hasError('invalidHttpSource')) {
+                    <span>La URL debe comenzar con http:// o https://</span>
+                  }
+                  @if (deviceForm.get('source')?.hasError('invalidYouTubeSource')) {
+                    <span>Ingresa una URL válida de YouTube (ej: www.youtube.com/live/... o https://youtu.be/...)</span>
+                  }
+                  @if (deviceForm.get('source')?.hasError('sourceAlreadyExists')) {
+                    <span>Este stream ya está registrado en el sistema</span>
                   }
                 </div>
               }
@@ -399,7 +392,7 @@
             [class.cursor-not-allowed]="!canSubmit()"
             class="px-6 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium transition disabled:hover:bg-brand-500"
           >
-            @if (!(isLoading$ | async)) {
+            @if ((isLoading$ | async) === false) {
               <span>Registrar Dispositivo</span>
             }
             @if (isLoading$ | async) {
