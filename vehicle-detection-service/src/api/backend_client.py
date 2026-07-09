@@ -46,7 +46,13 @@ class BackendClient:
                 (e.g., http://localhost:8080)
             timeout (int): Request timeout in seconds. Default: 5
         """
-        self.base_url = base_url.rstrip('/')
+        resolved_base_url = (
+            os.getenv("BACKEND_URL")
+            or os.getenv("FRONTEND_API_BASE_URL")
+            or os.getenv("API_BASE_URL")
+            or base_url
+        )
+        self.base_url = resolved_base_url.rstrip('/')
         self.timeout = timeout
         self.logger = logging.getLogger(__name__)
         self._is_available = False
@@ -55,10 +61,21 @@ class BackendClient:
         self._token_expiry: float = 0.0
 
         # Keycloak client-credentials configuration (read from env)
-        self.kc_token_url = os.getenv(
-            "KEYCLOAK_TOKEN_URL",
-            "https://auth.moveiot.online/realms/move/protocol/openid-connect/token",
-        )
+        self.kc_token_url = os.getenv("KEYCLOAK_TOKEN_URL")
+        if not self.kc_token_url:
+            issuer_uri = os.getenv("KEYCLOAK_ISSUER_URI") or os.getenv("KEYCLOAK_PUBLIC_HOSTNAME")
+            if issuer_uri:
+                issuer_uri = issuer_uri.rstrip('/')
+                if issuer_uri.endswith('/token'):
+                    self.kc_token_url = issuer_uri
+                elif '/realms/' in issuer_uri:
+                    self.kc_token_url = f"{issuer_uri}/protocol/openid-connect/token"
+                else:
+                    realm = os.getenv("KEYCLOAK_REALM", "move")
+                    self.kc_token_url = f"{issuer_uri}/realms/{realm}/protocol/openid-connect/token"
+            else:
+                self.kc_token_url = "http://localhost:8081/realms/move/protocol/openid-connect/token"
+
         self.client_id = os.getenv("VEHICLE_CLIENT_ID")
         self.client_secret = os.getenv("VEHICLE_CLIENT_SECRET")
     

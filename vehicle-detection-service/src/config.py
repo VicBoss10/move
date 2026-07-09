@@ -94,7 +94,12 @@ DRAW_PROXIMITY_PX = 100
 # BACKEND INTEGRATION
 # ============================================================================
 
-BACKEND_URL = os.environ.get("BACKEND_URL", "https://api.moveiot.online")
+BACKEND_URL = (
+    os.environ.get("BACKEND_URL")
+    or os.environ.get("FRONTEND_API_BASE_URL")
+    or os.environ.get("API_BASE_URL")
+    or "http://localhost:8080"
+)
 BACKEND_TIMEOUT = 5
 SEND_DETECTIONS_ENABLED = True
 
