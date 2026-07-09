@@ -83,8 +83,8 @@ Este proyecto combina servicios Docker (backend, frontend, Keycloak y bases de d
     - Genera `keycloak/move-realm-import.json`
     
     Si prefieres hacerlo manual, consulta [`keycloak/move-realm.example.md`](keycloak/move-realm.example.md).
-    
-    > **Nota (entorno local):** `docker-compose.yml` construye `KC_HOSTNAME` como `https://${KEYCLOAK_PUBLIC_HOSTNAME}`. Si defines `KEYCLOAK_PUBLIC_HOSTNAME=localhost`, Keycloak anunciará su hostname como `https://localhost` mientras el resto del sistema usa `http://localhost:8081`, lo que puede romper el claim `iss` de los tokens y las redirecciones de login. Gracias a `KC_HOSTNAME_STRICT: "false"` el acceso por `http://localhost:8081` funciona, pero si tienes problemas de autenticación en local, revisa esta variable.
+     
+    > **Gestión de usuarios y roles:** el usuario administrador (`KEYCLOAK_ADMIN_USERNAME`/`KEYCLOAK_ADMIN_PASSWORD`) se crea automáticamente en el realm `master`, sin email ni nombre configurados — es el comportamiento estándar de Keycloak. Para gestionar usuarios, roles y el resto de la configuración del realm `move`, accede a la consola de administración en `http://localhost:8081/admin`.
 
 4.  **Inicia el Servicio de Detección Vehícular (Local):**
     Por razones de rendimiento (CPU/GPU), este servicio se ejecuta de forma nativa. Si no lo necesitas ahora, puedes saltarlo.
