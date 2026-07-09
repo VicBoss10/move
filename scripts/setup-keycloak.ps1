@@ -1,4 +1,4 @@
-# Setup Keycloak - Genera move-realm-import.json desde .env y move-realm.example.json
+﻿# Setup Keycloak - Genera move-realm-import.json desde .env y move-realm.example.json
 # Para Windows PowerShell
 
 $ErrorActionPreference = "Stop"
@@ -45,7 +45,7 @@ if ([string]::IsNullOrWhiteSpace($GOOGLE_CLIENT_SECRET)) {
     $GOOGLE_CLIENT_SECRET = "REPLACE_WITH_OAUTH_SECRET"
 }
 
-Write-Host "✓ Secretos encontrados" -ForegroundColor Green
+Write-Host "Secretos encontrados" -ForegroundColor Green
 
 # Generar move-realm-import.json
 Write-Host "Generando move-realm-import.json..." -ForegroundColor Yellow
@@ -57,14 +57,14 @@ $content = $content -replace "REPLACE_WITH_YOUR_CLIENT_SECRET", $VEHICLE_CLIENT_
 $content = $content -replace "REPLACE_WITH_OAUTH_SECRET", $GOOGLE_CLIENT_SECRET
 $content | Set-Content "keycloak/move-realm-import.json"
 
-Write-Host "✓ move-realm-import.json generado exitosamente" -ForegroundColor Green
+Write-Host "move-realm-import.json generado exitosamente" -ForegroundColor Green
 
 # Verificar placeholders
 if ($content -match "REPLACE_WITH") {
-    Write-Host "⚠ Advertencia: Aun hay placeholders sin reemplazar" -ForegroundColor Yellow
+    Write-Host "Advertencia: Aun hay placeholders sin reemplazar" -ForegroundColor Yellow
     Write-Host "Revisa manualmente: keycloak/move-realm-import.json"
 } else {
-    Write-Host "✓ Todos los placeholders fueron reemplazados" -ForegroundColor Green
+    Write-Host "Todos los placeholders fueron reemplazados" -ForegroundColor Green
 }
 
 Write-Host ""
