@@ -179,7 +179,7 @@ Para detener todos los servicios, ejecuta el siguiente comando en la raíz del p
 ```bash
 docker compose down
 ```
-- Para detener y eliminar también los volúmenes (⚠️ esto borrará todos los datos de las bases de datos):
+- Para detener y eliminar también los volúmenes (esto borrará todos los datos de las bases de datos):
   ```bash
   docker compose down -v
   ```
