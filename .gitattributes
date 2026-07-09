@@ -1,0 +1,6 @@
+# Fuerza saltos de línea LF sin importar el sistema operativo o la configuración
+# local de Git (evita que Windows con core.autocrlf=true convierta a CRLF).
+# Necesario porque estos scripts se ejecutan como shell scripts (shebang #!/bin/sh
+# o #!/bin/bash), y un shebang con CRLF rompe la ejecución con
+# "exec: no such file or directory".
+*.sh text eol=lf
