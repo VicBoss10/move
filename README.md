@@ -28,6 +28,7 @@ Sistema de monitoreo ambiental móvil basado en IoT. Mide contaminantes vehicula
 ├── frontend/           # Aplicación web (Angular + Nginx)
 ├── firmware/           # Código fuente (C++) para dispositivos IoT (Arduino/ESP32)
 ├── keycloak/           # Configuración de identidad (Realms & Client Import)
+├── scripts/            # Scripts de configuración (setup de Keycloak)
 ├── vehicle-detection-service/ # Microservicio de IA (Python, YOLO v11, OpenCV)
 ├── docker-compose.yml  # Orquestador con perfiles (core, frontend, tools, tunnel)
 └── README.md           # Documentación principal
@@ -54,40 +55,67 @@ Este proyecto combina servicios Docker (backend, frontend, Keycloak y bases de d
     cd move
     ```
 
-2.  **Configura el entorno:**
-    Copia el archivo de ejemplo y ajusta los valores necesarios (tokens, claves API y secretos):
+2.  **Configura el archivo `.env`:**
+    Copia el archivo de ejemplo y ajusta los valores necesarios:
     ```bash
     cp .env.example .env
     ```
-    > **Nota sobre Configuración:** El archivo `docker-compose.yml` utiliza valores predeterminados para facilitar el despliegue rápido, pero es **crítico** configurar correctamente el archivo `.env`. El sistema está diseñado para funcionar tanto en entornos **locales** como **expuesto a internet**. Mezclar configuraciones locales con URLs públicas (o viceversa) impedirá que los servicios se comuniquen correctamente. Para una guía detallada sobre cada variable, consulta los comentarios en [.env.example](.env.example).
+    > El archivo `docker-compose.yml` utiliza valores predeterminados, pero **estos apuntan al entorno de producción** (`moveiot.online`). Para trabajar en local es obligatorio descomentar y configurar la sección de desarrollo local del `.env`; sin eso, el login y el frontend no funcionarán en localhost. El sistema funciona en entornos locales e internet, pero mezclar configuraciones locales con URLs públicas impedirá que los servicios se comuniquen. Consulta los comentarios en [.env.example](.env.example).
 
-3.  **Inicia el Servicio de Detección Vehícular (Local):**
-    Por razones de eficiencia y rendimiento (uso de CPU/GPU), este servicio se ejecuta de forma nativa. 
+3.  **Configura Keycloak:**
+    El backend depende de Keycloak. Debes configurarlo primero.
+    
+    Ejecuta el script de setup que genera automáticamente `move-realm-import.json` con los valores de `.env`:
+    
+    **Linux/Mac (Terminal):**
+    ```bash
+    ./scripts/setup-keycloak.sh
+    ```
+    
+    **Windows (PowerShell):**
+    ```powershell
+    .\scripts\setup-keycloak.ps1
+    ```
+    
+    El script:
+    - Lee `VEHICLE_CLIENT_SECRET` y `GOOGLE_CLIENT_SECRET` de `.env`
+    - Reemplaza los placeholders en `move-realm.example.json`
+    - Genera `keycloak/move-realm-import.json`
+    
+    Si prefieres hacerlo manual, consulta [`keycloak/move-realm.example.md`](keycloak/move-realm.example.md).
+    
+    > **Nota (entorno local):** `docker-compose.yml` construye `KC_HOSTNAME` como `https://${KEYCLOAK_PUBLIC_HOSTNAME}`. Si defines `KEYCLOAK_PUBLIC_HOSTNAME=localhost`, Keycloak anunciará su hostname como `https://localhost` mientras el resto del sistema usa `http://localhost:8081`, lo que puede romper el claim `iss` de los tokens y las redirecciones de login. Gracias a `KC_HOSTNAME_STRICT: "false"` el acceso por `http://localhost:8081` funciona, pero si tienes problemas de autenticación en local, revisa esta variable.
+
+4.  **Inicia el Servicio de Detección Vehícular (Local):**
+    Por razones de rendimiento (CPU/GPU), este servicio se ejecuta de forma nativa. Si no lo necesitas ahora, puedes saltarlo.
     
     1. Navega al directorio del servicio:
-
-        ```bash
-        cd vehicle-detection-service
-        ```
+       ```bash
+       cd vehicle-detection-service
+       ```
     
     2. Crea y activa el entorno virtual:
-        ```bash
-        python -m venv .venv
-        source .venv/bin/activate  # En Windows: .venv\Scripts\activate
-        ```
+       ```bash
+       python -m venv .venv
+       source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+       ```
     
-    3. Instala las dependencias necesarias:
-        ```bash
-        pip install -r requirements.txt
-        ```
+    3. Instala dependencias:
+       ```bash
+       pip install -r requirements.txt
+       ```
     
-    4. Inicia el servidor de inferencia con Gunicorn:
-        ```bash
-        gunicorn --worker-class gthread --workers 1 --threads 12 --bind 0.0.0.0:5000 --chdir src api_server:app
-        ```
+    4. Inicia el servidor (escucha en el puerto `5000`; el backend en Docker lo alcanza vía `host.docker.internal:5000`):
+       ```bash
+       gunicorn --worker-class gthread --workers 1 --threads 12 --bind 0.0.0.0:5000 --chdir src api_server:app
+       ```
+       > **Windows:** `gunicorn` no funciona en Windows. Usa WSL, o inicia el servidor de desarrollo de Flask:
+       > ```powershell
+       > python src\api_server.py
+       > ```
 
-4.  **Levanta los servicios con Docker Compose (en otra terminal):**
-    Regresa a la raíz de `move/` y usa perfiles para modularizar la ejecución:
+5.  **Levanta los servicios con Docker Compose (en otra terminal):**
+    Regresa a la raíz de `move/` y usa perfiles para modularizar:
 
     - **Solo Core (Backend + Keycloak + DBs):**
       ```bash
@@ -101,12 +129,13 @@ Este proyecto combina servicios Docker (backend, frontend, Keycloak y bases de d
       ```bash
       docker compose --profile tunnel up -d
       ```
+      > Requiere tener un túnel de Cloudflare ya configurado en el host: el contenedor monta `~/cloudflared` y espera encontrar ahí `config.yml` y las credenciales del túnel.
 
-5.  **Accede a la aplicación:**
+6.  **Accede a la aplicación:**
     - **Frontend:** [http://localhost](http://localhost) (requiere `--profile frontend`)
     - **Backend API:** [http://localhost:8080](http://localhost:8080)
-    - **Keycloak:** [http://localhost:8081](http://localhost:8081)
-    - **pgAdmin:** [http://localhost:5050](http://localhost:5050)
+    - **Keycloak Admin:** [http://localhost:8081](http://localhost:8081)
+    - **pgAdmin:** [http://localhost:5050](http://localhost:5050) (requiere `--profile tools`)
     - **Swagger UI:** [http://localhost:8080/docs](http://localhost:8080/docs)
 
 
@@ -137,8 +166,10 @@ El backend expone documentación interactiva de todos sus endpoints mediante **S
 
 | Recurso | URL |
 | :--- | :--- |
-| **Swagger UI** (interfaz interactiva) | [http://localhost:8080/docs](http://localhost:8080/docs) |
-| **OpenAPI JSON** (especificación raw) | [http://localhost:8080/docs/swagger-ui/index.html](http://localhost:8080/docs) |
+| **Swagger UI** (interfaz interactiva) | [http://localhost:8080/docs](http://localhost:8080/docs) (redirige a `/swagger-ui/index.html`) |
+| **OpenAPI YAML** (especificación raw) | [http://localhost:8080/docs.yaml](http://localhost:8080/docs.yaml) |
+
+> La especificación en JSON se sirve en la misma ruta `/docs` mediante negociación de contenido: `curl -H "Accept: application/json" http://localhost:8080/docs`.
 
 Desde Swagger UI puedes explorar todos los endpoints, ver los esquemas de request/response y ejecutar llamadas directamente contra la API. Para endpoints protegidos, utiliza el botón **Authorize** e introduce el Bearer token obtenido desde Keycloak.
 
@@ -222,7 +253,7 @@ El frontend es una aplicación de Angular.
 
 ### Servicio de Detección Vehicular (IA - Python)
 
-Este servicio se ejecuta de forma nativa por razones de rendimiento. Consulta el paso 3 de la sección [Instalación y Ejecución](#instalación-y-ejecución).
+Este servicio se ejecuta de forma nativa por razones de rendimiento. Consulta el paso 4 de la sección [Instalación y Ejecución](#instalación-y-ejecución).
 
 ---
 
