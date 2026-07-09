@@ -94,10 +94,21 @@ Este proyecto combina servicios Docker (backend, frontend, Keycloak y bases de d
        cd vehicle-detection-service
        ```
     
-    2. Crea y activa el entorno virtual:
+    2. Crea el entorno virtual:
        ```bash
        python -m venv .venv
-       source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+       ```
+
+       Actívalo:
+
+       **Linux/Mac (Terminal):**
+       ```bash
+       source .venv/bin/activate
+       ```
+
+       **Windows (PowerShell):**
+       ```powershell
+       .venv\Scripts\activate
        ```
     
     3. Instala dependencias:
@@ -106,13 +117,17 @@ Este proyecto combina servicios Docker (backend, frontend, Keycloak y bases de d
        ```
     
     4. Inicia el servidor (escucha en el puerto `5000`; el backend en Docker lo alcanza vía `host.docker.internal:5000`):
+
+       **Linux/Mac (Terminal):**
        ```bash
        gunicorn --worker-class gthread --workers 1 --threads 12 --bind 0.0.0.0:5000 --chdir src api_server:app
        ```
-       > **Windows:** `gunicorn` no funciona en Windows. Usa WSL, o inicia el servidor de desarrollo de Flask:
-       > ```powershell
-       > python src\api_server.py
-       > ```
+
+       **Windows (PowerShell):**
+       > `gunicorn` no funciona en Windows (depende de `fcntl`). Usa WSL para correr el comando de arriba, o inicia el servidor de desarrollo de Flask:
+       ```powershell
+       python src\api_server.py
+       ```
 
 5.  **Levanta los servicios con Docker Compose (en otra terminal):**
     Regresa a la raíz de `move/` y usa perfiles para modularizar:
