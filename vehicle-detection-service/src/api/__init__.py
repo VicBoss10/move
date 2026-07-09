@@ -11,7 +11,7 @@ Exports:
     YOLO_TO_VEHICLE_TYPE: Mapping from YOLO class names to VehicleType
     BackendClient: HTTP client for backend communication
 """
-from .models import VehicleType, VehicleDetectedEvent, YOLO_TO_VEHICLE_TYPE
+from .models import VehicleType, VehicleDetectedEvent, YOLO_TO_VEHICLE_TYPE, get_colombia_datetime
 from .backend_client import BackendClient
 
 __all__ = [

@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo
 import config
 from detectors import VehicleDetector
 from video import CameraSource, StreamSource
-from api import BackendClient, VehicleDetectedEvent, YOLO_TO_VEHICLE_TYPE
+from api import BackendClient, VehicleDetectedEvent, YOLO_TO_VEHICLE_TYPE, get_colombia_datetime
 from .stream_session import StreamSession
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ class StreamManager:
                 stream_type=stream_type,
                 source=source,
                 status="active",
-                created_at=datetime.now(ZoneInfo("America/Bogota")),
+                created_at=get_colombia_datetime(),
                 video_source=video_source,
                 detector=detector,
                 is_running=True,
@@ -345,7 +345,7 @@ class StreamManager:
                                 continue
                             event = VehicleDetectedEvent(
                                 vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
-                                timestamp=datetime.now(ZoneInfo("America/Bogota")),
+                                timestamp=get_colombia_datetime(),
                                 device_id=session.device_id
                             )
                             try:

@@ -49,7 +49,7 @@ from zoneinfo import ZoneInfo
 import config
 from detectors import VehicleDetector
 from video import CameraSource, StreamSource
-from api import BackendClient, VehicleDetectedEvent, YOLO_TO_VEHICLE_TYPE
+from api import BackendClient, VehicleDetectedEvent, YOLO_TO_VEHICLE_TYPE, get_colombia_datetime
 
 logging.basicConfig(
     level=logging.INFO,
@@ -343,7 +343,7 @@ def main_loop(cap, detector, backend_client, height, width, line_y, wait_time):
                         try:
                             event = VehicleDetectedEvent(
                                 vehicle_type=YOLO_TO_VEHICLE_TYPE[label],
-                                timestamp=datetime.now(ZoneInfo("America/Bogota")),
+                                timestamp=get_colombia_datetime(),
                                 device_id=None
                             )
                             success = backend_client.send_detection(event)

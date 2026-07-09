@@ -9,10 +9,38 @@ Classes:
     VehicleDetectedEvent: DTO for sending vehicle detections to backend
 """
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from enum import Enum
 from typing import Dict
+
+
+def get_colombia_datetime() -> datetime:
+    """
+    Returns a datetime for Colombia time when the timezone database is available.
+
+    Some environments (notably some Windows or minimal Python installs) do not
+    include the IANA timezone data. In that case, we fall back to the server's
+    local time instead of crashing the stream creation flow.
+    """
+    try:
+        return datetime.now(ZoneInfo("America/Bogota"))
+    except (ZoneInfoNotFoundError, KeyError, Exception):
+        return datetime.now().astimezone()
+
+
+def to_backend_datetime(timestamp: datetime) -> datetime:
+    """
+    Converts a timestamp to a naive datetime suitable for backend serialization.
+    """
+    if timestamp.tzinfo is None:
+        return timestamp
+
+    try:
+        target_tz = ZoneInfo("America/Bogota")
+        return timestamp.astimezone(target_tz).replace(tzinfo=None)
+    except (ZoneInfoNotFoundError, KeyError, Exception):
+        return timestamp.astimezone().replace(tzinfo=None)
 
 
 class VehicleType(Enum):
@@ -86,16 +114,7 @@ class VehicleDetectedEvent:
         """
         # Ensure we send a naive local datetime string so backend's LocalDateTime
         # parser interprets the time as local server time.
-        try:
-            # Convert to Colombia timezone explicitly and strip tzinfo so backend LocalDateTime parses as local time
-            target_tz = ZoneInfo("America/Bogota")
-            if self.timestamp.tzinfo is not None:
-                ts_local = self.timestamp.astimezone(target_tz).replace(tzinfo=None)
-            else:
-                # Treat naive datetime as if it's already in local Colombia time
-                ts_local = self.timestamp
-        except Exception:
-            ts_local = self.timestamp
+        ts_local = to_backend_datetime(self.timestamp)
 
         return {
             "vehicleType": self.vehicle_type.value,
