@@ -23,13 +23,5 @@ EOF
 
 echo "Wrote /usr/share/nginx/html/assets/config.json"
 
-# Sustituir placeholder en nginx.conf para que nginx tenga la URL correcta
-# Si no está definida, usar localhost:5000
-PY_URL=${PYTHON_SERVICE_PUBLIC_URL:-localhost:5000}
-if [ -f /etc/nginx/conf.d/default.conf ]; then
-  echo "Patching nginx.conf with PYTHON_SERVICE_PUBLIC_URL=${PY_URL}"
-  sed -i "s|__PYTHON_SERVICE_PUBLIC_URL__|${PY_URL}|g" /etc/nginx/conf.d/default.conf || true
-fi
-
 # Ejecutar el comando original (nginx)
 exec "$@"

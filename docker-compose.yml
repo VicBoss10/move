@@ -30,8 +30,9 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       # ── Servicios internos ─────────────────────────────────
-      - PYTHON_SERVICE_URL=${PYTHON_SERVICE_URL:-http://vehicle-detection:5000}
-      - PYTHON_SERVICE_PUBLIC_URL=${PYTHON_SERVICE_PUBLIC_URL:-}
+      # El servicio de detección corre fuera de Docker (en el host o expuesto
+      # a internet); configurar PYTHON_SERVICE_URL en .env según el modo.
+      - PYTHON_SERVICE_URL=${PYTHON_SERVICE_URL:-http://host.docker.internal:5000}
       # ── Keycloak ───────────────────────────────────────────
       # ISSUER_URI: URL pública, debe coincidir con el claim 'iss' del JWT
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI:-http://localhost:8081/realms/move}

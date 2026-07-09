@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,6 +22,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthConverter jwtAuthConverter;
@@ -48,7 +50,8 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher("/users", "/users/**", "/devices", "/devices/**", "/locations", "/locations/**",
-            "/vehicles", "/vehicles/**", "/cameras", "/cameras/**", "/sensors", "/sensors/**", "/sensordata", "/sensordata/**", "/stream/**")
+            "/vehicles", "/vehicles/**", "/cameras", "/cameras/**", "/sensors", "/sensors/**", "/sensordata", "/sensordata/**",
+            "/streams", "/streams/**", "/thresholds", "/thresholds/**")
             .csrf(csrf -> csrf.disable())
             .cors(cors -> {
             })
@@ -102,7 +105,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/sensordata/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/sensordata/**").hasRole("ADMIN")
 
-                .requestMatchers("/stream/**").hasAnyRole("ADMIN", "USER", "DEVICE")
+                .requestMatchers(HttpMethod.GET, "/streams/feed/*", "/streams/snapshot/*").permitAll()
+                .requestMatchers("/streams/**").hasAnyRole("ADMIN", "USER", "DEVICE")
+
+                .requestMatchers(HttpMethod.GET, "/thresholds", "/thresholds/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers("/thresholds/**").hasRole("ADMIN")
 
                 .anyRequest().authenticated());
 
