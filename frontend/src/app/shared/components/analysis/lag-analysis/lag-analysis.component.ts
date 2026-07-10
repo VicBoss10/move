@@ -218,7 +218,7 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
           const avg =
             inSensor.length > 0
               ? inSensor.reduce((s, d) => s + ((d[metricKey] as number) ?? 0), 0) / inSensor.length
-              : 0;
+              : NaN;
 
           pollutant.push(avg);
           vehicles.push(vCount);
@@ -275,6 +275,7 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     for (let i = 0; i < n; i++) {
       const j = i + k;
       if (j < 0 || j >= n) continue;
+      if (!Number.isFinite(y[j])) continue;
       pairs.push([x[i], y[j]]);
     }
     if (pairs.length < 2) return 0;
@@ -308,10 +309,10 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     if (best.lag === 0) {
       return `La correlación ${strength} (r = ${best.r.toFixed(2)}) entre vehículos y ${metricLabel} es instantánea; no se detecta rezago.`;
     }
-    if (best.lag < 0) {
-      return `Correlación ${strength} (r = ${best.r.toFixed(2)}) con rezago de ${Math.abs(best.lagHours)} h: el tráfico vehicular anticipa el cambio en ${metricLabel} hacia el futuro.`;
+    if (best.lag > 0) {
+      return `Correlación ${strength} (r = ${best.r.toFixed(2)}) con rezago de +${best.lagHours} h: el tráfico vehicular anticipa el cambio en ${metricLabel} ${best.lagHours} h después.`;
     }
-    return `Correlación ${strength} (r = ${best.r.toFixed(2)}) con rezago de +${best.lagHours} h: ${metricLabel} cambia antes que el tráfico vehicular (posible causalidad inversa u otro factor).`;
+    return `Correlación ${strength} (r = ${best.r.toFixed(2)}) con rezago de ${best.lagHours} h: ${metricLabel} cambia antes que el tráfico vehicular (posible causalidad inversa u otro factor).`;
   }
 
   private buildChartOptions(_m: MetricOption): ChartConfiguration<'bar'>['options'] {

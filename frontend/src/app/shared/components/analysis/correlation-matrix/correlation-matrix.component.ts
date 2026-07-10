@@ -77,11 +77,11 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
   sampleSize = 0;
 
   readonly legend = [
-    { color: 'bg-emerald-600', text: 'Strong positive correlation (r ≥ 0.7)' },
-    { color: 'bg-emerald-300', text: 'Moderate positive correlation (0.3 ≤ r < 0.7)' },
-    { color: 'bg-gray-100 dark:bg-gray-700', text: 'No significant correlation (|r| < 0.3)' },
-    { color: 'bg-blue-300', text: 'Moderate negative correlation (-0.7 < r ≤ -0.3)' },
-    { color: 'bg-blue-600', text: 'Strong negative correlation (r ≤ -0.7)' },
+    { color: 'bg-emerald-600', text: 'Correlación positiva fuerte (r ≥ 0.7)' },
+    { color: 'bg-emerald-300', text: 'Correlación positiva moderada (0.3 ≤ r < 0.7)' },
+    { color: 'bg-gray-100 dark:bg-gray-700', text: 'Sin correlación significativa (|r| < 0.3)' },
+    { color: 'bg-blue-300', text: 'Correlación negativa moderada (-0.7 < r ≤ -0.3)' },
+    { color: 'bg-blue-600', text: 'Correlación negativa fuerte (r ≤ -0.7)' },
   ];
 
   constructor(
@@ -166,13 +166,10 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
             return t >= sStart && t < sEnd;
           }).length;
 
-          if (inSlotSensor.length === 0 && vehicleCount === 0) continue;
+          if (inSlotSensor.length === 0) continue;
 
           const avg = (key: keyof SensorData) =>
-            inSlotSensor.length === 0
-              ? 0
-              : inSlotSensor.reduce((s, d) => s + ((d[key] as number) ?? 0), 0) /
-                inSlotSensor.length;
+            inSlotSensor.reduce((s, d) => s + ((d[key] as number) ?? 0), 0) / inSlotSensor.length;
 
           rows.push({
             co2: avg('co2'),

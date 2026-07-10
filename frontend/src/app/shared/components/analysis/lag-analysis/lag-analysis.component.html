@@ -257,13 +257,13 @@
                     }
                   </td>
                   <td class="px-5 py-3 text-xs text-gray-600 dark:text-gray-400">
-                    @if (row.lag < 0) {
-                      Vehículos → {{ row.lag === 0 ? '' : 'luego' }} contaminante
+                    @if (row.lag > 0) {
+                      Vehículos → luego contaminante
                     }
                     @if (row.lag === 0) {
                       Sin rezago
                     }
-                    @if (row.lag > 0) {
+                    @if (row.lag < 0) {
                       Contaminante → luego vehículos
                     }
                   </td>
@@ -283,7 +283,7 @@
         <strong class="text-gray-600 dark:text-gray-300">Metodología:</strong>
         Los datos horarios de sensores y vehículos se agregan por slot de 1 h. Para cada
         desplazamiento k (−12 h … +12 h) se calcula el coeficiente de Pearson entre el vector de
-        vehículos y el vector de contaminante desplazado k posiciones. Un k negativo indica que el
+        vehículos y el vector de contaminante desplazado k posiciones. Un k positivo indica que el
         tráfico _precede_ el cambio en el contaminante. La correlación no implica causalidad; factores
         meteorológicos pueden actuar como confundidores.
       </p>
