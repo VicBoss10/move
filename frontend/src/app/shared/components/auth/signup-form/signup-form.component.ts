@@ -8,6 +8,7 @@ import { ApiService } from '../../../../core/services/api.service';
 import { LabelComponent } from '../../form/label/label.component';
 import { InputFieldComponent } from '../../form/input/input-field.component';
 import { CheckboxComponent } from '../../form/input/checkbox.component';
+import { ButtonComponent } from '../../ui/button/button.component';
 
 /**
  * SignupFormComponent (Presentational Component)
@@ -35,7 +36,14 @@ import { CheckboxComponent } from '../../form/input/checkbox.component';
  */
 @Component({
   selector: 'app-signup-form',
-  imports: [RouterModule, FormsModule, LabelComponent, InputFieldComponent, CheckboxComponent],
+  imports: [
+    RouterModule,
+    FormsModule,
+    LabelComponent,
+    InputFieldComponent,
+    CheckboxComponent,
+    ButtonComponent,
+  ],
   templateUrl: './signup-form.component.html',
   styles: ``,
 })
@@ -77,6 +85,18 @@ export class SignupFormComponent {
   isChecked = false;
 
   /**
+   * Controls visibility of the terms and privacy policy modal.
+   * @type {boolean}
+   */
+  showTermsModal = false;
+
+  /**
+   * Active tab within the terms and privacy policy modal.
+   * @type {'terms' | 'privacy'}
+   */
+  activeTermsTab: 'terms' | 'privacy' = 'terms';
+
+  /**
    * Error message displayed to user on registration failure.
    * @type {string}
    */
@@ -106,6 +126,24 @@ export class SignupFormComponent {
    */
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  /**
+   * Opens the terms and privacy policy modal on the given tab.
+   * @param {'terms' | 'privacy'} tab - Tab to show first
+   * @returns {void}
+   */
+  onOpenTermsModal(tab: 'terms' | 'privacy'): void {
+    this.activeTermsTab = tab;
+    this.showTermsModal = true;
+  }
+
+  /**
+   * Closes the terms and privacy policy modal.
+   * @returns {void}
+   */
+  onCloseTermsModal(): void {
+    this.showTermsModal = false;
   }
 
   /**

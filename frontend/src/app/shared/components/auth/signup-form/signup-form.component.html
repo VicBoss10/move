@@ -1,6 +1,192 @@
 <!-- Sign Up Form Component
      Displays registration form with name, email, password inputs,
-     terms agreement checkbox, and OAuth signup buttons. -->
+     terms agreement checkbox, and OAuth signup buttons.
+     Also contains an inline modal with the terms and conditions
+     and the personal data processing policy (Ley 1581 de 2012). -->
+
+@if (showTermsModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-sm">
+    <div class="flex flex-col w-full max-w-2xl max-h-[85vh] p-8 bg-white rounded-2xl shadow-2xl dark:bg-gray-900">
+      <div class="mb-4">
+        <h2 class="mb-2 text-xl font-semibold text-gray-800 dark:text-white/90">
+          Términos y Condiciones y Política de Tratamiento de Datos
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          MOVE es un proyecto académico de monitoreo ambiental y detección vehicular. Antes de crear tu cuenta, revisa cómo tratamos tu información.
+        </p>
+      </div>
+
+      <!-- Tab switcher -->
+      <div class="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-800">
+        <button
+          type="button"
+          (click)="activeTermsTab = 'terms'"
+          class="px-3 py-2 text-sm font-medium transition-colors border-b-2"
+          [class.border-brand-500]="activeTermsTab === 'terms'"
+          [class.text-brand-500]="activeTermsTab === 'terms'"
+          [class.border-transparent]="activeTermsTab !== 'terms'"
+          [class.text-gray-500]="activeTermsTab !== 'terms'"
+          [class.dark:text-gray-400]="activeTermsTab !== 'terms'"
+        >
+          Términos y Condiciones
+        </button>
+        <button
+          type="button"
+          (click)="activeTermsTab = 'privacy'"
+          class="px-3 py-2 text-sm font-medium transition-colors border-b-2"
+          [class.border-brand-500]="activeTermsTab === 'privacy'"
+          [class.text-brand-500]="activeTermsTab === 'privacy'"
+          [class.border-transparent]="activeTermsTab !== 'privacy'"
+          [class.text-gray-500]="activeTermsTab !== 'privacy'"
+          [class.dark:text-gray-400]="activeTermsTab !== 'privacy'"
+        >
+          Política de Privacidad
+        </button>
+      </div>
+
+      <!-- Scrollable content -->
+      <div class="pr-2 space-y-4 overflow-y-auto text-sm text-gray-600 dark:text-gray-300 grow">
+        @if (activeTermsTab === 'terms') {
+          <div class="space-y-3">
+            <p class="text-xs text-gray-400 dark:text-gray-500">Última actualización: julio de 2026</p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">1. Naturaleza del proyecto.</strong>
+              MOVE es un sistema desarrollado con fines académicos para el monitoreo de variables
+              ambientales (temperatura, humedad, calidad del aire, gases, material particulado) y la
+              detección de vehículos mediante sensores IoT y cámaras, dentro del marco de un proyecto
+              de grado. No constituye un producto comercial y su disponibilidad puede cambiar o
+              suspenderse sin previo aviso.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">2. Responsable.</strong>
+              El desarrollo, operación y responsabilidad sobre esta plataforma corresponde
+              exclusivamente a su(s) autor(es) como proyecto académico independiente. La institución
+              educativa asociada no opera, administra ni se hace responsable por el funcionamiento de
+              la plataforma, el tratamiento de los datos aquí descrito, ni por decisiones tomadas con
+              base en la información que el sistema presenta.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">3. Cuenta de usuario.</strong>
+              Al registrarte declaras que la información suministrada (nombre, apellido y correo
+              electrónico) es veraz y que eres responsable de mantener la confidencialidad de tu
+              contraseña. El acceso a los módulos de administración puede estar restringido según el
+              rol asignado.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">4. Uso del sistema.</strong>
+              Te comprometes a utilizar la plataforma de forma razonable, sin intentar vulnerar su
+              seguridad, sobrecargar los servicios de detección o acceder a datos de otros usuarios o
+              dispositivos sin autorización.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">5. Disponibilidad y garantías.</strong>
+              Al tratarse de un proyecto académico en desarrollo, el sistema se ofrece "tal cual", sin
+              garantías de disponibilidad continua, exactitud absoluta de las mediciones o ausencia de
+              errores. Las lecturas de sensores y detecciones tienen fines demostrativos y de
+              investigación.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">6. Modificaciones.</strong>
+              Estos términos pueden actualizarse a medida que el proyecto evoluciona. Los cambios
+              relevantes se reflejarán en esta misma sección.
+            </p>
+          </div>
+        } @else {
+          <div class="space-y-3">
+            <p class="text-xs text-gray-400 dark:text-gray-500">
+              Tratamiento conforme a la Ley 1581 de 2012 y el Decreto 1377 de 2013 (Colombia)
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">1. Responsable del tratamiento.</strong>
+              MOVE, como proyecto académico, actúa como responsable del tratamiento de los datos
+              personales que recibe a través de este formulario de registro.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">2. Datos que recolectamos.</strong>
+            </p>
+            <ul class="pl-5 space-y-1 list-disc">
+              <li>Datos de cuenta: nombre, apellido y correo electrónico.</li>
+              <li>
+                Datos técnicos de sesión (token de autenticación) gestionados por nuestro proveedor de
+                identidad (Keycloak) o por Google si eliges registrarte con esa opción.
+              </li>
+              <li>
+                Datos ambientales generados por los sensores IoT (temperatura, humedad, gases, material
+                particulado), asociados al dispositivo y no a una persona natural.
+              </li>
+              <li>
+                Video de las cámaras: se procesa en vivo (transmisión y análisis en memoria)
+                únicamente para la detección automática de vehículos mediante visión artificial. El
+                sistema
+                <strong class="text-gray-800 dark:text-white/90"
+                  >no graba ni almacena en disco o base de datos las imágenes o el video</strong
+                >, y no realiza reconocimiento de placas ni de rostros. De cada detección solo se
+                guarda de forma permanente: tipo de vehículo, fecha, hora y cámara asociada.
+              </li>
+            </ul>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">3. Finalidad del tratamiento.</strong>
+              Los datos de cuenta se usan exclusivamente para autenticarte, identificar tu rol dentro
+              de la plataforma y permitir el acceso a los módulos correspondientes. Los datos
+              ambientales y de detección vehicular se usan con fines de monitoreo, análisis estadístico
+              y demostración académica del proyecto.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">4. Almacenamiento y seguridad.</strong>
+              La información se almacena en bases de datos del proyecto con acceso restringido. Las
+              contraseñas se gestionan mediante Keycloak y no se almacenan en texto plano.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">5. Con quién compartimos tus datos.</strong>
+              No vendemos ni compartimos tus datos personales con terceros con fines comerciales.
+              Podrán conocerse por quienes evalúan el proyecto académico (director, jurados) únicamente
+              con fines de sustentación, y nunca se publican credenciales ni contraseñas.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">6. Tus derechos (Habeas Data).</strong>
+              Como titular de los datos tienes derecho a conocer, actualizar, rectificar y solicitar la
+              eliminación de tu información, así como a revocar esta autorización en cualquier momento,
+              escribiendo a
+              <a href="mailto:vicboss042018@gmail.com" class="text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                vicboss042018&#64;gmail.com</a
+              >. Atenderemos tu solicitud en un plazo razonable.
+            </p>
+
+            <p>
+              <strong class="text-gray-800 dark:text-white/90">7. Vigencia.</strong>
+              Tus datos se conservarán mientras tu cuenta permanezca activa o mientras el proyecto
+              académico esté en desarrollo. Puedes solicitar la eliminación de tu cuenta y datos
+              asociados en cualquier momento.
+            </p>
+          </div>
+        }
+      </div>
+
+      <div class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800">
+        <app-button
+          className="w-full"
+          size="sm"
+          variant="outline"
+          (btnClick)="onCloseTermsModal()"
+        >
+          Cerrar
+        </app-button>
+      </div>
+    </div>
+  </div>
+}
 
 <div class="w-full max-w-md mx-auto mb-5 sm:pt-10">
   <a
@@ -174,9 +360,21 @@
           <app-checkbox className="w-5 h-5" [(checked)]="isChecked" />
           <p class="inline-block font-normal text-gray-500 dark:text-gray-400">
             Al crear una cuenta aceptas los
-            <span class="text-gray-800 dark:text-white/90"> Términos y Condiciones, </span>
+            <button
+              type="button"
+              (click)="onOpenTermsModal('terms')"
+              class="text-gray-800 underline dark:text-white/90 hover:text-brand-500 dark:hover:text-brand-400"
+            >
+              Términos y Condiciones,
+            </button>
             y nuestra
-            <span class="text-gray-800 dark:text-white"> Política de Privacidad </span>
+            <button
+              type="button"
+              (click)="onOpenTermsModal('privacy')"
+              class="text-gray-800 underline dark:text-white hover:text-brand-500 dark:hover:text-brand-400"
+            >
+              Política de Privacidad
+            </button>
           </p>
         </div>
         <div>
