@@ -191,12 +191,14 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
 
   /**
    * Cleanup lifecycle hook.
-   * Stops video viewing and stream session before destruction.
+   * Stops local video viewing before destruction.
+   * Does not terminate the backend stream session — detection must only
+   * be stopped via the explicit "detener" action in the camera filters table.
    * @returns {void}
    */
   ngOnDestroy(): void {
     if (this.isViewing) {
-      this.stopViewingAndStream();
+      this.stopViewing();
     }
     if (this.touchControlsTimeoutRef !== null) {
       clearTimeout(this.touchControlsTimeoutRef);
@@ -223,19 +225,16 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
             (c) => (c.device?.state || '').toString().toUpperCase() === DeviceState.ACTIVE,
           );
           // Si la cámara seleccionada ya no está en la lista (por estar inactiva), deseleccionarla
+          // Nota: esto solo limpia la vista local, nunca detiene la sesión de detección en el backend.
           if (
             this.selectedCamera &&
             !this.cameras.find((cc) => cc.id === this.selectedCamera?.id)
           ) {
             if (this.isViewing) {
-              this.stopViewingAndStream();
-            } else if (this.sessionId) {
-              this.cameraService.stopStream(this.sessionId).pipe(takeUntil(this.destroy$)).subscribe({
-                error: (err) => console.warn('Error stopping orphan session:', err),
-              });
-              this.sessionId = null;
-              this.feedUrl = null;
+              this.stopViewing();
             }
+            this.sessionId = null;
+            this.feedUrl = null;
             this.selectedCamera = null;
             this.streamUrl = null;
             this.detectionActive = false;
@@ -266,7 +265,7 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }
 
     if (this.isViewing) {
-      this.stopViewingAndStream();
+      this.stopViewing();
     }
 
     this.selectedCamera = camera;
@@ -350,25 +349,6 @@ export class CameraStreamingComponent implements OnInit, OnDestroy {
     }
     this.stopSnapshotPolling();
     this.changeDetectorRef.markForCheck();
-  }
-
-  /**
-   * Stops video stream viewing and terminates the backend session.
-   * Called when the user explicitly stops or the component is destroyed.
-   * @returns {void}
-   */
-  stopViewingAndStream(): void {
-    this.stopViewing();
-    if (this.sessionId) {
-      this.cameraService
-        .stopStream(this.sessionId)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          error: (err) => console.warn('Error stopping stream session:', err),
-        });
-      this.sessionId = null;
-      this.feedUrl = null;
-    }
   }
 
   /**
