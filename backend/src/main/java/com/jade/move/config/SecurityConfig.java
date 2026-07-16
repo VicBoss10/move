@@ -71,6 +71,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/devices").hasAnyRole("ADMIN", "USER", "DEVICE")
                 .requestMatchers(HttpMethod.GET, "/devices/**").hasAnyRole("ADMIN", "USER", "DEVICE")
                 .requestMatchers(HttpMethod.POST, "/devices/register-from-device").permitAll()
+                .requestMatchers(HttpMethod.POST, "/devices/*/move").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/devices").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/devices/**").hasAnyRole("ADMIN", "DEVICE")
                 .requestMatchers(HttpMethod.DELETE, "/devices/**").hasRole("ADMIN")
