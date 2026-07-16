@@ -42,4 +42,15 @@ public class Device {
     @ManyToOne
     @JoinColumn(name = "location_id", nullable = false)
     private Location location;
+
+    /**
+     * Whether the device has been archived ("moved").
+     *
+     * <p>An archived device keeps its historical data and location, but is no
+     * longer operational: the state scheduler ignores it, incoming sensor data
+     * is rejected, and the physical unit is signaled to return to provisioning
+     * mode. Defaults to {@code false}.</p>
+     */
+    @Column(nullable = false)
+    private Boolean archived = false;
 }

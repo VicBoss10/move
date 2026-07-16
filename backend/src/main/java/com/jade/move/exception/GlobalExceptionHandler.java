@@ -56,6 +56,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }
 
+    @ExceptionHandler(DeviceArchivedException.class)
+    public ResponseEntity<ProblemDetail> handleDeviceArchived(DeviceArchivedException ex, HttpServletRequest req) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.GONE);
+        pd.setTitle("Device archived");
+        pd.setDetail(ex.getMessage());
+        pd.setType(URI.create("/probs/device-archived"));
+        pd.setInstance(URI.create(req.getRequestURI()));
+        String traceId = getTraceId(req);
+        if (traceId != null) pd.setProperty("traceId", traceId);
+        return ResponseEntity.status(HttpStatus.GONE).body(pd);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ProblemDetail> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest req) {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);

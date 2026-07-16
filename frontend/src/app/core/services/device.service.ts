@@ -85,6 +85,27 @@ export class DeviceService extends BaseDataService<Device> {
   }
 
   /**
+   * Archives ("moves") a device without deleting it or its data.
+   * The device keeps its historical data but is marked as archived, and the
+   * physical unit returns to provisioning mode to be re-registered as new.
+   *
+   * @param {number} id - Identifier of the device to archive.
+   * @returns {Observable<void>} Observable that completes when the device is archived.
+   */
+  move(id: number): Observable<void> {
+    return this.apiService.post<void>(`/${this.endpoint}/${id}/move`, {}).pipe(
+      tap(() => {
+        this.invalidateCache();
+        this.clearServiceError();
+      }),
+      catchError((error) => {
+        this.setServiceError(error, `Error al mover dispositivo ${id}`);
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  /**
    * Registers a complete device (Device + Camera if applicable)
    * @param deviceData - Data of the device to register
    * @returns Observable<string> with confirmation message

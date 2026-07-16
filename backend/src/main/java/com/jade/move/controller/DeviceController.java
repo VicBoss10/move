@@ -241,4 +241,30 @@ public class DeviceController {
         deviceService.deleteDevice(id);
         return ResponseBuilder.noContent();
     }
+
+    /**
+     * Archives ("moves") a device without deleting it or its data.
+     *
+     * <p>Deletes the sensor's Keycloak credentials and marks the device as
+     * archived, keeping its historical data. The physical unit returns to
+     * provisioning mode so it can be registered again as a new device.</p>
+     *
+     * @param id device identifier to archive
+     * @return confirmation with no content
+     */
+    @Operation(
+            summary = "Move (archive) a device by ID / Mover (archivar) un dispositivo por ID",
+            description = "Archives a device keeping its historical data and location, but revokes its credentials and returns the physical unit to provisioning mode so it can be re-registered as a new device. / Archiva un dispositivo conservando sus datos históricos y ubicación, pero revoca sus credenciales y devuelve el equipo físico a modo de aprovisionamiento para poder registrarlo de nuevo como un dispositivo nuevo."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Device archived successfully / Dispositivo archivado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Device not found / Dispositivo no encontrado"),
+            @ApiResponse(responseCode = "400", description = "Invalid ID format / Formato de ID inválido"),
+            @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+    })
+    @PostMapping("/{id}/move")
+    public ResponseEntity<Void> moveDevice(@PathVariable Integer id) {
+        deviceService.moveDevice(id);
+        return ResponseBuilder.noContent();
+    }
 }

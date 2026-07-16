@@ -1,6 +1,7 @@
 package com.jade.move.service;
 
 import com.jade.move.dto.SensorDataSearchCriteria;
+import com.jade.move.model.Device;
 import com.jade.move.model.DeviceState;
 import com.jade.move.model.SensorData;
 import com.jade.move.repository.DeviceRepository;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 import com.jade.move.exception.EntityNotFoundException;
 import com.jade.move.exception.BadRequestException;
+import com.jade.move.exception.DeviceArchivedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +67,12 @@ public class SensorDataService {
      */
     public List<SensorData> createBulkSensorData(List<SensorData> sensorDataList) {
         if (sensorDataList == null || sensorDataList.isEmpty()) return new ArrayList<>();
+
+        // Reject the whole batch if its device has been archived ("moved")
+        for (SensorData s : sensorDataList) {
+            Integer deviceId = s.getDevice() != null ? s.getDevice().getId() : null;
+            assertDeviceNotArchived(deviceId);
+        }
 
         // Step 1: Persist all records as received — no filtering
         List<SensorData> saved = new ArrayList<>(sensorDataList.size());
@@ -169,6 +177,7 @@ public class SensorDataService {
             throw new IllegalArgumentException("SensorData cannot be null");
         }
         Integer deviceId = sensorData.getDevice() != null ? sensorData.getDevice().getId() : null;
+        assertDeviceNotArchived(deviceId);
         if (containsInvalidSentinel(sensorData)) {
             int count = incrementRejectedCount(deviceId);
             log.warn("Rejected sensor data for device {}. consecutive rejects={}", deviceId, count);
@@ -221,6 +230,24 @@ public class SensorDataService {
      * @param deviceId device identifier
      * @implNote Updates device state if it transitions from INACTIVE to ACTIVE
      */
+    /**
+     * Rejects data addressed to an archived ("moved") device.
+     *
+     * <p>Throws {@link DeviceArchivedException} (HTTP 410 Gone) so the physical
+     * unit knows it must return to provisioning mode instead of keeping data
+     * flowing to its old location.</p>
+     */
+    private void assertDeviceNotArchived(Integer deviceId) {
+        if (deviceId == null) return;
+        boolean archived = deviceRepository.findById(deviceId)
+                .map(Device::getArchived)
+                .map(Boolean.TRUE::equals)
+                .orElse(false);
+        if (archived) {
+            throw new DeviceArchivedException("Device " + deviceId + " is archived and no longer accepts sensor data");
+        }
+    }
+
     private void updateDeviceStateIfInactive(Integer deviceId) {
         if (deviceId == null) return;
         deviceRepository.findById(deviceId).ifPresent(device -> {

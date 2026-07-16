@@ -126,6 +126,12 @@ bool verifyDeviceExists(int deviceId) {
     delete client;
 
     if (code == 200) {
+      // Device archived ("moved") on backend -> clear credentials and return to provisioning
+      if (resp.indexOf("\"archived\":true") >= 0) {
+        Serial.println("[FW] Device is archived on backend -> clearing credentials");
+        clearProvisionPrefsAndRestart();
+        return false; // restart
+      }
       Serial.println("[FW] Device exists on backend");
       return true;
     }
@@ -845,6 +851,14 @@ void sendAveragedData() {
       drainQueueBulk();
     }
 
+  } else if (code == 410) {
+    // 410: Gone - device was archived ("moved") on backend -> return to provisioning
+    Serial.println("[FW] Server returned 410 Gone - device archived, clearing credentials and returning to portal");
+    http.end();
+    delete client;
+    delay(200);
+    clearProvisionPrefsAndRestart();
+
   } else if (code == 401) {
     // 401: Unauthorized - Keycloak token may be expired or missing
     Serial.println("[FW] Server returned 401 Unauthorized - restarting to re-validate credentials");
@@ -1230,6 +1244,12 @@ void drainQueueBulk() {
     } else {
       Serial.printf("[FW][BULK] Bulk POST failed code=%d response='%s'\n", code, resp.c_str());
       httpb.end();
+      // 410 Gone: device was archived ("moved") on backend -> return to provisioning
+      if (code == 410) {
+        Serial.println("[FW][BULK] Device archived (410 Gone) — clearing credentials and returning to portal");
+        clearProvisionPrefsAndRestart();
+        return; // unreachable, device restarts
+      }
       // If server indicates payload too large (413) or similar client rejection, reduce target and retry
       if (code == 413 || code == 400) {
         int prev = attemptTarget;

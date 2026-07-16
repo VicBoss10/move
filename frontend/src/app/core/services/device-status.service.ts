@@ -38,6 +38,8 @@ export interface DeviceStatusInfo {
   isOnline: boolean;
   /** Number of data points recorded by the device. */
   dataPoints: number;
+  /** Whether the device has been archived ("moved"). */
+  archived: boolean;
 }
 
 /**
@@ -134,6 +136,7 @@ export class DeviceStatusService {
       lastActivity,
       isOnline,
       dataPoints: deviceSensorData.length + deviceVehiclesDetected.length,
+      archived: device.archived ?? false,
       ...metrics,
     };
   }

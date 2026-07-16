@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.jade.move.dto.DevicesSearchCriteria;
 import com.jade.move.dto.RegisterDeviceRequest;
+import com.jade.move.exception.ConflictException;
 import com.jade.move.exception.EntityNotFoundException;
 import com.jade.move.model.*;
 import com.jade.move.specification.DevicesSpecification;
@@ -30,6 +31,7 @@ public class DeviceService {
     private final SensorService sensorService;
     private final KeycloakAdminService keycloakAdminService;
     private final SensorDataService sensorDataService;
+    private final VehicleDetectedService vehicleDetectedService;
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -41,6 +43,7 @@ public class DeviceService {
                          SensorService sensorService,
                          KeycloakAdminService keycloakAdminService,
                          SensorDataService sensorDataService,
+                         VehicleDetectedService vehicleDetectedService,
                          org.springframework.core.env.Environment env) {
         this.deviceRepository = deviceRepository;
         this.locationService = locationService;
@@ -48,6 +51,7 @@ public class DeviceService {
         this.sensorService = sensorService;
         this.keycloakAdminService = keycloakAdminService;
         this.sensorDataService = sensorDataService;
+        this.vehicleDetectedService = vehicleDetectedService;
 
         String ttlProp = env.getProperty("provisioning.ttl-seconds", "60");
         int ttl = 60;
@@ -150,6 +154,7 @@ public class DeviceService {
         try {
             Sensor sensor = sensorService.getSensorByDeviceId(id);
             if (sensor != null) {
+                deleteKeycloakClientForSensor(sensor);
                 sensorService.deleteSensor(sensor.getId());
             }
         } catch (Exception ignored) {
@@ -157,7 +162,63 @@ public class DeviceService {
         }
 
         sensorDataService.deleteSensorDataByDeviceId(id);
+        vehicleDetectedService.deleteVehicleDetectedByDeviceId(id);
         deviceRepository.deleteById(id);
+    }
+
+    /**
+     * Archives ("moves") a device without deleting it or its data.
+     *
+     * <p>Deletes the sensor's Keycloak client so its credentials stop working
+     * and marks the device as archived. Historical data and location are kept
+     * intact. The physical unit is signaled to return to provisioning mode
+     * (rejected sensor data and startup verification), so it can be registered
+     * again as a new device at a new location.</p>
+     *
+     * @param id device identifier to archive
+     * @throws IllegalArgumentException if id is null
+     * @throws EntityNotFoundException if device not found
+     */
+    @Transactional
+    public void moveDevice(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Device id cannot be null");
+        }
+
+        Device device = deviceRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Device not found with id: " + id));
+
+        if (device.getType() != DeviceType.SENSOR) {
+            throw new IllegalArgumentException("Only sensor devices can be moved");
+        }
+
+        try {
+            Sensor sensor = sensorService.getSensorByDeviceId(id);
+            if (sensor != null) {
+                deleteKeycloakClientForSensor(sensor);
+            }
+        } catch (Exception ignored) {
+            // Sensor may not exist for this device
+        }
+
+        device.setArchived(true);
+        device.setState(DeviceState.INACTIVE);
+        deviceRepository.save(device);
+    }
+
+    /**
+     * Deletes the Keycloak client associated with a sensor, if any.
+     */
+    private void deleteKeycloakClientForSensor(Sensor sensor) {
+        if (sensor == null || sensor.getKeycloakInternalId() == null) {
+            return;
+        }
+        try {
+            keycloakAdminService.deleteClientByInternalId(sensor.getKeycloakInternalId());
+        } catch (Exception e) {
+            log.warn("Failed to delete Keycloak client {} for sensor {}: {}",
+                    sensor.getKeycloakInternalId(), sensor.getId(), e.getMessage());
+        }
     }
 
     public List<Device> searchDevices(DevicesSearchCriteria criteria) {
@@ -224,6 +285,18 @@ public class DeviceService {
             }
             if (request.getFirmwareVersion() == null || request.getFirmwareVersion().trim().isEmpty()) {
                 throw new IllegalArgumentException("firmwareVersion is required for sensors");
+            }
+
+            // If this MAC already belongs to a moved (archived) device, release it so the
+            // same physical unit can register again; otherwise it is a genuine duplicate.
+            Sensor existingByMac = sensorService.findByMacAddress(request.getMacAddress());
+            if (existingByMac != null) {
+                Device existingDevice = existingByMac.getDevice();
+                if (existingDevice != null && Boolean.TRUE.equals(existingDevice.getArchived())) {
+                    sensorService.deleteSensorKeepingData(existingByMac.getId());
+                } else {
+                    throw new ConflictException("A sensor with MAC address " + request.getMacAddress() + " is already registered");
+                }
             }
 
             Sensor sensor = new Sensor();

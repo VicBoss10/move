@@ -71,6 +71,10 @@ public class DeviceStateScheduler {
                 continue;
             }
 
+            if (Boolean.TRUE.equals(device.getArchived())) {
+                continue;
+            }
+
             SensorData latest = sensorDataRepository
                     .findTopByDeviceIdOrderByTimestampDesc(device.getId());
 

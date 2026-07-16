@@ -8,5 +8,6 @@ import com.jade.move.model.Sensor;
 @Repository
 public interface SensorRepository extends JpaRepository<Sensor, Integer> {
     Optional<Sensor> findByDeviceId(Integer deviceId);
+    Optional<Sensor> findByMacAddress(String macAddress);
     boolean existsByMacAddress(String macAddress);
 }

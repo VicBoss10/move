@@ -24,13 +24,21 @@
               {{ getDeviceTypeText(device.type) }}
             </p>
           </div>
-          <span
-            [ngClass]="getStatusColor(device.status)"
-            class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-          >
-            {{ getStatusIcon(device.status) }}
-            {{ getStatusText(device.status) }}
-          </span>
+          @if (device.archived) {
+            <span
+              class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+            >
+              Archivado
+            </span>
+          } @else {
+            <span
+              [ngClass]="getStatusColor(device.status)"
+              class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+            >
+              {{ getStatusIcon(device.status) }}
+              {{ getStatusText(device.status) }}
+            </span>
+          }
         </div>
 
         <div class="space-y-3 border-t border-gray-200 pt-4 dark:border-gray-700">
@@ -75,6 +83,14 @@
           >
             Editar
           </button>
+          @if (device.type === DeviceType.SENSOR && !device.archived) {
+            <button
+              (click)="openMove(device)"
+              class="flex-1 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40"
+            >
+              Mover
+            </button>
+          }
           <button
             (click)="openDelete(device)"
             class="flex-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
@@ -130,22 +146,25 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Ubicación *
+            Ubicación
           </label>
           <select
             formControlName="locationId"
-            class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-500/30 transition"
+            class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-500/30 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <option [ngValue]="null" disabled>Selecciona una ubicación</option>
             @for (loc of locations$ | async; track loc) {
               <option [value]="loc.id">{{ loc.description || 'Ubicación #' + loc.id }}</option>
             }
           </select>
-          @if (editForm.get('locationId')?.invalid && editForm.get('locationId')?.touched) {
-            <p class="text-red-600 dark:text-red-400 text-xs mt-1">
-              Debes seleccionar una ubicación.
-            </p>
-          }
+          <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">
+            @if (editingDevice.type === DeviceType.SENSOR) {
+              La ubicación no se puede cambiar aquí. Para reubicar el sensor usa la opción «Mover»
+              (así no se altera su histórico).
+            } @else {
+              La ubicación no se puede cambiar. Para reubicar, registra un dispositivo nuevo.
+            }
+          </p>
         </div>
 
         @if (editingDevice.type === DeviceType.CAMERA) {
@@ -240,7 +259,9 @@
           <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
             ¿Confirmas que deseas eliminar
             <span class="font-medium text-gray-900 dark:text-white">"{{ deleteTarget.name }}"</span
-            >? Esta acción no se puede deshacer.
+            >? También se eliminarán todos sus registros
+            {{ deleteTarget.type === DeviceType.CAMERA ? 'de detecciones' : 'de datos' }}. Esta
+            acción no se puede deshacer.
           </p>
         </div>
       </div>
@@ -260,6 +281,64 @@
           class="px-4 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm font-medium"
         >
           {{ deleteSaving ? 'Eliminando...' : 'Sí, eliminar' }}
+        </button>
+      </div>
+    </div>
+  }
+</app-modal>
+
+<app-modal
+  [isOpen]="!!moveTarget"
+  (close)="closeMove()"
+  [showCloseButton]="false"
+  className="max-w-sm mx-4"
+>
+  @if (moveTarget) {
+    <div class="p-6">
+      <div class="flex items-start gap-3 mb-4">
+        <div
+          class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40"
+        >
+          <svg
+            class="w-5 h-5 text-amber-600 dark:text-amber-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+            />
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white">Mover Dispositivo</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            ¿Confirmas que deseas mover
+            <span class="font-medium text-gray-900 dark:text-white">"{{ moveTarget.name }}"</span>?
+            Sus datos históricos se conservarán, pero el equipo volverá a modo de configuración para
+            registrarlo de nuevo en otra ubicación.
+          </p>
+        </div>
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button
+          type="button"
+          (click)="closeMove()"
+          class="px-4 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          (click)="confirmMove()"
+          [disabled]="moveSaving"
+          [class.opacity-50]="moveSaving"
+          class="px-4 py-1.5 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium"
+        >
+          {{ moveSaving ? 'Moviendo...' : 'Sí, mover' }}
         </button>
       </div>
     </div>

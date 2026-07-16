@@ -118,4 +118,36 @@ public class SensorService {
 
         sensorRepository.deleteById(id);
     }
+
+    /**
+     * Finds a sensor by its MAC address.
+     *
+     * @param macAddress MAC address to search for
+     * @return the sensor, or {@code null} if none exists
+     */
+    public Sensor findByMacAddress(String macAddress) {
+        if (macAddress == null) {
+            return null;
+        }
+        return sensorRepository.findByMacAddress(macAddress).orElse(null);
+    }
+
+    /**
+     * Deletes only the sensor row, preserving its device's historical sensor data.
+     *
+     * <p>Used when a moved (archived) device's physical unit is re-registered:
+     * releasing the MAC address without discarding the archived device's data.
+     * Flushes immediately so the row is removed before any subsequent insert
+     * reusing the same unique MAC address.</p>
+     *
+     * @param id sensor identifier to delete
+     * @throws IllegalArgumentException if id is null
+     */
+    public void deleteSensorKeepingData(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Sensor id cannot be null");
+        }
+        sensorRepository.deleteById(id);
+        sensorRepository.flush();
+    }
 }

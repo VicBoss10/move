@@ -110,6 +110,16 @@ public class VehicleDetectedService {
         return saved;
     }
 
+    /**
+     * Deletes all vehicle detections belonging to a device.
+     *
+     * @param deviceId device identifier whose detections will be removed
+     */
+    public void deleteVehicleDetectedByDeviceId(Integer deviceId) {
+        if (deviceId == null) return;
+        vehicleDetectedRepository.deleteByDeviceId(deviceId);
+    }
+
     // Marks device as ACTIVE only when it is currently INACTIVE (avoids unnecessary writes).
     private void updateDeviceStateIfInactive(Integer deviceId) {
         if (deviceId == null) return;

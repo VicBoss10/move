@@ -48,6 +48,8 @@ export interface Device {
     /** Location description, may be null if not provided. */
     description?: string | null;
   };
+  /** Whether the device has been archived ("moved"); archived devices keep their data but are no longer operational. */
+  archived?: boolean;
 }
 
 /**

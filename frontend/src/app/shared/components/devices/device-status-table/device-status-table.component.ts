@@ -104,6 +104,18 @@ export class DeviceStatusTableComponent {
   deleteSaving = false;
 
   /**
+   * Device targeted for move (archive) or null if modal is closed.
+   * @type {DeviceStatusInfo | null}
+   */
+  moveTarget: DeviceStatusInfo | null = null;
+
+  /**
+   * Loading state indicator for move operation.
+   * @type {boolean}
+   */
+  moveSaving = false;
+
+  /**
    * Exported DeviceType enum for template access.
    * @type {typeof DeviceType}
    */
@@ -153,6 +165,11 @@ export class DeviceStatusTableComponent {
       streamType: [''],
       source: [''],
     });
+
+    // Location is fixed once a device is registered: changing it would retroactively
+    // re-attribute all historical data to the new location. To relocate a sensor use
+    // "Mover" (re-registers as a new device); cameras must be registered anew.
+    this.editForm.get('locationId')?.disable();
 
     this.devices$ = this.refresh$.pipe(
       startWith(null as null),
@@ -229,7 +246,7 @@ export class DeviceStatusTableComponent {
     this.editSaving = true;
     this.cdr.markForCheck();
 
-    const { name, state, locationId, streamType, source } = this.editForm.value;
+    const { name, state, locationId, streamType, source } = this.editForm.getRawValue();
     const devicePayload: Device = {
       id: this.editingDevice.id,
       name,
@@ -330,6 +347,57 @@ export class DeviceStatusTableComponent {
       error: () => {
         this.deleteSaving = false;
         this.toastService.error('No se pudo eliminar el dispositivo.', 'Error');
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  /**
+   * Opens move (archive) confirmation modal for selected device.
+   * @param {DeviceStatusInfo} device - Device to move
+   */
+  openMove(device: DeviceStatusInfo): void {
+    this.moveTarget = device;
+    this.moveSaving = false;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Closes move confirmation modal.
+   */
+  closeMove(): void {
+    this.moveTarget = null;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Confirms and executes device move (archive) via API call.
+   * The device keeps its historical data but is archived, and the physical unit
+   * returns to provisioning mode to be re-registered as a new device.
+   * Refreshes device list and displays toast notification on success.
+   */
+  confirmMove(): void {
+    if (!this.moveTarget) return;
+    this.moveSaving = true;
+    this.cdr.markForCheck();
+
+    const name = this.moveTarget.name;
+    const deviceId = this.moveTarget.id;
+
+    this.deviceService.move(deviceId).subscribe({
+      next: () => {
+        this.toastService.success(
+          `El dispositivo "${name}" ha sido archivado. El equipo volverá a modo de configuración.`,
+          'Dispositivo movido',
+        );
+        this.moveTarget = null;
+        this.moveSaving = false;
+        this.refresh$.next();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.moveSaving = false;
+        this.toastService.error('No se pudo mover el dispositivo.', 'Error');
         this.cdr.markForCheck();
       },
     });
