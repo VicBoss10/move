@@ -253,6 +253,10 @@ public class DeviceService {
             throw new IllegalArgumentException("Location ID is required");
         }
 
+        if (deviceRepository.findByName(request.getName()) != null) {
+            throw new ConflictException("A device with name '" + request.getName() + "' already exists");
+        }
+
         Location location = locationService.getLocationById(request.getLocationId());
 
         Device device = new Device();
