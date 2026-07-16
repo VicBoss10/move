@@ -971,7 +971,7 @@ section,
   border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
   border-radius: 10px;
   padding: 1.5rem;
-  width: 200px;
+  width: 220px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -1001,6 +1001,7 @@ section,
 .hero .stats-card .stats-label p {
   font-size: 0.9rem;
   margin: 0;
+  white-space: nowrap;
 }
 
 .hero .stats-card .stats-arrow {
