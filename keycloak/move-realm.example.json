@@ -810,14 +810,11 @@
       "clientAuthenticatorType" : "client-secret-post",
       "redirectUris" : [
         "http://localhost:80/*",
-        "https://www.moveiot.online/*",
         "http://localhost:4200/*",
-        "http://localhost/*",
-        "https://moveiot.online/*"
+        "http://localhost/*"
       ],
       "webOrigins" : [
         "http://localhost:80",
-        "https://moveiot.online",
         "*",
         "http://localhost",
         "http://localhost:4200"

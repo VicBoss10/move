@@ -25,7 +25,7 @@ class BackendClient:
     timeouts, connection errors, and detailed logging.
 
     Environment Variables:
-        KEYCLOAK_TOKEN_URL: OAuth2 token endpoint (default: auth.moveiot.online)
+        KEYCLOAK_TOKEN_URL: OAuth2 token endpoint (e.g. http://localhost:8081/realms/move/protocol/openid-connect/token)
         VEHICLE_CLIENT_ID: OAuth2 client ID for this service
         VEHICLE_CLIENT_SECRET: OAuth2 client secret for this service
 

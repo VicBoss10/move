@@ -60,7 +60,7 @@ Este proyecto combina servicios Docker (backend, frontend, Keycloak y bases de d
     ```bash
     cp .env.example .env
     ```
-    > El archivo `docker-compose.yml` utiliza valores predeterminados, pero **estos apuntan al entorno de producción** (`moveiot.online`). Para trabajar en local es obligatorio descomentar y configurar la sección de desarrollo local del `.env`; sin eso, el login y el frontend no funcionarán en localhost. El sistema funciona en entornos locales e internet, pero mezclar configuraciones locales con URLs públicas impedirá que los servicios se comuniquen. Consulta los comentarios en [.env.example](.env.example).
+    > El archivo `docker-compose.yml` utiliza `localhost` como valor predeterminado si no defines nada en `.env`. Para exponer el sistema a internet es obligatorio descomentar y configurar la sección "Internet" del `.env` con tu propio dominio. El sistema funciona en entornos locales e internet, pero mezclar configuraciones locales con URLs públicas impedirá que los servicios se comuniquen. Consulta los comentarios en [.env.example](.env.example).
 
 3.  **Configura Keycloak:**
     El backend depende de Keycloak. Debes configurarlo primero.
