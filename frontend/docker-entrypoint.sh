@@ -16,8 +16,8 @@ mkdir -p /usr/share/nginx/html/assets
 cat > /usr/share/nginx/html/assets/config.json <<EOF
 {
   "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY:-}",
-  "apiBaseUrl": "${FRONTEND_API_BASE_URL:-https://api.moveiot.online}",
-  "authBaseUrl": "${FRONTEND_AUTH_BASE_URL:-https://auth.moveiot.online}"
+  "apiBaseUrl": "${FRONTEND_API_BASE_URL:-http://localhost:8080}",
+  "authBaseUrl": "${FRONTEND_AUTH_BASE_URL:-http://localhost:8081}"
 }
 EOF
 
