@@ -65,7 +65,12 @@ const VARIABLES: Variable[] = [
 export class CorrelationMatrixComponent implements OnInit, OnDestroy {
   readonly variables = VARIABLES;
 
-  private readonly load$ = new Subject<{ start: Date; end: Date }>();
+  private readonly load$ = new Subject<{
+    start: Date;
+    end: Date;
+    locationId?: number;
+    locationDeviceIds?: number[];
+  }>();
   private readonly destroy$ = new Subject<void>();
 
   /** True once the user has selected at least one period. */
@@ -94,11 +99,11 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
     this.load$
       .pipe(
         takeUntil(this.destroy$),
-        switchMap(({ start, end }) => {
+        switchMap(({ start, end, locationId, locationDeviceIds }) => {
           this.isLoading = true;
           this.hasError = false;
           this.cdr.markForCheck();
-          return this.loadAndCompute(start, end);
+          return this.loadAndCompute(start, end, locationId, locationDeviceIds);
         }),
       )
       .subscribe(({ matrix, sampleSize }) => {
@@ -117,18 +122,28 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
   /** Called by PeriodRangeSelectorComponent when the user selects or applies a period. */
   onPeriodChange(range: PeriodRange): void {
     this.hasPeriod = true;
-    this.load$.next({ start: range.start, end: range.end });
+    this.load$.next({
+      start: range.start,
+      end: range.end,
+      locationId: range.locationId,
+      locationDeviceIds: range.locationDeviceIds,
+    });
   }
 
-  private loadAndCompute(start: Date, end: Date) {
+  private loadAndCompute(
+    start: Date,
+    end: Date,
+    locationId?: number,
+    locationDeviceIds?: number[],
+  ) {
     const slot = this.slotFor(start, end);
 
     const sensor$ = this.sensorDataService
-      .search({ start, end, size: 10000 })
+      .search({ start, end, locationId, size: 10000 })
       .pipe(catchError(() => of<SensorData[]>([])));
 
     const vehicle$ = this.vehicleService
-      .search({ start, end })
+      .search({ start, end, deviceIds: locationDeviceIds })
       .pipe(catchError(() => of<VehicleDetected[]>([])));
 
     return combineLatest([sensor$, vehicle$]).pipe(
@@ -211,14 +226,15 @@ export class CorrelationMatrixComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Derives aggregation slot size from the selected range duration.
-   * ≤ 2 days → 1h · ≤ 14 days → 4h · > 14 days → 1 day
+   * Aggregation slot used to compute the correlation: always 1 hour.
+   *
+   * <p>The slot is fixed regardless of the selected range so the coefficient
+   * stays comparable across periods. Coarser slots (e.g. daily averages over a
+   * multi-month range) flatten the intra-day traffic peaks that carry the
+   * signal, which understates the real correlation.</p>
    */
-  private slotFor(start: Date, end: Date): number {
-    const diffMs = end.getTime() - start.getTime();
-    if (diffMs <= 2 * 24 * 3_600_000) return 3_600_000;
-    if (diffMs <= 14 * 24 * 3_600_000) return 4 * 3_600_000;
-    return 24 * 3_600_000;
+  private slotFor(_start: Date, _end: Date): number {
+    return 3_600_000;
   }
 
   private pearson(xs: number[], ys: number[]): number {

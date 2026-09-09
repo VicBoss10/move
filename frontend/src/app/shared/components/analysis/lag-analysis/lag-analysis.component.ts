@@ -107,7 +107,13 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
 
   readonly metrics = METRICS;
 
-  private readonly load$ = new Subject<{ start: Date; end: Date; metric: MetricKey }>();
+  private readonly load$ = new Subject<{
+    start: Date;
+    end: Date;
+    metric: MetricKey;
+    locationId?: number;
+    locationDeviceIds?: number[];
+  }>();
   private readonly destroy$ = new Subject<void>();
   private currentRange: { start: Date; end: Date } | null = null;
 
@@ -136,7 +142,7 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
           this.isLoading = true;
           this.hasError = false;
           this.cdr.markForCheck();
-          return this.loadAndCompute(f.start, f.end, f.metric);
+          return this.loadAndCompute(f.start, f.end, f.metric, f.locationId, f.locationDeviceIds);
         }),
       )
       .subscribe(({ summary, chartData, chartOptions }) => {
@@ -158,22 +164,34 @@ export class LagAnalysisComponent implements OnInit, OnDestroy {
     this.currentRange = range;
     this.currentMetric = range.metric;
     this.hasPeriod = true;
-    this.load$.next({ start: range.start, end: range.end, metric: range.metric });
+    this.load$.next({
+      start: range.start,
+      end: range.end,
+      metric: range.metric,
+      locationId: range.locationId,
+      locationDeviceIds: range.locationDeviceIds,
+    });
   }
 
   /**
    * Loads sensor and vehicle data, aggregates into hourly slots,
    * and computes cross-correlation at each lag.
    */
-  private loadAndCompute(start: Date, end: Date, metricKey: MetricKey) {
+  private loadAndCompute(
+    start: Date,
+    end: Date,
+    metricKey: MetricKey,
+    locationId?: number,
+    locationDeviceIds?: number[],
+  ) {
     const metricOption = METRICS.find((m) => m.key === metricKey)!;
 
     const sensor$ = this.sensorDataService
-      .search({ start, end, size: 10000 })
+      .search({ start, end, locationId, size: 10000 })
       .pipe(catchError(() => of<SensorData[]>([])));
 
     const vehicle$ = this.vehicleService
-      .search({ start, end })
+      .search({ start, end, deviceIds: locationDeviceIds })
       .pipe(catchError(() => of<VehicleDetected[]>([])));
 
     return combineLatest([sensor$, vehicle$]).pipe(

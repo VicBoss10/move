@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
+  Input,
   OnInit,
   Output,
 } from '@angular/core';
@@ -41,6 +42,8 @@ export interface PeriodRange {
   start: Date;
   end: Date;
   locationDeviceIds?: number[];
+  /** Selected location id, undefined when all locations are included. */
+  locationId?: number;
   metric: MetricKey;
 }
 
@@ -86,8 +89,36 @@ export class PeriodRangeSelectorComponent implements OnInit {
   /** Emits when the user selects a quick option or applies a custom range. */
   @Output() periodChange = new EventEmitter<PeriodRange>();
 
+  /**
+   * Whether the parameter (metric) selector is shown.
+   *
+   * <p>Set to false by consumers that analyse every metric at once, such as the
+   * correlation matrix, where picking a single one would have no effect.</p>
+   */
+  @Input() showMetric = true;
+
+  /**
+   * Whether the location selector is shown.
+   *
+   * <p>Set to false by consumers that compare every location at once, such as
+   * the location analysis, where narrowing to one would empty the comparison.</p>
+   */
+  @Input() showLocation = true;
+
   /** Available quick-period options shown as buttons. */
   readonly quickOptions = QUICK_OPTIONS;
+
+  /**
+   * Tailwind class for the input grid, sized to the visible controls.
+   * Always two date pickers, plus location and metric when enabled.
+   * Class names are written in full so Tailwind keeps them when purging.
+   */
+  get gridColsClass(): string {
+    const visible = 2 + (this.showLocation ? 1 : 0) + (this.showMetric ? 1 : 0);
+    if (visible === 4) return 'sm:grid-cols-4';
+    if (visible === 3) return 'sm:grid-cols-3';
+    return 'sm:grid-cols-2';
+  }
 
   /** Key of the currently active quick option, null when custom mode is active. */
   selectedQuick: string | null = null;
@@ -172,7 +203,7 @@ export class PeriodRangeSelectorComponent implements OnInit {
       return;
     }
 
-    this.periodChange.emit({ start, end, locationDeviceIds: this.resolveLocationDeviceIds(), metric: this.selectedMetric });
+    this.periodChange.emit({ start, end, locationDeviceIds: this.resolveLocationDeviceIds(), locationId: this.resolveLocationId(), metric: this.selectedMetric });
     this.cdr.markForCheck();
   }
 
@@ -236,7 +267,7 @@ export class PeriodRangeSelectorComponent implements OnInit {
       return;
     }
 
-    this.periodChange.emit({ start, end, locationDeviceIds: this.resolveLocationDeviceIds(), metric: this.selectedMetric });
+    this.periodChange.emit({ start, end, locationDeviceIds: this.resolveLocationDeviceIds(), locationId: this.resolveLocationId(), metric: this.selectedMetric });
     this.cdr.markForCheck();
   }
 
@@ -281,6 +312,13 @@ export class PeriodRangeSelectorComponent implements OnInit {
     if (!this.selectedLocationId) return undefined;
     const id = Number(this.selectedLocationId);
     return isNaN(id) ? undefined : this.locationDeviceMap.get(id);
+  }
+
+  /** Resolves the selected location id, or undefined when all locations are included. */
+  private resolveLocationId(): number | undefined {
+    if (!this.selectedLocationId) return undefined;
+    const id = Number(this.selectedLocationId);
+    return isNaN(id) ? undefined : id;
   }
 
   private loadDateBounds(): void {

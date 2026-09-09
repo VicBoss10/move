@@ -12,7 +12,7 @@
   </div>
 
   <!-- Period range selector -->
-  <app-period-range-selector (periodChange)="onPeriodChange($event)" />
+  <app-period-range-selector [showMetric]="false" (periodChange)="onPeriodChange($event)" />
 
   <!-- No period selected placeholder -->
   @if (!hasPeriod && !isLoading) {

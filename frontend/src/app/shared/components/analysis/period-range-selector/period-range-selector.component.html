@@ -40,7 +40,7 @@
     </div>
 
     <!-- Location, parameter and date range inputs -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4" [ngClass]="gridColsClass">
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Fecha inicio
@@ -69,30 +69,34 @@
         />
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ubicación</label>
-        <select
-          [(ngModel)]="selectedLocationId"
-          class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-        >
-          <option value="">Todas las ubicaciones</option>
-          @for (location of locations$ | async; track location.locationId) {
-            <option [value]="location.locationId">{{ location.label }}</option>
-          }
-        </select>
-      </div>
+      @if (showLocation) {
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ubicación</label>
+          <select
+            [(ngModel)]="selectedLocationId"
+            class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          >
+            <option value="">Todas las ubicaciones</option>
+            @for (location of locations$ | async; track location.locationId) {
+              <option [value]="location.locationId">{{ location.label }}</option>
+            }
+          </select>
+        </div>
+      }
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Parámetro</label>
-        <select
-          [(ngModel)]="selectedMetric"
-          class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-        >
-          @for (m of metrics; track m.key) {
-            <option [value]="m.key">{{ m.label }} ({{ m.unit }})</option>
-          }
-        </select>
-      </div>
+      @if (showMetric) {
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Parámetro</label>
+          <select
+            [(ngModel)]="selectedMetric"
+            class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          >
+            @for (m of metrics; track m.key) {
+              <option [value]="m.key">{{ m.label }} ({{ m.unit }})</option>
+            }
+          </select>
+        </div>
+      }
     </div>
 
     <!-- Inline validation error -->

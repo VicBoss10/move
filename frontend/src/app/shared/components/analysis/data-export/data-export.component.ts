@@ -483,14 +483,14 @@ export class DataExportComponent implements OnDestroy, OnInit {
    * @returns {Promise<ReportData>} Promise with sensor data, vehicles, and locations.
    */
   private fetchData(): Promise<ReportData> {
-    const { start, end } = this.dateRange();
+    const { start, end, locationId, locationDeviceIds } = this.dateRange();
     return new Promise((resolve, reject) => {
       forkJoin({
         sensorData: this.sensorDataService
-          .search({ start, end, size: 10000 })
+          .search({ start, end, locationId, size: 10000 })
           .pipe(catchError(() => of([] as SensorData[]))),
         vehicleData: this.vehicleService
-          .search({ start, end })
+          .search({ start, end, deviceIds: locationDeviceIds })
           .pipe(catchError(() => of([] as VehicleDetected[]))),
         locations: this.locationService.getAll().pipe(catchError(() => of([] as Location[]))),
       })
@@ -1792,7 +1792,7 @@ export class DataExportComponent implements OnDestroy, OnInit {
    * Returns the active date range set by the period selector.
    * Only called after the user has selected a period (selectedRange is non-null).
    */
-  private dateRange(): { start: Date; end: Date } {
+  private dateRange(): PeriodRange {
     return this.selectedRange!;
   }
 
