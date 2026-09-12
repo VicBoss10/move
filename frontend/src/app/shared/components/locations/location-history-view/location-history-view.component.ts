@@ -39,7 +39,7 @@ interface DetectionRecord {
  * - Latest timestamp tracking per location (compares vehicle and sensor timestamps, shows most recent)
  * - Sort by lastUpdate descending (most recent first), "Sin datos" for locations with no detections
  * - Overall statistics calculated from aggregated data (totalVehicleDetections, totalSensorDetections, totalDetections)
- * - Loading state with isLoading flag and finalize operator to reset after completion
+ * - Loading state with isLoading flag and finalize operator: shows a spinner and hides the cards and table until data arrives
  * - Empty state with centered message when no detection records exist
  * - Responsive grid: 1 column mobile, 3 columns desktop for stat cards
  * - Dark mode support via dark: Tailwind prefix

@@ -1,5 +1,6 @@
 <!-- Location History View Component
-     Displays aggregated vehicle and sensor detection history grouped by location with summary statistics -->
+     Displays aggregated vehicle and sensor detection history grouped by location with summary statistics.
+     Statistics cards and table are replaced by a loading spinner while data is being fetched. -->
 
 <div class="space-y-6">
   <!-- Page header with title and description -->
@@ -10,82 +11,96 @@
     </p>
   </div>
 
-  <!-- Statistics cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="rounded-lg border-l-4 border-brand-500 bg-white p-4 dark:bg-gray-800">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">TOTAL DETECCIONES</p>
-      <p class="mt-2 text-2xl font-bold text-brand-600 dark:text-brand-400">
-        {{ overallStats.totalDetections | number }}
-      </p>
-    </div>
-
-    <div class="rounded-lg border-l-4 border-warning-500 bg-white p-4 dark:bg-gray-800">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">VEHÍCULOS DETECTADOS</p>
-      <p class="mt-2 text-2xl font-bold text-warning-600 dark:text-warning-400">
-        {{ overallStats.totalVehicleDetections | number }}
-      </p>
-    </div>
-
-    <div class="rounded-lg border-l-4 border-green-500 bg-white p-4 dark:bg-gray-800">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">SENSORES DETECTADOS</p>
-      <p class="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
-        {{ overallStats.totalSensorDetections | number }}
-      </p>
-    </div>
-  </div>
-
-  <!-- Detection history table section -->
-  <div class="space-y-4">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Detecciones por Ubicación</h2>
-
-    <!-- Detection history table with sorting -->
-    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-      <table class="w-full text-sm text-gray-700 dark:text-gray-300">
-        <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-900">
-          <tr>
-            <th class="px-6 py-3 text-left font-semibold">Ubicación</th>
-            <th class="px-6 py-3 text-center font-semibold">Vehículos</th>
-            <th class="px-6 py-3 text-center font-semibold">Sensores</th>
-            <th class="px-6 py-3 text-center font-semibold">Total</th>
-            <th class="px-6 py-3 text-left font-semibold">Última Actualización</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
-          @for (record of detectionHistory; track record) {
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td class="px-6 py-4 font-medium">{{ record.description }}</td>
-              <td class="px-6 py-4 text-center">
-                <span
-                  class="inline-flex items-center rounded-full bg-warning-50 px-3 py-1 text-sm font-medium text-warning-800 dark:bg-warning-900/30 dark:text-warning-200"
-                >
-                  {{ record.vehicleDetections }}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-center">
-                <span
-                  class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                >
-                  {{ record.sensorDetections }}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-center font-semibold">
-                {{ record.vehicleDetections + record.sensorDetections }}
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                {{ record.lastUpdate }}
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    @if (detectionHistory.length === 0 && !isLoading) {
-      <div
-        class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800"
-      >
-        <p class="text-gray-600 dark:text-gray-400">No hay detecciones registradas</p>
+  <!-- Loading spinner -->
+  @if (isLoading) {
+    <div class="flex items-center justify-center py-16">
+      <div class="flex flex-col items-center gap-3">
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-brand-500 dark:border-gray-700 dark:border-t-brand-500"
+        ></div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Cargando histórico de detecciones...</p>
       </div>
-    }
-  </div>
+    </div>
+  }
+
+  @if (!isLoading) {
+    <!-- Statistics cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="rounded-lg border-l-4 border-brand-500 bg-white p-4 dark:bg-gray-800">
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">TOTAL DETECCIONES</p>
+        <p class="mt-2 text-2xl font-bold text-brand-600 dark:text-brand-400">
+          {{ overallStats.totalDetections | number }}
+        </p>
+      </div>
+
+      <div class="rounded-lg border-l-4 border-warning-500 bg-white p-4 dark:bg-gray-800">
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">VEHÍCULOS DETECTADOS</p>
+        <p class="mt-2 text-2xl font-bold text-warning-600 dark:text-warning-400">
+          {{ overallStats.totalVehicleDetections | number }}
+        </p>
+      </div>
+
+      <div class="rounded-lg border-l-4 border-green-500 bg-white p-4 dark:bg-gray-800">
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">SENSORES DETECTADOS</p>
+        <p class="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
+          {{ overallStats.totalSensorDetections | number }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Detection history table section -->
+    <div class="space-y-4">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Detecciones por Ubicación</h2>
+
+      <!-- Detection history table with sorting -->
+      <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table class="w-full text-sm text-gray-700 dark:text-gray-300">
+          <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-900">
+            <tr>
+              <th class="px-6 py-3 text-left font-semibold">Ubicación</th>
+              <th class="px-6 py-3 text-center font-semibold">Vehículos</th>
+              <th class="px-6 py-3 text-center font-semibold">Sensores</th>
+              <th class="px-6 py-3 text-center font-semibold">Total</th>
+              <th class="px-6 py-3 text-left font-semibold">Última Actualización</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
+            @for (record of detectionHistory; track record) {
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="px-6 py-4 font-medium">{{ record.description }}</td>
+                <td class="px-6 py-4 text-center">
+                  <span
+                    class="inline-flex items-center rounded-full bg-warning-50 px-3 py-1 text-sm font-medium text-warning-800 dark:bg-warning-900/30 dark:text-warning-200"
+                  >
+                    {{ record.vehicleDetections }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <span
+                    class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                  >
+                    {{ record.sensorDetections }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center font-semibold">
+                  {{ record.vehicleDetections + record.sensorDetections }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  {{ record.lastUpdate }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (detectionHistory.length === 0) {
+        <div
+          class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800"
+        >
+          <p class="text-gray-600 dark:text-gray-400">No hay detecciones registradas</p>
+        </div>
+      }
+    </div>
+  }
 </div>
