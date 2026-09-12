@@ -1,49 +1,51 @@
-@if (stats$ | async; as stats) {
-  <div class="grid grid-cols-12 gap-4 md:gap-6">
-    <!-- Estado de Carga -->
-    @if (isLoading && !stats.totalDetected) {
-      <div class="col-span-12">
+<!-- The grid renders from the first change detection so the page opens immediately;
+     the spinner is shown inside it while the first batch of data is loading. -->
+<div class="grid grid-cols-12 gap-4 md:gap-6">
+  @let stats = stats$ | async;
+
+  <!-- Estado de Carga -->
+  @if (isLoading && !stats?.totalDetected) {
+    <div class="col-span-12">
+      <div
+        class="rounded-lg border border-gray-200 bg-white p-8 text-center dark:border-gray-800 dark:bg-white/[0.03]"
+      >
         <div
-          class="rounded-lg border border-gray-200 bg-white p-8 text-center dark:border-gray-800 dark:bg-white/[0.03]"
-        >
-          <div
-            class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-500"
-          ></div>
-          <p class="mt-4 text-gray-600 dark:text-gray-400">Cargando estadísticas de vehículos...</p>
-        </div>
+          class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-500"
+        ></div>
+        <p class="mt-4 text-gray-600 dark:text-gray-400">Cargando estadísticas de vehículos...</p>
       </div>
-    }
-    <!-- Estado de Error -->
-    @if (errorMessage && !stats.totalDetected) {
+    </div>
+  }
+  <!-- Estado de Error -->
+  @if (errorMessage && !stats?.totalDetected) {
+    <div class="col-span-12">
+      <div
+        class="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800/30 dark:bg-red-900/20"
+      >
+        <p class="text-red-700 dark:text-red-400">{{ errorMessage }}</p>
+      </div>
+    </div>
+  }
+  <!-- Contenido (Mostrar siempre si hay datos) -->
+  @if (stats && (stats.totalDetected > 0 || !isLoading)) {
+    <div class="col-span-12 grid grid-cols-12 gap-4 md:gap-6">
+      <!-- Tarjetas de Estadísticas (fila completa) -->
       <div class="col-span-12">
-        <div
-          class="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800/30 dark:bg-red-900/20"
-        >
-          <p class="text-red-700 dark:text-red-400"> {{ errorMessage }}</p>
-        </div>
+        <app-vehicle-stats-cards [stats]="stats" />
       </div>
-    }
-    <!-- Contenido (Mostrar siempre si hay datos) -->
-    @if (stats.totalDetected > 0 || !isLoading) {
-      <div class="col-span-12 grid grid-cols-12 gap-4 md:gap-6">
-        <!-- Tarjetas de Estadísticas (fila completa) -->
+      <!-- Donut por tipo + Bar por tipo (misma fila, mismo ancho) -->
+      @if (vehicles$ | async; as vehicles) {
+        <div class="col-span-12 lg:col-span-6">
+          <app-vehicle-type-chart [stats]="stats" />
+        </div>
+        <div class="col-span-12 lg:col-span-6">
+          <app-vehicle-bar-chart [vehicles]="vehicles" />
+        </div>
+        <!-- Detecciones por hora 24h (fila completa) -->
         <div class="col-span-12">
-          <app-vehicle-stats-cards [stats]="stats" />
+          <app-vehicle-chart [vehicles]="vehicles" />
         </div>
-        <!-- Donut por tipo + Bar por tipo (misma fila, mismo ancho) -->
-        @if (vehicles$ | async; as vehicles) {
-          <div class="col-span-12 lg:col-span-6">
-            <app-vehicle-type-chart [stats]="stats" />
-          </div>
-          <div class="col-span-12 lg:col-span-6">
-            <app-vehicle-bar-chart [vehicles]="vehicles" />
-          </div>
-          <!-- Detecciones por hora 24h (fila completa) -->
-          <div class="col-span-12">
-            <app-vehicle-chart [vehicles]="vehicles" />
-          </div>
-        }
-      </div>
-    }
-  </div>
-}
+      }
+    </div>
+  }
+</div>

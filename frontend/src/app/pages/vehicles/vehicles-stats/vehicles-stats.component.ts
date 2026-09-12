@@ -75,9 +75,11 @@ export class VehiclesStatsComponent implements OnInit, OnDestroy {
   stats$!: Observable<VehicleStats>;
 
   /**
-   * Estado de carga
+   * Estado de carga.
+   * Arranca en true: la carga se dispara en ngOnInit, así la página se pinta
+   * con el indicador desde el primer ciclo en vez de parecer que se traba.
    */
-  isLoading = false;
+  isLoading = true;
 
   /**
    * Mensaje de error si hay

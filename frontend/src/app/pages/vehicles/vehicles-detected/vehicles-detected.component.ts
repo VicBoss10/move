@@ -66,9 +66,11 @@ export class VehiclesDetectedComponent implements OnInit, OnDestroy {
   >;
 
   /**
-   * Flag de carga
+   * Flag de carga.
+   * Arranca en true: la carga se dispara en ngOnInit, así la página se pinta
+   * con el indicador desde el primer ciclo en vez de parecer que se traba.
    */
-  isLoading: boolean = false;
+  isLoading: boolean = true;
 
   /**
    * Mensaje de error si ocurre
