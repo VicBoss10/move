@@ -4,22 +4,16 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { DeviceStatusService, DeviceStatusInfo } from './device-status.service';
 import { DeviceService } from './device.service';
-import { SensorDataService } from './sensor-data.service';
-import { VehicleDetectedService } from './vehicle-detected.service';
 import { Device, DeviceType, DeviceState } from '../models/device.model';
-import { SensorData } from '../models/sensor-data.model';
-import { VehicleDetected, VehicleType } from '../models/vehicle.model';
 
 /**
  * Test suite for DeviceStatusService.
  *
  * Covers:
  * - Service instantiation and dependency injection
- * - Combining device, sensor, and vehicle detection data via combineLatest
- * - Enriching devices with metrics (dataPoints, lastActivity, isOnline status)
- * - Filtering sensor data by deviceId and vehicle data by device.id
+ * - Mapping devices to status information from the device list alone
  * - Setting device status and online state based on device state
- * - Calculating last activity timestamps for sensors and cameras
+ * - Archived flag propagation
  * - DeviceStatusInfo interface structure and completeness
  * - Observable sharing and replaying via shareReplay
  * - Error handling and recovery from upstream service failures
@@ -27,8 +21,6 @@ import { VehicleDetected, VehicleType } from '../models/vehicle.model';
 describe('DeviceStatusService', () => {
   let service: DeviceStatusService;
   let deviceServiceMock: jasmine.SpyObj<DeviceService>;
-  let sensorDataServiceMock: jasmine.SpyObj<SensorDataService>;
-  let vehicleDetectedServiceMock: jasmine.SpyObj<VehicleDetectedService>;
 
   const mockDevices: Device[] = [
     {
@@ -54,70 +46,15 @@ describe('DeviceStatusService', () => {
     },
   ];
 
-  const mockSensorData: SensorData[] = [
-    {
-      id: 1,
-      deviceId: 1,
-      timestamp: new Date(Date.now() - 10 * 60 * 1000),
-      temperature: 22.5,
-      humidity: 45,
-      co2: 410,
-      pm25: 12,
-      pm10: 25,
-      co: 0.8,
-      no2: 35,
-      nh3: 5,
-    },
-    {
-      id: 2,
-      deviceId: 1,
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-      temperature: 23.0,
-      humidity: 46,
-      co2: 420,
-      pm25: 13,
-      pm10: 26,
-      co: 0.9,
-      no2: 36,
-      nh3: 6,
-    },
-  ];
-
-  const mockVehiclesDetected: VehicleDetected[] = [
-    {
-      id: 1,
-      device: { id: 2 },
-      vehicleType: VehicleType.CAR,
-      timestamp: new Date(Date.now() - 15 * 60 * 1000),
-    },
-    {
-      id: 2,
-      device: { id: 2 },
-      vehicleType: VehicleType.TRUCK,
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    },
-  ];
-
   beforeEach(() => {
     const deviceSpy = jasmine.createSpyObj('DeviceService', ['getAll']);
-    const sensorSpy = jasmine.createSpyObj('SensorDataService', ['getAll']);
-    const vehicleSpy = jasmine.createSpyObj('VehicleDetectedService', ['getAll']);
 
     TestBed.configureTestingModule({
-      providers: [
-        DeviceStatusService,
-        { provide: DeviceService, useValue: deviceSpy },
-        { provide: SensorDataService, useValue: sensorSpy },
-        { provide: VehicleDetectedService, useValue: vehicleSpy },
-      ],
+      providers: [DeviceStatusService, { provide: DeviceService, useValue: deviceSpy }],
     });
 
     service = TestBed.inject(DeviceStatusService);
     deviceServiceMock = TestBed.inject(DeviceService) as jasmine.SpyObj<DeviceService>;
-    sensorDataServiceMock = TestBed.inject(SensorDataService) as jasmine.SpyObj<SensorDataService>;
-    vehicleDetectedServiceMock = TestBed.inject(
-      VehicleDetectedService,
-    ) as jasmine.SpyObj<VehicleDetectedService>;
   });
 
   it('should be created', () => {
@@ -125,10 +62,8 @@ describe('DeviceStatusService', () => {
   });
 
   describe('getDeviceStatuses()', () => {
-    it('should combine device, sensor, and vehicle data', (done) => {
+    it('should map every device returned by the device service', (done) => {
       deviceServiceMock.getAll.and.returnValue(of(mockDevices));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of(mockVehiclesDetected));
 
       service.getDeviceStatuses().subscribe((statuses) => {
         expect(statuses.length).toBe(3);
@@ -138,10 +73,8 @@ describe('DeviceStatusService', () => {
       });
     });
 
-    it('should enrich each device with metrics', (done) => {
+    it('should map device fields to status information', (done) => {
       deviceServiceMock.getAll.and.returnValue(of([mockDevices[0]]));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of([]));
 
       service.getDeviceStatuses().subscribe((statuses) => {
         const status = statuses[0];
@@ -152,10 +85,16 @@ describe('DeviceStatusService', () => {
       });
     });
 
+    it('should not request sensor or detection history', () => {
+      deviceServiceMock.getAll.and.returnValue(of(mockDevices));
+
+      service.getDeviceStatuses().subscribe();
+
+      expect(deviceServiceMock.getAll).toHaveBeenCalledTimes(1);
+    });
+
     it('should return empty array on error', (done) => {
       deviceServiceMock.getAll.and.returnValue(throwError(() => new Error('Error')));
-      sensorDataServiceMock.getAll.and.returnValue(of([]));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of([]));
 
       service.getDeviceStatuses().subscribe((statuses) => {
         expect(Array.isArray(statuses)).toBe(true);
@@ -166,8 +105,6 @@ describe('DeviceStatusService', () => {
 
     it('should set isOnline based on device state', (done) => {
       deviceServiceMock.getAll.and.returnValue(of(mockDevices));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of(mockVehiclesDetected));
 
       service.getDeviceStatuses().subscribe((statuses) => {
         const activeSensor = statuses.find((s) => s.id === 1);
@@ -178,99 +115,9 @@ describe('DeviceStatusService', () => {
         done();
       });
     });
-  });
-
-  describe('enrichDeviceWithMetrics()', () => {
-    it('should enrich sensor device with sensor data', (done) => {
-      const sensorDevice = mockDevices[0];
-
-      deviceServiceMock.getAll.and.returnValue(of([sensorDevice]));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of([]));
-
-      service.getDeviceStatuses().subscribe((statuses) => {
-        const status = statuses[0];
-        expect(status.dataPoints).toBe(2);
-        expect(status.lastActivity).toBeDefined();
-        done();
-      });
-    });
-
-    it('should enrich camera device with vehicle detections', (done) => {
-      const cameraDevice = mockDevices[1];
-
-      deviceServiceMock.getAll.and.returnValue(of([cameraDevice]));
-      sensorDataServiceMock.getAll.and.returnValue(of([]));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of(mockVehiclesDetected));
-
-      service.getDeviceStatuses().subscribe((statuses) => {
-        const status = statuses[0];
-        expect(status.dataPoints).toBe(2);
-        expect(status.lastActivity).toBeDefined();
-        done();
-      });
-    });
-
-    it('should set lastActivity to most recent timestamp for sensor', (done) => {
-      const sensorDevice = mockDevices[0];
-
-      deviceServiceMock.getAll.and.returnValue(of([sensorDevice]));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of([]));
-
-      service.getDeviceStatuses().subscribe((statuses) => {
-        const status = statuses[0];
-        expect(status.lastActivity?.getTime()).toBe(mockSensorData[1].timestamp.getTime());
-        done();
-      });
-    });
-
-    it('should set lastActivity to most recent timestamp for camera', (done) => {
-      const cameraDevice = mockDevices[1];
-
-      deviceServiceMock.getAll.and.returnValue(of([cameraDevice]));
-      sensorDataServiceMock.getAll.and.returnValue(of([]));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of(mockVehiclesDetected));
-
-      service.getDeviceStatuses().subscribe((statuses) => {
-        const status = statuses[0];
-        expect(status.lastActivity?.getTime()).toBe(mockVehiclesDetected[1].timestamp.getTime());
-        done();
-      });
-    });
-
-    it('should set lastActivity to null if no data available', (done) => {
-      const sensorDevice = mockDevices[0];
-
-      deviceServiceMock.getAll.and.returnValue(of([sensorDevice]));
-      sensorDataServiceMock.getAll.and.returnValue(of([]));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of([]));
-
-      service.getDeviceStatuses().subscribe((statuses) => {
-        const status = statuses[0];
-        expect(status.lastActivity).toBeNull();
-        done();
-      });
-    });
-
-    it('should calculate dataPoints as sum of sensor and vehicle data', (done) => {
-      const cameraDevice = mockDevices[1];
-
-      deviceServiceMock.getAll.and.returnValue(of([cameraDevice]));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of(mockVehiclesDetected));
-
-      service.getDeviceStatuses().subscribe((statuses) => {
-        const status = statuses[0];
-        expect(status.dataPoints).toBe(2);
-        done();
-      });
-    });
 
     it('should set status to device state', (done) => {
       deviceServiceMock.getAll.and.returnValue(of([mockDevices[0], mockDevices[2]]));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of([]));
 
       service.getDeviceStatuses().subscribe((statuses) => {
         const activeStatus = statuses.find((s) => s.id === 1);
@@ -282,30 +129,14 @@ describe('DeviceStatusService', () => {
       });
     });
 
-    it('should filter sensor data by deviceId', (done) => {
-      const sensorDevice = mockDevices[0];
-
-      deviceServiceMock.getAll.and.returnValue(of([sensorDevice]));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of([]));
+    it('should default archived to false when absent', (done) => {
+      deviceServiceMock.getAll.and.returnValue(
+        of([mockDevices[0], { ...mockDevices[1], archived: true }]),
+      );
 
       service.getDeviceStatuses().subscribe((statuses) => {
-        const status = statuses[0];
-        expect(status.dataPoints).toBe(2);
-        done();
-      });
-    });
-
-    it('should filter vehicle data by device.id', (done) => {
-      const cameraDevice = mockDevices[1];
-
-      deviceServiceMock.getAll.and.returnValue(of([cameraDevice]));
-      sensorDataServiceMock.getAll.and.returnValue(of([]));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of(mockVehiclesDetected));
-
-      service.getDeviceStatuses().subscribe((statuses) => {
-        const status = statuses[0];
-        expect(status.dataPoints).toBe(2);
+        expect(statuses[0].archived).toBe(false);
+        expect(statuses[1].archived).toBe(true);
         done();
       });
     });
@@ -314,8 +145,6 @@ describe('DeviceStatusService', () => {
   describe('DeviceStatusInfo interface', () => {
     it('should return complete status information', (done) => {
       deviceServiceMock.getAll.and.returnValue(of([mockDevices[0]]));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of([]));
 
       service.getDeviceStatuses().subscribe((statuses) => {
         const status = statuses[0] as DeviceStatusInfo;
@@ -328,9 +157,8 @@ describe('DeviceStatusService', () => {
         expect(status.location.id).toBeDefined();
         expect(status.location.latitude).toBeDefined();
         expect(status.location.longitude).toBeDefined();
-        expect(status.lastActivity).toBeDefined();
         expect(status.isOnline).toBeDefined();
-        expect(status.dataPoints).toBeDefined();
+        expect(status.archived).toBeDefined();
         done();
       });
     });
@@ -339,8 +167,6 @@ describe('DeviceStatusService', () => {
   describe('shareReplay()', () => {
     it('should share and replay results', (done) => {
       deviceServiceMock.getAll.and.returnValue(of(mockDevices));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of(mockVehiclesDetected));
 
       const statuses$ = service.getDeviceStatuses();
 
@@ -358,33 +184,6 @@ describe('DeviceStatusService', () => {
           expect(secondSubscriberCount).toBe(1);
           done();
         }
-      });
-    });
-  });
-
-  describe('combineLatest behavior', () => {
-    it('should emit when all sources emit', (done) => {
-      deviceServiceMock.getAll.and.returnValue(of(mockDevices));
-      sensorDataServiceMock.getAll.and.returnValue(of(mockSensorData));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of(mockVehiclesDetected));
-
-      let emissionCount = 0;
-      service.getDeviceStatuses().subscribe(() => {
-        emissionCount++;
-        if (emissionCount === 1) {
-          done();
-        }
-      });
-    });
-
-    it('should handle one source error', (done) => {
-      deviceServiceMock.getAll.and.returnValue(of(mockDevices));
-      sensorDataServiceMock.getAll.and.returnValue(throwError(() => new Error('Sensor error')));
-      vehicleDetectedServiceMock.getAll.and.returnValue(of(mockVehiclesDetected));
-
-      service.getDeviceStatuses().subscribe((statuses) => {
-        expect(Array.isArray(statuses)).toBe(true);
-        done();
       });
     });
   });

@@ -1,5 +1,5 @@
 <!-- Device Status Table Component
-     Displays grid of device cards showing name, type, status badge, location, connectivity, last activity, data points.
+     Displays grid of device cards showing name, type, status badge, location and connectivity.
      Supports two status: ACTIVE (green), INACTIVE (gray), FAILING (red). Includes edit and delete modals.
      Edit modal: reactive form with name, state, location, optional camera streaming config.
      Delete modal: confirmation dialog with device name validation. -->
@@ -12,95 +12,98 @@
     </p>
   </div>
 
-  <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-    @for (device of devices$ | async; track device) {
-      <div
-        class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
-      >
-        <div class="mb-4 flex items-start justify-between">
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ device.name }}</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              {{ getDeviceTypeText(device.type) }}
-            </p>
-          </div>
-          @if (device.archived) {
-            <span
-              class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-            >
-              Archivado
-            </span>
-          } @else {
-            <span
-              [ngClass]="getStatusColor(device.status)"
-              class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-            >
-              {{ getStatusIcon(device.status) }}
-              {{ getStatusText(device.status) }}
-            </span>
-          }
-        </div>
-
-        <div class="space-y-3 border-t border-gray-200 pt-4 dark:border-gray-700">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600 dark:text-gray-400">Ubicación</span>
-            <span class="font-medium text-gray-900 dark:text-white">
-              {{ device.location.description || 'Sin ubicación' }}
-            </span>
+  @if (devices$ | async; as devices) {
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      @for (device of devices; track device.id) {
+        <div
+          class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+        >
+          <div class="mb-4 flex items-start justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ device.name }}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ getDeviceTypeText(device.type) }}
+              </p>
+            </div>
+            @if (device.archived) {
+              <span
+                class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+              >
+                Archivado
+              </span>
+            } @else {
+              <span
+                [ngClass]="getStatusColor(device.status)"
+                class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+              >
+                {{ getStatusIcon(device.status) }}
+                {{ getStatusText(device.status) }}
+              </span>
+            }
           </div>
 
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600 dark:text-gray-400">Conectividad</span>
-            <span
-              [ngClass]="
-                device.isOnline
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'
-              "
-              class="text-xs font-medium"
-            >
-              {{ device.isOnline ? 'En línea' : 'Fuera de línea' }}
-            </span>
+          <div class="space-y-3 border-t border-gray-200 pt-4 dark:border-gray-700">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-600 dark:text-gray-400">Ubicación</span>
+              <span class="font-medium text-gray-900 dark:text-white">
+                {{ device.location.description || 'Sin ubicación' }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-600 dark:text-gray-400">Conectividad</span>
+              <span
+                [ngClass]="
+                  device.isOnline
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
+                "
+                class="text-xs font-medium"
+              >
+                {{ device.isOnline ? 'En línea' : 'Fuera de línea' }}
+              </span>
+            </div>
           </div>
 
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600 dark:text-gray-400">Última actividad</span>
-            <span class="font-medium text-gray-900 dark:text-white">
-              {{ device.lastActivity ? (device.lastActivity | date: 'short') : 'Sin datos' }}
-            </span>
-          </div>
-
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600 dark:text-gray-400">Datos totales</span>
-            <span class="font-medium text-gray-900 dark:text-white">{{ device.dataPoints }}</span>
-          </div>
-        </div>
-
-        <div class="mt-4 flex gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
-          <button
-            (click)="openEdit(device)"
-            class="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-          >
-            Editar
-          </button>
-          @if (device.type === DeviceType.SENSOR && !device.archived) {
+          <div class="mt-4 flex gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
             <button
-              (click)="openMove(device)"
-              class="flex-1 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40"
+              (click)="openEdit(device)"
+              class="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
             >
-              Mover
+              Editar
             </button>
-          }
-          <button
-            (click)="openDelete(device)"
-            class="flex-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
-          >
-            Eliminar
-          </button>
+            @if (device.type === DeviceType.SENSOR && !device.archived) {
+              <button
+                (click)="openMove(device)"
+                class="flex-1 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40"
+              >
+                Mover
+              </button>
+            }
+            <button
+              (click)="openDelete(device)"
+              class="flex-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+            >
+              Eliminar
+            </button>
+          </div>
         </div>
+      } @empty {
+        <div class="md:col-span-2 lg:col-span-3">
+          <p class="text-sm text-gray-500 dark:text-gray-400">No hay dispositivos registrados.</p>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="flex items-center justify-center py-16">
+      <div class="flex flex-col items-center gap-3">
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-brand-500 dark:border-gray-700 dark:border-t-brand-500"
+        ></div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Cargando dispositivos...</p>
       </div>
-    }
-  </div>
+    </div>
+  }
 </div>
 
 <app-modal
