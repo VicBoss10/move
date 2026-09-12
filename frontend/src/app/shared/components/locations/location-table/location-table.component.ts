@@ -167,13 +167,13 @@ export class LocationTableComponent {
       next: () => {
         this.editSaving = false;
         this.closeEdit();
-        this.toastService.success(`Location "${updated.description}" updated`, 'Success');
+        this.toastService.success(`Ubicación "${updated.description}" actualizada`, 'Éxito');
         this.locationChanged.emit();
         this.cdr.markForCheck();
       },
       error: () => {
         this.editSaving = false;
-        this.toastService.error('Error updating location', 'Error');
+        this.toastService.error('No se pudo actualizar la ubicación.', 'Error');
         this.cdr.markForCheck();
       },
     });
@@ -216,15 +216,18 @@ export class LocationTableComponent {
         this.deleteSaving = false;
         this.closeDelete();
         this.toastService.success(
-          `Location "${target.description ?? '#' + target.id}" deleted`,
-          'Success',
+          `Ubicación "${target.description ?? '#' + target.id}" eliminada`,
+          'Éxito',
         );
         this.locationChanged.emit();
         this.cdr.markForCheck();
       },
       error: () => {
         this.deleteSaving = false;
-        this.toastService.error('Unable to delete. It may have assigned devices.', 'Error');
+        this.toastService.error(
+          'No se pudo eliminar. Puede tener dispositivos asignados.',
+          'Error',
+        );
         this.cdr.markForCheck();
       },
     });

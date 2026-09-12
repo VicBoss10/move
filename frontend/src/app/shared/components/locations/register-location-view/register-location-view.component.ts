@@ -114,8 +114,8 @@ export class RegisterLocationViewComponent {
         next: () => {
           this.successMessage$.next(null);
           this.toastService.success(
-            `Location "${formValue.description}" registered successfully`,
-            'Success',
+            `Ubicación "${formValue.description}" registrada exitosamente`,
+            'Éxito',
           );
           setTimeout(() => {
             this.router.navigate(['/dashboard/locations/monitoring']);
@@ -124,7 +124,10 @@ export class RegisterLocationViewComponent {
         error: (err) => {
           console.error('Error registering location:', err);
           this.errorMessage$.next(null);
-          this.toastService.error('Failed to register location. Please try again.', 'Error');
+          this.toastService.error(
+            'No se pudo registrar la ubicación. Inténtalo de nuevo.',
+            'Error',
+          );
         },
       });
   }
