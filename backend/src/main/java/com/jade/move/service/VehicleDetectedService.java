@@ -190,6 +190,17 @@ public class VehicleDetectedService {
     }
 
     /**
+     * Deletes all vehicle detections captured by the devices of a location.
+     *
+     * @param locationId location identifier
+     * @throws IllegalArgumentException if locationId is null
+     */
+    public void deleteVehicleDetectedByLocation(Integer locationId) {
+        if (locationId == null) throw new IllegalArgumentException("locationId cannot be null");
+        vehicleDetectedRepository.deleteByDeviceLocationId(locationId);
+    }
+
+    /**
      * Retrieves the earliest vehicle detection record.
      *
      * @return first record by timestamp

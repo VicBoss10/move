@@ -159,6 +159,13 @@ export class SensorDataService extends BaseDataService<SensorData> {
       );
   }
 
+  deleteByLocation(locationId: number): Observable<void> {
+    return this.apiService.delete(`/${this.endpoint}/location/${locationId}`).pipe(
+      tap(() => this.invalidateCache()),
+      map(() => undefined),
+    );
+  }
+
   getFirstRecord(): Observable<SensorData> {
     return this.apiService
       .get<SensorData>(`/${this.endpoint}/first`)

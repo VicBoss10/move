@@ -26,6 +26,10 @@ public interface VehicleDetectedRepository extends JpaRepository<VehicleDetected
     @org.springframework.transaction.annotation.Transactional
     void deleteByDeviceId(Integer deviceId);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByDeviceLocationId(Integer locationId);
+
     VehicleDetected findFirstByOrderByTimestampAsc();
     VehicleDetected findFirstByOrderByTimestampDesc();
 }

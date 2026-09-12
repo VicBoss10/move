@@ -26,6 +26,10 @@ public interface SensorDataRepository extends JpaRepository<SensorData, Integer>
     @Transactional
     void deleteByTimestampBetween(LocalDateTime start, LocalDateTime end);
 
+    @Modifying
+    @Transactional
+    void deleteByDeviceLocationId(Integer locationId);
+
     SensorData findFirstByOrderByTimestampAsc();
     SensorData findFirstByOrderByTimestampDesc();
 }

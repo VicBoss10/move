@@ -111,6 +111,13 @@ export class VehicleDetectedService extends BaseDataService<VehicleDetected> {
       );
   }
 
+  deleteByLocation(locationId: number): Observable<void> {
+    return this.apiService.delete<void>(`/${this.endpoint}/location/${locationId}`).pipe(
+      tap(() => this.invalidateCache()),
+      map(() => undefined),
+    );
+  }
+
   getFirstRecord(): Observable<VehicleDetected> {
     return this.apiService.get<VehicleDetected>(`/${this.endpoint}/first`);
   }

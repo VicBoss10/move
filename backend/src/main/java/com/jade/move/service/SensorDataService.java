@@ -343,6 +343,17 @@ public class SensorDataService {
     }
 
     /**
+     * Deletes all sensor data recorded by the devices of a location.
+     *
+     * @param locationId location identifier
+     * @throws IllegalArgumentException if locationId is null
+     */
+    public void deleteSensorDataByLocation(Integer locationId) {
+        if (locationId == null) throw new IllegalArgumentException("locationId cannot be null");
+        sensorDataRepository.deleteByDeviceLocationId(locationId);
+    }
+
+    /**
      * Retrieves the earliest sensor data record.
      *
      * @return first record by timestamp

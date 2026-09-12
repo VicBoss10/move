@@ -2,11 +2,12 @@
  * DeleteDataFormComponent (Smart Component)
  *
  * Manages bulk deletion of sensor data and vehicle detection records with confirmation workflows.
- * Supports total deletion or date-range bounded deletion for both data types.
+ * Supports total deletion, date-range bounded deletion and per-location deletion for both data types.
  *
  * Features:
  * - Auto-loaded first/last record timestamps for min/max date constraints
- * - Total deletion or date-range bounded deletion for sensors and vehicles
+ * - Total deletion, date-range bounded deletion and per-location deletion for sensors and vehicles
+ * - Location list loaded from LocationService to populate the location selectors
  * - Destructive action confirmation modal with warning messages
  * - Reactive loading and success/error state management via BehaviorSubject
  * - Toast notifications for user feedback
@@ -26,8 +27,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
+import { LocationService } from '../../../../core/services/location.service';
+import { Location } from '../../../../core/models/location.model';
 import { BehaviorSubject } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { catchError, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ModalComponent } from '../../ui/modal/modal.component';
 
@@ -39,6 +43,12 @@ import { ModalComponent } from '../../ui/modal/modal.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeleteDataFormComponent implements OnInit {
+  /** Locations available for the per-location deletion selectors. */
+  locations: Location[] = [];
+
+  sensorLocationId: number | null = null;
+  vehicleLocationId: number | null = null;
+
   sensorMinDate = '';
   sensorMaxDate = '';
   sensorStartDate = '';
@@ -64,12 +74,14 @@ export class DeleteDataFormComponent implements OnInit {
    * Initializes component with service dependencies.
    * @param {SensorDataService} sensorService - Service managing sensor data operations
    * @param {VehicleDetectedService} vehicleService - Service managing vehicle detection data operations
+   * @param {LocationService} locationService - Service providing the list of registered locations
    * @param {ToastService} toastService - Service for displaying user notifications
    * @param {ChangeDetectorRef} cdr - Change detection reference for manual triggering in OnPush mode
    */
   constructor(
     private sensorService: SensorDataService,
     private vehicleService: VehicleDetectedService,
+    private locationService: LocationService,
     private toastService: ToastService,
     private cdr: ChangeDetectorRef,
   ) {}
@@ -81,6 +93,42 @@ export class DeleteDataFormComponent implements OnInit {
   ngOnInit(): void {
     this.loadSensorDateBounds();
     this.loadVehicleDateBounds();
+    this.loadLocations();
+  }
+
+  /**
+   * Loads the registered locations used by the per-location deletion selectors.
+   * Falls back to an empty list on error, which keeps those sections disabled.
+   * @private
+   */
+  private loadLocations(): void {
+    this.locationService
+      .getAll()
+      .pipe(catchError(() => of<Location[]>([])))
+      .subscribe((locations) => {
+        this.locations = locations;
+        this.cdr.markForCheck();
+      });
+  }
+
+  /**
+   * Returns the display label for a location.
+   * @param {Location} location - Location to label
+   * @returns {string} Description or a fallback built from the identifier
+   */
+  locationLabel(location: Location): string {
+    return location.description || `Ubicación #${location.id}`;
+  }
+
+  /**
+   * Returns the display label for a location id, used in confirmation messages.
+   * @param {number} locationId - Location identifier
+   * @returns {string} Location label or the raw identifier when not found
+   * @private
+   */
+  private locationLabelById(locationId: number): string {
+    const location = this.locations.find((l) => l.id === locationId);
+    return location ? this.locationLabel(location) : `#${locationId}`;
   }
 
   /**
@@ -268,6 +316,54 @@ export class DeleteDataFormComponent implements OnInit {
   }
 
   /**
+   * Initiates sensor data deletion by location with confirmation modal.
+   * Validates a location is selected before proceeding.
+   */
+  deleteSensorByLocation(): void {
+    if (this.sensorLocationId == null) return;
+    const label = this.locationLabelById(this.sensorLocationId);
+    this.requestConfirm(
+      'Eliminar datos de sensores por ubicación',
+      `Se eliminarán permanentemente todos los registros de los dispositivos de "${label}".`,
+      () => this.executeSensorByLocation(),
+    );
+  }
+
+  /**
+   * Executes sensor data deletion by location with loading state and error handling.
+   * Reloads date bounds on success, since the remaining range may have changed.
+   * @private
+   */
+  private executeSensorByLocation(): void {
+    if (this.sensorLocationId == null) return;
+    const locationId = this.sensorLocationId;
+    const label = this.locationLabelById(locationId);
+    this.sensorLoading$.next(true);
+    this.sensorSuccess$.next(null);
+    this.sensorError$.next(null);
+    this.cdr.markForCheck();
+    this.sensorService
+      .deleteByLocation(locationId)
+      .pipe(finalize(() => this.sensorLoading$.next(false)))
+      .subscribe({
+        next: () => {
+          const msg = `Datos de sensores de "${label}" eliminados correctamente.`;
+          this.sensorSuccess$.next(msg);
+          this.toastService.success(msg, 'Éxito');
+          this.sensorLocationId = null;
+          this.loadSensorDateBounds();
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
+          this.sensorError$.next(msg);
+          this.toastService.error(msg, 'Error');
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  /**
    * Initiates total vehicle detection data deletion with confirmation modal.
    */
   deleteVehicleAll(): void {
@@ -347,6 +443,54 @@ export class DeleteDataFormComponent implements OnInit {
           this.toastService.success(msg, 'Éxito');
           this.vehicleStartDate = '';
           this.vehicleEndDate = '';
+          this.loadVehicleDateBounds();
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          const msg = 'Error al eliminar: ' + (err?.message ?? 'Error desconocido');
+          this.vehicleError$.next(msg);
+          this.toastService.error(msg, 'Error');
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  /**
+   * Initiates vehicle detection data deletion by location with confirmation modal.
+   * Validates a location is selected before proceeding.
+   */
+  deleteVehicleByLocation(): void {
+    if (this.vehicleLocationId == null) return;
+    const label = this.locationLabelById(this.vehicleLocationId);
+    this.requestConfirm(
+      'Eliminar detecciones por ubicación',
+      `Se eliminarán permanentemente todas las detecciones de los dispositivos de "${label}".`,
+      () => this.executeVehicleByLocation(),
+    );
+  }
+
+  /**
+   * Executes vehicle detection data deletion by location with loading state and error handling.
+   * Reloads date bounds on success, since the remaining range may have changed.
+   * @private
+   */
+  private executeVehicleByLocation(): void {
+    if (this.vehicleLocationId == null) return;
+    const locationId = this.vehicleLocationId;
+    const label = this.locationLabelById(locationId);
+    this.vehicleLoading$.next(true);
+    this.vehicleSuccess$.next(null);
+    this.vehicleError$.next(null);
+    this.cdr.markForCheck();
+    this.vehicleService
+      .deleteByLocation(locationId)
+      .pipe(finalize(() => this.vehicleLoading$.next(false)))
+      .subscribe({
+        next: () => {
+          const msg = `Detecciones de "${label}" eliminadas correctamente.`;
+          this.vehicleSuccess$.next(msg);
+          this.toastService.success(msg, 'Éxito');
+          this.vehicleLocationId = null;
           this.loadVehicleDateBounds();
           this.cdr.markForCheck();
         },

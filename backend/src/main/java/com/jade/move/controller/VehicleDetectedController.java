@@ -221,6 +221,27 @@ public class VehicleDetectedController {
         }
 
         /**
+         * Deletes vehicle detections captured by the devices of a location.
+         *
+         * @param locationId location identifier
+         * @return 204 No Content response
+         */
+        @Operation(
+                summary = "Delete vehicle detections by location / Eliminar detecciones de vehículos por ubicación",
+                description = "Permanently deletes all vehicle detections captured by the devices of a location. This action cannot be undone. / Elimina permanentemente todas las detecciones de vehículos capturadas por los dispositivos de una ubicación. Esta acción no se puede deshacer."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "204", description = "Vehicle detections for the location deleted successfully / Detecciones de vehículos de la ubicación eliminadas exitosamente"),
+                @ApiResponse(responseCode = "400", description = "Invalid location identifier / Identificador de ubicación inválido"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
+        @DeleteMapping("/location/{locationId}")
+        public ResponseEntity<Void> deleteVehicleDetectedByLocation(@PathVariable Integer locationId) {
+                vehicleDetectedService.deleteVehicleDetectedByLocation(locationId);
+                return ResponseBuilder.noContent();
+        }
+
+        /**
          * Returns the earliest vehicle detection record.
          *
          * @return first detection record

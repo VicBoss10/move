@@ -318,6 +318,27 @@ public class SensorDataController {
         }
 
         /**
+         * Deletes sensor data recorded by the devices of a location.
+         *
+         * @param locationId location identifier
+         * @return 204 No Content response
+         */
+        @Operation(
+                summary = "Delete sensor data by location / Eliminar datos de sensores por ubicación",
+                description = "Permanently deletes all sensor data recorded by the devices of a location. This action cannot be undone. / Elimina permanentemente todos los datos de sensores registrados por los dispositivos de una ubicación. Esta acción no se puede deshacer."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "204", description = "Sensor data for the location deleted successfully / Datos de sensores de la ubicación eliminados exitosamente"),
+                @ApiResponse(responseCode = "400", description = "Invalid location identifier / Identificador de ubicación inválido"),
+                @ApiResponse(responseCode = "500", description = "Internal server error / Error interno del servidor")
+        })
+        @DeleteMapping("/location/{locationId}")
+        public ResponseEntity<Void> deleteSensorDataByLocation(@PathVariable Integer locationId) {
+                sensorDataService.deleteSensorDataByLocation(locationId);
+                return ResponseBuilder.noContent();
+        }
+
+        /**
          * Returns the earliest sensor data record.
          *
          * @return first sensor data record
