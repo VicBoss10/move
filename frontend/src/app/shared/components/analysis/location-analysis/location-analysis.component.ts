@@ -24,6 +24,8 @@ import {
 import { LocationService } from '../../../../core/services/location.service';
 import { SensorDataService } from '../../../../core/services/sensor-data.service';
 import { VehicleDetectedService } from '../../../../core/services/vehicle-detected.service';
+import { DeviceService } from '../../../../core/services/device.service';
+import { Device } from '../../../../core/models/device.model';
 import { Location } from '../../../../core/models/location.model';
 import { SensorData } from '../../../../core/models/sensor-data.model';
 import { VehicleDetected } from '../../../../core/models/vehicle.model';
@@ -115,6 +117,7 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
     private readonly locationService: LocationService,
     private readonly sensorDataService: SensorDataService,
     private readonly vehicleService: VehicleDetectedService,
+    private readonly deviceService: DeviceService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
@@ -166,7 +169,9 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
       .search({ start, end })
       .pipe(catchError(() => of<VehicleDetected[]>([])));
 
-    return combineLatest([locations$, sensor$, vehicles$]).pipe(
+    const devices$ = this.deviceService.getAll().pipe(catchError(() => of<Device[]>([])));
+
+    return combineLatest([locations$, sensor$, vehicles$, devices$]).pipe(
       catchError((err) => {
         console.error('[LocationAnalysis] Error:', err);
         this.hasError = true;
@@ -186,8 +191,14 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
 
         if (!result) return of(empty);
 
-        const [locations, sensorData, vehicleData] = result;
+        const [locations, sensorData, vehicleData, devices] = result;
         if (locations.length === 0) return of(empty);
+
+        // Detections carry their location through the device that captured them;
+        // the map covers responses where the device is not expanded with its location.
+        const deviceLocationMap = new Map<number, number>(
+          devices.map((d) => [d.id, d.location.id]),
+        );
 
         const rows: LocationRow[] = locations.map((loc, idx) => {
           const locSensor = sensorData.filter((d) => d.device?.location?.id === loc.id);
@@ -195,7 +206,9 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
             .map((d) => d[metricKey] as number)
             .filter((v) => v != null && v >= 0);
 
-          const vehicleTotal = vehicleData.filter((v) => v.location?.id === loc.id).length;
+          const vehicleTotal = vehicleData.filter(
+            (v) => this.resolveVehicleLocationId(v, deviceLocationMap) === loc.id,
+          ).length;
 
           const sensorAvg = values.length
             ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100
@@ -214,21 +227,26 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
           };
         });
 
-        rows.sort((a, b) => b.sensorAvg - a.sensorAvg);
-        rows.forEach((r, i) => (r.rank = i + 1));
+        // Only locations with activity in the period are compared: one without
+        // measurements nor detections would rank last with an average of zero.
+        const rowsWithData = rows.filter((r) => r.dataPoints > 0 || r.vehicleTotal > 0);
+        if (rowsWithData.length === 0) return of(empty);
 
-        const worstLocation = rows[0] ?? null;
+        rowsWithData.sort((a, b) => b.sensorAvg - a.sensorAvg);
+        rowsWithData.forEach((r, i) => (r.rank = i + 1));
+
+        const worstLocation = rowsWithData[0] ?? null;
         const busiestLocation =
-          [...rows].sort((a, b) => b.vehicleTotal - a.vehicleTotal)[0] ?? null;
+          [...rowsWithData].sort((a, b) => b.vehicleTotal - a.vehicleTotal)[0] ?? null;
 
-        const labels = rows.map((r) => this.locationLabel(r.location));
+        const labels = rowsWithData.map((r) => this.locationLabel(r.location));
 
         const chartData: ChartConfiguration<'bar'>['data'] = {
           labels,
           datasets: [
             {
               label: `${metricOption.label} promedio (${metricOption.unit})`,
-              data: rows.map((r) => r.sensorAvg),
+              data: rowsWithData.map((r) => r.sensorAvg),
               backgroundColor: metricOption.bg,
               borderColor: metricOption.color,
               borderWidth: 1.5,
@@ -237,7 +255,7 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
             },
             {
               label: 'Vehículos detectados',
-              data: rows.map((r) => r.vehicleTotal),
+              data: rowsWithData.map((r) => r.vehicleTotal),
               backgroundColor: VEHICLE_COLOR,
               borderColor: '#6366f1',
               borderWidth: 1.5,
@@ -248,7 +266,7 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
         };
 
         return of({
-          rows,
+          rows: rowsWithData,
           chartData,
           chartOptions: this.buildChartOptions(metricOption),
           worstLocation,
@@ -256,6 +274,18 @@ export class LocationAnalysisComponent implements OnInit, OnDestroy {
         });
       }),
     );
+  }
+
+  /**
+   * Resolves the location a detection belongs to.
+   * Detections reference their location through the capturing device; the map is
+   * used as a fallback when the device is returned without its location expanded.
+   */
+  private resolveVehicleLocationId(
+    vehicle: VehicleDetected,
+    deviceLocationMap: Map<number, number>,
+  ): number | undefined {
+    return vehicle.device?.location?.id ?? deviceLocationMap.get(vehicle.device?.id);
   }
 
   locationLabel(loc: Location): string {
